@@ -13,117 +13,110 @@ const SetupDatabase = () => {
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const executeRPC = async (query: string, errorContext: string) => {
+    try {
+      const { error } = await supabase.rpc('exec', { query });
+      if (error) {
+        console.log(`${errorContext} error (might be okay):`, error.message);
+      }
+      return { success: !error };
+    } catch (err: any) {
+      console.log(`${errorContext} error:`, err.message);
+      return { success: false };
+    }
+  };
+
   const createTables = async () => {
     setIsCreating(true);
     setError(null);
     
     try {
       // Create agent_type enum
-      await supabase.rpc('exec', { 
-        query: "create type agent_type as enum ('audience', 'content', 'seo', 'social', 'email', 'analytics');" 
-      }).catch(e => {
-        console.log('agent_type enum might already exist:', e.message);
-      });
+      await executeRPC(
+        "create type agent_type as enum ('audience', 'content', 'seo', 'social', 'email', 'analytics');", 
+        "agent_type enum"
+      );
 
       // Create strategy_status enum
-      await supabase.rpc('exec', { 
-        query: "create type strategy_status as enum ('draft', 'in_progress', 'completed');" 
-      }).catch(e => {
-        console.log('strategy_status enum might already exist:', e.message);
-      });
+      await executeRPC(
+        "create type strategy_status as enum ('draft', 'in_progress', 'completed');",
+        "strategy_status enum"
+      );
 
       // Create strategies table
-      await supabase.rpc('exec', { 
-        query: `
-          create table if not exists public.strategies (
-            id uuid primary key default gen_random_uuid(),
-            name text not null,
-            description text,
-            status strategy_status not null default 'draft',
-            created_at timestamptz not null default now(),
-            updated_at timestamptz not null default now()
-          );
-        `
-      });
+      await executeRPC(`
+        create table if not exists public.strategies (
+          id uuid primary key default gen_random_uuid(),
+          name text not null,
+          description text,
+          status strategy_status not null default 'draft',
+          created_at timestamptz not null default now(),
+          updated_at timestamptz not null default now()
+        );
+      `, "strategies table");
 
       // Create agents table
-      await supabase.rpc('exec', { 
-        query: `
-          create table if not exists public.agents (
-            id uuid primary key default gen_random_uuid(),
-            strategy_id uuid references public.strategies(id) on delete cascade,
-            name text not null,
-            type agent_type not null,
-            description text,
-            is_active boolean not null default true,
-            created_at timestamptz not null default now()
-          );
-        `
-      });
+      await executeRPC(`
+        create table if not exists public.agents (
+          id uuid primary key default gen_random_uuid(),
+          strategy_id uuid references public.strategies(id) on delete cascade,
+          name text not null,
+          type agent_type not null,
+          description text,
+          is_active boolean not null default true,
+          created_at timestamptz not null default now()
+        );
+      `, "agents table");
 
       // Create agent_results table
-      await supabase.rpc('exec', { 
-        query: `
-          create table if not exists public.agent_results (
-            id uuid primary key default gen_random_uuid(),
-            agent_id uuid references public.agents(id) on delete cascade,
-            strategy_id uuid references public.strategies(id) on delete cascade,
-            content text not null,
-            metadata jsonb,
-            created_at timestamptz not null default now()
-          );
-        `
-      });
+      await executeRPC(`
+        create table if not exists public.agent_results (
+          id uuid primary key default gen_random_uuid(),
+          agent_id uuid references public.agents(id) on delete cascade,
+          strategy_id uuid references public.strategies(id) on delete cascade,
+          content text not null,
+          metadata jsonb,
+          created_at timestamptz not null default now()
+        );
+      `, "agent_results table");
 
       // Enable RLS
-      await supabase.rpc('exec', { 
-        query: `
-          alter table public.strategies enable row level security;
-          alter table public.agents enable row level security;
-          alter table public.agent_results enable row level security;
-        `
-      });
+      await executeRPC(`
+        alter table public.strategies enable row level security;
+        alter table public.agents enable row level security;
+        alter table public.agent_results enable row level security;
+      `, "enable RLS");
 
       // Create updated_at trigger function
-      await supabase.rpc('exec', { 
-        query: `
-          create or replace function handle_updated_at()
-          returns trigger as $$
-          begin
-            new.updated_at = now();
-            return new;
-          end;
-          $$ language plpgsql;
-        `
-      });
+      await executeRPC(`
+        create or replace function handle_updated_at()
+        returns trigger as $$
+        begin
+          new.updated_at = now();
+          return new;
+        end;
+        $$ language plpgsql;
+      `, "create trigger function");
 
       // Add trigger to strategies table
-      await supabase.rpc('exec', { 
-        query: `
-          create trigger handle_strategies_updated_at
-            before update on public.strategies
-            for each row
-            execute function handle_updated_at();
-        `
-      }).catch(e => {
-        console.log('Trigger might already exist:', e.message);
-      });
+      await executeRPC(`
+        create trigger handle_strategies_updated_at
+          before update on public.strategies
+          for each row
+          execute function handle_updated_at();
+      `, "create trigger");
 
       // Add RLS policies
-      await supabase.rpc('exec', { 
-        query: `
-          create policy "Enable all access for authenticated users" on public.strategies
-            for all using (auth.role() = 'authenticated');
-          
-          create policy "Enable all access for authenticated users" on public.agents
-            for all using (auth.role() = 'authenticated');
-          
-          create policy "Enable all access for authenticated users" on public.agent_results
-            for all using (auth.role() = 'authenticated');
-        `
-      }).catch(e => {
-        console.log('Policies might already exist:', e.message);
-      });
+      await executeRPC(`
+        create policy "Enable all access for authenticated users" on public.strategies
+          for all using (auth.role() = 'authenticated');
+        
+        create policy "Enable all access for authenticated users" on public.agents
+          for all using (auth.role() = 'authenticated');
+        
+        create policy "Enable all access for authenticated users" on public.agent_results
+          for all using (auth.role() = 'authenticated');
+      `, "create RLS policies");
       
       toast({
         title: "Success",
