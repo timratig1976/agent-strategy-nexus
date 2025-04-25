@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,6 +45,20 @@ const Index = () => {
           </CardFooter>
         </Card>
       </div>
+
+      <Card className="mb-12">
+        <CardHeader>
+          <CardTitle>First-time Setup</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>Before using the application, you need to set up the database tables. Click the button below to initialize the database.</p>
+        </CardContent>
+        <CardFooter>
+          <Button onClick={() => navigate("/setup-database")} variant="default" className="w-full">
+            Setup Database
+          </Button>
+        </CardFooter>
+      </Card>
 
       <div className="bg-muted rounded-lg p-6">
         <h2 className="text-2xl font-bold mb-4">How It Works</h2>
