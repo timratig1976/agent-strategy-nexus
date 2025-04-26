@@ -13,16 +13,19 @@ const SetupDatabase = () => {
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const executeRPC = async (query: string, errorContext: string) => {
+  const executeSQL = async (query: string, errorContext: string) => {
     try {
-      const { error } = await supabase.rpc('exec', { query });
+      const { data, error } = await supabase.rpc('exec', { query });
+      
       if (error) {
-        console.log(`${errorContext} error (might be okay):`, error.message);
+        console.log(`${errorContext} error:`, error.message);
+        return { success: false, error: error.message };
       }
-      return { success: !error };
+      
+      return { success: true, data };
     } catch (err: any) {
-      console.log(`${errorContext} error:`, err.message);
-      return { success: false };
+      console.log(`${errorContext} exception:`, err.message);
+      return { success: false, error: err.message };
     }
   };
 
@@ -32,19 +35,27 @@ const SetupDatabase = () => {
     
     try {
       // Create agent_type enum
-      await executeRPC(
-        "create type agent_type as enum ('audience', 'content', 'seo', 'social', 'email', 'analytics');", 
+      const agentTypeResult = await executeSQL(
+        "create type if not exists agent_type as enum ('audience', 'content', 'seo', 'social', 'email', 'analytics');", 
         "agent_type enum"
       );
+      
+      if (!agentTypeResult.success && !agentTypeResult.error?.includes("already exists")) {
+        throw new Error(`Failed to create agent_type enum: ${agentTypeResult.error}`);
+      }
 
       // Create strategy_status enum
-      await executeRPC(
-        "create type strategy_status as enum ('draft', 'in_progress', 'completed');",
+      const statusResult = await executeSQL(
+        "create type if not exists strategy_status as enum ('draft', 'in_progress', 'completed');",
         "strategy_status enum"
       );
+      
+      if (!statusResult.success && !statusResult.error?.includes("already exists")) {
+        throw new Error(`Failed to create strategy_status enum: ${statusResult.error}`);
+      }
 
       // Create strategies table
-      await executeRPC(`
+      const strategiesResult = await executeSQL(`
         create table if not exists public.strategies (
           id uuid primary key default gen_random_uuid(),
           name text not null,
@@ -54,9 +65,13 @@ const SetupDatabase = () => {
           updated_at timestamptz not null default now()
         );
       `, "strategies table");
+      
+      if (!strategiesResult.success) {
+        throw new Error(`Failed to create strategies table: ${strategiesResult.error}`);
+      }
 
       // Create agents table
-      await executeRPC(`
+      const agentsResult = await executeSQL(`
         create table if not exists public.agents (
           id uuid primary key default gen_random_uuid(),
           strategy_id uuid references public.strategies(id) on delete cascade,
@@ -67,9 +82,13 @@ const SetupDatabase = () => {
           created_at timestamptz not null default now()
         );
       `, "agents table");
+      
+      if (!agentsResult.success) {
+        throw new Error(`Failed to create agents table: ${agentsResult.error}`);
+      }
 
       // Create agent_results table
-      await executeRPC(`
+      const resultsResult = await executeSQL(`
         create table if not exists public.agent_results (
           id uuid primary key default gen_random_uuid(),
           agent_id uuid references public.agents(id) on delete cascade,
@@ -79,16 +98,24 @@ const SetupDatabase = () => {
           created_at timestamptz not null default now()
         );
       `, "agent_results table");
+      
+      if (!resultsResult.success) {
+        throw new Error(`Failed to create agent_results table: ${resultsResult.error}`);
+      }
 
       // Enable RLS
-      await executeRPC(`
+      const rlsResult = await executeSQL(`
         alter table public.strategies enable row level security;
         alter table public.agents enable row level security;
         alter table public.agent_results enable row level security;
       `, "enable RLS");
+      
+      if (!rlsResult.success) {
+        throw new Error(`Failed to enable RLS: ${rlsResult.error}`);
+      }
 
       // Create updated_at trigger function
-      await executeRPC(`
+      const triggerFuncResult = await executeSQL(`
         create or replace function handle_updated_at()
         returns trigger as $$
         begin
@@ -97,26 +124,42 @@ const SetupDatabase = () => {
         end;
         $$ language plpgsql;
       `, "create trigger function");
+      
+      if (!triggerFuncResult.success) {
+        throw new Error(`Failed to create trigger function: ${triggerFuncResult.error}`);
+      }
 
       // Add trigger to strategies table
-      await executeRPC(`
+      const triggerResult = await executeSQL(`
+        drop trigger if exists handle_strategies_updated_at on public.strategies;
         create trigger handle_strategies_updated_at
           before update on public.strategies
           for each row
           execute function handle_updated_at();
       `, "create trigger");
+      
+      if (!triggerResult.success) {
+        throw new Error(`Failed to create trigger: ${triggerResult.error}`);
+      }
 
       // Add RLS policies
-      await executeRPC(`
+      const policiesResult = await executeSQL(`
+        drop policy if exists "Enable all access for authenticated users" on public.strategies;
         create policy "Enable all access for authenticated users" on public.strategies
           for all using (auth.role() = 'authenticated');
         
+        drop policy if exists "Enable all access for authenticated users" on public.agents;
         create policy "Enable all access for authenticated users" on public.agents
           for all using (auth.role() = 'authenticated');
         
+        drop policy if exists "Enable all access for authenticated users" on public.agent_results;
         create policy "Enable all access for authenticated users" on public.agent_results
           for all using (auth.role() = 'authenticated');
       `, "create RLS policies");
+      
+      if (!policiesResult.success) {
+        throw new Error(`Failed to create RLS policies: ${policiesResult.error}`);
+      }
       
       toast({
         title: "Success",
@@ -156,6 +199,9 @@ const SetupDatabase = () => {
             <li>Required enums and triggers</li>
             <li>Row-level security policies</li>
           </ul>
+          <p className="text-amber-600 font-medium mb-4">
+            Important: Make sure the SQL RPC function is enabled in your Supabase project.
+          </p>
         </CardContent>
         <CardFooter className="flex justify-between">
           <Button 
