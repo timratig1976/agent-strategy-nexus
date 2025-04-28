@@ -9,7 +9,113 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      agent_results: {
+        Row: {
+          agent_id: string | null
+          content: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          strategy_id: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          strategy_id?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          strategy_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_results_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_results_strategy_id_fkey"
+            columns: ["strategy_id"]
+            isOneToOne: false
+            referencedRelation: "strategies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agents: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          strategy_id: string | null
+          type: Database["public"]["Enums"]["agent_type"]
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          strategy_id?: string | null
+          type: Database["public"]["Enums"]["agent_type"]
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          strategy_id?: string | null
+          type?: Database["public"]["Enums"]["agent_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agents_strategy_id_fkey"
+            columns: ["strategy_id"]
+            isOneToOne: false
+            referencedRelation: "strategies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      strategies: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          status: Database["public"]["Enums"]["strategy_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          status?: Database["public"]["Enums"]["strategy_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          status?: Database["public"]["Enums"]["strategy_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +124,14 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      agent_type:
+        | "audience"
+        | "content"
+        | "seo"
+        | "social"
+        | "email"
+        | "analytics"
+      strategy_status: "draft" | "in_progress" | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +246,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      agent_type: [
+        "audience",
+        "content",
+        "seo",
+        "social",
+        "email",
+        "analytics",
+      ],
+      strategy_status: ["draft", "in_progress", "completed"],
+    },
   },
 } as const
