@@ -19,13 +19,25 @@ const Dashboard = () => {
         const { data, error } = await supabase
           .from('strategies')
           .select('*')
-          .order('updatedAt', { ascending: false });
+          .order('updated_at', { ascending: false });
         
         if (error) {
           throw error;
         }
 
-        setStrategies(data || []);
+        // Transform the data to match our Strategy interface
+        const transformedStrategies: Strategy[] = (data || []).map(item => ({
+          id: item.id,
+          name: item.name,
+          description: item.description || '',
+          status: item.status,
+          createdAt: item.created_at,
+          updatedAt: item.updated_at,
+          agents: [],  // We'll fetch these separately if needed
+          results: []  // We'll fetch these separately if needed
+        }));
+
+        setStrategies(transformedStrategies);
       } catch (error) {
         console.error('Error fetching strategies:', error);
         toast({

@@ -39,7 +39,7 @@ const StrategyDetails = () => {
         const { data: agentsData, error: agentsError } = await supabase
           .from('agents')
           .select('*')
-          .eq('strategyId', id);
+          .eq('strategy_id', id);
         
         if (agentsError) throw agentsError;
         
@@ -47,27 +47,50 @@ const StrategyDetails = () => {
         const { data: resultsData, error: resultsError } = await supabase
           .from('agent_results')
           .select('*')
-          .eq('strategyId', id);
+          .eq('strategy_id', id);
         
         if (resultsError) throw resultsError;
         
+        // Transform the data to match our interfaces
+        const transformedAgents: Agent[] = agentsData?.map((agent) => ({
+          id: agent.id,
+          name: agent.name,
+          type: agent.type,
+          description: agent.description || '',
+          isActive: agent.is_active
+        })) || [];
+
+        const transformedResults: AgentResult[] = resultsData?.map((result) => ({
+          id: result.id,
+          agentId: result.agent_id || '',
+          strategyId: result.strategy_id || '',
+          content: result.content,
+          createdAt: result.created_at,
+          metadata: result.metadata || {}
+        })) || [];
+
         // Combine all data
         setStrategy({
-          ...strategyData,
-          agents: agentsData || [],
-          results: resultsData || []
+          id: strategyData.id,
+          name: strategyData.name,
+          description: strategyData.description || '',
+          status: strategyData.status,
+          createdAt: strategyData.created_at,
+          updatedAt: strategyData.updated_at,
+          agents: transformedAgents,
+          results: transformedResults
         });
 
         // Initialize agent input state
         const initialInputs: Record<string, string> = {};
-        agentsData?.forEach((agent: Agent) => {
+        transformedAgents.forEach((agent) => {
           initialInputs[agent.id] = '';
         });
         setAgentInput(initialInputs);
         
         // Set the first agent as the current tab if available
-        if (agentsData && agentsData.length > 0) {
-          setCurrentTab(agentsData[0].id);
+        if (transformedAgents && transformedAgents.length > 0) {
+          setCurrentTab(transformedAgents[0].id);
         }
       } catch (error) {
         console.error('Error fetching strategy:', error);
@@ -101,10 +124,10 @@ const StrategyDetails = () => {
       const { data, error } = await supabase
         .from('agent_results')
         .insert({
-          agentId,
-          strategyId: strategy.id,
+          agent_id: agentId,
+          strategy_id: strategy.id,
           content: simulatedResult,
-          createdAt: new Date().toISOString(),
+          created_at: new Date().toISOString(),
           metadata: { input: agentInput[agentId] }
         })
         .select('*')
@@ -112,12 +135,22 @@ const StrategyDetails = () => {
       
       if (error) throw error;
       
+      // Transform the new result to match our interface
+      const newResult: AgentResult = {
+        id: data.id,
+        agentId: data.agent_id || '',
+        strategyId: data.strategy_id || '',
+        content: data.content,
+        createdAt: data.created_at,
+        metadata: data.metadata || {}
+      };
+      
       // Update the strategy state with the new result
       setStrategy(prev => {
         if (!prev) return null;
         return {
           ...prev,
-          results: [...prev.results, data]
+          results: [...prev.results, newResult]
         };
       });
       
