@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -66,7 +65,8 @@ const StrategyDetails = () => {
           strategyId: result.strategy_id || '',
           content: result.content,
           createdAt: result.created_at,
-          metadata: result.metadata || {}
+          // Fix the metadata type issue by ensuring it's a Record<string, any>
+          metadata: result.metadata as Record<string, any> || {}
         })) || [];
 
         // Combine all data
@@ -128,7 +128,7 @@ const StrategyDetails = () => {
           strategy_id: strategy.id,
           content: simulatedResult,
           created_at: new Date().toISOString(),
-          metadata: { input: agentInput[agentId] }
+          metadata: { input: agentInput[agentId] } as Record<string, any>
         })
         .select('*')
         .single();
@@ -142,7 +142,7 @@ const StrategyDetails = () => {
         strategyId: data.strategy_id || '',
         content: data.content,
         createdAt: data.created_at,
-        metadata: data.metadata || {}
+        metadata: data.metadata as Record<string, any> || {}
       };
       
       // Update the strategy state with the new result

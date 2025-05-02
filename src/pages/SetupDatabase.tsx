@@ -1,12 +1,12 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Code } from "@/components/ui/code";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
+// Removed the invalid import for Code component
 
 const SetupDatabase = () => {
   const { toast } = useToast();
@@ -52,25 +52,25 @@ const SetupDatabase = () => {
       
       if (strategyError) throw strategyError;
       
-      // Create sample agents
+      // Create sample agents - Fix type issues by specifying proper agent types
       const agents = [
         {
           name: 'Audience Analyzer',
-          type: 'audience',
+          type: 'audience' as const, // Use const assertion to ensure it matches the enum
           description: 'Analyzes target audience demographics and preferences',
           is_active: true,
           strategy_id: strategy.id
         },
         {
           name: 'Content Strategist',
-          type: 'content',
+          type: 'content' as const,
           description: 'Develops content strategy and content calendar',
           is_active: true,
           strategy_id: strategy.id
         },
         {
           name: 'SEO Optimizer',
-          type: 'seo',
+          type: 'seo' as const,
           description: 'Provides SEO recommendations and keyword analysis',
           is_active: true,
           strategy_id: strategy.id
