@@ -5,9 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
+import { useAuth } from "@/context/AuthProvider";
+import { LogOut } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const [dbStatus, setDbStatus] = useState<'checking' | 'ready' | 'not-setup'>('checking');
 
   // Check if database tables exist
@@ -36,10 +39,33 @@ const Index = () => {
     checkDatabase();
   }, []);
 
+  const handleLogout = async () => {
+    await signOut();
+    toast.success("Successfully logged out");
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl font-bold">Marketing Strategy Hub</h1>
+        {user ? (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              {user.email}
+            </span>
+            <Button variant="outline" size="sm" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Log out
+            </Button>
+          </div>
+        ) : (
+          <Button onClick={() => navigate("/auth")}>
+            Sign In
+          </Button>
+        )}
+      </div>
+
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-4">Marketing Strategy Hub</h1>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto">
           Create comprehensive marketing strategies with AI-powered agents that work together to provide insights across different marketing domains.
         </p>
@@ -88,9 +114,9 @@ const Index = () => {
             <Button 
               onClick={() => navigate("/create-strategy")} 
               className="w-full" 
-              disabled={dbStatus !== 'ready'}
+              disabled={dbStatus !== 'ready' || !user}
             >
-              Get Started
+              {!user ? "Sign in to Get Started" : "Get Started"}
             </Button>
           </CardFooter>
         </Card>
@@ -107,9 +133,9 @@ const Index = () => {
               onClick={() => navigate("/dashboard")} 
               variant="outline" 
               className="w-full"
-              disabled={dbStatus !== 'ready'}
+              disabled={dbStatus !== 'ready' || !user}
             >
-              Go to Dashboard
+              {!user ? "Sign in to View Dashboard" : "Go to Dashboard"}
             </Button>
           </CardFooter>
         </Card>
