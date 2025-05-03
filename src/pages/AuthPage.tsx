@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,9 @@ const AuthPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Get the current URL for proper redirects
+  const currentOrigin = window.location.origin;
 
   // Handle email/password sign in
   const handleEmailSignIn = async (e: React.FormEvent) => {
@@ -47,7 +49,7 @@ const AuthPage = () => {
         email,
         password,
         options: {
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: `${currentOrigin}/`,
         },
       });
       
@@ -69,7 +71,7 @@ const AuthPage = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${currentOrigin}/`,
         },
       });
       
