@@ -1,1 +1,5 @@
+
 project_id = "lqrbflaupbwizcyhwcsz"
+
+[functions.company-data-agent]
+verify_jwt = true

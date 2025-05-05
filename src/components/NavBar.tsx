@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { Settings } from "lucide-react";
+import { Settings, FileText } from "lucide-react";
 import { useAuth } from "@/context/AuthProvider";
 import CompanyLogo from "./CompanyLogo";
 import {
@@ -65,6 +65,13 @@ const NavBar = () => {
                     <Link to="/create-strategy">
                       <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                         Create Strategy
+                      </NavigationMenuLink>
+                    </Link>
+                  </NavigationMenuItem>
+                  <NavigationMenuItem>
+                    <Link to="/company-summary">
+                      <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                        Company Summary
                       </NavigationMenuLink>
                     </Link>
                   </NavigationMenuItem>
