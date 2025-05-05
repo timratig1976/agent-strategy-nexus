@@ -55,14 +55,14 @@ const NavBar = () => {
               <NavigationMenu>
                 <NavigationMenuList>
                   <NavigationMenuItem>
-                    <Link to="/dashboard" legacyBehavior passHref>
+                    <Link to="/dashboard">
                       <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                         Dashboard
                       </NavigationMenuLink>
                     </Link>
                   </NavigationMenuItem>
                   <NavigationMenuItem>
-                    <Link to="/create-strategy" legacyBehavior passHref>
+                    <Link to="/create-strategy">
                       <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                         Create Strategy
                       </NavigationMenuLink>

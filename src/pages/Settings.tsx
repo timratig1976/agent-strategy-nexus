@@ -50,9 +50,10 @@ const Settings = () => {
           .from("company_settings")
           .select("*")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
-        if (error && error.code !== "PGRST116") {
+        if (error) {
+          console.error("Error fetching company settings:", error);
           throw error;
         }
 
@@ -132,7 +133,7 @@ const Settings = () => {
         .from("company_settings")
         .select("id")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (existingData) {
         // Update existing settings

@@ -18,20 +18,21 @@ const CompanyLogo = ({ size = "md", className = "" }: CompanyLogoProps) => {
       if (!user) return;
 
       try {
+        // Use maybeSingle instead of single to handle the case where no data is found
         const { data, error } = await supabase
           .from("company_settings")
           .select("name, logo_url")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
-        if (error && error.code !== "PGRST116") {
+        if (error) {
           console.error("Error fetching company settings:", error);
           return;
         }
 
         if (data) {
           setLogoUrl(data.logo_url);
-          setCompanyName(data.name);
+          setCompanyName(data.name || "");
         }
       } catch (error) {
         console.error("Error fetching company settings:", error);

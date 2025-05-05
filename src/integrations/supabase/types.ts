@@ -89,6 +89,36 @@ export type Database = {
           },
         ]
       }
+      company_settings: {
+        Row: {
+          created_at: string
+          id: string
+          logo_url: string | null
+          name: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       strategies: {
         Row: {
           created_at: string
