@@ -31,7 +31,14 @@ const CompanySummaryPage = () => {
           .maybeSingle();
 
         if (existingAgent) {
-          setAgent(existingAgent);
+          // Map snake_case database columns to camelCase interface properties
+          setAgent({
+            id: existingAgent.id,
+            name: existingAgent.name,
+            type: existingAgent.type,
+            description: existingAgent.description || "",
+            isActive: existingAgent.is_active
+          });
         } else {
           // Create new agent if it doesn't exist
           const { data: newAgent, error } = await supabase
@@ -49,7 +56,14 @@ const CompanySummaryPage = () => {
             throw error;
           }
 
-          setAgent(newAgent);
+          // Map snake_case database columns to camelCase interface properties
+          setAgent({
+            id: newAgent.id,
+            name: newAgent.name,
+            type: newAgent.type,
+            description: newAgent.description || "",
+            isActive: newAgent.is_active
+          });
         }
       } catch (error) {
         console.error("Error fetching/creating agent:", error);

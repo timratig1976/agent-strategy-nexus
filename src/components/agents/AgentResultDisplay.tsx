@@ -36,7 +36,18 @@ export const AgentResultDisplay: React.FC<AgentResultDisplayProps> = ({ agentId,
           throw error;
         }
 
-        setResult(data);
+        if (data) {
+          // Map snake_case database columns to camelCase interface properties
+          const mappedResult: AgentResult = {
+            id: data.id,
+            agentId: data.agent_id,
+            strategyId: data.strategy_id || "",
+            content: data.content,
+            createdAt: data.created_at,
+            metadata: data.metadata || {},
+          };
+          setResult(mappedResult);
+        }
       } catch (err) {
         console.error("Error fetching agent result:", err);
         setError("Failed to load agent result");
