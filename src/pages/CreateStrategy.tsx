@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/context/AuthProvider";
+import { StrategyState } from "@/types/marketing";
 
 const CreateStrategy = () => {
   const navigate = useNavigate();
@@ -51,7 +52,7 @@ const CreateStrategy = () => {
           name: name.trim(),
           description: description.trim(),
           user_id: user.id,
-          state: 'briefing',
+          state: 'briefing' as StrategyState,
           status: 'draft',
         })
         .select()
@@ -63,7 +64,7 @@ const CreateStrategy = () => {
       const initialTask = {
         strategy_id: strategy.id,
         title: "Define your marketing goals",
-        state: 'briefing',
+        state: 'briefing' as StrategyState,
         is_completed: false
       };
       
