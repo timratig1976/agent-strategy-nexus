@@ -9,6 +9,76 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      agent_data_sources: {
+        Row: {
+          agent_id: string | null
+          created_at: string
+          id: string
+          source_data: Json | null
+          source_type: string
+          source_url: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string
+          id?: string
+          source_data?: Json | null
+          source_type: string
+          source_url?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string
+          id?: string
+          source_data?: Json | null
+          source_type?: string
+          source_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_data_sources_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_prompts: {
+        Row: {
+          agent_id: string | null
+          created_at: string
+          id: string
+          system_prompt: string | null
+          updated_at: string
+          user_prompt: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string
+          id?: string
+          system_prompt?: string | null
+          updated_at?: string
+          user_prompt?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string
+          id?: string
+          system_prompt?: string | null
+          updated_at?: string
+          user_prompt?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_prompts_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_results: {
         Row: {
           agent_id: string | null

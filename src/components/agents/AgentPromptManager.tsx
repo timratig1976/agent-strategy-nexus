@@ -14,6 +14,15 @@ interface AgentPromptManagerProps {
   agentId: string;
 }
 
+interface AgentPrompt {
+  id: string;
+  agent_id: string;
+  system_prompt: string;
+  user_prompt: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export const AgentPromptManager: React.FC<AgentPromptManagerProps> = ({ agentId }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -165,7 +174,7 @@ export const AgentPromptManager: React.FC<AgentPromptManagerProps> = ({ agentId 
             className="min-h-[150px]"
           />
           <p className="text-xs text-muted-foreground">
-            This is the template for what to ask the AI. Use {{variables}} that will be replaced with actual data.
+            This is the template for what to ask the AI. Use &#123;&#123;variables&#125;&#125; that will be replaced with actual data.
           </p>
         </div>
       </CardContent>
