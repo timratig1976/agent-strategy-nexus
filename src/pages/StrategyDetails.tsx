@@ -83,7 +83,7 @@ const StrategyDetails = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">{strategy.title}</h1>
+      <h1 className="text-3xl font-bold mb-6">{strategy.name}</h1>
       
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-2">Description</h2>
