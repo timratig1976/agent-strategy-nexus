@@ -60,22 +60,29 @@ async function crawlWebsite(url: string): Promise<WebsiteData> {
   }
 }
 
-async function generateSummaryWithOpenAI(companyData: CompanyData): Promise<string> {
+async function getAgentPrompts(agentId: string) {
   try {
-    const prompt = `
+    const { data, error } = await supabase
+      .from("agent_prompts")
+      .select("*")
+      .eq("agent_id", agentId)
+      .maybeSingle();
+
+    if (error && error.code !== "PGRST116") { // Not found error is ok
+      throw error;
+    }
+
+    // Return default prompts if none found
+    return {
+      systemPrompt: data?.system_prompt || "You are an AI assistant that creates detailed company summaries based on website data.",
+      userPrompt: data?.user_prompt || `
 Create a comprehensive company summary based on the following information:
 
-Company Name: ${companyData.name}
-Company Website: ${companyData.website || 'Unknown'}
+Company Name: {{companyName}}
+Company Website: {{websiteUrl}}
 
 Website Content:
-${companyData.sources.map(source => 
-  `URL: ${source.url}
-  Title: ${source.title || 'Unknown'}
-  Description: ${source.description || 'Unknown'}
-  
-  Content Summary: ${source.content?.substring(0, 1000)}...
-  `).join('\n\n')}
+{{websiteContent}}
 
 Please provide a structured summary with the following sections:
 1. Company Overview
@@ -86,7 +93,38 @@ Please provide a structured summary with the following sections:
 6. Customer Personas (if identifiable)
 
 If information for any section is not available, indicate that.
-`;
+`
+    };
+  } catch (error) {
+    console.error("Error fetching agent prompts:", error);
+    // Return default prompts if error
+    return {
+      systemPrompt: "You are an AI assistant that creates detailed company summaries based on website data.",
+      userPrompt: "Create a comprehensive company summary based on the provided information."
+    };
+  }
+}
+
+async function generateSummaryWithOpenAI(companyData: CompanyData, agentId: string): Promise<string> {
+  try {
+    // Get custom prompts for this agent
+    const { systemPrompt, userPrompt } = await getAgentPrompts(agentId);
+    
+    // Replace variables in the user prompt template
+    let formattedUserPrompt = userPrompt
+      .replace("{{companyName}}", companyData.name)
+      .replace("{{websiteUrl}}", companyData.website || 'Unknown');
+    
+    // Format website content for the prompt
+    const websiteContentFormatted = companyData.sources.map(source => 
+      `URL: ${source.url}
+      Title: ${source.title || 'Unknown'}
+      Description: ${source.description || 'Unknown'}
+      
+      Content Summary: ${source.content?.substring(0, 1000)}...
+      `).join('\n\n');
+    
+    formattedUserPrompt = formattedUserPrompt.replace("{{websiteContent}}", websiteContentFormatted);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -97,8 +135,8 @@ If information for any section is not available, indicate that.
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
-          { role: 'system', content: 'You are an AI assistant that creates detailed company summaries based on website data.' },
-          { role: 'user', content: prompt }
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: formattedUserPrompt }
         ],
         temperature: 0.5
       })
@@ -157,7 +195,7 @@ Deno.serve(async (req) => {
     }
 
     // Generate summary with OpenAI
-    const summary = await generateSummaryWithOpenAI(companyData);
+    const summary = await generateSummaryWithOpenAI(companyData, agentId);
 
     // Store the result
     const { data: resultData, error: resultError } = await supabase

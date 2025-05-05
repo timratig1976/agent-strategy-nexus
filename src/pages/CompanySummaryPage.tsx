@@ -5,6 +5,8 @@ import { useAuth } from "@/context/AuthProvider";
 import NavBar from "@/components/NavBar";
 import { CompanySummaryAgent } from "@/components/agents/CompanySummaryAgent";
 import { AgentResultDisplay } from "@/components/agents/AgentResultDisplay";
+import { AgentPromptManager } from "@/components/agents/AgentPromptManager";
+import { AgentResultEditor } from "@/components/agents/AgentResultEditor";
 import { Agent } from "@/types/marketing";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -96,6 +98,8 @@ const CompanySummaryPage = () => {
             <TabsList className="mb-6">
               <TabsTrigger value="agent">Run Agent</TabsTrigger>
               <TabsTrigger value="results">View Results</TabsTrigger>
+              <TabsTrigger value="edit">Edit Results</TabsTrigger>
+              <TabsTrigger value="prompts">Manage Prompts</TabsTrigger>
             </TabsList>
 
             <TabsContent value="agent" className="space-y-6">
@@ -111,6 +115,17 @@ const CompanySummaryPage = () => {
                 key={refreshTrigger} 
                 agentId={agent.id} 
               />
+            </TabsContent>
+
+            <TabsContent value="edit" className="space-y-6">
+              <AgentResultEditor 
+                agentId={agent.id} 
+                onSave={() => setRefreshTrigger(prev => prev + 1)}
+              />
+            </TabsContent>
+
+            <TabsContent value="prompts" className="space-y-6">
+              <AgentPromptManager agentId={agent.id} />
             </TabsContent>
           </Tabs>
         ) : (
