@@ -15,6 +15,9 @@ import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 import Settings from "./pages/Settings";
 import CompanySummaryPage from "./pages/CompanySummaryPage";
+import ContactsPage from "./pages/crm/ContactsPage";
+import ContactDetailsPage from "./pages/crm/ContactDetailsPage";
+import DealsPage from "./pages/crm/DealsPage";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +40,11 @@ const App = () => (
               <Route path="/strategy/:id" element={<StrategyDetailsWithNav />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/company-summary" element={<CompanySummaryPage />} />
+              
+              {/* CRM Routes */}
+              <Route path="/crm/contacts" element={<ContactsPage />} />
+              <Route path="/crm/contacts/:id" element={<ContactDetailsPage />} />
+              <Route path="/crm/deals" element={<DealsPage />} />
             </Route>
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
