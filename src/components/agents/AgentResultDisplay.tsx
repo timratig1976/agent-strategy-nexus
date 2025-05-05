@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,13 +37,18 @@ export const AgentResultDisplay: React.FC<AgentResultDisplayProps> = ({ agentId,
 
         if (data) {
           // Map snake_case database columns to camelCase interface properties
+          // Ensure metadata is an object or default to empty object
+          const metadataAsRecord = typeof data.metadata === 'object' && data.metadata !== null 
+            ? data.metadata as Record<string, any> 
+            : {};
+            
           const mappedResult: AgentResult = {
             id: data.id,
             agentId: data.agent_id,
             strategyId: data.strategy_id || "",
             content: data.content,
             createdAt: data.created_at,
-            metadata: data.metadata || {},
+            metadata: metadataAsRecord,
           };
           setResult(mappedResult);
         }
