@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,22 +7,66 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Strategy, Agent, AgentResult } from "@/types/marketing";
-import { ArrowLeft, Play, RefreshCw, Save } from "lucide-react";
+import { Strategy, Agent, AgentResult, StrategyTask, StrategyState } from "@/types/marketing";
+import { ArrowLeft, Play, RefreshCw, Save, ArrowRightCircle, CheckCircle2 } from "lucide-react";
+import StrategyTaskList from "@/components/StrategyTaskList";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/context/AuthProvider";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+const stateOrder: StrategyState[] = ['briefing', 'persona', 'pain_gains', 'funnel', 'ads'];
+
+const stateLabels: Record<StrategyState, string> = {
+  briefing: "Briefing",
+  persona: "Persona Development",
+  pain_gains: "Pain & Gains",
+  funnel: "Funnel Strategy",
+  ads: "Ad Campaign"
+};
+
+const stateColors: Record<StrategyState, string> = {
+  briefing: "bg-blue-100 text-blue-800",
+  persona: "bg-purple-100 text-purple-800",
+  pain_gains: "bg-amber-100 text-amber-800",
+  funnel: "bg-green-100 text-green-800",
+  ads: "bg-pink-100 text-pink-800"
+};
 
 const StrategyDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const [strategy, setStrategy] = useState<Strategy | null>(null);
   const [loading, setLoading] = useState(true);
   const [runningAgent, setRunningAgent] = useState<string | null>(null);
   const [agentInput, setAgentInput] = useState<Record<string, string>>({});
   const [currentTab, setCurrentTab] = useState<string>('overview');
+  const [isProgressDialogOpen, setIsProgressDialogOpen] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+
+  // Check if all tasks in the current state are completed
+  const canProgressToNextState = (strategy: Strategy | null): boolean => {
+    if (!strategy) return false;
+    
+    const currentStateIndex = stateOrder.indexOf(strategy.state);
+    if (currentStateIndex >= stateOrder.length - 1) return false; // Already at the last state
+    
+    const currentStateTasks = strategy.tasks.filter(task => task.state === strategy.state);
+    return currentStateTasks.length > 0 && currentStateTasks.every(task => task.isCompleted);
+  };
+
+  // Get the next state in the progression
+  const getNextState = (currentState: StrategyState): StrategyState | null => {
+    const currentIndex = stateOrder.indexOf(currentState);
+    return currentIndex < stateOrder.length - 1 ? stateOrder[currentIndex + 1] : null;
+  };
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !user) return;
 
     const fetchStrategy = async () => {
       try {
@@ -30,6 +75,7 @@ const StrategyDetails = () => {
           .from('strategies')
           .select('*')
           .eq('id', id)
+          .eq('user_id', user.id)
           .single();
         
         if (strategyError) throw strategyError;
@@ -50,6 +96,14 @@ const StrategyDetails = () => {
         
         if (resultsError) throw resultsError;
         
+        // Fetch tasks for this strategy
+        const { data: tasksData, error: tasksError } = await supabase
+          .from('strategy_tasks')
+          .select('*')
+          .eq('strategy_id', id);
+        
+        if (tasksError) throw tasksError;
+        
         // Transform the data to match our interfaces
         const transformedAgents: Agent[] = agentsData?.map((agent) => ({
           id: agent.id,
@@ -65,8 +119,18 @@ const StrategyDetails = () => {
           strategyId: result.strategy_id || '',
           content: result.content,
           createdAt: result.created_at,
-          // Fix the metadata type issue by ensuring it's a Record<string, any>
           metadata: result.metadata as Record<string, any> || {}
+        })) || [];
+        
+        const transformedTasks: StrategyTask[] = tasksData?.map((task) => ({
+          id: task.id,
+          strategyId: task.strategy_id,
+          title: task.title,
+          description: task.description || '',
+          state: task.state,
+          isCompleted: task.is_completed,
+          createdAt: task.created_at,
+          updatedAt: task.updated_at
         })) || [];
 
         // Combine all data
@@ -75,10 +139,13 @@ const StrategyDetails = () => {
           name: strategyData.name,
           description: strategyData.description || '',
           status: strategyData.status,
+          state: strategyData.state,
           createdAt: strategyData.created_at,
           updatedAt: strategyData.updated_at,
+          userId: strategyData.user_id,
           agents: transformedAgents,
-          results: transformedResults
+          results: transformedResults,
+          tasks: transformedTasks
         });
 
         // Initialize agent input state
@@ -105,7 +172,7 @@ const StrategyDetails = () => {
     };
 
     fetchStrategy();
-  }, [id, toast]);
+  }, [id, toast, user]);
 
   const runAgent = async (agentId: string) => {
     if (!strategy) return;
@@ -175,6 +242,94 @@ const StrategyDetails = () => {
     return strategy.results.find(r => r.agentId === agentId);
   };
 
+  const handleUpdateTasks = (updatedTasks: StrategyTask[]) => {
+    if (!strategy) return;
+    setStrategy({ ...strategy, tasks: updatedTasks });
+  };
+
+  const progressToNextState = async () => {
+    if (!strategy) return;
+    
+    const nextState = getNextState(strategy.state);
+    if (!nextState) return;
+    
+    try {
+      // Update the strategy state
+      const { error: updateError } = await supabase
+        .from('strategies')
+        .update({ state: nextState, status: 'in_progress' })
+        .eq('id', strategy.id);
+      
+      if (updateError) throw updateError;
+      
+      // Add the initial task for the next state if provided
+      if (newTaskTitle.trim()) {
+        const { error: taskError } = await supabase
+          .from('strategy_tasks')
+          .insert({
+            strategy_id: strategy.id,
+            title: newTaskTitle.trim(),
+            state: nextState,
+            is_completed: false
+          });
+        
+        if (taskError) throw taskError;
+      }
+      
+      // Refetch the strategy to get updated data
+      const { data: updatedStrategy, error: fetchError } = await supabase
+        .from('strategies')
+        .select('*')
+        .eq('id', strategy.id)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      // Fetch updated tasks
+      const { data: updatedTasks, error: tasksError } = await supabase
+        .from('strategy_tasks')
+        .select('*')
+        .eq('strategy_id', strategy.id);
+      
+      if (tasksError) throw tasksError;
+      
+      const transformedTasks: StrategyTask[] = updatedTasks?.map((task) => ({
+        id: task.id,
+        strategyId: task.strategy_id,
+        title: task.title,
+        description: task.description || '',
+        state: task.state,
+        isCompleted: task.is_completed,
+        createdAt: task.created_at,
+        updatedAt: task.updated_at
+      })) || [];
+      
+      // Update local state
+      setStrategy({
+        ...strategy,
+        state: updatedStrategy.state,
+        status: updatedStrategy.status,
+        tasks: transformedTasks
+      });
+      
+      // Reset dialog state and close it
+      setNewTaskTitle('');
+      setIsProgressDialogOpen(false);
+      
+      toast({
+        title: "Success",
+        description: `Progressed to ${stateLabels[nextState]} stage`
+      });
+    } catch (error) {
+      console.error('Error updating strategy state:', error);
+      toast({
+        title: "Error",
+        description: "Failed to progress to the next state",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -220,19 +375,44 @@ const StrategyDetails = () => {
       
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold">{strategy.name}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-bold">{strategy.name}</h1>
+            <Badge className={stateColors[strategy.state]}>
+              {stateLabels[strategy.state]}
+            </Badge>
+          </div>
           <p className="text-gray-500 mt-1">{strategy.description}</p>
         </div>
-        <div className="mt-4 md:mt-0">
-          <span className={`px-3 py-1 rounded-full text-sm font-medium
+        <div className="mt-4 md:mt-0 flex items-center gap-2">
+          <Badge className={`
             ${strategy.status === 'completed' ? 'bg-green-100 text-green-800' : 
               strategy.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
               'bg-gray-100 text-gray-800'}`}>
             {strategy.status.replace('_', ' ').toUpperCase()}
-          </span>
+          </Badge>
+          
+          {canProgressToNextState(strategy) && (
+            <Button 
+              onClick={() => setIsProgressDialogOpen(true)}
+              className="ml-2"
+              size="sm"
+            >
+              Progress to Next Stage <ArrowRightCircle className="ml-2 h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {/* Render task lists for current state */}
+        <StrategyTaskList 
+          strategyId={strategy.id}
+          tasks={strategy.tasks}
+          state={strategy.state}
+          onTasksChange={handleUpdateTasks}
+        />
+      </div>
+      
       <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
         <TabsList className="w-full overflow-x-auto flex whitespace-nowrap">
           <TabsTrigger value="overview">Strategy Overview</TabsTrigger>
@@ -358,6 +538,41 @@ const StrategyDetails = () => {
           );
         })}
       </Tabs>
+      
+      {/* Progress to Next State Dialog */}
+      <Dialog open={isProgressDialogOpen} onOpenChange={setIsProgressDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Progress to {getNextState(strategy.state) ? stateLabels[getNextState(strategy.state)!] : 'Next'} Stage</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="mb-4">
+              All tasks for the {stateLabels[strategy.state]} stage are complete.
+              Are you ready to move to the next stage?
+            </p>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-task">Create first task for the next stage (optional)</Label>
+                <Input
+                  id="new-task"
+                  value={newTaskTitle}
+                  onChange={(e) => setNewTaskTitle(e.target.value)}
+                  placeholder="E.g., Complete competitor analysis"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsProgressDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={progressToNextState}>
+              <CheckCircle2 className="mr-2 h-4 w-4" /> 
+              Progress to Next Stage
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

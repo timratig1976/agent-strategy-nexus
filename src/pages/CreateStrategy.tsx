@@ -1,224 +1,146 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { AgentType } from "@/types/marketing";
-
-const AGENT_TYPES: { id: AgentType; name: string; description: string }[] = [
-  { 
-    id: "audience", 
-    name: "Audience Analysis", 
-    description: "Analyzes your target audience and creates detailed persona profiles." 
-  },
-  { 
-    id: "content", 
-    name: "Content Strategy", 
-    description: "Develops content ideas and calendar based on audience and trends."
-  },
-  { 
-    id: "seo", 
-    name: "SEO Optimization", 
-    description: "Recommends keywords and optimization strategies for better search ranking."
-  },
-  { 
-    id: "social", 
-    name: "Social Media", 
-    description: "Creates social media strategy and content recommendations."
-  },
-  { 
-    id: "email", 
-    name: "Email Marketing", 
-    description: "Develops email campaign strategies and content templates."
-  },
-  { 
-    id: "analytics", 
-    name: "Analytics & Reporting", 
-    description: "Sets up KPIs and reports on marketing performance metrics."
-  }
-];
+import { ArrowLeft } from "lucide-react";
+import { useAuth } from "@/context/AuthProvider";
 
 const CreateStrategy = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [selectedAgents, setSelectedAgents] = useState<AgentType[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleAgentToggle = (agentType: AgentType) => {
-    setSelectedAgents((prev) =>
-      prev.includes(agentType)
-        ? prev.filter((a) => a !== agentType)
-        : [...prev, agentType]
-    );
-  };
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "You need to be signed in to create a strategy",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     if (!name.trim()) {
       toast({
-        title: "Error",
-        description: "Please enter a strategy name",
-        variant: "destructive",
+        title: "Missing Information",
+        description: "Please provide a name for your strategy",
+        variant: "destructive"
       });
       return;
     }
-
-    if (selectedAgents.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please select at least one agent",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-
+    
+    setSubmitting(true);
+    
     try {
-      // Insert the new strategy
-      const { data: strategyData, error: strategyError } = await supabase
+      // Create the strategy
+      const { data: strategy, error: strategyError } = await supabase
         .from('strategies')
         .insert({
-          name,
-          description,
+          name: name.trim(),
+          description: description.trim(),
+          user_id: user.id,
+          state: 'briefing',
           status: 'draft',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
         })
-        .select('id')
+        .select()
         .single();
-
+      
       if (strategyError) throw strategyError;
-
-      // Insert the agents for this strategy
-      const agentsToInsert = selectedAgents.map(agentType => {
-        const agentInfo = AGENT_TYPES.find(a => a.id === agentType);
-        return {
-          strategyId: strategyData.id,
-          type: agentType,
-          name: agentInfo?.name || agentType,
-          description: agentInfo?.description || "",
-          isActive: true
-        };
-      });
-
-      const { error: agentsError } = await supabase
-        .from('agents')
-        .insert(agentsToInsert);
-
-      if (agentsError) throw agentsError;
-
+      
+      // Add initial task
+      const initialTask = {
+        strategy_id: strategy.id,
+        title: "Define your marketing goals",
+        state: 'briefing',
+        is_completed: false
+      };
+      
+      const { error: taskError } = await supabase
+        .from('strategy_tasks')
+        .insert(initialTask);
+      
+      if (taskError) throw taskError;
+      
       toast({
-        title: "Success",
-        description: "Strategy created successfully!",
+        title: "Strategy Created",
+        description: "Your marketing strategy has been created successfully"
       });
-
-      navigate(`/strategy/${strategyData.id}`);
+      
+      navigate(`/strategy/${strategy.id}`);
     } catch (error) {
       console.error('Error creating strategy:', error);
       toast({
         title: "Error",
         description: "Failed to create strategy",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Create New Marketing Strategy</h1>
+      <div className="flex justify-start">
+        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back
+        </Button>
+      </div>
       
-      <Card>
-        <form onSubmit={handleSubmit}>
+      <div className="max-w-2xl mx-auto">
+        <Card>
           <CardHeader>
-            <CardTitle>Strategy Details</CardTitle>
+            <CardTitle className="text-2xl">Create New Marketing Strategy</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="name">Strategy Name</Label>
-              <Input
-                id="name"
-                placeholder="Enter strategy name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Describe your marketing strategy goals"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="min-h-[100px]"
-              />
-            </div>
-            
-            <div className="space-y-4">
-              <Label>Select Marketing Agents</Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {AGENT_TYPES.map((agent) => (
-                  <div
-                    key={agent.id}
-                    className={`p-4 border rounded-md cursor-pointer transition-colors ${
-                      selectedAgents.includes(agent.id)
-                        ? "border-primary bg-primary/10"
-                        : "border-border hover:border-primary/50"
-                    }`}
-                    onClick={() => handleAgentToggle(agent.id)}
-                  >
-                    <div className="flex items-start gap-3">
-                      <Checkbox
-                        id={`agent-${agent.id}`}
-                        checked={selectedAgents.includes(agent.id)}
-                        onCheckedChange={() => handleAgentToggle(agent.id)}
-                      />
-                      <div>
-                        <Label
-                          htmlFor={`agent-${agent.id}`}
-                          className="font-medium cursor-pointer"
-                        >
-                          {agent.name}
-                        </Label>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {agent.description}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+          
+          <form onSubmit={handleSubmit}>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="name">Strategy Name</Label>
+                <Input 
+                  id="name" 
+                  placeholder="E.g., Q3 Product Launch Strategy"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
               </div>
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate(-1)}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Creating..." : "Create Strategy"}
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
+              
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea 
+                  id="description" 
+                  placeholder="Briefly describe your marketing strategy and objectives..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={5}
+                />
+              </div>
+            </CardContent>
+            
+            <CardFooter className="flex justify-between">
+              <Button type="button" variant="outline" onClick={() => navigate('/dashboard')}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? "Creating..." : "Create Strategy"}
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
+      </div>
     </div>
   );
 };

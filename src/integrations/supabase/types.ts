@@ -95,26 +95,73 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          state: Database["public"]["Enums"]["strategy_state"]
           status: Database["public"]["Enums"]["strategy_status"]
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
           description?: string | null
           id?: string
           name: string
+          state?: Database["public"]["Enums"]["strategy_state"]
           status?: Database["public"]["Enums"]["strategy_status"]
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
           description?: string | null
           id?: string
           name?: string
+          state?: Database["public"]["Enums"]["strategy_state"]
           status?: Database["public"]["Enums"]["strategy_status"]
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
+      }
+      strategy_tasks: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_completed: boolean
+          state: Database["public"]["Enums"]["strategy_state"]
+          strategy_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_completed?: boolean
+          state: Database["public"]["Enums"]["strategy_state"]
+          strategy_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_completed?: boolean
+          state?: Database["public"]["Enums"]["strategy_state"]
+          strategy_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategy_tasks_strategy_id_fkey"
+            columns: ["strategy_id"]
+            isOneToOne: false
+            referencedRelation: "strategies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -131,6 +178,7 @@ export type Database = {
         | "social"
         | "email"
         | "analytics"
+      strategy_state: "briefing" | "persona" | "pain_gains" | "funnel" | "ads"
       strategy_status: "draft" | "in_progress" | "completed"
     }
     CompositeTypes: {
@@ -255,6 +303,7 @@ export const Constants = {
         "email",
         "analytics",
       ],
+      strategy_state: ["briefing", "persona", "pain_gains", "funnel", "ads"],
       strategy_status: ["draft", "in_progress", "completed"],
     },
   },

@@ -4,38 +4,97 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Strategy } from "@/types/marketing";
-import { PlusCircle } from "lucide-react";
+import { Strategy, StrategyState } from "@/types/marketing";
+import { PlusCircle, Loader2, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/context/AuthProvider";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+
+const stateLabels: Record<StrategyState, string> = {
+  briefing: "Briefing",
+  persona: "Persona Development",
+  pain_gains: "Pain & Gains",
+  funnel: "Funnel Strategy",
+  ads: "Ad Campaign"
+};
+
+const stateColors: Record<StrategyState, string> = {
+  briefing: "bg-blue-100 text-blue-800",
+  persona: "bg-purple-100 text-purple-800",
+  pain_gains: "bg-amber-100 text-amber-800",
+  funnel: "bg-green-100 text-green-800",
+  ads: "bg-pink-100 text-pink-800"
+};
 
 const Dashboard = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStrategies = async () => {
+      if (!user) return;
+      
       try {
-        const { data, error } = await supabase
+        setLoading(true);
+        
+        // Fetch strategies
+        const { data: strategyData, error: strategyError } = await supabase
           .from('strategies')
           .select('*')
+          .eq('user_id', user.id)
           .order('updated_at', { ascending: false });
         
-        if (error) {
-          throw error;
+        if (strategyError) {
+          throw strategyError;
+        }
+
+        // Fetch tasks for all strategies
+        const strategyIds = strategyData.map(s => s.id);
+        let tasksData: any[] = [];
+        
+        if (strategyIds.length > 0) {
+          const { data: fetchedTasks, error: tasksError } = await supabase
+            .from('strategy_tasks')
+            .select('*')
+            .in('strategy_id', strategyIds);
+            
+          if (tasksError) {
+            throw tasksError;
+          }
+          
+          tasksData = fetchedTasks || [];
         }
 
         // Transform the data to match our Strategy interface
-        const transformedStrategies: Strategy[] = (data || []).map(item => ({
-          id: item.id,
-          name: item.name,
-          description: item.description || '',
-          status: item.status,
-          createdAt: item.created_at,
-          updatedAt: item.updated_at,
-          agents: [],  // We'll fetch these separately if needed
-          results: []  // We'll fetch these separately if needed
-        }));
+        const transformedStrategies: Strategy[] = (strategyData || []).map(item => {
+          const strategyTasks = tasksData.filter(task => task.strategy_id === item.id).map(task => ({
+            id: task.id,
+            strategyId: task.strategy_id,
+            title: task.title,
+            description: task.description || '',
+            state: task.state,
+            isCompleted: task.is_completed,
+            createdAt: task.created_at,
+            updatedAt: task.updated_at
+          }));
+          
+          return {
+            id: item.id,
+            name: item.name,
+            description: item.description || '',
+            status: item.status,
+            state: item.state,
+            createdAt: item.created_at,
+            updatedAt: item.updated_at,
+            userId: item.user_id,
+            agents: [],
+            results: [],
+            tasks: strategyTasks
+          };
+        });
 
         setStrategies(transformedStrategies);
       } catch (error) {
@@ -51,7 +110,14 @@ const Dashboard = () => {
     };
 
     fetchStrategies();
-  }, [toast]);
+  }, [toast, user]);
+
+  // Calculate progress percentage for a strategy based on completed tasks
+  const calculateProgress = (strategy: Strategy): number => {
+    if (strategy.tasks.length === 0) return 0;
+    const completedTasks = strategy.tasks.filter(task => task.isCompleted).length;
+    return Math.round((completedTasks / strategy.tasks.length) * 100);
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -68,11 +134,12 @@ const Dashboard = () => {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <Card key={i} className="h-[200px] animate-pulse">
+            <Card key={i} className="h-[260px] animate-pulse">
               <CardHeader className="bg-gray-100 dark:bg-gray-800 h-[60px]"></CardHeader>
               <CardContent className="p-6">
                 <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-3/4 mb-3"></div>
-                <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-1/2 mb-4"></div>
+                <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded w-full mt-4"></div>
               </CardContent>
             </Card>
           ))}
@@ -92,7 +159,12 @@ const Dashboard = () => {
             <Link to={`/strategy/${strategy.id}`} key={strategy.id}>
               <Card className="h-full hover:shadow-lg transition-shadow">
                 <CardHeader>
-                  <CardTitle>{strategy.name}</CardTitle>
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="mr-2">{strategy.name}</CardTitle>
+                    <Badge className={stateColors[strategy.state]}>
+                      {stateLabels[strategy.state]}
+                    </Badge>
+                  </div>
                   <CardDescription>
                     {new Date(strategy.updatedAt).toLocaleDateString()}
                   </CardDescription>
@@ -105,11 +177,23 @@ const Dashboard = () => {
                         'bg-gray-100 text-gray-800'}`}>
                       {strategy.status.replace('_', ' ').toUpperCase()}
                     </span>
-                    <span className="text-sm text-gray-500">
-                      {strategy.agents?.length || 0} agents
-                    </span>
                   </div>
-                  <p className="text-sm text-gray-600 line-clamp-2">{strategy.description}</p>
+                  
+                  <p className="text-sm text-gray-600 line-clamp-2 mb-4">{strategy.description}</p>
+                  
+                  <div className="mt-4">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Progress</span>
+                      <span>{calculateProgress(strategy)}%</span>
+                    </div>
+                    <Progress value={calculateProgress(strategy)} className="h-2" />
+                    
+                    <div className="flex justify-end mt-4">
+                      <span className="text-xs text-muted-foreground flex items-center">
+                        View Details <ArrowRight className="ml-1 h-3 w-3" />
+                      </span>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </Link>
