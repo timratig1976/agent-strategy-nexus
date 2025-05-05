@@ -1,13 +1,13 @@
 
 import React from "react";
+import NavBar from "@/components/NavBar";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { StrategyTask } from "@/types/marketing";
 import StrategyTaskList from "@/components/StrategyTaskList";
 
-// This component is now being used through StrategyDetailsWithNav.tsx
-const StrategyDetails = () => {
+const StrategyDetailsWithNav = () => {
   const { id } = useParams<{ id: string }>();
   
   // Fetch strategy details
@@ -62,47 +62,56 @@ const StrategyDetails = () => {
   
   if (isStrategyLoading || isTasksLoading) {
     return (
-      <div className="container mx-auto p-4">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <>
+        <NavBar />
+        <div className="container mx-auto p-4">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
   
   if (!strategy) {
     return (
-      <div className="container mx-auto p-4">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Strategy not found</h1>
-          <p>The strategy you're looking for doesn't exist or has been removed.</p>
+      <>
+        <NavBar />
+        <div className="container mx-auto p-4">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Strategy not found</h1>
+            <p>The strategy you're looking for doesn't exist or has been removed.</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">{strategy.title}</h1>
-      
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">Description</h2>
-        <p className="text-gray-700">{strategy.description}</p>
+    <>
+      <NavBar />
+      <div className="container mx-auto p-4">
+        <h1 className="text-3xl font-bold mb-6">{strategy.title}</h1>
+        
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-2">Description</h2>
+          <p className="text-gray-700">{strategy.description}</p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+          {['briefing', 'persona', 'pain_gains', 'funnel', 'ads'].map((state) => (
+            <StrategyTaskList
+              key={state}
+              strategyId={id || ''}
+              tasks={tasks || []}
+              state={state as any}
+              onTasksChange={handleTasksChange}
+            />
+          ))}
+        </div>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-        {['briefing', 'persona', 'pain_gains', 'funnel', 'ads'].map((state) => (
-          <StrategyTaskList
-            key={state}
-            strategyId={id || ''}
-            tasks={tasks || []}
-            state={state as any}
-            onTasksChange={handleTasksChange}
-          />
-        ))}
-      </div>
-    </div>
+    </>
   );
 };
 
-export default StrategyDetails;
+export default StrategyDetailsWithNav;
