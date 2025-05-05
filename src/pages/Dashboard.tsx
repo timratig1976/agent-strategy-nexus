@@ -10,6 +10,7 @@ import { useAuth } from "@/context/AuthProvider";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import NavBar from "@/components/NavBar";
+import CompanyLogo from "@/components/CompanyLogo";
 
 const stateLabels: Record<StrategyState, string> = {
   briefing: "Briefing",
@@ -162,7 +163,10 @@ const Dashboard = () => {
               <Card className="h-full hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex justify-between items-start">
-                    <CardTitle className="mr-2">{strategy.name}</CardTitle>
+                    <div className="flex gap-2">
+                      <CompanyLogo size="sm" />
+                      <CardTitle className="mr-2">{strategy.name}</CardTitle>
+                    </div>
                     <Badge className={stateColors[strategy.state]}>
                       {stateLabels[strategy.state]}
                     </Badge>

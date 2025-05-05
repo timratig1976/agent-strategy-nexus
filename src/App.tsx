@@ -13,6 +13,7 @@ import StrategyDetailsWithNav from "./pages/StrategyDetailsWithNav";
 import SetupDatabase from "./pages/SetupDatabase";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/create-strategy" element={<CreateStrategy />} />
               <Route path="/strategy/:id" element={<StrategyDetailsWithNav />} />
+              <Route path="/settings" element={<Settings />} />
             </Route>
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

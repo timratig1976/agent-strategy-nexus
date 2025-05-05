@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { StrategyTask } from "@/types/marketing";
 import StrategyTaskList from "@/components/StrategyTaskList";
+import CompanyLogo from "@/components/CompanyLogo";
 
 const StrategyDetailsWithNav = () => {
   const { id } = useParams<{ id: string }>();
@@ -91,7 +92,10 @@ const StrategyDetailsWithNav = () => {
     <>
       <NavBar />
       <div className="container mx-auto p-4">
-        <h1 className="text-3xl font-bold mb-6">{strategy.name}</h1>
+        <div className="flex items-center gap-3 mb-6">
+          <CompanyLogo size="md" />
+          <h1 className="text-3xl font-bold">{strategy.name}</h1>
+        </div>
         
         <div className="mb-6">
           <h2 className="text-xl font-semibold mb-2">Description</h2>
