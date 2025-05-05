@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthProvider";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import NavBar from "@/components/NavBar";
 
 const stateLabels: Record<StrategyState, string> = {
   briefing: "Briefing",
@@ -121,6 +121,8 @@ const Dashboard = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <NavBar />
+      
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Marketing Strategies</h1>
         <Link to="/create-strategy">

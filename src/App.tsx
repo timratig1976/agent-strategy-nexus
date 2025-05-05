@@ -9,7 +9,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import CreateStrategy from "./pages/CreateStrategy";
-import StrategyDetails from "./pages/StrategyDetails";
+import StrategyDetailsWithNav from "./pages/StrategyDetailsWithNav";
 import SetupDatabase from "./pages/SetupDatabase";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
@@ -32,7 +32,7 @@ const App = () => (
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/create-strategy" element={<CreateStrategy />} />
-              <Route path="/strategy/:id" element={<StrategyDetails />} />
+              <Route path="/strategy/:id" element={<StrategyDetailsWithNav />} />
             </Route>
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

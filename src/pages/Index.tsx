@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { useAuth } from "@/context/AuthProvider";
 import { LogOut } from "lucide-react";
+import NavBar from "@/components/NavBar";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -46,6 +47,8 @@ const Index = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
+      {user && <NavBar />}
+      
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-bold">Marketing Strategy Hub</h1>
         {user ? (

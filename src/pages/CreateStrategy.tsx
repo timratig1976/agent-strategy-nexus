@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/context/AuthProvider";
 import { StrategyState } from "@/types/marketing";
+import NavBar from "@/components/NavBar";
 
 const CreateStrategy = () => {
   const navigate = useNavigate();
@@ -94,6 +95,8 @@ const CreateStrategy = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <NavBar />
+      
       <div className="flex justify-start">
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
           <ArrowLeft className="mr-2 h-4 w-4" /> Back
