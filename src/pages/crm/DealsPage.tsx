@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -109,8 +108,10 @@ const DealsPage: React.FC = () => {
 
   const onSubmit = async (values: FormValues) => {
     try {
+      // Ensure name property is provided (required by the database)
       const { error } = await supabase.from("deals").insert({
         ...values,
+        name: values.name, // Explicitly include required field
       });
 
       if (error) throw error;

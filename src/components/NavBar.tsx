@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthProvider";
 import { Button } from "@/components/ui/button";
@@ -6,13 +5,13 @@ import { cn } from "@/lib/utils";
 import { LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function NavBar() {
   const { user, signOut } = useAuth();
   const [open, setOpen] = useState(false);
   const location = useLocation();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
 
   // Get the current route for active link highlighting
   const currentRoute = location.pathname;
