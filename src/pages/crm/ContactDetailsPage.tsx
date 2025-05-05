@@ -54,9 +54,9 @@ const ContactDetailsPage: React.FC<ContactDetailsPageProps> = () => {
     name: "",
     status: "new",
     notes: "",
-    amount: undefined,
+    amount: undefined as number | undefined,
     currency: "USD",
-    expected_close_date: undefined,
+    expected_close_date: undefined as string | undefined,
   });
 
   // State for dialogs
@@ -143,8 +143,8 @@ const ContactDetailsPage: React.FC<ContactDetailsPageProps> = () => {
   }, [id, refetchInteractions, refetchDeals]);
 
   // Mutations for adding interactions and deals
-  const addInteractionMutation = useMutation(
-    async () => {
+  const addInteractionMutation = useMutation({
+    mutationFn: async () => {
       if (!newInteractionData.type || !newInteractionData.description) {
         toast({
           title: "Required fields missing",
@@ -163,29 +163,27 @@ const ContactDetailsPage: React.FC<ContactDetailsPageProps> = () => {
 
       if (error) throw error;
     },
-    {
-      onSuccess: () => {
-        toast({
-          title: "Interaction added",
-          description: "New interaction has been added to the contact",
-        });
-        setNewInteractionData({ type: "", description: "", date: new Date().toISOString() });
-        setOpenInteractionDialog(false);
-        queryClient.invalidateQueries(["interactions", id]);
-      },
-      onError: (error: any) => {
-        console.error("Error adding interaction:", error);
-        toast({
-          title: "Error",
-          description: "Failed to add interaction",
-          variant: "destructive",
-        });
-      },
-    }
-  );
+    onSuccess: () => {
+      toast({
+        title: "Interaction added",
+        description: "New interaction has been added to the contact",
+      });
+      setNewInteractionData({ type: "", description: "", date: new Date().toISOString() });
+      setOpenInteractionDialog(false);
+      queryClient.invalidateQueries({ queryKey: ["interactions", id] });
+    },
+    onError: (error: any) => {
+      console.error("Error adding interaction:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add interaction",
+        variant: "destructive",
+      });
+    },
+  });
 
-  const addDealMutation = useMutation(
-    async () => {
+  const addDealMutation = useMutation({
+    mutationFn: async () => {
       if (!newDealData.name) {
         toast({
           title: "Deal name is required",
@@ -207,26 +205,24 @@ const ContactDetailsPage: React.FC<ContactDetailsPageProps> = () => {
 
       if (error) throw error;
     },
-    {
-      onSuccess: () => {
-        toast({
-          title: "Deal added",
-          description: "New deal has been added to the contact",
-        });
-        setNewDealData({ name: "", status: "new", notes: "", amount: undefined, currency: "USD", expected_close_date: undefined });
-        setOpenDealDialog(false);
-        queryClient.invalidateQueries(["deals", id]);
-      },
-      onError: (error: any) => {
-        console.error("Error adding deal:", error);
-        toast({
-          title: "Error",
-          description: "Failed to add deal",
-          variant: "destructive",
-        });
-      },
-    }
-  );
+    onSuccess: () => {
+      toast({
+        title: "Deal added",
+        description: "New deal has been added to the contact",
+      });
+      setNewDealData({ name: "", status: "new", notes: "", amount: undefined, currency: "USD", expected_close_date: undefined });
+      setOpenDealDialog(false);
+      queryClient.invalidateQueries({ queryKey: ["deals", id] });
+    },
+    onError: (error: any) => {
+      console.error("Error adding deal:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add deal",
+        variant: "destructive",
+      });
+    },
+  });
 
   const deleteContact = async () => {
     try {
@@ -259,7 +255,7 @@ const ContactDetailsPage: React.FC<ContactDetailsPageProps> = () => {
         title: "Interaction deleted",
         description: "The interaction has been removed",
       });
-      queryClient.invalidateQueries(["interactions", id]);
+      queryClient.invalidateQueries({ queryKey: ["interactions", id] });
     } catch (error) {
       console.error("Error deleting interaction:", error);
       toast({
@@ -280,7 +276,7 @@ const ContactDetailsPage: React.FC<ContactDetailsPageProps> = () => {
         title: "Deal deleted",
         description: "The deal has been removed",
       });
-      queryClient.invalidateQueries(["deals", id]);
+      queryClient.invalidateQueries({ queryKey: ["deals", id] });
     } catch (error) {
       console.error("Error deleting deal:", error);
       toast({
