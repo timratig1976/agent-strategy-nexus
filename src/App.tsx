@@ -35,19 +35,22 @@ const App = () => (
             
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
+              {/* Marketing Strategy Routes */}
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/create-strategy" element={<CreateStrategy />} />
               <Route path="/strategy/:id" element={<StrategyDetailsWithNav />} />
-              <Route path="/settings" element={<Settings />} />
               <Route path="/company-summary" element={<CompanySummaryPage />} />
               
               {/* CRM Routes */}
               <Route path="/crm/contacts" element={<ContactsPage />} />
               <Route path="/crm/contacts/:id" element={<ContactDetailsPage />} />
               <Route path="/crm/deals" element={<DealsPage />} />
+              
+              {/* Shared Routes */}
+              <Route path="/settings" element={<Settings />} />
             </Route>
             
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
