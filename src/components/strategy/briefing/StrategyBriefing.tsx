@@ -10,13 +10,15 @@ import StrategyInfoCard from "./StrategyInfoCard";
 import BriefingResultCard from "./BriefingResultCard";
 import WebsiteCrawlerWrapper from "./WebsiteCrawlerWrapper";
 import { WebsiteCrawlResult } from "@/components/marketing/modules/website-crawler/types";
+import { Progress } from "@/components/ui/progress";
 
 const StrategyBriefing: React.FC<StrategyBriefingProps> = ({ 
   strategy, 
-  agentResults = [] // Provide a default empty array
+  agentResults = [] 
 }) => {
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [showCrawler, setShowCrawler] = useState(false);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [progress, setProgress] = useState<number>(0);
+  const [showCrawler, setShowCrawler] = useState<boolean>(false);
   const [crawlResults, setCrawlResults] = useState<WebsiteCrawlResult | undefined>();
   const [formValues, setFormValues] = useState<StrategyFormValues>({
     name: strategy.name,
@@ -57,10 +59,22 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
     fetchFormData();
   }, [strategy.id, strategy.name, strategy.description]);
   
-  // Function to generate AI briefing
+  // Function to generate AI briefing with progress updates
   const generateBriefing = async () => {
     try {
       setIsGenerating(true);
+      setProgress(10);
+      
+      // Simulate progress updates
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 1000);
       
       const { data, error } = await MarketingAIService.generateContent<AgentResult>(
         'briefing',
@@ -70,6 +84,9 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
           formData: formValues
         }
       );
+      
+      clearInterval(progressInterval);
+      setProgress(100);
       
       if (error) throw new Error(error);
       
@@ -82,6 +99,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
     } catch (error: any) {
       console.error("Error generating briefing:", error);
       toast.error("Failed to generate AI briefing");
+      setProgress(0);
     } finally {
       setIsGenerating(false);
     }
@@ -143,6 +161,15 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
 
   return (
     <div className="space-y-6">
+      {isGenerating && (
+        <div className="mb-4">
+          <div className="flex justify-between mb-2 text-sm">
+            <span>Generating AI briefing...</span>
+            <span>{progress}%</span>
+          </div>
+          <Progress value={progress} className="w-full" />
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           {showCrawler ? (

@@ -1,9 +1,10 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { AIResultEditor } from "@/components/marketing/shared/AIResultEditor";
+import { Skeleton } from "@/components/ui/skeleton";
 import { BriefingResultCardProps } from "./types";
 
 const BriefingResultCard: React.FC<BriefingResultCardProps> = ({
@@ -13,7 +14,7 @@ const BriefingResultCard: React.FC<BriefingResultCardProps> = ({
   saveAgentResult
 }) => {
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>AI Briefing</span>
@@ -26,9 +27,23 @@ const BriefingResultCard: React.FC<BriefingResultCardProps> = ({
             {isGenerating ? "Generating..." : latestBriefing ? "Regenerate" : "Generate"}
           </Button>
         </CardTitle>
+        {!latestBriefing && !isGenerating && (
+          <CardDescription>
+            Generate an AI briefing based on your strategy information
+          </CardDescription>
+        )}
       </CardHeader>
       <CardContent>
-        {latestBriefing ? (
+        {isGenerating ? (
+          <div className="space-y-3">
+            <Skeleton className="h-[20px] w-[250px]" />
+            <Skeleton className="h-[20px] w-full" />
+            <Skeleton className="h-[20px] w-[270px]" />
+            <Skeleton className="h-[20px] w-full" />
+            <Skeleton className="h-[20px] w-[290px]" />
+            <Skeleton className="h-[20px] w-full" />
+          </div>
+        ) : latestBriefing ? (
           <AIResultEditor 
             title="Edit Briefing"
             description="Fine-tune the AI-generated content"
