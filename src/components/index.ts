@@ -6,6 +6,8 @@ import DatabaseStatus from "./home/DatabaseStatus";
 import HowItWorks from "./home/HowItWorks";
 import MarketingTabContent from "./home/MarketingTabContent";
 import CrmTabContent from "./home/CrmTabContent";
+import StrategyCards from "./home/marketing/StrategyCards";
+import QuickAccessTools from "./home/marketing/QuickAccessTools";
 
 export {
   NavBar,
@@ -14,5 +16,7 @@ export {
   DatabaseStatus,
   HowItWorks,
   MarketingTabContent,
-  CrmTabContent
+  CrmTabContent,
+  StrategyCards,
+  QuickAccessTools
 };
