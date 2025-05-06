@@ -12,6 +12,9 @@ interface PageHeaderProps {
 const PageHeader = ({ user, onLogout }: PageHeaderProps) => {
   const navigate = useNavigate();
   
+  // Get user display name or email
+  const userDisplayName = user?.email || "User";
+  
   return (
     <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8 pb-6 border-b">
       <div>
@@ -24,7 +27,7 @@ const PageHeader = ({ user, onLogout }: PageHeaderProps) => {
       {user ? (
         <div className="flex items-center gap-3">
           <div className="bg-muted px-3 py-1.5 rounded-full text-sm text-muted-foreground">
-            {user.email}
+            {userDisplayName}
           </div>
           <Button variant="outline" size="sm" onClick={onLogout}>
             <LogOut className="h-4 w-4 mr-2" />
