@@ -9,7 +9,8 @@ import BriefingResultCard from "./BriefingResultCard";
 import WebsiteCrawlerWrapper from "./WebsiteCrawlerWrapper";
 import { WebsiteCrawlResult } from "@/components/marketing/modules/website-crawler/types";
 import { useBriefingGenerator } from "./hooks/useBriefingGenerator";
-import BriefingProgressBar from "./components/BriefingProgressBar";
+import { BriefingProgressBar } from "./components";
+import { AgentResult } from "@/types/marketing";
 
 const StrategyBriefing: React.FC<StrategyBriefingProps> = ({ 
   strategy, 
