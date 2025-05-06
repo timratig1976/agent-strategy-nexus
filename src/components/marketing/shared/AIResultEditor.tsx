@@ -12,7 +12,7 @@ interface AIResultEditorProps<T> {
   description: string;
   originalContent: T;
   contentField: keyof T;
-  onSave: (updatedContent: T) => void;
+  onSave: (updatedContent: T) => Promise<boolean> | boolean;
   isLoading?: boolean;
 }
 

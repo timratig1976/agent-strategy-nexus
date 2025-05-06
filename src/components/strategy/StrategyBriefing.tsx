@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,6 +11,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { StrategyFormValues } from "@/components/strategy-form";
 import { WebsiteCrawlingModule } from "@/components/marketing/modules/website-crawler";
 import { MarketingAIService } from "@/services/marketingAIService";
+
+interface StrategyMetadata {
+  id?: string;
+  strategy_id?: string;
+  company_name: string;
+  website_url: string;
+  product_description: string;
+  product_url: string;
+  additional_info: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
 interface StrategyBriefingProps {
   strategy: Strategy;
@@ -30,25 +42,25 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({ strategy, agentResu
     additionalInfo: ''
   });
 
-  // Fetch strategy form data
-  React.useEffect(() => {
+  // Fetch strategy metadata
+  useEffect(() => {
     const fetchFormData = async () => {
       try {
-        // Using raw SQL query to get around type issues with the strategy_metadata table
         const { data, error } = await supabase
           .rpc('get_strategy_metadata', { strategy_id_param: strategy.id });
           
         if (error) throw error;
         
-        if (data) {
+        if (data && data.length > 0) {
+          const metadata = data[0] as StrategyMetadata;
           setFormValues({
             name: strategy.name,
             description: strategy.description,
-            companyName: data.company_name || '',
-            websiteUrl: data.website_url || '',
-            productDescription: data.product_description || '',
-            productUrl: data.product_url || '',
-            additionalInfo: data.additional_info || ''
+            companyName: metadata.company_name || '',
+            websiteUrl: metadata.website_url || '',
+            productDescription: metadata.product_description || '',
+            productUrl: metadata.product_url || '',
+            additionalInfo: metadata.additional_info || ''
           });
         }
       } catch (error) {
@@ -185,8 +197,8 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({ strategy, agentResu
                 title="Strategy Details"
                 description="Edit strategy information to improve AI briefing"
                 originalContent={formValues}
-                contentField="content"
-                onSave={(updatedContent) => saveStrategyMetadata(updatedContent.content)}
+                contentField="formValues"
+                onSave={(updatedContent) => saveStrategyMetadata(updatedContent.formValues)}
               />
             )}
           </CardContent>
