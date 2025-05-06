@@ -19,6 +19,8 @@ import ContactsPage from "./pages/crm/ContactsPage";
 import ContactDetailsPage from "./pages/crm/ContactDetailsPage";
 import DealsPage from "./pages/crm/DealsPage";
 import CrmDashboardPage from "./pages/crm/DashboardPage";
+import MarketingHubPage from "./pages/MarketingHubPage";
+import ModulePage from "./pages/ModulePage";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthProvider";
@@ -55,6 +57,8 @@ const AppContent = () => {
           <Route path="/create-strategy" element={<CreateStrategy />} />
           <Route path="/strategy/:id" element={<StrategyDetailsWithNav />} />
           <Route path="/company-summary" element={<CompanySummaryPage />} />
+          <Route path="/marketing-hub" element={<MarketingHubPage />} />
+          <Route path="/marketing/module" element={<ModulePage />} />
           
           {/* CRM Routes */}
           <Route path="/crm/dashboard" element={<CrmDashboardPage />} />
