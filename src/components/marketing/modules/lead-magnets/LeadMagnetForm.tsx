@@ -1,21 +1,14 @@
 
 import React from "react";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { AlertCircle, Loader2 } from "lucide-react";
-import { LeadMagnetFormData } from "./types";
+import { Label } from "@/components/ui/label";
+import { Loader } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Checkbox } from "@/components/ui/checkbox";
+import { CheckboxGroup } from "@/components/ui/checkbox-group";
+import { LeadMagnetFormData } from "./types";
 
 interface LeadMagnetFormProps {
   formData: LeadMagnetFormData;
@@ -32,59 +25,18 @@ const LeadMagnetForm = ({
   isGenerating,
   error
 }: LeadMagnetFormProps) => {
-  // Available options for multiselect fields
-  const marketingGoalsOptions = [
-    { id: "lead_generation", label: "Lead Generation" },
-    { id: "email_list_building", label: "Email List Building" },
-    { id: "audience_education", label: "Audience Education" },
-    { id: "establish_authority", label: "Establish Authority" },
-    { id: "increase_sales", label: "Increase Sales" },
-    { id: "customer_retention", label: "Customer Retention" }
-  ];
+  const updateFormField = (field: keyof LeadMagnetFormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
-  const brandVoiceOptions = [
-    { id: "professional", label: "Professional" },
-    { id: "friendly", label: "Friendly" },
-    { id: "authoritative", label: "Authoritative" },
-    { id: "innovative", label: "Innovative" },
-    { id: "educational", label: "Educational" },
-    { id: "conversational", label: "Conversational" }
-  ];
-
-  const funnelStageOptions = [
-    { id: "awareness", label: "Awareness (Top of Funnel)" },
-    { id: "consideration", label: "Consideration (Middle of Funnel)" },
-    { id: "conversion", label: "Conversion (Bottom of Funnel)" },
-    { id: "retention", label: "Retention (Existing Customers)" }
-  ];
-
-  const contentFormatOptions = [
-    { id: "ebook", label: "eBook / Guide" },
-    { id: "checklist", label: "Checklist" },
-    { id: "template", label: "Template / Worksheet" },
-    { id: "webinar", label: "Webinar / Workshop" },
-    { id: "case_study", label: "Case Study" },
-    { id: "video_series", label: "Video Series" },
-    { id: "email_course", label: "Email Course" },
-    { id: "quiz", label: "Quiz / Assessment" }
-  ];
-
-  const handleCheckboxChange = (
-    field: keyof Pick<LeadMagnetFormData, "marketingGoals" | "brandVoice" | "funnelStage" | "contentFormats">,
-    itemId: string,
-    checked: boolean
-  ) => {
+  const updateCheckboxArray = (field: keyof LeadMagnetFormData, value: string, checked: boolean) => {
     setFormData(prev => {
+      const currentValues = Array.isArray(prev[field]) ? [...prev[field]] as string[] : [];
+      
       if (checked) {
-        return {
-          ...prev,
-          [field]: [...prev[field], itemId]
-        };
+        return { ...prev, [field]: [...currentValues, value] };
       } else {
-        return {
-          ...prev,
-          [field]: prev[field].filter(id => id !== itemId)
-        };
+        return { ...prev, [field]: currentValues.filter(v => v !== value) };
       }
     });
   };
@@ -94,26 +46,51 @@ const LeadMagnetForm = ({
     onGenerate();
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+  const marketingGoalsOptions = [
+    { label: "Increase brand awareness", value: "awareness" },
+    { label: "Generate leads", value: "leads" },
+    { label: "Nurture prospects", value: "nurture" },
+    { label: "Convert customers", value: "convert" },
+    { label: "Retain customers", value: "retain" }
+  ];
 
-      <Card className="p-6 space-y-6">
-        <h3 className="text-lg font-semibold border-b pb-2">Business Information</h3>
-        
+  const brandVoiceOptions = [
+    { label: "Professional", value: "professional" },
+    { label: "Casual", value: "casual" },
+    { label: "Technical", value: "technical" },
+    { label: "Educational", value: "educational" },
+    { label: "Conversational", value: "conversational" }
+  ];
+
+  const funnelStageOptions = [
+    { label: "Top of funnel (Awareness)", value: "awareness" },
+    { label: "Middle of funnel (Consideration)", value: "consideration" },
+    { label: "Bottom of funnel (Conversion)", value: "conversion" }
+  ];
+
+  const contentFormatOptions = [
+    { label: "eBook", value: "ebook" },
+    { label: "Webinar", value: "webinar" },
+    { label: "Checklist", value: "checklist" },
+    { label: "Template", value: "template" },
+    { label: "Case Study", value: "case_study" },
+    { label: "White Paper", value: "white_paper" },
+    { label: "Email Course", value: "email_course" },
+    { label: "Video Tutorial", value: "video_tutorial" }
+  ];
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-8">
+      <Card className="p-6">
+        <h3 className="text-lg font-medium mb-4">Business Information</h3>
         <div className="space-y-4">
           <div>
-            <Label htmlFor="businessType">Business Type/Industry</Label>
+            <Label htmlFor="businessType">Type of Business/Industry</Label>
             <Input
               id="businessType"
-              placeholder="e.g., SaaS, E-commerce, Health & Wellness"
+              placeholder="e.g., Marketing Agency, SaaS Platform, Healthcare Provider"
               value={formData.businessType}
-              onChange={(e) => setFormData({ ...formData, businessType: e.target.value })}
+              onChange={(e) => updateFormField("businessType", e.target.value)}
             />
           </div>
 
@@ -121,9 +98,9 @@ const LeadMagnetForm = ({
             <Label htmlFor="targetAudience">Target Audience</Label>
             <Input
               id="targetAudience"
-              placeholder="e.g., Small Business Owners, Marketing Professionals"
+              placeholder="e.g., Small Business Owners, Marketing Professionals, HR Managers"
               value={formData.targetAudience}
-              onChange={(e) => setFormData({ ...formData, targetAudience: e.target.value })}
+              onChange={(e) => updateFormField("targetAudience", e.target.value)}
             />
           </div>
 
@@ -131,126 +108,83 @@ const LeadMagnetForm = ({
             <Label htmlFor="problemSolving">Problem Your Business Solves</Label>
             <Textarea
               id="problemSolving"
-              placeholder="Describe the main problem or challenge your product/service solves"
+              placeholder="Describe the main problem(s) your product or service addresses"
               value={formData.problemSolving}
-              onChange={(e) => setFormData({ ...formData, problemSolving: e.target.value })}
+              onChange={(e) => updateFormField("problemSolving", e.target.value)}
               rows={3}
+              className="resize-none"
             />
           </div>
         </div>
       </Card>
 
-      <Card className="p-6 space-y-6">
-        <h3 className="text-lg font-semibold border-b pb-2">Lead Magnet Requirements</h3>
-        
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Marketing Goals (select all that apply)</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {marketingGoalsOptions.map((option) => (
-                <div key={option.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`goal-${option.id}`}
-                    checked={formData.marketingGoals.includes(option.id)}
-                    onCheckedChange={(checked) =>
-                      handleCheckboxChange("marketingGoals", option.id, checked === true)
-                    }
-                  />
-                  <Label htmlFor={`goal-${option.id}`} className="text-sm cursor-pointer">
-                    {option.label}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Brand Voice (select all that apply)</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {brandVoiceOptions.map((option) => (
-                <div key={option.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`voice-${option.id}`}
-                    checked={formData.brandVoice.includes(option.id)}
-                    onCheckedChange={(checked) =>
-                      handleCheckboxChange("brandVoice", option.id, checked === true)
-                    }
-                  />
-                  <Label htmlFor={`voice-${option.id}`} className="text-sm cursor-pointer">
-                    {option.label}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Funnel Stage (select all that apply)</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {funnelStageOptions.map((option) => (
-                <div key={option.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`funnel-${option.id}`}
-                    checked={formData.funnelStage.includes(option.id)}
-                    onCheckedChange={(checked) =>
-                      handleCheckboxChange("funnelStage", option.id, checked === true)
-                    }
-                  />
-                  <Label htmlFor={`funnel-${option.id}`} className="text-sm cursor-pointer">
-                    {option.label}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Content Formats (select all that apply)</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {contentFormatOptions.map((option) => (
-                <div key={option.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`format-${option.id}`}
-                    checked={formData.contentFormats.includes(option.id)}
-                    onCheckedChange={(checked) =>
-                      handleCheckboxChange("contentFormats", option.id, checked === true)
-                    }
-                  />
-                  <Label htmlFor={`format-${option.id}`} className="text-sm cursor-pointer">
-                    {option.label}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
+      <Card className="p-6">
+        <h3 className="text-lg font-medium mb-4">Lead Magnet Strategy</h3>
+        <div className="space-y-6">
+          <CheckboxGroup
+            label="Marketing Goals"
+            options={marketingGoalsOptions}
+            values={Array.isArray(formData.marketingGoals) ? formData.marketingGoals : []}
+            onChange={(value, checked) => updateCheckboxArray("marketingGoals", value, checked)}
+          />
 
           <div>
-            <Label htmlFor="existingContent">Existing Content (optional)</Label>
+            <Label htmlFor="existingContent">Existing Content to Repurpose (Optional)</Label>
             <Textarea
               id="existingContent"
-              placeholder="List any existing content you have that could be repurposed for lead magnets"
+              placeholder="Describe any existing content that could be repurposed for lead magnets"
               value={formData.existingContent}
-              onChange={(e) => setFormData({ ...formData, existingContent: e.target.value })}
+              onChange={(e) => updateFormField("existingContent", e.target.value)}
               rows={3}
+              className="resize-none"
             />
           </div>
+
+          <CheckboxGroup
+            label="Brand Voice"
+            options={brandVoiceOptions}
+            values={Array.isArray(formData.brandVoice) ? formData.brandVoice : []}
+            onChange={(value, checked) => updateCheckboxArray("brandVoice", value, checked)}
+          />
         </div>
       </Card>
 
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={isGenerating}
-      >
-        {isGenerating ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Generating Lead Magnets...
-          </>
-        ) : (
-          "Generate Lead Magnets"
-        )}
-      </Button>
+      <Card className="p-6">
+        <h3 className="text-lg font-medium mb-4">Content Specifications</h3>
+        <div className="space-y-6">
+          <CheckboxGroup
+            label="Marketing Funnel Stage"
+            options={funnelStageOptions}
+            values={Array.isArray(formData.funnelStage) ? formData.funnelStage : []}
+            onChange={(value, checked) => updateCheckboxArray("funnelStage", value, checked)}
+          />
+
+          <CheckboxGroup
+            label="Preferred Content Formats"
+            options={contentFormatOptions}
+            values={Array.isArray(formData.contentFormats) ? formData.contentFormats : []}
+            onChange={(value, checked) => updateCheckboxArray("contentFormats", value, checked)}
+          />
+        </div>
+      </Card>
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <div className="flex justify-end">
+        <Button type="submit" disabled={isGenerating}>
+          {isGenerating ? (
+            <>
+              <Loader className="mr-2 h-4 w-4 animate-spin" /> Generating...
+            </>
+          ) : (
+            "Generate Lead Magnet Ideas"
+          )}
+        </Button>
+      </div>
     </form>
   );
 };

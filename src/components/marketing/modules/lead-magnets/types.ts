@@ -21,5 +21,5 @@ export interface LeadMagnet {
   estimatedConversionRate: string;
   implementationSteps: string[];
   callToAction: string;
-  createdAt: Date;
+  createdAt: Date | string;
 }
