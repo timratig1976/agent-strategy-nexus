@@ -8,10 +8,10 @@ import NavBar from "@/components/NavBar";
 // Import refactored components
 import StrategyBackButton from "@/components/strategy/StrategyBackButton";
 import StrategyHeader from "@/components/strategy/StrategyHeader";
-import StrategyTasksGrid from "@/components/strategy/StrategyTasksGrid";
 import StrategyResults from "@/components/strategy/StrategyResults";
 import LoadingStrategy from "@/components/strategy/loading/LoadingStrategy";
 import StrategyNotFound from "@/components/strategy/StrategyNotFound";
+import StrategyBriefing from "@/components/strategy/StrategyBriefing";
 
 // Import custom hooks and utilities
 import useStrategyData from "@/hooks/useStrategyData";
@@ -22,7 +22,7 @@ const StrategyDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState("tasks");
+  const [activeTab, setActiveTab] = useState("briefing");
   
   // Redirect to dashboard if no ID is provided
   useEffect(() => {
@@ -42,10 +42,8 @@ const StrategyDetails = () => {
   // Use the custom hook to fetch all strategy data
   const { 
     strategy, 
-    tasks, 
     agentResults, 
-    isLoading, 
-    handleTasksChange 
+    isLoading
   } = useStrategyData({ id });
   
   // If there's no ID, show a loading state until the redirect happens
@@ -88,33 +86,15 @@ const StrategyDetails = () => {
         
         <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">
-            <TabsTrigger value="tasks">Tasks</TabsTrigger>
             <TabsTrigger value="briefing">AI Briefing</TabsTrigger>
             <TabsTrigger value="results">Results</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="tasks">
-            <StrategyTasksGrid 
-              strategyId={id}
-              tasks={tasks || []}
-              onTasksChange={handleTasksChange}
-            />
-          </TabsContent>
-          
           <TabsContent value="briefing">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-xl font-semibold mb-4">Create AI Briefing</h3>
-              <p className="text-gray-600 mb-4">
-                Generate a comprehensive AI briefing based on the information you've provided about your strategy.
-                This will help organize your marketing approach and define clear next steps.
-              </p>
-              <button 
-                className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90 transition-colors"
-                onClick={() => toast.success("AI Briefing generation started")}
-              >
-                Generate AI Briefing
-              </button>
-            </div>
+            <StrategyBriefing 
+              strategy={strategy} 
+              agentResults={agentResults || []} 
+            />
           </TabsContent>
           
           <TabsContent value="results">
