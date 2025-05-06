@@ -1,26 +1,26 @@
 
 import React from "react";
-import { CircleCheck, CircleBookOpen, CircleActivity, CircleGraph } from "lucide-react";
+import { CheckCircle, BookOpen, Activity, BarChart } from "lucide-react";
 
 const HowItWorks = () => {
   const steps = [
     {
-      icon: <CircleBookOpen className="h-7 w-7 text-blue-500" />,
+      icon: <BookOpen className="h-7 w-7 text-blue-500" />,
       title: "Choose your application",
       description: "Switch between Marketing Strategy and CRM to fit your current needs."
     },
     {
-      icon: <CircleCheck className="h-7 w-7 text-green-500" />,
+      icon: <CheckCircle className="h-7 w-7 text-green-500" />,
       title: "Set up your data",
       description: "Configure your business information and import your contacts."
     },
     {
-      icon: <CircleActivity className="h-7 w-7 text-purple-500" />,
+      icon: <Activity className="h-7 w-7 text-purple-500" />,
       title: "Get insights",
       description: "Leverage AI-powered marketing strategies and customer relationship tools."
     },
     {
-      icon: <CircleGraph className="h-7 w-7 text-amber-500" />,
+      icon: <BarChart className="h-7 w-7 text-amber-500" />,
       title: "Track progress",
       description: "Monitor your success and refine your approach over time."
     }
