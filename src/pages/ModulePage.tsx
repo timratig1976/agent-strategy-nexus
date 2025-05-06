@@ -7,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import ProjectBriefingModule from "@/components/marketing/modules/ProjectBriefingModule";
 import WebsiteCrawlingModule from "@/components/marketing/modules/website-crawler";
 import PersonaGeneratorModule from "@/components/marketing/modules/persona-generator";
+import UspCanvasModule from "@/components/marketing/modules/usp-canvas";
 
 const ModulePage = () => {
   const [searchParams] = useSearchParams();
@@ -21,6 +22,8 @@ const ModulePage = () => {
         return <WebsiteCrawlingModule />;
       case "persona_development":
         return <PersonaGeneratorModule />;
+      case "usp_canvas":
+        return <UspCanvasModule />;
       default:
         return (
           <div className="text-center py-16">
