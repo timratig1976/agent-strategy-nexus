@@ -6,6 +6,12 @@ export interface ContentStrategyFormData {
   contentType: string;
   tone: string;
   additionalInfo: string;
+  // Add these missing fields with defaults
+  marketingGoals: string[];
+  existingContent: string;
+  competitorInsights: string;
+  contentFormats: string[];
+  distributionChannels: string[];
 }
 
 export interface ContentPillar {

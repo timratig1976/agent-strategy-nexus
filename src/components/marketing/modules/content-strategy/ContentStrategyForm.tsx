@@ -27,16 +27,29 @@ const ContentStrategyForm = ({
     value: string,
     isChecked: boolean
   ) => {
-    if (isChecked) {
-      setFormData(prev => ({
-        ...prev,
-        [field]: [...prev[field] as string[], value]
-      }));
+    if (field === 'tone') {
+      // Handle tone as a single string value
+      if (isChecked) {
+        setFormData({
+          ...formData,
+          tone: value
+        });
+      }
     } else {
-      setFormData(prev => ({
-        ...prev,
-        [field]: (prev[field] as string[]).filter(item => item !== value)
-      }));
+      // Handle array fields properly
+      const currentValues = formData[field] as string[] || [];
+      
+      if (isChecked) {
+        setFormData({
+          ...formData,
+          [field]: [...currentValues, value]
+        });
+      } else {
+        setFormData({
+          ...formData,
+          [field]: (currentValues).filter(item => item !== value)
+        });
+      }
     }
   };
 
@@ -96,13 +109,19 @@ const ContentStrategyForm = ({
             />
 
             <BrandVoiceSelector 
-              selectedVoices={[formData.tone]} 
-              onChange={handleCheckboxChange}
+              selectedVoices={formData.tone ? [formData.tone] : []} 
+              onChange={(field, value, isChecked) => handleCheckboxChange('tone', value, isChecked)}
             />
 
             <AdvancedOptions
-              formData={formData}
-              setFormData={setFormData}
+              formData={{
+                marketingGoals: formData.marketingGoals || [],
+                existingContent: formData.existingContent || "",
+                competitorInsights: formData.competitorInsights || "",
+                contentFormats: formData.contentFormats || [],
+                distributionChannels: formData.distributionChannels || []
+              }}
+              setFormData={(advancedData) => setFormData({...formData, ...advancedData})}
               handleCheckboxChange={handleCheckboxChange}
             />
           </div>

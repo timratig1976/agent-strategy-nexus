@@ -12,7 +12,13 @@ export const useContentStrategy = () => {
     businessGoals: "",
     contentType: "",
     tone: "",
-    additionalInfo: ""
+    additionalInfo: "",
+    // Initialize the new fields
+    marketingGoals: [],
+    existingContent: "",
+    competitorInsights: "",
+    contentFormats: [],
+    distributionChannels: []
   });
 
   const [contentPillars, setContentPillars] = useState<ContentPillar[]>([]);
