@@ -216,6 +216,33 @@ export type Database = {
           },
         ]
       }
+      ai_prompts: {
+        Row: {
+          created_at: string
+          id: string
+          module: string
+          system_prompt: string | null
+          updated_at: string
+          user_prompt: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          module: string
+          system_prompt?: string | null
+          updated_at?: string
+          user_prompt?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          module?: string
+          system_prompt?: string | null
+          updated_at?: string
+          user_prompt?: string | null
+        }
+        Relationships: []
+      }
       campaign_ideas: {
         Row: {
           created_at: string

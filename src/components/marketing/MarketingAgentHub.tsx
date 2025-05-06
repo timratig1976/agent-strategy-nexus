@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +26,7 @@ const MarketingAgentHub = () => {
     phase: MarketingPhase;
     title: string;
     description: string;
-    icon: React.ComponentType;
+    icon: React.ComponentType<{ className?: string }>;
   }[] = [
     {
       phase: "briefing",
@@ -111,7 +112,7 @@ const MarketingAgentHub = () => {
       
       <div>
         <h2 className="text-xl font-semibold mb-4">Select Marketing Phase</h2>
-        <Select value={selectedPhase} onValueChange={setSelectedPhase}>
+        <Select value={selectedPhase} onValueChange={(value: MarketingPhase) => setSelectedPhase(value)}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select a phase" />
           </SelectTrigger>
