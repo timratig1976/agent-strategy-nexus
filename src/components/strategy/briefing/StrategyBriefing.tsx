@@ -2,22 +2,19 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { MarketingAIService } from "@/services/marketingAIService";
-import { AgentResult } from "@/types/marketing";
 import { StrategyFormValues } from "@/components/strategy-form";
 import { StrategyBriefingProps, StrategyMetadata } from "./types";
 import StrategyInfoCard from "./StrategyInfoCard";
 import BriefingResultCard from "./BriefingResultCard";
 import WebsiteCrawlerWrapper from "./WebsiteCrawlerWrapper";
 import { WebsiteCrawlResult } from "@/components/marketing/modules/website-crawler/types";
-import { Progress } from "@/components/ui/progress";
+import { useBriefingGenerator } from "./hooks/useBriefingGenerator";
+import BriefingProgressBar from "./components/BriefingProgressBar";
 
 const StrategyBriefing: React.FC<StrategyBriefingProps> = ({ 
   strategy, 
   agentResults = [] 
 }) => {
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [progress, setProgress] = useState<number>(0);
   const [showCrawler, setShowCrawler] = useState<boolean>(false);
   const [crawlResults, setCrawlResults] = useState<WebsiteCrawlResult | undefined>();
   const [formValues, setFormValues] = useState<StrategyFormValues>({
@@ -30,78 +27,39 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
     additionalInfo: ''
   });
 
+  const {
+    isGenerating,
+    progress,
+    generateBriefing,
+    saveAgentResult
+  } = useBriefingGenerator(strategy.id);
+
   // Fetch strategy metadata
   useEffect(() => {
-    const fetchFormData = async () => {
-      try {
-        const { data, error } = await supabase
-          .rpc('get_strategy_metadata', { strategy_id_param: strategy.id });
-          
-        if (error) throw error;
-        
-        if (data && Array.isArray(data) && data.length > 0) {
-          const metadata = data[0] as StrategyMetadata;
-          setFormValues(prevFormValues => ({
-            ...prevFormValues,
-            companyName: metadata.company_name || '',
-            websiteUrl: metadata.website_url || '',
-            productDescription: metadata.product_description || '',
-            productUrl: metadata.product_url || '',
-            additionalInfo: metadata.additional_info || ''
-          }));
-        }
-      } catch (error) {
-        console.error("Error fetching strategy metadata:", error);
-        toast.error("Failed to load strategy details");
-      }
-    };
-    
-    fetchFormData();
+    fetchStrategyMetadata();
   }, [strategy.id, strategy.name, strategy.description]);
   
-  // Function to generate AI briefing with progress updates
-  const generateBriefing = async () => {
+  const fetchStrategyMetadata = async () => {
     try {
-      setIsGenerating(true);
-      setProgress(10);
+      const { data, error } = await supabase
+        .rpc('get_strategy_metadata', { strategy_id_param: strategy.id });
+        
+      if (error) throw error;
       
-      // Simulate progress updates
-      const progressInterval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 1000);
-      
-      const { data, error } = await MarketingAIService.generateContent<AgentResult>(
-        'briefing',
-        'generate',
-        {
-          strategyId: strategy.id,
-          formData: formValues
-        }
-      );
-      
-      clearInterval(progressInterval);
-      setProgress(100);
-      
-      if (error) throw new Error(error);
-      
-      toast.success("AI Briefing generated successfully");
-      
-      // Wait a moment before refreshing
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-    } catch (error: any) {
-      console.error("Error generating briefing:", error);
-      toast.error("Failed to generate AI briefing");
-      setProgress(0);
-    } finally {
-      setIsGenerating(false);
+      if (data && Array.isArray(data) && data.length > 0) {
+        const metadata = data[0] as StrategyMetadata;
+        setFormValues(prevFormValues => ({
+          ...prevFormValues,
+          companyName: metadata.company_name || '',
+          websiteUrl: metadata.website_url || '',
+          productDescription: metadata.product_description || '',
+          productUrl: metadata.product_url || '',
+          additionalInfo: metadata.additional_info || ''
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching strategy metadata:", error);
+      toast.error("Failed to load strategy details");
     }
   };
 
@@ -130,45 +88,13 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
     }
   };
   
-  // Save agent result changes
-  const saveAgentResult = async (updatedResult: AgentResult): Promise<boolean> => {
-    try {
-      const { error } = await supabase
-        .from('agent_results')
-        .update({
-          content: updatedResult.content,
-          metadata: { 
-            ...updatedResult.metadata,
-            manually_edited: true,
-            edited_at: new Date().toISOString()
-          }
-        })
-        .eq('id', updatedResult.id);
-      
-      if (error) throw error;
-      
-      toast.success("Briefing content updated");
-      return true;
-    } catch (error) {
-      console.error("Error updating agent result:", error);
-      toast.error("Failed to update briefing content");
-      return false;
-    }
-  };
-  
   // Find the latest briefing result
-  const latestBriefing = agentResults.length > 0 ? agentResults[0] : null;
+  const latestBriefing = agentResults && agentResults.length > 0 ? agentResults[0] : null;
 
   return (
     <div className="space-y-6">
       {isGenerating && (
-        <div className="mb-4">
-          <div className="flex justify-between mb-2 text-sm">
-            <span>Generating AI briefing...</span>
-            <span>{progress}%</span>
-          </div>
-          <Progress value={progress} className="w-full" />
-        </div>
+        <BriefingProgressBar progress={progress} />
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
@@ -191,7 +117,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
         <BriefingResultCard 
           latestBriefing={latestBriefing}
           isGenerating={isGenerating}
-          generateBriefing={generateBriefing}
+          generateBriefing={() => generateBriefing(formValues)}
           saveAgentResult={saveAgentResult}
         />
       </div>
