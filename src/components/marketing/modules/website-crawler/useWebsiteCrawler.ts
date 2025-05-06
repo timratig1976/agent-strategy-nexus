@@ -4,11 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { WebsiteCrawlResult } from "./types";
 import { toast } from "sonner";
 
-export const useWebsiteCrawler = () => {
+export const useWebsiteCrawler = (initialData?: WebsiteCrawlResult) => {
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [results, setResults] = useState<WebsiteCrawlResult | null>(null);
+  const [results, setResults] = useState<WebsiteCrawlResult | null>(initialData || null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -53,6 +53,7 @@ export const useWebsiteCrawler = () => {
     isLoading,
     progress,
     results,
+    setResults,
     error,
     handleSubmit
   };

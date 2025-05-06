@@ -11,7 +11,7 @@ import StrategyHeader from "@/components/strategy/StrategyHeader";
 import StrategyResults from "@/components/strategy/StrategyResults";
 import LoadingStrategy from "@/components/strategy/loading/LoadingStrategy";
 import StrategyNotFound from "@/components/strategy/StrategyNotFound";
-import StrategyBriefing from "@/components/strategy/StrategyBriefing";
+import StrategyBriefing from "@/components/strategy/briefing";
 
 // Import custom hooks and utilities
 import useStrategyData from "@/hooks/useStrategyData";

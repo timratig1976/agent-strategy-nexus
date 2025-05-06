@@ -4,17 +4,36 @@ import { Globe } from "lucide-react";
 import WebsiteAnalysisForm from "./WebsiteAnalysisForm";
 import WebsiteCrawlerResults from "./WebsiteCrawlerResults";
 import { useWebsiteCrawler } from "./useWebsiteCrawler";
+import { WebsiteCrawlResult } from "./types";
 
-const WebsiteCrawlingModule = () => {
+interface WebsiteCrawlingModuleProps {
+  initialData?: WebsiteCrawlResult;
+  onResults?: React.Dispatch<React.SetStateAction<WebsiteCrawlResult | undefined>>;
+}
+
+const WebsiteCrawlingModule: React.FC<WebsiteCrawlingModuleProps> = ({ 
+  initialData,
+  onResults 
+}) => {
   const { 
     url, 
     setUrl, 
     isLoading, 
     progress, 
-    results, 
+    results: internalResults, 
+    setResults: setInternalResults,
     error, 
     handleSubmit 
-  } = useWebsiteCrawler();
+  } = useWebsiteCrawler(initialData);
+
+  // Update parent component when results change
+  React.useEffect(() => {
+    if (internalResults && onResults) {
+      onResults(internalResults);
+    }
+  }, [internalResults, onResults]);
+
+  const results = internalResults || initialData;
 
   return (
     <div className="max-w-3xl mx-auto">

@@ -6,6 +6,7 @@ import ContentStrategyForm from "./ContentStrategyForm";
 import ContentStrategyResults from "./ContentStrategyResults";
 import SavedContentPillars from "./SavedContentPillars";
 import { useContentStrategy } from "./useContentStrategy";
+import { ContentPillar } from "./types";
 
 const ContentStrategyModule = () => {
   const {
@@ -26,6 +27,17 @@ const ContentStrategyModule = () => {
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     generateContentPillars();
+  };
+
+  // Wrapper for savePillar that returns a boolean
+  const handleSavePillar = (pillar: ContentPillar): Promise<boolean> | boolean => {
+    try {
+      savePillar(pillar);
+      return true;
+    } catch (error) {
+      console.error("Error saving pillar:", error);
+      return false;
+    }
   };
 
   return (
@@ -62,7 +74,7 @@ const ContentStrategyModule = () => {
         <TabsContent value="results">
           <ContentStrategyResults
             contentPillars={contentPillars}
-            onSave={savePillar}
+            onSave={handleSavePillar}
             onBack={resetGenerator}
           />
         </TabsContent>
