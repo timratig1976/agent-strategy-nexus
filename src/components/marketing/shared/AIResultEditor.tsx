@@ -45,12 +45,15 @@ export const AIResultEditor = <T extends Record<string, any>>({
       };
       
       // Call the save callback
-      await onSave(updatedContent);
+      const result = await onSave(updatedContent);
       
-      toast({
-        title: "Success",
-        description: "Content updated successfully",
-      });
+      // Only show success toast if the save operation was successful
+      if (result !== false) {
+        toast({
+          title: "Success",
+          description: "Content updated successfully",
+        });
+      }
     } catch (error) {
       console.error("Error updating content:", error);
       toast({

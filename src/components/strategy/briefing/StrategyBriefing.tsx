@@ -1,35 +1,19 @@
 
 import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { AgentResult, Strategy } from "@/types/marketing";
-import { AIResultEditor } from "@/components/marketing/shared/AIResultEditor";
 import { supabase } from "@/integrations/supabase/client";
-import { StrategyFormValues } from "@/components/strategy-form";
-import { WebsiteCrawlingModule } from "@/components/marketing/modules/website-crawler";
 import { MarketingAIService } from "@/services/marketingAIService";
+import { AgentResult } from "@/types/marketing";
+import { StrategyFormValues } from "@/components/strategy-form";
+import { StrategyBriefingProps, StrategyMetadata } from "./types";
+import StrategyInfoCard from "./StrategyInfoCard";
+import BriefingResultCard from "./BriefingResultCard";
+import WebsiteCrawlerWrapper from "./WebsiteCrawlerWrapper";
 
-interface StrategyMetadata {
-  id?: string;
-  strategy_id?: string;
-  company_name: string;
-  website_url: string;
-  product_description: string;
-  product_url: string;
-  additional_info: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-interface StrategyBriefingProps {
-  strategy: Strategy;
-  agentResults: AgentResult[];
-}
-
-const StrategyBriefing: React.FC<StrategyBriefingProps> = ({ strategy, agentResults }) => {
+const StrategyBriefing: React.FC<StrategyBriefingProps> = ({ 
+  strategy, 
+  agentResults 
+}) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showCrawler, setShowCrawler] = useState(false);
   const [formValues, setFormValues] = useState<StrategyFormValues>({
@@ -162,80 +146,25 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({ strategy, agentResu
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Strategy Information</span>
-              {!showCrawler && formValues.websiteUrl && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setShowCrawler(true)}
-                  className="flex items-center gap-1"
-                >
-                  <Globe className="h-4 w-4" />
-                  <span>Crawl Website</span>
-                </Button>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {showCrawler ? (
-              <div className="space-y-4">
-                <WebsiteCrawlingModule />
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setShowCrawler(false)}
-                  className="mt-4"
-                >
-                  Back to Strategy
-                </Button>
-              </div>
-            ) : (
-              <AIResultEditor 
-                title="Strategy Details"
-                description="Edit strategy information to improve AI briefing"
-                originalContent={formValues}
-                contentField="formValues"
-                onSave={(updatedContent) => saveStrategyMetadata(updatedContent.formValues)}
-              />
-            )}
-          </CardContent>
-        </Card>
+        <div>
+          {showCrawler ? (
+            <WebsiteCrawlerWrapper onBack={() => setShowCrawler(false)} />
+          ) : (
+            <StrategyInfoCard 
+              formValues={formValues}
+              saveStrategyMetadata={saveStrategyMetadata}
+              showCrawler={showCrawler}
+              setShowCrawler={setShowCrawler}
+            />
+          )}
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>AI Briefing</span>
-              <Button 
-                onClick={generateBriefing}
-                disabled={isGenerating}
-                className="flex items-center gap-1"
-              >
-                <RefreshCw className={`h-4 w-4 ${isGenerating ? 'animate-spin' : ''}`} />
-                {isGenerating ? "Generating..." : latestBriefing ? "Regenerate" : "Generate"}
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {latestBriefing ? (
-              <AIResultEditor 
-                title="Edit Briefing"
-                description="Fine-tune the AI-generated content"
-                originalContent={latestBriefing}
-                contentField="content"
-                onSave={saveAgentResult}
-              />
-            ) : (
-              <div className="p-6 text-center border rounded-md bg-muted/20">
-                <p className="text-muted-foreground">
-                  No briefing has been generated yet. Click 'Generate' to create an AI briefing based on the strategy information.
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <BriefingResultCard 
+          latestBriefing={latestBriefing}
+          isGenerating={isGenerating}
+          generateBriefing={generateBriefing}
+          saveAgentResult={saveAgentResult}
+        />
       </div>
     </div>
   );
