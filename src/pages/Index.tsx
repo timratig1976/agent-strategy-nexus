@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { toast } from "@/components/ui/sonner";
 import { useAuth } from "@/context/AuthProvider";
 import { NavBar } from "@/components";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LayoutDashboard, Users } from "lucide-react";
+import { LayoutDashboard, Users, LogOut } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
