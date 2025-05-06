@@ -3,22 +3,14 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthProvider";
 import { AIPrompt, MarketingAIService } from "@/services/marketingAIService";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
+import { MODULE_OPTIONS } from "./constants";
+import ModuleSelector from "./ModuleSelector";
+import PromptForm from "./PromptForm";
+import SaveButton from "./SaveButton";
+import LoadingIndicator from "./LoadingIndicator";
 
-const moduleOptions = [
-  { value: 'contentStrategy', label: 'Content Strategy' },
-  { value: 'uspGenerator', label: 'USP Generator' },
-  { value: 'campaignIdeas', label: 'Campaign Ideas' },
-  { value: 'leadMagnets', label: 'Lead Magnets' },
-  { value: 'adCreative', label: 'Ad Creative' },
-  { value: 'channelStrategy', label: 'Channel Strategy' },
-];
-
-export const AIPromptManager: React.FC = () => {
+const AIPromptManager: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -130,6 +122,14 @@ export const AIPromptManager: React.FC = () => {
     }
   };
 
+  const handlePromptChange = (field: 'systemPrompt' | 'userPrompt', value: string) => {
+    if (field === 'systemPrompt') {
+      setSystemPrompt(value);
+    } else {
+      setUserPrompt(value);
+    }
+  };
+
   if (!user) {
     return (
       <Card>
@@ -149,74 +149,30 @@ export const AIPromptManager: React.FC = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Select Module</label>
-          <Select
-            value={selectedModule}
-            onValueChange={setSelectedModule}
-            disabled={isLoading}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select a module" />
-            </SelectTrigger>
-            <SelectContent>
-              {moduleOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <ModuleSelector 
+          selectedModule={selectedModule} 
+          moduleOptions={MODULE_OPTIONS} 
+          isLoading={isLoading} 
+          onModuleChange={setSelectedModule} 
+        />
 
         {isLoading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin" />
-          </div>
+          <LoadingIndicator />
         ) : (
-          <>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">System Prompt</label>
-              <Textarea
-                placeholder="Enter system prompt (instructions for the AI)"
-                value={systemPrompt}
-                onChange={(e) => setSystemPrompt(e.target.value)}
-                className="min-h-[150px] font-mono text-sm"
-              />
-              <p className="text-xs text-muted-foreground">
-                The system prompt defines the AI's behavior and expertise.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">User Prompt Template</label>
-              <Textarea
-                placeholder="Enter the user prompt template"
-                value={userPrompt}
-                onChange={(e) => setUserPrompt(e.target.value)}
-                className="min-h-[200px] font-mono text-sm"
-              />
-              <p className="text-xs text-muted-foreground">
-                Use variables like &#123;&#123;keyword&#125;&#125; that will be replaced with user input.
-              </p>
-            </div>
-          </>
+          <PromptForm 
+            systemPrompt={systemPrompt} 
+            userPrompt={userPrompt} 
+            isLoading={isLoading} 
+            onChange={handlePromptChange} 
+          />
         )}
       </CardContent>
       <CardFooter className="flex justify-end">
-        <Button 
-          onClick={handleSave} 
-          disabled={isLoading || isSaving}
-        >
-          {isSaving ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            "Save Prompt"
-          )}
-        </Button>
+        <SaveButton 
+          isSaving={isSaving} 
+          isLoading={isLoading} 
+          onSave={handleSave} 
+        />
       </CardFooter>
     </Card>
   );

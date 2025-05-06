@@ -1,7 +1,7 @@
 
 import React from "react";
 import NavBar from "@/components/NavBar";
-import AIPromptManager from "@/components/marketing/AIPromptManager";
+import AIPromptManager from "@/components/marketing/ai-prompt-manager";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
