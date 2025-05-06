@@ -9,6 +9,7 @@ import { StrategyBriefingProps, StrategyMetadata } from "./types";
 import StrategyInfoCard from "./StrategyInfoCard";
 import BriefingResultCard from "./BriefingResultCard";
 import WebsiteCrawlerWrapper from "./WebsiteCrawlerWrapper";
+import { WebsiteCrawlResult } from "@/components/marketing/modules/website-crawler/types";
 
 const StrategyBriefing: React.FC<StrategyBriefingProps> = ({ 
   strategy, 
@@ -16,6 +17,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showCrawler, setShowCrawler] = useState(false);
+  const [crawlResults, setCrawlResults] = useState<WebsiteCrawlResult | undefined>();
   const [formValues, setFormValues] = useState<StrategyFormValues>({
     name: strategy.name,
     description: strategy.description,
@@ -35,7 +37,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
           
         if (error) throw error;
         
-        if (data && data.length > 0) {
+        if (data && Array.isArray(data) && data.length > 0) {
           const metadata = data[0] as StrategyMetadata;
           setFormValues({
             name: strategy.name,
@@ -141,14 +143,18 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   };
   
   // Find the latest briefing result
-  const latestBriefing = agentResults.length > 0 ? agentResults[0] : null;
+  const latestBriefing = agentResults && agentResults.length > 0 ? agentResults[0] : null;
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           {showCrawler ? (
-            <WebsiteCrawlerWrapper onBack={() => setShowCrawler(false)} />
+            <WebsiteCrawlerWrapper 
+              onBack={() => setShowCrawler(false)}
+              crawlResults={crawlResults}
+              setCrawlResults={setCrawlResults}
+            />
           ) : (
             <StrategyInfoCard 
               formValues={formValues}

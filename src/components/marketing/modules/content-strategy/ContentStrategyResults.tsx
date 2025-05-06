@@ -10,7 +10,7 @@ import { AIResultEditor } from "@/components/marketing/shared/AIResultEditor";
 
 interface ContentStrategyResultsProps {
   contentPillars: ContentPillar[];
-  onSave: (pillar: ContentPillar) => void;
+  onSave: (pillar: ContentPillar) => Promise<boolean> | boolean;
   onBack: () => void;
 }
 
@@ -20,7 +20,7 @@ const ContentStrategyResults = ({
   onBack 
 }: ContentStrategyResultsProps) => {
   const handleSavePillar = (updatedPillar: ContentPillar) => {
-    onSave(updatedPillar);
+    return onSave(updatedPillar);
   };
 
   return (

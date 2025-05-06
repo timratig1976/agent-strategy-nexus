@@ -5,11 +5,16 @@ import { WebsiteCrawlingModule } from "@/components/marketing/modules/website-cr
 import { WebsiteCrawlerWrapperProps } from "./types";
 
 const WebsiteCrawlerWrapper: React.FC<WebsiteCrawlerWrapperProps> = ({ 
-  onBack 
+  onBack,
+  crawlResults,
+  setCrawlResults
 }) => {
   return (
     <div className="space-y-4">
-      <WebsiteCrawlingModule />
+      <WebsiteCrawlingModule 
+        initialData={crawlResults}
+        onResults={setCrawlResults}
+      />
       <Button 
         variant="outline" 
         size="sm" 
