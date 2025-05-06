@@ -8,4 +8,10 @@ export interface WebsiteCrawlResult {
   expiresAt?: string;
   data?: any[];
   error?: string;
+  // Fields for display
+  pagesCrawled?: number;
+  contentExtracted?: boolean;
+  summary?: string;
+  keywordsFound?: string[];
+  technologiesDetected?: string[];
 }

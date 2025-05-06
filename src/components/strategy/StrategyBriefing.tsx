@@ -9,7 +9,7 @@ import { AgentResult, Strategy } from "@/types/marketing";
 import { AIResultEditor } from "@/components/marketing/shared/AIResultEditor";
 import { supabase } from "@/integrations/supabase/client";
 import { StrategyFormValues } from "@/components/strategy-form";
-import WebsiteCrawlingModule from "@/components/marketing/modules/website-crawler/WebsiteCrawlingModule";
+import { WebsiteCrawlingModule } from "@/components/marketing/modules/website-crawler";
 import { MarketingAIService } from "@/services/marketingAIService";
 
 interface StrategyBriefingProps {
@@ -34,11 +34,9 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({ strategy, agentResu
   React.useEffect(() => {
     const fetchFormData = async () => {
       try {
+        // Using raw SQL query to get around type issues with the strategy_metadata table
         const { data, error } = await supabase
-          .from('strategy_metadata')
-          .select('*')
-          .eq('strategy_id', strategy.id)
-          .single();
+          .rpc('get_strategy_metadata', { strategy_id_param: strategy.id });
           
         if (error) throw error;
         
@@ -97,16 +95,15 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({ strategy, agentResu
   // Function to update strategy metadata
   const saveStrategyMetadata = async (updatedValues: StrategyFormValues) => {
     try {
+      // Using raw SQL again via RPC for consistency
       const { error } = await supabase
-        .from('strategy_metadata')
-        .upsert({
-          strategy_id: strategy.id,
-          company_name: updatedValues.companyName,
-          website_url: updatedValues.websiteUrl,
-          product_description: updatedValues.productDescription,
-          product_url: updatedValues.productUrl,
-          additional_info: updatedValues.additionalInfo,
-          updated_at: new Date().toISOString()
+        .rpc('upsert_strategy_metadata', {
+          strategy_id_param: strategy.id,
+          company_name_param: updatedValues.companyName,
+          website_url_param: updatedValues.websiteUrl,
+          product_description_param: updatedValues.productDescription,
+          product_url_param: updatedValues.productUrl,
+          additional_info_param: updatedValues.additionalInfo
         });
       
       if (error) throw error;
@@ -187,9 +184,9 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({ strategy, agentResu
               <AIResultEditor 
                 title="Strategy Details"
                 description="Edit strategy information to improve AI briefing"
-                originalContent={{...formValues}}
-                contentField="formValues"
-                onSave={(updatedContent) => saveStrategyMetadata(updatedContent.formValues)}
+                originalContent={formValues}
+                contentField="content"
+                onSave={(updatedContent) => saveStrategyMetadata(updatedContent.content)}
               />
             )}
           </CardContent>

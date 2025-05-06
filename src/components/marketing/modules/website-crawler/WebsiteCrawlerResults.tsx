@@ -3,22 +3,37 @@ import React, { useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { CheckCircle } from "lucide-react";
+import { WebsiteCrawlResult } from "./types";
 
 interface WebsiteCrawlerResultsProps {
-  results: {
-    pagesCrawled: number;
-    contentExtracted: boolean;
-    summary: string;
-    keywordsFound: string[];
-    technologiesDetected: string[];
-  };
+  results: WebsiteCrawlResult;
 }
 
 const WebsiteCrawlerResults = ({ results }: WebsiteCrawlerResultsProps) => {
-  const { toast } = useToast();
   const [adoptedContent, setAdoptedContent] = useState<string[]>([]);
+
+  // Extract keywords from crawl data
+  const keywordsFound = results.keywordsFound || 
+    (results.data?.flatMap(item => item.metadata?.keywords?.split(',') || []) || [])
+      .map(word => word.trim())
+      .filter(word => word.length > 0);
+
+  // Generate a summary from the crawl data
+  const summary = results.summary || 
+    results.data?.[0]?.content?.substring(0, 200) + "..." || 
+    "Content extracted from website. Review the data for insights about the company and its products.";
+
+  // Extract technologiesDetected or create empty array
+  const technologiesDetected = results.technologiesDetected || [];
+
+  // Calculate pagesCrawled from data
+  const pagesCrawled = results.pagesCrawled || results.data?.length || 0;
+
+  // Determine if content was successfully extracted
+  const contentExtracted = results.contentExtracted !== undefined ? 
+    results.contentExtracted : (results.data && results.data.length > 0);
 
   const handleAdoptContent = (content: string) => {
     setAdoptedContent((prev) => [...prev, content]);
@@ -26,17 +41,10 @@ const WebsiteCrawlerResults = ({ results }: WebsiteCrawlerResultsProps) => {
     // Copy to clipboard
     navigator.clipboard.writeText(content).then(
       () => {
-        toast({
-          title: "Content adopted",
-          description: "Content has been copied to clipboard and saved for reference.",
-        });
+        toast.success("Content copied to clipboard and saved for reference.");
       },
       () => {
-        toast({
-          title: "Failed to copy",
-          description: "The content was saved but could not be copied to clipboard.",
-          variant: "destructive",
-        });
+        toast.error("Content was saved but could not be copied to clipboard.");
       }
     );
   };
@@ -52,12 +60,12 @@ const WebsiteCrawlerResults = ({ results }: WebsiteCrawlerResultsProps) => {
           <div className="space-y-4">
             <div>
               <h4 className="text-sm font-medium mb-2">Summary</h4>
-              <p className="text-sm text-muted-foreground mb-2">{results.summary}</p>
-              {!isAdopted(results.summary) ? (
+              <p className="text-sm text-muted-foreground mb-2">{summary}</p>
+              {!isAdopted(summary) ? (
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => handleAdoptContent(results.summary)}
+                  onClick={() => handleAdoptContent(summary)}
                 >
                   Adopt Content
                 </Button>
@@ -68,48 +76,52 @@ const WebsiteCrawlerResults = ({ results }: WebsiteCrawlerResultsProps) => {
               )}
             </div>
             
-            <div>
-              <h4 className="text-sm font-medium mb-2">Keywords Found</h4>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {results.keywordsFound.map((keyword, index) => (
-                  <Badge key={index} variant="secondary">{keyword}</Badge>
-                ))}
+            {keywordsFound.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium mb-2">Keywords Found</h4>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {keywordsFound.map((keyword, index) => (
+                    <Badge key={index} variant="secondary">{keyword}</Badge>
+                  ))}
+                </div>
+                {!isAdopted(keywordsFound.join(", ")) ? (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleAdoptContent(keywordsFound.join(", "))}
+                  >
+                    Adopt Keywords
+                  </Button>
+                ) : (
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                    <CheckCircle className="h-3 w-3 mr-1" /> Keywords Adopted
+                  </Badge>
+                )}
               </div>
-              {!isAdopted(results.keywordsFound.join(", ")) ? (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => handleAdoptContent(results.keywordsFound.join(", "))}
-                >
-                  Adopt Keywords
-                </Button>
-              ) : (
-                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                  <CheckCircle className="h-3 w-3 mr-1" /> Keywords Adopted
-                </Badge>
-              )}
-            </div>
+            )}
             
-            <div>
-              <h4 className="text-sm font-medium mb-2">Technologies Detected</h4>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {results.technologiesDetected.map((tech, index) => (
-                  <Badge key={index} variant="outline">{tech}</Badge>
-                ))}
+            {technologiesDetected.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium mb-2">Technologies Detected</h4>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {technologiesDetected.map((tech, index) => (
+                    <Badge key={index} variant="outline">{tech}</Badge>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
             
             <div>
               <h4 className="text-sm font-medium">Statistics</h4>
               <ul className="mt-2 text-sm">
                 <li className="flex items-center justify-between py-1 border-b border-gray-100">
                   <span className="text-muted-foreground">Pages Crawled:</span>
-                  <span className="font-medium">{results.pagesCrawled}</span>
+                  <span className="font-medium">{pagesCrawled}</span>
                 </li>
                 <li className="flex items-center justify-between py-1">
                   <span className="text-muted-foreground">Content Extraction:</span>
                   <span className="font-medium">
-                    {results.contentExtracted ? "Successful" : "Failed"}
+                    {contentExtracted ? "Successful" : "Failed"}
                   </span>
                 </li>
               </ul>
