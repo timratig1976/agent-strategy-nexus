@@ -2,16 +2,20 @@
 import React from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthProvider";
+import LoadingIndicator from "@/components/marketing/ai-prompt-manager/LoadingIndicator";
 
+/**
+ * Enhanced ProtectedRoute component that redirects unauthenticated users
+ * and provides a consistent loading state
+ */
 const ProtectedRoute: React.FC = () => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
-    // Display a loading spinner while checking auth state
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <LoadingIndicator />
       </div>
     );
   }

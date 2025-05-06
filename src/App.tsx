@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
@@ -17,41 +18,41 @@ import ContactsPage from "@/pages/crm/ContactsPage";
 import ContactDetailsPage from "@/pages/crm/ContactDetailsPage";
 import DealsPage from "@/pages/crm/DealsPage";
 import NotFound from "@/pages/NotFound";
-import { useAuth } from "@/context/AuthProvider";
-import { Navigate } from 'react-router-dom';
 import AIPromptManagerPage from "@/pages/AIPromptManagerPage";
+import { AuthProvider, useAuth } from "@/context/AuthProvider";
+import ProtectedRoute from '@/components/ProtectedRoute';
 
-// Protected Route Component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return <div>Loading...</div>; // Replace with a proper loading indicator
-  }
-
-  return user ? <>{children}</> : <Navigate to="/auth" />;
-};
-
+/**
+ * App component with improved routing and security
+ * Uses AuthProvider for authentication context and ProtectedRoute for route guarding
+ */
 function App() {
   return (
     <div className="App flex flex-col min-h-screen">
       <Routes>
         <Route index element={<Index />} />
         <Route path="/auth" element={<AuthPage />} />
+        
+        {/* Public routes */}
         <Route path="/setup-database" element={<SetupDatabase />} />
-        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-        <Route path="/strategy/:strategyId" element={<ProtectedRoute><StrategyDetailsWithNav /></ProtectedRoute>} />
-        <Route path="/strategy-details/:strategyId" element={<ProtectedRoute><StrategyDetails /></ProtectedRoute>} />
-        <Route path="/create-strategy" element={<ProtectedRoute><CreateStrategy /></ProtectedRoute>} />
-        <Route path="/company-summary" element={<ProtectedRoute><CompanySummaryPage /></ProtectedRoute>} />
-        <Route path="/marketing-hub" element={<ProtectedRoute><MarketingHubPage /></ProtectedRoute>} />
-        <Route path="/module" element={<ProtectedRoute><ModulePage /></ProtectedRoute>} />
-        <Route path="/ai-prompts" element={<ProtectedRoute><AIPromptManagerPage /></ProtectedRoute>} />
-        <Route path="/crm/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-        <Route path="/crm/contacts" element={<ProtectedRoute><ContactsPage /></ProtectedRoute>} />
-        <Route path="/crm/contacts/:contactId" element={<ProtectedRoute><ContactDetailsPage /></ProtectedRoute>} />
-        <Route path="/crm/deals" element={<ProtectedRoute><DealsPage /></ProtectedRoute>} />
+        
+        {/* Protected routes using the enhanced ProtectedRoute component */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/strategy/:strategyId" element={<StrategyDetailsWithNav />} />
+          <Route path="/strategy-details/:strategyId" element={<StrategyDetails />} />
+          <Route path="/create-strategy" element={<CreateStrategy />} />
+          <Route path="/company-summary" element={<CompanySummaryPage />} />
+          <Route path="/marketing-hub" element={<MarketingHubPage />} />
+          <Route path="/module" element={<ModulePage />} />
+          <Route path="/ai-prompts" element={<AIPromptManagerPage />} />
+          <Route path="/crm/dashboard" element={<DashboardPage />} />
+          <Route path="/crm/contacts" element={<ContactsPage />} />
+          <Route path="/crm/contacts/:contactId" element={<ContactDetailsPage />} />
+          <Route path="/crm/deals" element={<DealsPage />} />
+        </Route>
+        
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />

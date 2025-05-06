@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { cleanupAuthState } from "@/utils/authUtils";
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -21,12 +21,35 @@ const AuthPage = () => {
   // Get the current URL for proper redirects
   const currentOrigin = window.location.origin;
 
-  // Handle email/password sign in
+  // Handle email/password sign in with improved security
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
+    // Validate inputs
+    if (!email || !validateEmail(email)) {
+      toast.error("Please enter a valid email address");
+      setLoading(false);
+      return;
+    }
+
+    if (!password || password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      setLoading(false);
+      return;
+    }
+
     try {
+      // Clean up any existing auth state first
+      cleanupAuthState();
+      
+      // Attempt global sign out first to clear any stale sessions
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+      }
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -43,12 +66,28 @@ const AuthPage = () => {
     }
   };
 
-  // Handle email/password sign up
+  // Handle email/password sign up with improved security
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
+    // Validate inputs
+    if (!email || !validateEmail(email)) {
+      toast.error("Please enter a valid email address");
+      setLoading(false);
+      return;
+    }
+
+    if (!password || password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      setLoading(false);
+      return;
+    }
+    
     try {
+      // Clean up any existing auth state first
+      cleanupAuthState();
+      
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -67,10 +106,10 @@ const AuthPage = () => {
     }
   };
 
-  // Handle magic link sign in
+  // Handle magic link sign in with improved security
   const handleMagicLinkSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !email.includes('@')) {
+    if (!email || !validateEmail(email)) {
       toast.error("Please enter a valid email address");
       return;
     }
@@ -78,6 +117,9 @@ const AuthPage = () => {
     setLoading(true);
     
     try {
+      // Clean up any existing auth state first
+      cleanupAuthState();
+      
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
@@ -97,11 +139,14 @@ const AuthPage = () => {
     }
   };
 
-  // Handle Google sign in
+  // Handle Google sign in with improved security
   const handleGoogleSignIn = async () => {
     setLoading(true);
     
     try {
+      // Clean up any existing auth state first
+      cleanupAuthState();
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
@@ -116,6 +161,24 @@ const AuthPage = () => {
     }
   };
 
+  // Validate email format
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  // Redirect if already logged in
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        navigate("/");
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
+
+  
   return (
     <div className="container mx-auto flex flex-col items-center justify-center min-h-screen p-4">
       <Card className="w-full max-w-md">

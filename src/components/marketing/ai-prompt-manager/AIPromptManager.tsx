@@ -1,120 +1,137 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { Pencil } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthProvider";
-import { AIPrompt, MarketingAIService } from "@/services/marketingAIService";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
-import { MODULE_OPTIONS } from "./constants";
 import ModuleSelector from "./ModuleSelector";
 import PromptForm from "./PromptForm";
 import SaveButton from "./SaveButton";
 import LoadingIndicator from "./LoadingIndicator";
+import { ModuleOption } from "./types";
 
 const AIPromptManager: React.FC = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [selectedModule, setSelectedModule] = useState<string>("contentStrategy");
+  const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [systemPrompt, setSystemPrompt] = useState<string>("");
   const [userPrompt, setUserPrompt] = useState<string>("");
-  const [prompts, setPrompts] = useState<AIPrompt[]>([]);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
-  // Fetch all prompts on component mount
+  // Redirect to auth if not authenticated
   useEffect(() => {
-    const fetchPrompts = async () => {
-      if (!user) return;
-      
-      setIsLoading(true);
-      try {
-        const response = await MarketingAIService.getPrompts();
-        if (response.data) {
-          setPrompts(response.data);
-        } else if (response.error) {
-          toast({
-            title: "Error",
-            description: `Failed to fetch prompts: ${response.error}`,
-            variant: "destructive",
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching prompts:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to access this feature",
+        variant: "destructive",
+      });
+      navigate("/auth");
+    }
+  }, [user, navigate, toast]);
 
-    fetchPrompts();
-  }, [user, toast]);
-
-  // Load selected module's prompt
+  // Fetch prompt data when module changes
   useEffect(() => {
-    const loadSelectedPrompt = async () => {
+    const fetchPromptData = async () => {
       if (!selectedModule) return;
       
       setIsLoading(true);
       try {
-        const response = await MarketingAIService.getPromptByModule(selectedModule);
-        
-        if (response.data) {
-          setSystemPrompt(response.data.systemPrompt);
-          setUserPrompt(response.data.userPrompt);
-        } else {
-          // If no prompt found for this module, set defaults
-          const basePrompt = "You are an expert marketing strategist AI assistant helping to create professional marketing content.";
-          setSystemPrompt(basePrompt);
-          setUserPrompt("");
+        const { data, error } = await supabase
+          .from("ai_prompts")
+          .select("system_prompt, user_prompt")
+          .eq("module", selectedModule)
+          .single();
+
+        if (error) {
+          console.error("Error fetching prompt data:", error);
+          throw error;
         }
+
+        setSystemPrompt(data?.system_prompt || "");
+        setUserPrompt(data?.user_prompt || "");
       } catch (error) {
-        console.error("Error loading prompt:", error);
+        console.error("Error:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load prompt data",
+          variant: "destructive",
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadSelectedPrompt();
-  }, [selectedModule]);
+    fetchPromptData();
+  }, [selectedModule, toast]);
+
+  const handleModuleChange = (moduleValue: string) => {
+    setSelectedModule(moduleValue);
+  };
+
+  const handleSystemPromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setSystemPrompt(e.target.value);
+  };
+
+  const handleUserPromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setUserPrompt(e.target.value);
+  };
 
   const handleSave = async () => {
-    if (!user || !selectedModule) return;
+    if (!selectedModule) {
+      toast({
+        title: "Error",
+        description: "Please select a module first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Input validation
+    if (!systemPrompt.trim()) {
+      toast({
+        title: "Error",
+        description: "System prompt cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!userPrompt.trim()) {
+      toast({
+        title: "Error",
+        description: "User prompt cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsSaving(true);
     try {
-      const response = await MarketingAIService.savePrompt({
-        module: selectedModule,
-        systemPrompt,
-        userPrompt
-      });
+      const { error } = await supabase
+        .from("ai_prompts")
+        .update({
+          system_prompt: systemPrompt,
+          user_prompt: userPrompt,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("module", selectedModule);
 
-      if (response.data) {
-        // Update local prompts list
-        const updatedPrompts = [...prompts];
-        const existingIndex = updatedPrompts.findIndex(p => p.module === selectedModule);
-        
-        if (existingIndex >= 0) {
-          updatedPrompts[existingIndex] = response.data;
-        } else {
-          updatedPrompts.push(response.data);
-        }
-        
-        setPrompts(updatedPrompts);
-        
-        toast({
-          title: "Success",
-          description: "Prompt saved successfully",
-        });
-      } else if (response.error) {
-        toast({
-          title: "Error",
-          description: `Failed to save prompt: ${response.error}`,
-          variant: "destructive",
-        });
-      }
+      if (error) throw error;
+
+      toast({
+        title: "Prompt Updated",
+        description: "The AI prompt has been successfully updated",
+      });
     } catch (error) {
       console.error("Error saving prompt:", error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred while saving",
+        description: "Failed to save prompt",
         variant: "destructive",
       });
     } finally {
@@ -122,59 +139,41 @@ const AIPromptManager: React.FC = () => {
     }
   };
 
-  const handlePromptChange = (field: 'systemPrompt' | 'userPrompt', value: string) => {
-    if (field === 'systemPrompt') {
-      setSystemPrompt(value);
-    } else {
-      setUserPrompt(value);
-    }
-  };
-
-  if (!user) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <p>You need to be logged in to manage AI prompts.</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>AI Prompt Manager</CardTitle>
-        <CardDescription>
-          Customize the prompts used by marketing AI modules when generating content
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <ModuleSelector 
-          selectedModule={selectedModule} 
-          moduleOptions={MODULE_OPTIONS} 
-          isLoading={isLoading} 
-          onModuleChange={setSelectedModule} 
-        />
+    <div className="container mx-auto max-w-4xl px-4 py-8">
+      <div className="mb-8 flex items-center space-x-3">
+        <div className="p-2 rounded-md bg-primary/10">
+          <Pencil className="h-6 w-6" />
+        </div>
+        <div>
+          <h2 className="text-3xl font-bold">AI Prompt Manager</h2>
+          <p className="text-muted-foreground mt-1">
+            Customize the AI prompts used in different modules
+          </p>
+        </div>
+      </div>
 
-        {isLoading ? (
-          <LoadingIndicator />
-        ) : (
+      <ModuleSelector selectedModule={selectedModule} onModuleChange={handleModuleChange} />
+
+      {isLoading ? (
+        <LoadingIndicator />
+      ) : (
+        selectedModule && (
           <PromptForm 
-            systemPrompt={systemPrompt} 
-            userPrompt={userPrompt} 
-            isLoading={isLoading} 
-            onChange={handlePromptChange} 
+            systemPrompt={systemPrompt}
+            userPrompt={userPrompt}
+            onSystemPromptChange={handleSystemPromptChange}
+            onUserPromptChange={handleUserPromptChange}
           />
-        )}
-      </CardContent>
-      <CardFooter className="flex justify-end">
-        <SaveButton 
-          isSaving={isSaving} 
-          isLoading={isLoading} 
-          onSave={handleSave} 
-        />
-      </CardFooter>
-    </Card>
+        )
+      )}
+
+      {selectedModule && !isLoading && (
+        <div className="mt-6 flex justify-end">
+          <SaveButton isSaving={isSaving} onSave={handleSave} />
+        </div>
+      )}
+    </div>
   );
 };
 

@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { cleanupAuthState } from "@/utils/authUtils";
 
 interface AuthContextProps {
   user: User | null;
@@ -38,6 +39,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (event === "SIGNED_OUT") {
           navigate("/auth");
         }
+
+        // For SIGNED_IN events, defer data loading to prevent deadlocks
+        if (event === "SIGNED_IN" && currentSession?.user) {
+          setTimeout(() => {
+            // Any additional data loading can be done here
+            console.log("User authenticated:", currentSession.user.email);
+          }, 0);
+        }
       }
     );
 
@@ -54,7 +63,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [navigate]);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    // Use improved sign out implementation
+    try {
+      // Clean up auth state
+      cleanupAuthState();
+      // Attempt global sign out
+      await supabase.auth.signOut({ scope: 'global' });
+      // Force page reload for a clean state
+      window.location.href = '/auth';
+    } catch (error) {
+      console.error("Sign out error:", error);
+      throw error;
+    }
   };
 
   return (
