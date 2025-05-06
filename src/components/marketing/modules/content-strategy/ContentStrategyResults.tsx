@@ -17,152 +17,115 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Users, Hash, FileText, Share2 } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ArrowLeft, Save, Loader2 } from "lucide-react";
 
 interface ContentStrategyResultsProps {
   contentPillars: ContentPillar[];
   onSave: (pillar: ContentPillar) => void;
-  onBack: () => void;
+  isGenerating: boolean;
 }
 
 const ContentStrategyResults = ({
   contentPillars,
   onSave,
-  onBack
+  isGenerating
 }: ContentStrategyResultsProps) => {
   return (
-    <div className="space-y-6">
-      <Button 
-        variant="outline" 
-        className="flex items-center gap-2" 
-        onClick={onBack}
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to Generator
-      </Button>
-
-      <h3 className="text-xl font-semibold mb-4">Your Content Pillar Strategy</h3>
+    <div className="space-y-8">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-xl font-semibold">Generated Content Pillars</h3>
+      </div>
       
-      {contentPillars.length === 0 ? (
+      {isGenerating ? (
+        <Card className="p-8">
+          <div className="flex flex-col items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+            <p className="text-center text-muted-foreground">
+              Generating your content pillar strategy...
+            </p>
+          </div>
+        </Card>
+      ) : contentPillars.length === 0 ? (
         <Card>
           <CardContent className="pt-6">
             <p className="text-center text-muted-foreground">No content pillars generated yet.</p>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-6">
+        <div className="space-y-6">
           {contentPillars.map((pillar) => (
-            <Card key={pillar.id} className="border-l-4 border-l-green-500">
+            <Card key={pillar.id} className="border-l-4 border-l-primary">
               <CardHeader className="pb-2">
                 <CardTitle className="text-xl">{pillar.title}</CardTitle>
                 <CardDescription>{pillar.description}</CardDescription>
               </CardHeader>
+              
               <CardContent className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Target Audience:</span>
-                  <span className="text-sm">{pillar.targetAudience}</span>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Hash className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Key Subtopics:</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2 pl-6">
-                    {pillar.keySubtopics.map((subtopic, index) => (
-                      <Badge key={index} variant="outline">{subtopic}</Badge>
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Key Subtopics</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {pillar.keySubtopics.map((topic, idx) => (
+                      <Badge key={idx} variant="secondary">{topic}</Badge>
                     ))}
                   </div>
                 </div>
                 
                 <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="keywords">
-                    <AccordionTrigger className="text-sm py-2">
-                      <div className="flex items-center gap-2">
-                        <Hash className="h-4 w-4" />
-                        <span>Keywords</span>
-                      </div>
+                  <AccordionItem value="content-ideas">
+                    <AccordionTrigger className="text-sm font-medium py-2">
+                      Content Ideas ({pillar.contentIdeas.length})
                     </AccordionTrigger>
                     <AccordionContent>
-                      <div className="flex flex-wrap gap-2 pt-2">
-                        {pillar.keywords.map((keyword, index) => (
-                          <Badge key={index} variant="secondary">{keyword}</Badge>
+                      <div className="space-y-3">
+                        {pillar.contentIdeas.map((idea, idx) => (
+                          <div key={idx} className="border rounded-md p-3 bg-secondary/20">
+                            <div className="flex justify-between">
+                              <h5 className="font-medium">{idea.title}</h5>
+                              <Badge variant="outline" className="text-xs">{idea.estimatedEffort} effort</Badge>
+                            </div>
+                            <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                              <div>Format: <span className="text-foreground">{idea.format}</span></div>
+                              <div>Channel: <span className="text-foreground">{idea.channel}</span></div>
+                            </div>
+                          </div>
                         ))}
                       </div>
                     </AccordionContent>
                   </AccordionItem>
                   
-                  <AccordionItem value="content-ideas">
-                    <AccordionTrigger className="text-sm py-2">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        <span>Content Ideas ({pillar.contentIdeas.length})</span>
-                      </div>
+                  <AccordionItem value="keywords">
+                    <AccordionTrigger className="text-sm font-medium py-2">
+                      Suggested Keywords
                     </AccordionTrigger>
                     <AccordionContent>
-                      <ScrollArea className="h-[200px] w-full">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Title</TableHead>
-                              <TableHead>Format</TableHead>
-                              <TableHead>Channel</TableHead>
-                              <TableHead>Effort</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {pillar.contentIdeas.map((idea, index) => (
-                              <TableRow key={index}>
-                                <TableCell>{idea.title}</TableCell>
-                                <TableCell>{idea.format}</TableCell>
-                                <TableCell>{idea.channel}</TableCell>
-                                <TableCell>
-                                  <Badge 
-                                    variant="outline" 
-                                    className={
-                                      idea.estimatedEffort === "Low" 
-                                        ? "bg-green-50 text-green-700 border-green-200"
-                                        : idea.estimatedEffort === "Medium"
-                                        ? "bg-yellow-50 text-yellow-700 border-yellow-200"
-                                        : "bg-red-50 text-red-700 border-red-200"
-                                    }
-                                  >
-                                    {idea.estimatedEffort}
-                                  </Badge>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </ScrollArea>
+                      <div className="flex flex-wrap gap-2">
+                        {pillar.keywords.map((keyword, idx) => (
+                          <Badge key={idx} variant="outline">{keyword}</Badge>
+                        ))}
+                      </div>
                     </AccordionContent>
                   </AccordionItem>
                   
                   <AccordionItem value="distribution">
-                    <AccordionTrigger className="text-sm py-2">
-                      <div className="flex items-center gap-2">
-                        <Share2 className="h-4 w-4" />
-                        <span>Distribution Strategy</span>
-                      </div>
+                    <AccordionTrigger className="text-sm font-medium py-2">
+                      Distribution Strategy
                     </AccordionTrigger>
                     <AccordionContent>
-                      <div className="space-y-4">
+                      <div className="space-y-2">
                         <div>
-                          <h4 className="text-sm font-medium">Content Formats:</h4>
+                          <h5 className="text-sm font-medium">Content Formats</h5>
                           <div className="flex flex-wrap gap-2 mt-1">
-                            {pillar.contentFormats.map((format, index) => (
-                              <Badge key={index} variant="outline">{format}</Badge>
+                            {pillar.contentFormats.map((format, idx) => (
+                              <Badge key={idx} variant="secondary">{format}</Badge>
                             ))}
                           </div>
                         </div>
+                        
                         <div>
-                          <h4 className="text-sm font-medium">Distribution Channels:</h4>
+                          <h5 className="text-sm font-medium">Distribution Channels</h5>
                           <div className="flex flex-wrap gap-2 mt-1">
-                            {pillar.distributionChannels.map((channel, index) => (
-                              <Badge key={index} variant="outline">{channel}</Badge>
+                            {pillar.distributionChannels.map((channel, idx) => (
+                              <Badge key={idx} variant="secondary">{channel}</Badge>
                             ))}
                           </div>
                         </div>
@@ -171,6 +134,7 @@ const ContentStrategyResults = ({
                   </AccordionItem>
                 </Accordion>
               </CardContent>
+              
               <CardFooter className="border-t pt-4">
                 <Button 
                   variant="outline" 
@@ -178,7 +142,7 @@ const ContentStrategyResults = ({
                   onClick={() => onSave(pillar)}
                 >
                   <Save className="h-4 w-4" />
-                  Save Pillar
+                  Save Content Pillar
                 </Button>
               </CardFooter>
             </Card>

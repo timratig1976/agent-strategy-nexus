@@ -1,27 +1,23 @@
 
 import React from "react";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, Controller } from "react-hook-form";
 import { ContentPillarFormData } from "./types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Card, CardContent } from "@/components/ui/card";
+  Card,
+  CardContent,
+  CardFooter
+} from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger
+} from "@/components/ui/accordion";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2, Plus, X } from "lucide-react";
 
 interface ContentStrategyFormProps {
   formData: ContentPillarFormData;
@@ -31,17 +27,25 @@ interface ContentStrategyFormProps {
   error: string | null;
 }
 
-const formSchema = z.object({
-  businessNiche: z.string().min(2, "Business niche is required"),
-  targetAudience: z.string().min(2, "Target audience is required"),
-  brandVoice: z.array(z.string()).min(1, "Select at least one brand voice"),
-  marketingGoals: z.array(z.string()).min(1, "Select at least one marketing goal"),
-  existingContent: z.string().optional(),
-  competitorInsights: z.string().optional(),
-  keyTopics: z.array(z.string()).min(1, "Add at least one key topic"),
-  contentFormats: z.array(z.string()).min(1, "Select at least one content format"),
-  distributionChannels: z.array(z.string()).min(1, "Select at least one distribution channel")
-});
+const BRAND_VOICE_OPTIONS = [
+  "Professional", "Conversational", "Authoritative", "Educational", 
+  "Entertaining", "Inspirational", "Technical", "Friendly"
+];
+
+const MARKETING_GOALS = [
+  "Brand Awareness", "Lead Generation", "Customer Retention", 
+  "Thought Leadership", "SEO Rankings", "Social Engagement"
+];
+
+const CONTENT_FORMATS = [
+  "Blog Posts", "Videos", "Podcasts", "Infographics", "Ebooks", 
+  "Case Studies", "Webinars", "Social Media Posts"
+];
+
+const DISTRIBUTION_CHANNELS = [
+  "Website/Blog", "Email Newsletter", "LinkedIn", "Twitter", 
+  "Facebook", "Instagram", "YouTube", "TikTok", "Industry Publications"
+];
 
 const ContentStrategyForm = ({
   formData,
@@ -50,436 +54,260 @@ const ContentStrategyForm = ({
   isGenerating,
   error
 }: ContentStrategyFormProps) => {
-  const form = useForm<ContentPillarFormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: formData
-  });
+  // Array option handlers
+  const handleCheckboxChange = (
+    field: keyof ContentPillarFormData,
+    value: string,
+    isChecked: boolean
+  ) => {
+    if (isChecked) {
+      setFormData(prev => ({
+        ...prev,
+        [field]: [...prev[field] as string[], value]
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: (prev[field] as string[]).filter(item => item !== value)
+      }));
+    }
+  };
 
-  const onSubmit = (values: ContentPillarFormData) => {
-    setFormData(values);
+  // Topic input handling
+  const [newTopic, setNewTopic] = React.useState("");
+  
+  const addTopic = () => {
+    if (newTopic.trim() && !formData.keyTopics.includes(newTopic.trim())) {
+      setFormData({
+        ...formData,
+        keyTopics: [...formData.keyTopics, newTopic.trim()]
+      });
+      setNewTopic("");
+    }
+  };
+
+  const removeTopic = (topic: string) => {
+    setFormData({
+      ...formData,
+      keyTopics: formData.keyTopics.filter(t => t !== topic)
+    });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     onGenerate();
   };
 
-  const brandVoiceOptions = [
-    { id: "professional", label: "Professional" },
-    { id: "casual", label: "Casual" },
-    { id: "authoritative", label: "Authoritative" },
-    { id: "friendly", label: "Friendly" },
-    { id: "inspirational", label: "Inspirational" },
-    { id: "educational", label: "Educational" },
-    { id: "humorous", label: "Humorous" }
-  ];
-
-  const marketingGoalOptions = [
-    { id: "awareness", label: "Brand Awareness" },
-    { id: "engagement", label: "Audience Engagement" },
-    { id: "conversion", label: "Conversions" },
-    { id: "retention", label: "Customer Retention" },
-    { id: "authority", label: "Thought Leadership" },
-    { id: "seo", label: "SEO Performance" }
-  ];
-
-  const contentFormatOptions = [
-    { id: "blog", label: "Blog Posts" },
-    { id: "video", label: "Videos" },
-    { id: "podcast", label: "Podcasts" },
-    { id: "ebook", label: "Ebooks/Guides" },
-    { id: "infographic", label: "Infographics" },
-    { id: "webinar", label: "Webinars" },
-    { id: "social", label: "Social Media Posts" },
-    { id: "email", label: "Email Newsletters" }
-  ];
-
-  const distributionChannelOptions = [
-    { id: "website", label: "Website/Blog" },
-    { id: "instagram", label: "Instagram" },
-    { id: "facebook", label: "Facebook" },
-    { id: "linkedin", label: "LinkedIn" },
-    { id: "twitter", label: "Twitter" },
-    { id: "youtube", label: "YouTube" },
-    { id: "tiktok", label: "TikTok" },
-    { id: "email", label: "Email" },
-    { id: "podcast", label: "Podcast Platforms" }
-  ];
-
-  const [topicInput, setTopicInput] = React.useState("");
-  
-  const addTopic = () => {
-    if (topicInput.trim() && !form.getValues().keyTopics.includes(topicInput.trim())) {
-      const updatedTopics = [...form.getValues().keyTopics, topicInput.trim()];
-      form.setValue("keyTopics", updatedTopics);
-      setTopicInput("");
-    }
-  };
-  
-  const removeTopic = (topic: string) => {
-    const updatedTopics = form.getValues().keyTopics.filter(t => t !== topic);
-    form.setValue("keyTopics", updatedTopics);
-  };
-
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+    <Card className="bg-white dark:bg-gray-950">
+      <form onSubmit={handleSubmit}>
+        <CardContent className="pt-6">
+          {error && (
+            <div className="mb-4 p-3 border border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-800 text-red-700 dark:text-red-400 rounded-md">
+              {error}
+            </div>
+          )}
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="businessNiche"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Business Niche</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g. Fitness Technology" {...field} />
-                </FormControl>
-                <FormDescription>
-                  Your industry or business specialty
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="businessNiche">Business Niche/Industry *</Label>
+                <Input
+                  id="businessNiche"
+                  placeholder="e.g., Digital Marketing, Healthcare, SaaS"
+                  value={formData.businessNiche}
+                  onChange={(e) => setFormData({...formData, businessNiche: e.target.value})}
+                  required
+                />
+              </div>
 
-          <FormField
-            control={form.control}
-            name="targetAudience"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Target Audience</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g. Fitness enthusiasts aged 25-45" {...field} />
-                </FormControl>
-                <FormDescription>
-                  Who your content should speak to
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <Separator />
-
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-lg font-medium">Brand Voice & Goals</h3>
-            <p className="text-sm text-muted-foreground">
-              Define how your content should sound and what it should achieve
-            </p>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="brandVoice"
-              render={() => (
-                <FormItem>
-                  <FormLabel>Brand Voice</FormLabel>
-                  <div className="grid grid-cols-2 gap-2">
-                    {brandVoiceOptions.map((option) => (
-                      <FormField
-                        key={option.id}
-                        control={form.control}
-                        name="brandVoice"
-                        render={({ field }) => {
-                          return (
-                            <FormItem
-                              key={option.id}
-                              className="flex flex-row items-start space-x-2 space-y-0"
-                            >
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes(option.id)}
-                                  onCheckedChange={(checked) => {
-                                    return checked
-                                      ? field.onChange([...field.value, option.id])
-                                      : field.onChange(
-                                          field.value?.filter(
-                                            (value) => value !== option.id
-                                          )
-                                        )
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="font-normal">
-                                {option.label}
-                              </FormLabel>
-                            </FormItem>
-                          )
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="marketingGoals"
-              render={() => (
-                <FormItem>
-                  <FormLabel>Marketing Goals</FormLabel>
-                  <div className="grid grid-cols-2 gap-2">
-                    {marketingGoalOptions.map((option) => (
-                      <FormField
-                        key={option.id}
-                        control={form.control}
-                        name="marketingGoals"
-                        render={({ field }) => {
-                          return (
-                            <FormItem
-                              key={option.id}
-                              className="flex flex-row items-start space-x-2 space-y-0"
-                            >
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes(option.id)}
-                                  onCheckedChange={(checked) => {
-                                    return checked
-                                      ? field.onChange([...field.value, option.id])
-                                      : field.onChange(
-                                          field.value?.filter(
-                                            (value) => value !== option.id
-                                          )
-                                        )
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="font-normal">
-                                {option.label}
-                              </FormLabel>
-                            </FormItem>
-                          )
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
-
-        <Separator />
-
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-lg font-medium">Content Intelligence</h3>
-            <p className="text-sm text-muted-foreground">
-              Provide insights about existing content and competitor analysis
-            </p>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="existingContent"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Existing Content Overview</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Summarize your current content assets and performance..."
-                      className="h-24" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Optional: Helps refine strategy recommendations
-                  </FormDescription>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="competitorInsights"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Competitor Content Insights</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="What are competitors doing well with their content?"
-                      className="h-24" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Optional: Helps identify gaps and opportunities
-                  </FormDescription>
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
-
-        <Separator />
-
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-lg font-medium">Content Planning</h3>
-            <p className="text-sm text-muted-foreground">
-              Define your key topics and how you'll deliver content
-            </p>
-          </div>
-
-          <FormField
-            control={form.control}
-            name="keyTopics"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Key Topics</FormLabel>
-                <div className="grid gap-3">
-                  <div className="flex gap-2">
-                    <Input 
-                      placeholder="Enter a content topic"
-                      value={topicInput}
-                      onChange={(e) => setTopicInput(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          addTopic();
-                        }
-                      }}
-                    />
-                    <Button type="button" onClick={addTopic}>
-                      Add Topic
-                    </Button>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-2">
-                    {field.value.map((topic, index) => (
-                      <div 
-                        key={index} 
-                        className="bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-sm flex items-center gap-2"
+              <div className="space-y-2">
+                <Label htmlFor="targetAudience">Target Audience *</Label>
+                <Input
+                  id="targetAudience"
+                  placeholder="e.g., Marketing professionals, Small business owners"
+                  value={formData.targetAudience}
+                  onChange={(e) => setFormData({...formData, targetAudience: e.target.value})}
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Key Topics for Content Pillars *</Label>
+              <div className="flex items-center space-x-2">
+                <Input
+                  placeholder="Add a topic for a content pillar"
+                  value={newTopic}
+                  onChange={(e) => setNewTopic(e.target.value)}
+                />
+                <Button 
+                  type="button"
+                  size="sm"
+                  onClick={addTopic}
+                  disabled={!newTopic.trim()}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {formData.keyTopics.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {formData.keyTopics.map((topic) => (
+                    <div 
+                      key={topic} 
+                      className="bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-sm flex items-center gap-1"
+                    >
+                      {topic}
+                      <button 
+                        type="button" 
+                        onClick={() => removeTopic(topic)}
+                        className="text-secondary-foreground/70 hover:text-secondary-foreground ml-1"
                       >
-                        <span>{topic}</span>
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-4 w-4 p-0" 
-                          onClick={() => removeTopic(topic)}
-                        >
-                          ✕
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                  <FormMessage />
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              </FormItem>
-            )}
-          />
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="contentFormats"
-              render={() => (
-                <FormItem>
-                  <FormLabel>Content Formats</FormLabel>
-                  <div className="grid grid-cols-2 gap-2">
-                    {contentFormatOptions.map((option) => (
-                      <FormField
-                        key={option.id}
-                        control={form.control}
-                        name="contentFormats"
-                        render={({ field }) => {
-                          return (
-                            <FormItem
-                              key={option.id}
-                              className="flex flex-row items-start space-x-2 space-y-0"
-                            >
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes(option.id)}
-                                  onCheckedChange={(checked) => {
-                                    return checked
-                                      ? field.onChange([...field.value, option.id])
-                                      : field.onChange(
-                                          field.value?.filter(
-                                            (value) => value !== option.id
-                                          )
-                                        )
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="font-normal">
-                                {option.label}
-                              </FormLabel>
-                            </FormItem>
-                          )
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <FormMessage />
-                </FormItem>
               )}
-            />
-
-            <FormField
-              control={form.control}
-              name="distributionChannels"
-              render={() => (
-                <FormItem>
-                  <FormLabel>Distribution Channels</FormLabel>
-                  <div className="grid grid-cols-2 gap-2">
-                    {distributionChannelOptions.map((option) => (
-                      <FormField
-                        key={option.id}
-                        control={form.control}
-                        name="distributionChannels"
-                        render={({ field }) => {
-                          return (
-                            <FormItem
-                              key={option.id}
-                              className="flex flex-row items-start space-x-2 space-y-0"
-                            >
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes(option.id)}
-                                  onCheckedChange={(checked) => {
-                                    return checked
-                                      ? field.onChange([...field.value, option.id])
-                                      : field.onChange(
-                                          field.value?.filter(
-                                            (value) => value !== option.id
-                                          )
-                                        )
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="font-normal">
-                                {option.label}
-                              </FormLabel>
-                            </FormItem>
-                          )
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <FormMessage />
-                </FormItem>
+              {formData.keyTopics.length === 0 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Add at least one topic to generate content pillars
+                </p>
               )}
-            />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Brand Voice</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {BRAND_VOICE_OPTIONS.map((option) => (
+                  <div key={option} className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={`voice-${option}`}
+                      checked={formData.brandVoice.includes(option)}
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange('brandVoice', option, checked === true)
+                      }
+                    />
+                    <Label htmlFor={`voice-${option}`} className="text-sm font-normal cursor-pointer">
+                      {option}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="advanced-options">
+                <AccordionTrigger className="text-sm font-medium">
+                  Advanced Options
+                </AccordionTrigger>
+                <AccordionContent className="space-y-6 pt-4">
+                  <div className="space-y-2">
+                    <Label>Marketing Goals</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {MARKETING_GOALS.map((goal) => (
+                        <div key={goal} className="flex items-center space-x-2">
+                          <Checkbox 
+                            id={`goal-${goal}`}
+                            checked={formData.marketingGoals.includes(goal)}
+                            onCheckedChange={(checked) => 
+                              handleCheckboxChange('marketingGoals', goal, checked === true)
+                            }
+                          />
+                          <Label htmlFor={`goal-${goal}`} className="text-sm font-normal cursor-pointer">
+                            {goal}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="existingContent">Existing Content Analysis</Label>
+                    <Textarea
+                      id="existingContent"
+                      placeholder="Describe your existing content and what's performed well..."
+                      value={formData.existingContent}
+                      onChange={(e) => setFormData({...formData, existingContent: e.target.value})}
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="competitorInsights">Competitor Content Insights</Label>
+                    <Textarea
+                      id="competitorInsights"
+                      placeholder="What content strategies are your competitors using?"
+                      value={formData.competitorInsights}
+                      onChange={(e) => setFormData({...formData, competitorInsights: e.target.value})}
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Preferred Content Formats</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      {CONTENT_FORMATS.map((format) => (
+                        <div key={format} className="flex items-center space-x-2">
+                          <Checkbox 
+                            id={`format-${format}`}
+                            checked={formData.contentFormats.includes(format)}
+                            onCheckedChange={(checked) => 
+                              handleCheckboxChange('contentFormats', format, checked === true)
+                            }
+                          />
+                          <Label htmlFor={`format-${format}`} className="text-sm font-normal cursor-pointer">
+                            {format}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Distribution Channels</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {DISTRIBUTION_CHANNELS.map((channel) => (
+                        <div key={channel} className="flex items-center space-x-2">
+                          <Checkbox 
+                            id={`channel-${channel}`}
+                            checked={formData.distributionChannels.includes(channel)}
+                            onCheckedChange={(checked) => 
+                              handleCheckboxChange('distributionChannels', channel, checked === true)
+                            }
+                          />
+                          <Label htmlFor={`channel-${channel}`} className="text-sm font-normal cursor-pointer">
+                            {channel}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
-        </div>
-
-        <Button type="submit" className="w-full" disabled={isGenerating}>
-          {isGenerating ? "Generating Strategy..." : "Generate Content Pillar Strategy"}
-        </Button>
+        </CardContent>
+        
+        <CardFooter className="flex justify-end border-t p-6">
+          <Button 
+            type="submit" 
+            disabled={isGenerating || formData.keyTopics.length === 0}
+            className="w-full md:w-auto"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generating Content Strategy...
+              </>
+            ) : (
+              "Generate Content Strategy"
+            )}
+          </Button>
+        </CardFooter>
       </form>
-    </Form>
+    </Card>
   );
 };
 
