@@ -30,7 +30,7 @@ const MarketingTabContent = ({ dbStatus, isAuthenticated }: MarketingTabContentP
       action: () => navigate("/create-strategy"),
       buttonText: !isAuthenticated ? "Sign in to Get Started" : "Get Started",
       buttonClass: "bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600",
-      buttonVariant: "default"
+      buttonVariant: "default" as const
     },
     {
       title: "View Your Strategies",
