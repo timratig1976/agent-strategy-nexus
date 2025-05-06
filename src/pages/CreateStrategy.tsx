@@ -1,104 +1,54 @@
 
-import React, { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/context/AuthProvider";
 import NavBar from "@/components/NavBar";
-import PhaseSelector from "@/components/marketing/PhaseSelector";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-type MarketingPhase = 
-  | 'briefing'
-  | 'website_analysis'
-  | 'persona_development'
-  | 'usp_canvas'
-  | 'usp_generator'
-  | 'channel_strategy'
-  | 'roas_calculator'
-  | 'campaign_ideas'
-  | 'ad_creative'
-  | 'lead_magnets'
-  | 'content_strategy';
+const strategyFormSchema = z.object({
+  name: z.string().min(3, { message: "Strategy name must be at least 3 characters" }),
+  description: z.string().optional(),
+  companyName: z.string().min(2, { message: "Company name is required" }),
+  websiteUrl: z.string().url({ message: "Please enter a valid URL" }).optional().or(z.literal("")),
+  productDescription: z.string().optional(),
+  productUrl: z.string().url({ message: "Please enter a valid URL" }).optional().or(z.literal("")),
+  additionalInfo: z.string().optional()
+});
+
+type StrategyFormValues = z.infer<typeof strategyFormSchema>;
 
 const CreateStrategy = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { user } = useAuth();
-  const [searchParams] = useSearchParams();
-  
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [selectedPhase, setSelectedPhase] = useState<MarketingPhase>('briefing');
-  const [activeTab, setActiveTab] = useState<'new' | 'existing'>('new');
-  const [existingStrategies, setExistingStrategies] = useState<Array<{id: string, name: string}>>([]);
-  const [selectedStrategyId, setSelectedStrategyId] = useState<string | null>(null);
 
-  // Get the requested phase from URL params, if available
-  useEffect(() => {
-    const phaseParam = searchParams.get('phase');
-    if (phaseParam) {
-      setSelectedPhase(phaseParam as MarketingPhase);
-      setActiveTab('existing'); // Default to existing tab when a specific phase is requested
+  const form = useForm<StrategyFormValues>({
+    resolver: zodResolver(strategyFormSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      companyName: "",
+      websiteUrl: "",
+      productDescription: "",
+      productUrl: "",
+      additionalInfo: ""
     }
-    
-    // Fetch existing strategies for the current user
-    const fetchStrategies = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('strategies')
-          .select('id, name')
-          .eq('user_id', user.id)
-          .order('updated_at', { ascending: false });
-          
-        if (error) throw error;
-        
-        setExistingStrategies(data || []);
-        
-        // If we have strategies and a phase param, select the first strategy
-        if (data && data.length > 0 && phaseParam) {
-          setSelectedStrategyId(data[0].id);
-        }
-      } catch (error) {
-        console.error('Error fetching strategies:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load existing strategies",
-          variant: "destructive"
-        });
-      }
-    };
-    
-    fetchStrategies();
-  }, [searchParams, user, toast]);
+  });
 
-  const handleCreateStrategy = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSubmit = async (values: StrategyFormValues) => {
     if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "You need to be signed in to create a strategy",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (!name.trim()) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide a name for your strategy",
-        variant: "destructive"
-      });
+      toast.error("You must be signed in to create a strategy");
       return;
     }
     
@@ -109,22 +59,27 @@ const CreateStrategy = () => {
       const { data: strategy, error: strategyError } = await supabase
         .from('strategies')
         .insert({
-          name: name.trim(),
-          description: description.trim(),
+          name: values.name,
+          description: values.description || "",
           user_id: user.id,
-          phase: selectedPhase,
-          status: 'draft',
+          company_name: values.companyName,
+          website_url: values.websiteUrl || "",
+          product_description: values.productDescription || "",
+          product_url: values.productUrl || "",
+          additional_info: values.additionalInfo || "",
+          status: 'in_progress',
+          state: 'briefing'
         })
         .select()
         .single();
       
       if (strategyError) throw strategyError;
       
-      // Add initial task based on the selected phase
+      // Add initial briefing task
       const initialTask = {
         strategy_id: strategy.id,
-        title: `Complete ${selectedPhase.replace('_', ' ')} phase`,
-        state: selectedPhase as any,
+        title: "Create AI Briefing",
+        state: 'briefing',
         is_completed: false
       };
       
@@ -134,50 +89,15 @@ const CreateStrategy = () => {
       
       if (taskError) throw taskError;
       
-      toast({
-        title: "Strategy Created",
-        description: "Your marketing strategy has been created successfully"
-      });
+      toast.success("Strategy created successfully!");
+      // Navigate to the strategy overview page
+      navigate(`/strategy-overview/${strategy.id}`);
       
-      navigate(`/strategy/${strategy.id}`);
     } catch (error) {
       console.error('Error creating strategy:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create strategy",
-        variant: "destructive"
-      });
+      toast.error("Failed to create strategy");
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const handlePhaseSelect = (phase: MarketingPhase) => {
-    setSelectedPhase(phase);
-    
-    if (activeTab === 'existing' && selectedStrategyId) {
-      // Navigate to the strategy page with the selected phase
-      navigate(`/strategy/${selectedStrategyId}?phase=${phase}`);
-    }
-  };
-
-  const handleStrategySelect = (strategyId: string) => {
-    setSelectedStrategyId(strategyId);
-  };
-
-  const handleContinue = () => {
-    if (activeTab === 'new') {
-      // Submit the form to create a new strategy
-      handleCreateStrategy(new Event('submit') as any);
-    } else if (selectedStrategyId) {
-      // Navigate to the existing strategy with the selected phase
-      navigate(`/strategy/${selectedStrategyId}?phase=${selectedPhase}`);
-    } else {
-      toast({
-        title: "No Strategy Selected",
-        description: "Please select an existing strategy to continue",
-        variant: "destructive"
-      });
     }
   };
 
@@ -186,123 +106,143 @@ const CreateStrategy = () => {
       <NavBar />
       
       <div className="flex justify-start">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back
+        <Button variant="ghost" onClick={() => navigate("/dashboard")} className="mb-6">
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
         </Button>
       </div>
       
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">
-              {selectedPhase === 'briefing' 
-                ? 'Create New Marketing Strategy' 
-                : `Add ${selectedPhase.replace('_', ' ')} to Your Strategy`}
-            </CardTitle>
+            <CardTitle className="text-2xl">Create New Marketing Strategy</CardTitle>
           </CardHeader>
           
-          <CardContent className="space-y-6">
-            <Tabs 
-              value={activeTab} 
-              onValueChange={(value) => setActiveTab(value as 'new' | 'existing')}
-              className="w-full"
-            >
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="new">Create New Strategy</TabsTrigger>
-                <TabsTrigger value="existing">Use Existing Strategy</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="new" className="space-y-6">
-                <form id="create-strategy-form" onSubmit={handleCreateStrategy} className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Strategy Name</Label>
-                    <Input 
-                      id="name" 
-                      placeholder="E.g., Q3 Product Launch Strategy"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
-                  </div>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)}>
+              <CardContent className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Strategy Name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="E.g., Q3 Product Launch Strategy" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Briefly describe your marketing strategy and objectives..."
+                          rows={3}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="companyName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Company Name *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Your Company Name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea 
-                      id="description" 
-                      placeholder="Briefly describe your marketing strategy and objectives..."
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Starting Phase</Label>
-                    <PhaseSelector 
-                      onPhaseSelect={handlePhaseSelect} 
-                      initialPhase={selectedPhase}
-                    />
-                  </div>
-                </form>
-              </TabsContent>
+                  <FormField
+                    control={form.control}
+                    name="websiteUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Website URL</FormLabel>
+                        <FormControl>
+                          <Input placeholder="https://yourcompany.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <FormField
+                  control={form.control}
+                  name="productDescription"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Product Description</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Describe your product or service..."
+                          rows={3}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="productUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Product URL</FormLabel>
+                      <FormControl>
+                        <Input placeholder="https://yourcompany.com/product" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="additionalInfo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Additional Information</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Any other relevant information about your strategy, target audience, goals, etc."
+                          rows={4}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
               
-              <TabsContent value="existing" className="space-y-6">
-                {existingStrategies.length > 0 ? (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Select Existing Strategy</Label>
-                      <div className="grid gap-2">
-                        {existingStrategies.map(strategy => (
-                          <Card 
-                            key={strategy.id}
-                            className={`cursor-pointer hover:bg-accent transition-colors ${
-                              selectedStrategyId === strategy.id ? 'ring-2 ring-primary' : ''
-                            }`}
-                            onClick={() => handleStrategySelect(strategy.id)}
-                          >
-                            <CardContent className="p-4">
-                              <p className="font-medium">{strategy.name}</p>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Select Phase</Label>
-                      <PhaseSelector 
-                        onPhaseSelect={handlePhaseSelect}
-                        currentStrategyId={selectedStrategyId || undefined}
-                        initialPhase={selectedPhase}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground mb-4">
-                      You don't have any existing strategies yet.
-                    </p>
-                    <Button onClick={() => setActiveTab('new')}>
-                      Create Your First Strategy
-                    </Button>
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-          
-          <CardFooter className="flex justify-between">
-            <Button type="button" variant="outline" onClick={() => navigate('/dashboard')}>
-              Cancel
-            </Button>
-            <Button 
-              type="button"
-              onClick={handleContinue}
-              disabled={submitting || (activeTab === 'existing' && !selectedStrategyId)}
-            >
-              {submitting ? "Processing..." : "Continue"}
-            </Button>
-          </CardFooter>
+              <CardFooter className="flex justify-between">
+                <Button type="button" variant="outline" onClick={() => navigate('/dashboard')}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? "Processing..." : "Create Strategy"}
+                </Button>
+              </CardFooter>
+            </form>
+          </Form>
         </Card>
       </div>
     </div>

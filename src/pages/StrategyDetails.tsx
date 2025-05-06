@@ -1,7 +1,6 @@
 
-// Import the correct component
-import React, { useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import NavBar from "@/components/NavBar";
@@ -22,14 +21,23 @@ const StrategyDetails = () => {
   // Extract the id parameter from the URL
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState("tasks");
   
   // Redirect to dashboard if no ID is provided
   useEffect(() => {
     if (!id) {
       toast.error("Strategy ID is missing");
       navigate('/dashboard');
+      return;
     }
-  }, [id, navigate]);
+
+    // Check if there's a tab parameter in the URL
+    const tabParam = searchParams.get("tab");
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [id, navigate, searchParams]);
   
   // Use the custom hook to fetch all strategy data
   const { 
@@ -78,9 +86,10 @@ const StrategyDetails = () => {
           <p className="text-gray-700">{strategy.description}</p>
         </div>
         
-        <Tabs defaultValue="tasks">
+        <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">
             <TabsTrigger value="tasks">Tasks</TabsTrigger>
+            <TabsTrigger value="briefing">AI Briefing</TabsTrigger>
             <TabsTrigger value="results">Results</TabsTrigger>
           </TabsList>
           
@@ -90,6 +99,22 @@ const StrategyDetails = () => {
               tasks={tasks || []}
               onTasksChange={handleTasksChange}
             />
+          </TabsContent>
+          
+          <TabsContent value="briefing">
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h3 className="text-xl font-semibold mb-4">Create AI Briefing</h3>
+              <p className="text-gray-600 mb-4">
+                Generate a comprehensive AI briefing based on the information you've provided about your strategy.
+                This will help organize your marketing approach and define clear next steps.
+              </p>
+              <button 
+                className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90 transition-colors"
+                onClick={() => toast.success("AI Briefing generation started")}
+              >
+                Generate AI Briefing
+              </button>
+            </div>
           </TabsContent>
           
           <TabsContent value="results">
