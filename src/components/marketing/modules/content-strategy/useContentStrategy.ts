@@ -3,6 +3,7 @@ import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { ContentStrategyFormData, ContentPillar, ContentIdea, ContentSubtopic } from "./types";
 import { useToast } from "@/components/ui/use-toast";
+import { MarketingAIService } from "@/services/marketingAIService";
 
 export const useContentStrategy = () => {
   const { toast } = useToast();
@@ -32,19 +33,50 @@ export const useContentStrategy = () => {
     setError(null);
 
     try {
-      // In a real app, this would be an API call to generate content pillars
-      // For now, we'll simulate the response with mock data
-      const mockPillar = generateMockContentPillar(formData);
+      toast({
+        title: "Generating content strategy",
+        description: "Using AI to generate your content pillars...",
+      });
+
+      // Call the AI service to generate content pillars
+      const { data, error: aiError } = await MarketingAIService.generateContent<ContentPillar>(
+        'contentStrategy',
+        'generate',
+        formData
+      );
+
+      if (aiError) {
+        throw new Error(aiError);
+      }
+
+      if (!data) {
+        throw new Error("No content pillars were generated");
+      }
+
+      // Add unique ID to the content pillar
+      const pillarWithId: ContentPillar = {
+        ...data,
+        id: uuidv4(),
+        createdAt: new Date() // Ensure we have a proper Date object
+      };
+
+      setContentPillars([pillarWithId]);
+      setActiveTab("results");
       
-      setTimeout(() => {
-        setContentPillars([mockPillar]);
-        setActiveTab("results");
-        setIsGenerating(false);
-      }, 2000);
+      toast({
+        title: "Content strategy generated",
+        description: "Your AI-powered content strategy is ready to review.",
+      });
     } catch (err) {
-      setError("Failed to generate content pillars. Please try again.");
-      setIsGenerating(false);
+      setError(err instanceof Error ? err.message : "Failed to generate content pillars. Please try again.");
+      toast({
+        title: "Generation failed",
+        description: err instanceof Error ? err.message : "Failed to generate content pillars",
+        variant: "destructive"
+      });
       console.error("Error generating content pillars:", err);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -85,72 +117,4 @@ export const useContentStrategy = () => {
     deleteSavedPillar,
     resetGenerator
   };
-};
-
-// Helper function to generate mock pillar
-const generateMockContentPillar = (formData: ContentStrategyFormData): ContentPillar => {
-  // Generate subtopics
-  const subtopics = [
-    'Fundamentals',
-    'Advanced strategies',
-    'Case studies',
-    'Trends and insights'
-  ].map(name => {
-    return {
-      id: uuidv4(),
-      title: `${formData.keyword} ${name}`,
-      description: `A detailed exploration of ${formData.keyword} ${name.toLowerCase()} for ${formData.targetAudience}.`,
-      contentIdeas: generateContentIdeas(formData.keyword, name)
-    };
-  });
-  
-  return {
-    id: uuidv4(),
-    title: formData.keyword,
-    description: `A comprehensive content pillar about ${formData.keyword} for ${formData.targetAudience} in the ${formData.businessGoals} industry.`,
-    subtopics: subtopics,
-    keywords: generateKeywords(formData.keyword),
-    formats: ['Blog Post', 'Video', 'Infographic', 'Webinar', 'Podcast'],
-    channels: ['Website', 'LinkedIn', 'Email', 'YouTube', 'Twitter'],
-    createdAt: new Date()
-  };
-};
-
-// Helper function to generate mock content ideas
-const generateContentIdeas = (topic: string, subtopic: string): ContentIdea[] => {
-  const ideas = [
-    {
-      id: uuidv4(),
-      title: `Ultimate guide to ${topic} ${subtopic.toLowerCase()}`,
-      description: `An in-depth guide covering all aspects of ${topic} ${subtopic.toLowerCase()}.`,
-      format: 'Long-form Blog',
-      example: `"10 Essential ${topic} ${subtopic.toLowerCase()} Every Professional Should Know"`
-    },
-    {
-      id: uuidv4(),
-      title: `${topic} ${subtopic.toLowerCase()} explained`,
-      description: `Simple explanation of complex ${topic} ${subtopic.toLowerCase()} concepts.`,
-      format: 'Video',
-      example: `"${topic} ${subtopic.toLowerCase()} Explained in 5 Minutes"`
-    },
-    {
-      id: uuidv4(),
-      title: `${subtopic} checklist for ${topic}`,
-      description: `A practical checklist for implementing ${topic} ${subtopic.toLowerCase()}.`,
-      format: 'Downloadable PDF'
-    }
-  ];
-  
-  return ideas;
-};
-
-// Helper function to generate keywords
-const generateKeywords = (topic: string): string[] => {
-  return [
-    topic,
-    `${topic} guide`,
-    `${topic} tips`,
-    `${topic} strategy`,
-    `best ${topic} practices`
-  ];
 };
