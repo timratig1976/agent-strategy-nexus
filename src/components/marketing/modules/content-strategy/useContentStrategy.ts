@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { ContentPillarFormData, ContentPillar } from "./types";
+import { ContentPillarFormData, ContentPillar, ContentIdeaItem } from "./types";
 import { useToast } from "@/components/ui/use-toast";
 
 export const useContentStrategy = () => {
