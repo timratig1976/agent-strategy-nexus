@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import ProjectBriefingModule from "@/components/marketing/modules/ProjectBriefingModule";
 import WebsiteCrawlingModule from "@/components/marketing/modules/WebsiteCrawlingModule";
+import PersonaGeneratorModule from "@/components/marketing/modules/PersonaGeneratorModule";
 
 const ModulePage = () => {
   const [searchParams] = useSearchParams();
@@ -18,6 +19,8 @@ const ModulePage = () => {
         return <ProjectBriefingModule />;
       case "website_analysis":
         return <WebsiteCrawlingModule />;
+      case "persona_development":
+        return <PersonaGeneratorModule />;
       default:
         return (
           <div className="text-center py-16">
