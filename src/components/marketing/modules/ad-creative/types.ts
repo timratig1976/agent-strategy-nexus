@@ -1,23 +1,31 @@
 
 export interface AdCreativeFormData {
-  campaignObjective: string;
+  platform: string;
+  adType: string;
+  productName: string;
   targetAudience: string;
-  productService: string;
-  keyBenefits: string[];
-  brandTone: string;
-  adPlatforms: string[];
+  productDescription: string;
+  uniqueSellingPoints: string;
   callToAction: string;
-  additionalNotes: string;
+  tone: string;
+  generateImage?: boolean;
+  imageDescription?: string;
+  imageUrl?: string;
 }
 
 export interface AdCreative {
-  id: string;
+  id?: string;
   headline: string;
-  description: string;
+  primaryText: string;
+  description?: string;
   callToAction: string;
+  target?: string;
   platform: string;
-  format: string;
-  visualDescription: string;
-  targetAudience: string;
-  createdAt: Date;
+  adType: string;
+  imageUrl?: string;
+  createdAt: string;
+}
+
+export interface SavedAd extends AdCreative {
+  id: string;
 }

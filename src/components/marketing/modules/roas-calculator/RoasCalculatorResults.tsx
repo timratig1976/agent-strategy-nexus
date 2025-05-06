@@ -1,192 +1,180 @@
 
 import React from "react";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RoasResults } from "./types";
-import { BarChart3, DollarSign, RotateCcw, TrendingUp, TrendingDown } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { RoasResult } from "./types";
+import { BarChart, LineChart } from "@/components/ui/chart";
 
 interface RoasCalculatorResultsProps {
-  results: RoasResults | null;
+  results: RoasResult;
   onReset: () => void;
 }
 
 const RoasCalculatorResults = ({ results, onReset }: RoasCalculatorResultsProps) => {
-  if (!results) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-muted-foreground">No results available. Please calculate ROAS first.</p>
-      </div>
-    );
-  }
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
+  // Format data for the funnel visualization chart
+  const funnelChartData = {
+    labels: ['Impressions', 'Clicks', 'Leads/Orders'],
+    datasets: [
+      {
+        label: 'Funnel Visualization',
+        data: [
+          results.impressions,
+          results.clicks,
+          results.conversions,
+        ],
+        backgroundColor: [
+          'rgba(54, 162, 235, 0.5)',
+          'rgba(75, 192, 192, 0.5)',
+          'rgba(153, 102, 255, 0.5)',
+        ],
+        borderColor: [
+          'rgb(54, 162, 235)',
+          'rgb(75, 192, 192)',
+          'rgb(153, 102, 255)',
+        ],
+        borderWidth: 1
+      }
+    ]
   };
 
-  const formatPercent = (value: number) => {
-    return `${value.toFixed(2)}%`;
+  // Format data for the ROAS breakdown chart
+  const roasBreakdownData = {
+    labels: ['Ad Cost', 'Revenue', 'Profit'],
+    datasets: [
+      {
+        label: 'Amount ($)',
+        data: [
+          results.adSpend,
+          results.revenue,
+          results.profit
+        ],
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.5)',
+          'rgba(75, 192, 192, 0.5)',
+          'rgba(153, 102, 255, 0.5)',
+        ],
+        borderColor: [
+          'rgb(255, 99, 132)',
+          'rgb(75, 192, 192)',
+          'rgb(153, 102, 255)',
+        ],
+        borderWidth: 1
+      }
+    ]
+  };
+
+  // Line chart for breakeven projection
+  const profitProjectionData = {
+    labels: ['Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6'],
+    datasets: [
+      {
+        label: 'Cumulative Cost',
+        data: Array(6).fill(0).map((_v, i) => results.adSpend * (i + 1)),
+        borderColor: 'rgb(255, 99, 132)',
+        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+        tension: 0.1,
+      },
+      {
+        label: 'Cumulative Revenue',
+        data: Array(6).fill(0).map((_v, i) => {
+          // Revenue grows faster over time
+          const growthFactor = 1 + (i * 0.05);
+          return results.revenue * (i + 1) * growthFactor;
+        }),
+        borderColor: 'rgb(75, 192, 192)',
+        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+        tension: 0.1,
+      }
+    ]
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+      },
+    },
+  };
+
+  const getRoasBadgeColor = (roas: number) => {
+    if (roas >= 4) return "bg-green-100 text-green-800 border-green-300";
+    if (roas >= 2) return "bg-blue-100 text-blue-800 border-blue-300";
+    return "bg-orange-100 text-orange-800 border-orange-300";
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="p-4 flex flex-col items-center">
+          <p className="text-sm text-muted-foreground mb-1">ROAS</p>
+          <Badge variant="outline" className={`text-xl p-2 ${getRoasBadgeColor(results.roas)}`}>
+            {results.roas.toFixed(2)}x
+          </Badge>
+          <p className="text-xs text-muted-foreground mt-2">Return on Ad Spend</p>
+        </Card>
+        
+        <Card className="p-4 flex flex-col items-center">
+          <p className="text-sm text-muted-foreground mb-1">CPA</p>
+          <Badge variant="outline" className="text-xl p-2 bg-blue-100 text-blue-800 border-blue-300">
+            ${results.cpa.toFixed(2)}
+          </Badge>
+          <p className="text-xs text-muted-foreground mt-2">Cost per Acquisition</p>
+        </Card>
+        
+        <Card className="p-4 flex flex-col items-center">
+          <p className="text-sm text-muted-foreground mb-1">Profit</p>
+          <Badge 
+            variant="outline" 
+            className={`text-xl p-2 ${results.profit > 0 ? "bg-green-100 text-green-800 border-green-300" : "bg-red-100 text-red-800 border-red-300"}`}
+          >
+            ${results.profit.toFixed(2)}
+          </Badge>
+          <p className="text-xs text-muted-foreground mt-2">Total Profit</p>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Monthly Revenue</CardTitle>
+            <h3 className="text-lg font-medium">Funnel Visualization</h3>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center">
-              <DollarSign className="h-5 w-5 text-green-500 mr-2" />
-              <span className="text-2xl font-bold">{formatCurrency(results.revenue)}</span>
+            <div className="h-64">
+              <BarChart data={funnelChartData} options={chartOptions} />
             </div>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">ROAS</CardTitle>
+            <h3 className="text-lg font-medium">ROAS Breakdown</h3>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center">
-              <BarChart3 className="h-5 w-5 text-blue-500 mr-2" />
-              <span className="text-2xl font-bold">{results.roas.toFixed(2)}x</span>
-            </div>
-            <div className="mt-2">
-              <Progress value={Math.min(results.roas * 20, 100)} className="h-2" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Target Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center">
-              {results.roas >= (results.targetRoas || 1) ? (
-                <>
-                  <TrendingUp className="h-5 w-5 text-green-500 mr-2" />
-                  <span className="text-2xl font-bold text-green-600">On Target</span>
-                </>
-              ) : (
-                <>
-                  <TrendingDown className="h-5 w-5 text-red-500 mr-2" />
-                  <span className="text-2xl font-bold text-red-600">Below Target</span>
-                </>
-              )}
+            <div className="h-64">
+              <BarChart data={roasBreakdownData} options={chartOptions} />
             </div>
           </CardContent>
         </Card>
       </div>
-      
+
       <Card>
-        <CardHeader>
-          <CardTitle>Campaign Performance Breakdown</CardTitle>
+        <CardHeader className="pb-2">
+          <h3 className="text-lg font-medium">6-Month Breakeven Projection</h3>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Metric</TableHead>
-                <TableHead className="text-right">Value</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell>Monthly Ad Spend</TableCell>
-                <TableCell className="text-right">{formatCurrency(results.adSpend)}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Monthly Clicks</TableCell>
-                <TableCell className="text-right">{results.clicks.toLocaleString()}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Click-Through Rate (CTR)</TableCell>
-                <TableCell className="text-right">{formatPercent(results.ctr)}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Conversion Rate</TableCell>
-                <TableCell className="text-right">{formatPercent(results.conversionRate)}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Conversions</TableCell>
-                <TableCell className="text-right">{results.conversions.toLocaleString()}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Average Order Value</TableCell>
-                <TableCell className="text-right">{formatCurrency(results.averageOrderValue)}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Cost per Click (CPC)</TableCell>
-                <TableCell className="text-right">{formatCurrency(results.cpc)}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Cost per Acquisition (CPA)</TableCell>
-                <TableCell className="text-right">{formatCurrency(results.cpa)}</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-
-          <Separator className="my-6" />
-
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Financial Metrics</TableHead>
-                <TableHead className="text-right">Value</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell>Revenue</TableCell>
-                <TableCell className="text-right">{formatCurrency(results.revenue)}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Profit</TableCell>
-                <TableCell className="text-right">{formatCurrency(results.profit)}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Return on Ad Spend (ROAS)</TableCell>
-                <TableCell className="text-right">{results.roas.toFixed(2)}x</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Target ROAS</TableCell>
-                <TableCell className="text-right">{results.targetRoas?.toFixed(2) || "N/A"}x</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Profit Margin</TableCell>
-                <TableCell className="text-right">{formatPercent(results.profitMargin)}</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+          <div className="h-72">
+            <LineChart data={profitProjectionData} options={chartOptions} />
+          </div>
         </CardContent>
+        <CardFooter className="flex justify-between pt-0">
+          <Button variant="outline" onClick={onReset}>
+            Re-calculate
+          </Button>
+        </CardFooter>
       </Card>
-      
-      <div className="flex justify-end">
-        <Button 
-          onClick={onReset} 
-          variant="outline"
-          className="flex items-center space-x-2"
-        >
-          <RotateCcw className="h-4 w-4" />
-          <span>Try Different Values</span>
-        </Button>
-      </div>
     </div>
   );
 };
