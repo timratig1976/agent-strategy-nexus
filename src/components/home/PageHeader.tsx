@@ -29,10 +29,6 @@ const PageHeader = ({ user, onLogout }: PageHeaderProps) => {
           <div className="bg-muted px-3 py-1.5 rounded-full text-sm text-muted-foreground">
             {userDisplayName}
           </div>
-          <Button variant="outline" size="sm" onClick={onLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Log out
-          </Button>
         </div>
       ) : (
         <Button onClick={() => navigate("/auth")} className="shadow-md hover:shadow-lg transition-shadow">

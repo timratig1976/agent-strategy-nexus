@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { LogOut, Menu, X } from "lucide-react";
+import { Menu, X, Settings } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -26,21 +26,17 @@ export default function NavBar() {
     { name: "Dashboard", href: "/dashboard" },
     { name: "Strategies", href: "/create-strategy" },
     { name: "Company", href: "/company-summary" },
-    { name: "Settings", href: "/settings" },
+    { name: "Settings", href: "/settings", icon: Settings },
   ];
 
   const crmNavItems = [
     { name: "Contacts", href: "/crm/contacts" },
     { name: "Deals", href: "/crm/deals" },
-    { name: "Settings", href: "/settings" },
+    { name: "Settings", href: "/settings", icon: Settings },
   ];
   
   // Select the appropriate nav items
   const navItems = isInCrm ? crmNavItems : marketingNavItems;
-
-  const handleLogout = async () => {
-    await signOut();
-  };
 
   const mobileNavigation = (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -70,12 +66,13 @@ export default function NavBar() {
                     to={item.href}
                     onClick={() => setOpen(false)}
                     className={cn(
-                      "block py-2 px-3 rounded-md transition-colors",
+                      "flex items-center gap-2 block py-2 px-3 rounded-md transition-colors",
                       currentRoute === item.href
                         ? "bg-accent text-accent-foreground font-medium"
                         : "hover:bg-accent/50"
                     )}
                   >
+                    {item.icon && <item.icon className="h-4 w-4" />}
                     {item.name}
                   </Link>
                 </li>
@@ -88,15 +85,6 @@ export default function NavBar() {
               <div className="px-3 py-2 text-sm text-muted-foreground">
                 {user.email}
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start"
-                onClick={handleLogout}
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Log out
-              </Button>
             </div>
           )}
         </div>
@@ -122,13 +110,14 @@ export default function NavBar() {
                     key={item.name}
                     to={item.href}
                     className={cn(
-                      "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                      "px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-2",
                       currentRoute === item.href
                         ? "bg-accent text-accent-foreground"
                         : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                     )}
                   >
-                    {item.name}
+                    {item.icon && <item.icon className="h-4 w-4" />}
+                    {item.name === "Settings" ? null : item.name}
                   </Link>
                 ))}
               </nav>
@@ -138,13 +127,6 @@ export default function NavBar() {
 
         <div className="flex items-center gap-2">
           {isMobile && user ? mobileNavigation : null}
-
-          {!isMobile && user && (
-            <Button variant="outline" size="sm" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Log out
-            </Button>
-          )}
         </div>
       </div>
     </header>
