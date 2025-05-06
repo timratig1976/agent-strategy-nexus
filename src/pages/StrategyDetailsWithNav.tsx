@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import NavBar from "@/components/NavBar";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -19,10 +19,20 @@ const StrategyDetailsWithNav = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
+  // Redirect to dashboard if no ID is provided
+  useEffect(() => {
+    if (!id) {
+      toast.error("Strategy ID is missing");
+      navigate('/dashboard');
+    }
+  }, [id, navigate]);
+  
   // Fetch strategy details
   const { data: strategy, isLoading: isStrategyLoading } = useQuery({
     queryKey: ['strategy', id],
     queryFn: async () => {
+      if (!id) return null;
+      
       try {
         const { data, error } = await supabase
           .from('strategies')
@@ -37,7 +47,8 @@ const StrategyDetailsWithNav = () => {
         toast.error("Failed to load strategy details");
         return null;
       }
-    }
+    },
+    enabled: !!id // Only run query if id is available
   });
   
   // Fetch tasks for this strategy
@@ -48,6 +59,8 @@ const StrategyDetailsWithNav = () => {
   } = useQuery({
     queryKey: ['strategy-tasks', id],
     queryFn: async () => {
+      if (!id) return [];
+      
       try {
         const { data, error } = await supabase
           .from('strategy_tasks')
@@ -73,13 +86,16 @@ const StrategyDetailsWithNav = () => {
         toast.error("Failed to load strategy tasks");
         return [];
       }
-    }
+    },
+    enabled: !!id // Only run query if id is available
   });
   
   // Fetch agent results for this strategy
   const { data: agentResults, isLoading: isResultsLoading } = useQuery({
     queryKey: ['strategy-results', id],
     queryFn: async () => {
+      if (!id) return [];
+      
       try {
         const { data, error } = await supabase
           .from('agent_results')
@@ -93,7 +109,8 @@ const StrategyDetailsWithNav = () => {
         console.error("Error fetching agent results:", err);
         return [];
       }
-    }
+    },
+    enabled: !!id // Only run query if id is available
   });
   
   // Handle task changes
@@ -125,6 +142,20 @@ const StrategyDetailsWithNav = () => {
     return stateColors[state] || "bg-gray-100 text-gray-800";
   };
   
+  // If there's no ID, show a loading state until the redirect happens
+  if (!id) {
+    return (
+      <>
+        <NavBar />
+        <div className="container mx-auto p-4">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Loading...</h1>
+          </div>
+        </div>
+      </>
+    );
+  }
+  
   if (isStrategyLoading || isTasksLoading) {
     return (
       <>
@@ -146,6 +177,13 @@ const StrategyDetailsWithNav = () => {
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Strategy not found</h1>
             <p>The strategy you're looking for doesn't exist or has been removed.</p>
+            <Button 
+              variant="default"
+              className="mt-4" 
+              onClick={() => navigate('/dashboard')}
+            >
+              Return to Dashboard
+            </Button>
           </div>
         </div>
       </>
@@ -188,7 +226,7 @@ const StrategyDetailsWithNav = () => {
               {['briefing', 'persona', 'pain_gains', 'funnel', 'ads'].map((state) => (
                 <StrategyTaskList
                   key={state}
-                  strategyId={id || ''}
+                  strategyId={id}
                   tasks={tasks || []}
                   state={state as any}
                   onTasksChange={handleTasksChange}
@@ -224,9 +262,7 @@ const StrategyDetailsWithNav = () => {
               )}
               
               {/* Display the most recent agent result from AgentResultDisplay */}
-              {id && (
-                <AgentResultDisplay strategyId={id} agentId="" />
-              )}
+              <AgentResultDisplay strategyId={id} agentId="" />
             </div>
           </TabsContent>
         </Tabs>
