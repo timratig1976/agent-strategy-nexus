@@ -11,9 +11,10 @@ export const PromptForm: React.FC<PromptFormProps> = ({
 }) => {
   return (
     <>
-      <div className="space-y-2">
-        <label className="text-sm font-medium">System Prompt</label>
+      <div className="space-y-2 mb-6">
+        <label htmlFor="systemPrompt" className="text-sm font-medium">System Prompt</label>
         <Textarea
+          id="systemPrompt"
           placeholder="Enter system prompt (instructions for the AI)"
           value={systemPrompt}
           onChange={(e) => onChange('systemPrompt', e.target.value)}
@@ -26,8 +27,9 @@ export const PromptForm: React.FC<PromptFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">User Prompt Template</label>
+        <label htmlFor="userPrompt" className="text-sm font-medium">User Prompt Template</label>
         <Textarea
+          id="userPrompt"
           placeholder="Enter the user prompt template"
           value={userPrompt}
           onChange={(e) => onChange('userPrompt', e.target.value)}

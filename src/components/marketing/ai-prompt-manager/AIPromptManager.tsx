@@ -3,17 +3,16 @@ import React, { useEffect, useState } from "react";
 import { Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthProvider";
 import ModuleSelector from "./ModuleSelector";
 import PromptForm from "./PromptForm";
 import SaveButton from "./SaveButton";
 import LoadingIndicator from "./LoadingIndicator";
-import { ModuleOption } from "./types";
+import { MODULE_OPTIONS } from "./constants";
 
 const AIPromptManager: React.FC = () => {
-  const [selectedModule, setSelectedModule] = useState<string | null>(null);
+  const [selectedModule, setSelectedModule] = useState<string>("");
   const [systemPrompt, setSystemPrompt] = useState<string>("");
   const [userPrompt, setUserPrompt] = useState<string>("");
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -153,7 +152,12 @@ const AIPromptManager: React.FC = () => {
         </div>
       </div>
 
-      <ModuleSelector selectedModule={selectedModule} onModuleChange={handleModuleChange} />
+      <ModuleSelector 
+        selectedModule={selectedModule} 
+        onModuleChange={handleModuleChange} 
+        moduleOptions={MODULE_OPTIONS}
+        isLoading={isLoading}
+      />
 
       {isLoading ? (
         <LoadingIndicator />
@@ -162,15 +166,25 @@ const AIPromptManager: React.FC = () => {
           <PromptForm 
             systemPrompt={systemPrompt}
             userPrompt={userPrompt}
-            onSystemPromptChange={handleSystemPromptChange}
-            onUserPromptChange={handleUserPromptChange}
+            isLoading={isLoading}
+            onChange={(field, value) => {
+              if (field === 'systemPrompt') {
+                setSystemPrompt(value);
+              } else {
+                setUserPrompt(value);
+              }
+            }}
           />
         )
       )}
 
       {selectedModule && !isLoading && (
         <div className="mt-6 flex justify-end">
-          <SaveButton isSaving={isSaving} onSave={handleSave} />
+          <SaveButton 
+            isSaving={isSaving} 
+            onSave={handleSave} 
+            isLoading={isLoading}
+          />
         </div>
       )}
     </div>

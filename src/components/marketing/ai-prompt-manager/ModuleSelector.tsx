@@ -10,14 +10,14 @@ export const ModuleSelector: React.FC<ModuleSelectorProps> = ({
   onModuleChange
 }) => {
   return (
-    <div className="space-y-2">
-      <label className="text-sm font-medium">Select Module</label>
+    <div className="space-y-2 mb-6">
+      <label htmlFor="moduleSelect" className="text-sm font-medium">Select Module</label>
       <Select
         value={selectedModule}
         onValueChange={onModuleChange}
         disabled={isLoading}
       >
-        <SelectTrigger>
+        <SelectTrigger id="moduleSelect">
           <SelectValue placeholder="Select a module" />
         </SelectTrigger>
         <SelectContent>
