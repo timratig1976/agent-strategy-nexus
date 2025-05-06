@@ -8,6 +8,7 @@ import ProjectBriefingModule from "@/components/marketing/modules/ProjectBriefin
 import WebsiteCrawlingModule from "@/components/marketing/modules/website-crawler";
 import PersonaGeneratorModule from "@/components/marketing/modules/persona-generator";
 import UspCanvasModule from "@/components/marketing/modules/usp-canvas";
+import RoasCalculatorModule from "@/components/marketing/modules/roas-calculator";
 
 const ModulePage = () => {
   const [searchParams] = useSearchParams();
@@ -24,6 +25,8 @@ const ModulePage = () => {
         return <PersonaGeneratorModule />;
       case "usp_canvas":
         return <UspCanvasModule />;
+      case "roas_calculator":
+        return <RoasCalculatorModule />;
       default:
         return (
           <div className="text-center py-16">
