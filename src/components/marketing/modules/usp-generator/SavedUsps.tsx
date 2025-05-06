@@ -1,90 +1,105 @@
 
 import React from "react";
-import { format } from "date-fns";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Download, Trash2, Award, Target } from "lucide-react";
 import { UspItem } from "./types";
+import { Calendar, Download, MessageSquare, Target, Trash2, Zap } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { formatDistanceToNow } from "date-fns";
 
 interface SavedUspsProps {
   savedUsps: UspItem[];
   onDelete: (id: string) => void;
 }
 
-const SavedUsps = ({ savedUsps, onDelete }: SavedUspsProps) => {
+const SavedUsps: React.FC<SavedUspsProps> = ({ savedUsps, onDelete }) => {
   if (savedUsps.length === 0) {
     return (
-      <Card className="p-6 text-center">
-        <p className="text-muted-foreground mb-2">You haven't saved any USPs yet.</p>
-        <p className="text-sm text-muted-foreground">
-          Generate and save USPs to see them here.
-        </p>
+      <Card className="bg-muted/40">
+        <CardContent className="pt-6 pb-6 text-center">
+          <p className="text-muted-foreground">
+            You haven't saved any USPs yet. Generate some USPs and save them to see them here.
+          </p>
+        </CardContent>
       </Card>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Your Saved USPs</h3>
-        <p className="text-sm text-muted-foreground">
-          {savedUsps.length} saved item{savedUsps.length !== 1 ? "s" : ""}
-        </p>
-      </div>
-
+      <h3 className="text-xl font-semibold">Saved USPs</h3>
+      
       <div className="grid grid-cols-1 gap-6">
         {savedUsps.map((usp) => (
-          <Card key={usp.id} className="border-l-4 border-l-primary">
+          <Card key={usp.id}>
             <CardHeader>
-              <CardTitle className="text-lg">{usp.title}</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Saved on {format(new Date(usp.createdAt), "MMM d, yyyy")}
-              </p>
-            </CardHeader>
-            
-            <CardContent className="space-y-4">
-              <p>{usp.description}</p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="flex items-center text-sm font-medium">
-                    <Target className="mr-2 h-4 w-4 text-primary" />
-                    Target Audience
-                  </div>
-                  <p className="text-sm">{usp.audience}</p>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="text-xl">{usp.title}</CardTitle>
+                  <p className="text-muted-foreground">
+                    For: <span className="font-medium">{usp.audience}</span>
+                  </p>
                 </div>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center text-sm font-medium">
-                    <Award className="mr-2 h-4 w-4 text-primary" />
-                    Top Differentiator
-                  </div>
-                  <p className="text-sm">{usp.differentiators[0]}</p>
+                <div className="flex items-center text-xs text-muted-foreground">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  {formatDistanceToNow(new Date(usp.createdAt), { addSuffix: true })}
                 </div>
               </div>
-              
-              <div className="pt-2">
-                <p className="text-sm font-medium mb-2">Application Areas:</p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p>{usp.description}</p>
+
+              <div>
+                <h4 className="text-sm font-medium flex items-center mb-2">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Supporting Points
+                </h4>
+                <ul className="list-disc pl-5 space-y-1">
+                  {usp.supportingPoints.map((point, index) => (
+                    <li key={index} className="text-sm">{point}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium flex items-center mb-2">
+                  <Zap className="h-4 w-4 mr-2" />
+                  Key Differentiators
+                </h4>
+                <ul className="list-disc pl-5 space-y-1">
+                  {usp.differentiators.map((diff, index) => (
+                    <li key={index} className="text-sm">{diff}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium flex items-center mb-2">
+                  <Target className="h-4 w-4 mr-2" />
+                  Where to Apply
+                </h4>
                 <div className="flex flex-wrap gap-2">
                   {usp.applicationAreas.map((area, index) => (
-                    <Badge key={index} variant="secondary">{area}</Badge>
+                    <Badge key={index} variant="outline" className="bg-muted/50">
+                      {area}
+                    </Badge>
                   ))}
                 </div>
               </div>
             </CardContent>
-            
-            <CardFooter className="flex justify-between border-t pt-4">
+            <CardFooter className="border-t pt-4 flex justify-between">
               <Button variant="outline" size="sm">
-                <Download className="mr-2 h-4 w-4" /> Export
+                <Download className="mr-2 h-4 w-4" />
+                Export as PDF
               </Button>
               <Button 
                 variant="ghost" 
-                size="sm"
+                size="sm" 
                 onClick={() => onDelete(usp.id)}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                className="text-destructive hover:text-destructive"
               >
-                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
               </Button>
             </CardFooter>
           </Card>
