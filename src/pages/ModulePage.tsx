@@ -11,6 +11,7 @@ import UspCanvasModule from "@/components/marketing/modules/usp-canvas";
 import RoasCalculatorModule from "@/components/marketing/modules/roas-calculator";
 import CampaignIdeasModule from "@/components/marketing/modules/campaign-ideas";
 import AdCreativeModule from "@/components/marketing/modules/ad-creative";
+import ContentStrategyModule from "@/components/marketing/modules/content-strategy";
 
 const ModulePage = () => {
   const [searchParams] = useSearchParams();
@@ -33,6 +34,8 @@ const ModulePage = () => {
         return <CampaignIdeasModule />;
       case "ad_creative":
         return <AdCreativeModule />;
+      case "content_strategy":
+        return <ContentStrategyModule />;
       default:
         return (
           <div className="text-center py-16">
