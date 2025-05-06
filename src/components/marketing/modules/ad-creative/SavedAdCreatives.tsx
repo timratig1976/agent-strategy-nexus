@@ -1,5 +1,6 @@
 
 import React from "react";
+import { format } from "date-fns";
 import { AdCreative } from "./types";
 import { Button } from "@/components/ui/button";
 import { 
@@ -10,7 +11,6 @@ import {
   CardFooter
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
 import { Trash2, Calendar } from "lucide-react";
 
 interface SavedAdCreativesProps {
@@ -22,6 +22,14 @@ const SavedAdCreatives = ({
   savedCreatives,
   onDelete
 }: SavedAdCreativesProps) => {
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), "MMM d, yyyy");
+    } catch (e) {
+      return dateString;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold mb-4">Saved Ad Creatives</h3>
@@ -47,7 +55,7 @@ const SavedAdCreatives = ({
                   </div>
                   <div className="flex items-center text-xs text-muted-foreground gap-1">
                     <Calendar className="h-3 w-3" />
-                    {format(new Date(creative.createdAt), "MMM d, yyyy")}
+                    {formatDate(creative.createdAt)}
                   </div>
                 </div>
               </CardHeader>
@@ -57,8 +65,8 @@ const SavedAdCreatives = ({
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">CTA:</span>
                   <Badge variant="secondary" className="text-xs">{creative.callToAction}</Badge>
-                  <span className="text-xs text-muted-foreground ml-2">Format:</span>
-                  <span className="text-xs">{creative.format}</span>
+                  <span className="text-xs text-muted-foreground ml-2">Type:</span>
+                  <span className="text-xs">{creative.adType}</span>
                 </div>
               </CardContent>
               <CardFooter className="border-t pt-3 flex justify-end">
@@ -66,7 +74,7 @@ const SavedAdCreatives = ({
                   variant="ghost" 
                   size="sm"
                   className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
-                  onClick={() => onDelete(creative.id)}
+                  onClick={() => creative.id && onDelete(creative.id)}
                 >
                   <Trash2 className="h-4 w-4 mr-1" />
                   Remove

@@ -23,4 +23,5 @@ export interface RoasResults {
   cpc: number;
   cpa: number;
   profit: number;
+  impressions?: number;
 }

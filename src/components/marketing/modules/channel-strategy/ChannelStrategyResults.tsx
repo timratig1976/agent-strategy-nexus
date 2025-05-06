@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ChannelStrategyResult } from "./types";
-import { BarChart } from "@/components/ui/chart";
+import { BarChart } from "@/components/ui/recharts";
 
 interface ChannelStrategyResultsProps {
   results: ChannelStrategyResult;

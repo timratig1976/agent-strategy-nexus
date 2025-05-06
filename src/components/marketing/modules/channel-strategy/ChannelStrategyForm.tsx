@@ -73,7 +73,7 @@ const ChannelStrategyForm = ({
   });
 
   const handleFormSubmit = (values: z.infer<typeof formSchema>) => {
-    setFormData(values);
+    setFormData(values as ChannelStrategyFormData);
     onSubmit(new Event('submit') as unknown as React.FormEvent);
   };
 

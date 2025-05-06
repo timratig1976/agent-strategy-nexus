@@ -1,33 +1,60 @@
 
-export interface ContentPillarFormData {
-  businessNiche: string;
+export interface ContentStrategyFormData {
+  keyword: string;
   targetAudience: string;
-  brandVoice: string[];
-  marketingGoals: string[];
-  existingContent: string;
-  competitorInsights: string;
-  keyTopics: string[];
-  contentFormats: string[];
-  distributionChannels: string[];
+  businessGoals: string;
+  contentType: string;
+  tone: string;
+  additionalInfo: string;
 }
 
 export interface ContentPillar {
   id: string;
   title: string;
   description: string;
-  targetAudience: string;
-  keySubtopics: string[];
-  contentIdeas: ContentIdeaItem[];
+  subtopics: ContentSubtopic[];
   keywords: string[];
-  contentFormats: string[];
-  distributionChannels: string[];
-  createdAt: Date;
+  formats: string[];
+  channels: string[];
 }
 
-export interface ContentIdeaItem {
+export interface ContentSubtopic {
+  id: string;
   title: string;
+  description: string;
+  contentIdeas: ContentIdea[];
+}
+
+export interface ContentIdea {
+  id: string;
+  title: string;
+  description: string;
   format: string;
-  channel: string;
-  audience: string;
-  estimatedEffort: string;
+  example?: string;
+}
+
+export interface ContentPillarCardProps {
+  pillar: ContentPillar;
+  onSave: () => void;
+}
+
+export interface ContentIdeasAccordionProps {
+  subtopics: ContentSubtopic[];
+}
+
+export interface KeywordsAccordionProps {
+  keywords: string[];
+}
+
+export interface DistributionStrategyAccordionProps {
+  formats: string[];
+  channels: string[];
+}
+
+export interface LoadingStateProps {
+  message?: string;
+}
+
+export interface EmptyStateProps {
+  message?: string;
 }

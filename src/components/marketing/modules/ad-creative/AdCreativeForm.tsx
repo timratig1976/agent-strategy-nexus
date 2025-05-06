@@ -49,6 +49,7 @@ interface AdCreativeFormProps {
   setFormData: React.Dispatch<React.SetStateAction<AdCreativeFormData>>;
   isLoading: boolean;
   onSubmit: (e: React.FormEvent) => void;
+  error: string | null;
 }
 
 const AdCreativeForm = ({
@@ -56,6 +57,7 @@ const AdCreativeForm = ({
   setFormData,
   isLoading,
   onSubmit,
+  error,
 }: AdCreativeFormProps) => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("basic");
@@ -85,7 +87,7 @@ const AdCreativeForm = ({
     }
     
     // Include the generated image URL in form data if available
-    const updatedFormData = {
+    const updatedFormData: AdCreativeFormData = {
       ...values,
       imageUrl: generatedImage || formData.imageUrl, // Keep existing image URL if no new one
     };
@@ -112,10 +114,10 @@ const AdCreativeForm = ({
       if (data?.image_url) {
         setGeneratedImage(data.image_url);
         // Update form data with image URL
-        setFormData(prev => ({
-          ...prev,
+        setFormData({
+          ...formData,
           imageUrl: data.image_url,
-        }));
+        });
         
         toast({
           title: "Image generated",

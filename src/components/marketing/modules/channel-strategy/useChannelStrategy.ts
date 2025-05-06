@@ -83,7 +83,7 @@ export const useChannelStrategy = () => {
   };
 
   const getChannelAdvice = (channelName: string, percentage: number, budget: number) => {
-    const recommendations = {
+    const recommendations: Record<string, string[]> = {
       "Social Media": [
         `Focus on ${budget > 5000 ? 'Facebook, Instagram, and LinkedIn' : 'Instagram and Facebook'} with ${percentage > 30 ? 'daily' : 'regular'} posts and promoted content.`,
         `Use targeted ads to reach specific audience segments with custom creatives.`,
@@ -136,7 +136,7 @@ export const useChannelStrategy = () => {
       ]
     };
 
-    const channelAdvice = recommendations[channelName as keyof typeof recommendations];
+    const channelAdvice = recommendations[channelName];
     if (channelAdvice) {
       return channelAdvice.join(' ');
     }

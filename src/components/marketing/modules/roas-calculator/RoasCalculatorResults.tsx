@@ -3,11 +3,11 @@ import React from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RoasResult } from "./types";
-import { BarChart, LineChart } from "@/components/ui/chart";
+import { RoasResults } from "./types";
+import { BarChart, LineChart } from "@/components/ui/recharts";
 
 interface RoasCalculatorResultsProps {
-  results: RoasResult;
+  results: RoasResults;
   onReset: () => void;
 }
 
@@ -19,7 +19,7 @@ const RoasCalculatorResults = ({ results, onReset }: RoasCalculatorResultsProps)
       {
         label: 'Funnel Visualization',
         data: [
-          results.impressions,
+          results.impressions || results.clicks * 100, // If impressions not available, estimate from clicks
           results.clicks,
           results.conversions,
         ],

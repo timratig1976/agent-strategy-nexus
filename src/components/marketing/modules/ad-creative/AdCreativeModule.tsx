@@ -11,13 +11,15 @@ const AdCreativeModule = () => {
   const {
     formData,
     setFormData,
+    result,
     adCreatives,
     savedCreatives,
-    isGenerating,
+    isLoading,
+    isSaving,
     error,
     activeTab,
     setActiveTab,
-    generateAdCreatives,
+    handleSubmit,
     saveCreative,
     deleteSavedCreative,
     resetGenerator
@@ -48,18 +50,33 @@ const AdCreativeModule = () => {
           <AdCreativeForm 
             formData={formData}
             setFormData={setFormData}
-            onGenerate={generateAdCreatives}
-            isGenerating={isGenerating}
+            isLoading={isLoading}
+            onSubmit={handleSubmit}
             error={error}
           />
         </TabsContent>
         
         <TabsContent value="results">
-          <AdCreativeResults
-            adCreatives={adCreatives}
-            onSave={saveCreative}
-            onBack={resetGenerator}
-          />
+          {result ? (
+            <AdCreativeResults
+              result={result}
+              onSave={saveCreative}
+              onReset={resetGenerator}
+              isSaving={isSaving}
+            />
+          ) : (
+            <div className="space-y-6">
+              {adCreatives.map((creative, index) => (
+                <AdCreativeResults
+                  key={index}
+                  result={creative}
+                  onSave={() => saveCreative(creative)}
+                  onReset={resetGenerator}
+                  isSaving={isSaving}
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
         
         <TabsContent value="saved">
