@@ -12,6 +12,7 @@ import RoasCalculatorModule from "@/components/marketing/modules/roas-calculator
 import CampaignIdeasModule from "@/components/marketing/modules/campaign-ideas";
 import AdCreativeModule from "@/components/marketing/modules/ad-creative";
 import ContentStrategyModule from "@/components/marketing/modules/content-strategy";
+import LeadMagnetsModule from "@/components/marketing/modules/lead-magnets";
 
 const ModulePage = () => {
   const [searchParams] = useSearchParams();
@@ -36,6 +37,8 @@ const ModulePage = () => {
         return <AdCreativeModule />;
       case "content_strategy":
         return <ContentStrategyModule />;
+      case "lead_magnets":
+        return <LeadMagnetsModule />;
       default:
         return (
           <div className="text-center py-16">
