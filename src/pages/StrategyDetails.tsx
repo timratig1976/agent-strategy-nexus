@@ -1,8 +1,10 @@
+
 // Import the correct component
 import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import NavBar from "@/components/NavBar";
 
 // Import refactored components
 import StrategyBackButton from "@/components/strategy/StrategyBackButton";
