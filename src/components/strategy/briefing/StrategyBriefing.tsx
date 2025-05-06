@@ -13,7 +13,7 @@ import { WebsiteCrawlResult } from "@/components/marketing/modules/website-crawl
 
 const StrategyBriefing: React.FC<StrategyBriefingProps> = ({ 
   strategy, 
-  agentResults = [] // Provide a default empty array to fix the 'never' type
+  agentResults = [] // Provide a default empty array
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showCrawler, setShowCrawler] = useState(false);
