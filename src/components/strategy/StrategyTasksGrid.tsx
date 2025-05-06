@@ -15,15 +15,16 @@ const StrategyTasksGrid: React.FC<StrategyTasksGridProps> = ({
   onTasksChange
 }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
       {['briefing', 'persona', 'pain_gains', 'funnel', 'ads'].map((state) => (
-        <TaskList
-          key={state}
-          strategyId={strategyId}
-          tasks={tasks || []}
-          state={state as StrategyState}
-          onTasksChange={onTasksChange}
-        />
+        <div key={state} className="flex flex-col h-full">
+          <TaskList
+            strategyId={strategyId}
+            tasks={tasks || []}
+            state={state as StrategyState}
+            onTasksChange={onTasksChange}
+          />
+        </div>
       ))}
     </div>
   );
