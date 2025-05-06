@@ -8,6 +8,7 @@ import ProjectBriefingModule from "@/components/marketing/modules/ProjectBriefin
 import WebsiteCrawlingModule from "@/components/marketing/modules/website-crawler";
 import PersonaGeneratorModule from "@/components/marketing/modules/persona-generator";
 import UspCanvasModule from "@/components/marketing/modules/usp-canvas";
+import UspGeneratorModule from "@/components/marketing/modules/usp-generator";
 import RoasCalculatorModule from "@/components/marketing/modules/roas-calculator";
 import CampaignIdeasModule from "@/components/marketing/modules/campaign-ideas";
 import AdCreativeModule from "@/components/marketing/modules/ad-creative";
@@ -29,6 +30,8 @@ const ModulePage = () => {
         return <PersonaGeneratorModule />;
       case "usp_canvas":
         return <UspCanvasModule />;
+      case "usp_generator":
+        return <UspGeneratorModule />;
       case "roas_calculator":
         return <RoasCalculatorModule />;
       case "campaign_ideas":
