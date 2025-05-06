@@ -35,7 +35,7 @@ const MarketingAgentHub = () => {
       return;
     }
     
-    navigate(`/create-strategy?phase=${moduleType}`);
+    navigate(`/marketing/module?type=${moduleType}`);
   };
 
   const modules = [
