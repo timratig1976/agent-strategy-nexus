@@ -20,7 +20,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   const [crawlResults, setCrawlResults] = useState<WebsiteCrawlResult | undefined>();
   const [formValues, setFormValues] = useState<StrategyFormValues>({
     name: strategy.name,
-    description: strategy.description,
+    description: strategy.description || '',
     companyName: '',
     websiteUrl: '',
     productDescription: '',
@@ -39,15 +39,14 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
         
         if (data && Array.isArray(data) && data.length > 0) {
           const metadata = data[0] as StrategyMetadata;
-          setFormValues({
-            name: strategy.name,
-            description: strategy.description,
+          setFormValues(prevFormValues => ({
+            ...prevFormValues,
             companyName: metadata.company_name || '',
             websiteUrl: metadata.website_url || '',
             productDescription: metadata.product_description || '',
             productUrl: metadata.product_url || '',
             additionalInfo: metadata.additional_info || ''
-          });
+          }));
         }
       } catch (error) {
         console.error("Error fetching strategy metadata:", error);
@@ -63,7 +62,6 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
     try {
       setIsGenerating(true);
       
-      // Call the AI service to generate briefing
       const { data, error } = await MarketingAIService.generateContent<AgentResult>(
         'briefing',
         'generate',
@@ -75,14 +73,13 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
       
       if (error) throw new Error(error);
       
-      // Refresh the page to show new results
       toast.success("AI Briefing generated successfully");
       
       // Wait a moment before refreshing
       setTimeout(() => {
         window.location.reload();
       }, 1500);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating briefing:", error);
       toast.error("Failed to generate AI briefing");
     } finally {
@@ -91,9 +88,8 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   };
 
   // Function to update strategy metadata
-  const saveStrategyMetadata = async (updatedValues: StrategyFormValues) => {
+  const saveStrategyMetadata = async (updatedValues: StrategyFormValues): Promise<boolean> => {
     try {
-      // Using raw SQL again via RPC for consistency
       const { error } = await supabase
         .rpc('upsert_strategy_metadata', {
           strategy_id_param: strategy.id,
@@ -117,7 +113,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   };
   
   // Save agent result changes
-  const saveAgentResult = async (updatedResult: AgentResult) => {
+  const saveAgentResult = async (updatedResult: AgentResult): Promise<boolean> => {
     try {
       const { error } = await supabase
         .from('agent_results')
@@ -143,7 +139,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   };
   
   // Find the latest briefing result
-  const latestBriefing = agentResults && agentResults.length > 0 ? agentResults[0] : null;
+  const latestBriefing = agentResults.length > 0 ? agentResults[0] : null;
 
   return (
     <div className="space-y-6">
