@@ -1,7 +1,6 @@
 
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { useAuth } from "@/context/AuthProvider";
@@ -59,20 +58,20 @@ const Index = () => {
       <PageHeader user={user} onLogout={handleLogout} />
 
       <div className="text-center mb-12">
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Complete business management solution with marketing strategy tools and customer relationship management.
         </p>
       </div>
 
       <DatabaseStatus status={dbStatus} />
 
-      <Tabs defaultValue="marketing" className="mb-8">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="marketing" className="flex gap-2 items-center">
+      <Tabs defaultValue="marketing" className="mb-12">
+        <TabsList className="grid w-full grid-cols-2 mb-8 max-w-lg mx-auto shadow-sm">
+          <TabsTrigger value="marketing" className="flex gap-2 items-center py-3 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 dark:data-[state=active]:bg-blue-950 dark:data-[state=active]:text-blue-300">
             <LayoutDashboard className="h-4 w-4" />
             Marketing Strategy
           </TabsTrigger>
-          <TabsTrigger value="crm" className="flex gap-2 items-center">
+          <TabsTrigger value="crm" className="flex gap-2 items-center py-3 data-[state=active]:bg-green-50 data-[state=active]:text-green-700 dark:data-[state=active]:bg-green-950 dark:data-[state=active]:text-green-300">
             <Users className="h-4 w-4" />
             CRM
           </TabsTrigger>
