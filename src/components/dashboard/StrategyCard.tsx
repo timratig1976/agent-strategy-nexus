@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +22,7 @@ const StrategyCard = ({ strategy, stateLabels, stateColors }: StrategyCardProps)
   };
 
   return (
-    <Link to={`/strategy/${strategy.id}`}>
+    <Link to={`/strategy-details/${strategy.id}`}>
       <Card className="h-full hover:shadow-lg transition-shadow">
         <CardHeader>
           <div className="flex justify-between items-start">

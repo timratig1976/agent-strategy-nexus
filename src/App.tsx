@@ -40,8 +40,8 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/strategy/:strategyId" element={<StrategyDetailsWithNav />} />
-          <Route path="/strategy-details/:strategyId" element={<StrategyDetails />} />
+          <Route path="/strategy/:id" element={<StrategyDetailsWithNav />} />
+          <Route path="/strategy-details/:id" element={<StrategyDetails />} />
           <Route path="/create-strategy" element={<CreateStrategy />} />
           <Route path="/company-summary" element={<CompanySummaryPage />} />
           <Route path="/marketing-hub" element={<MarketingHubPage />} />
