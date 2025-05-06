@@ -2,7 +2,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { LogOut } from "lucide-react";
 
 interface PageHeaderProps {
   user: any;
@@ -26,12 +25,15 @@ const PageHeader = ({ user, onLogout }: PageHeaderProps) => {
       
       {user ? (
         <div className="flex items-center gap-3">
-          <div className="bg-muted px-3 py-1.5 rounded-full text-sm text-muted-foreground">
+          <div className="bg-muted px-3 py-2 rounded-md text-sm text-muted-foreground">
             {userDisplayName}
           </div>
         </div>
       ) : (
-        <Button onClick={() => navigate("/auth")} className="shadow-md hover:shadow-lg transition-shadow">
+        <Button 
+          onClick={() => navigate("/auth")} 
+          className="px-4 py-2 h-10 shadow-md hover:shadow-lg transition-shadow"
+        >
           Sign In
         </Button>
       )}

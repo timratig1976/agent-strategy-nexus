@@ -10,7 +10,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import AppSwitcher from "./AppSwitcher";
 
 export default function NavBar() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const isMobile = useIsMobile();
@@ -95,7 +95,7 @@ export default function NavBar() {
 
   return (
     <header className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 w-full border-b">
-      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="font-semibold text-lg mr-6">
             {isInCrm ? "CRM Hub" : "Marketing Hub"}
@@ -105,20 +105,20 @@ export default function NavBar() {
             <>
               {user && <AppSwitcher />}
               
-              <nav className="hidden ml-6 md:flex items-center gap-1">
+              <nav className="hidden ml-6 md:flex items-center gap-4">
                 {navItems.map((item) => (
                   <Link
                     key={item.name}
                     to={item.href}
                     className={cn(
-                      "px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-2",
+                      "px-3 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-2",
                       currentRoute === item.href
                         ? "bg-accent text-accent-foreground"
                         : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                     )}
                   >
-                    {item.icon && <item.icon className="h-4 w-4" />}
-                    {item.name === "Settings" ? null : item.name}
+                    {item.icon ? <item.icon className="h-4 w-4" /> : null}
+                    {item.name === "Settings" && !item.icon ? null : item.name}
                   </Link>
                 ))}
               </nav>

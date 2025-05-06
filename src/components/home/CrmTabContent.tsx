@@ -28,7 +28,7 @@ const CrmTabContent = ({ dbStatus, isAuthenticated }: CrmTabContentProps) => {
         <CardFooter>
           <Button 
             onClick={() => navigate("/crm/dashboard")} 
-            className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+            className="w-full h-10 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
             disabled={dbStatus !== 'ready' || !isAuthenticated}
           >
             {!isAuthenticated ? "Sign in to View Dashboard" : "View Dashboard"}
@@ -50,7 +50,7 @@ const CrmTabContent = ({ dbStatus, isAuthenticated }: CrmTabContentProps) => {
           <Button 
             onClick={() => navigate("/crm/contacts")} 
             variant="outline" 
-            className="w-full border-blue-200 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-950 dark:hover:text-blue-300"
+            className="w-full h-10 px-4 py-2 border-blue-200 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-950 dark:hover:text-blue-300"
             disabled={dbStatus !== 'ready' || !isAuthenticated}
           >
             {!isAuthenticated ? "Sign in to View Contacts" : "View Contacts"}
@@ -72,7 +72,7 @@ const CrmTabContent = ({ dbStatus, isAuthenticated }: CrmTabContentProps) => {
           <Button 
             onClick={() => navigate("/crm/deals")} 
             variant="outline" 
-            className="w-full border-amber-200 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-950 dark:hover:text-amber-300"
+            className="w-full h-10 px-4 py-2 border-amber-200 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-950 dark:hover:text-amber-300"
             disabled={dbStatus !== 'ready' || !isAuthenticated}
           >
             {!isAuthenticated ? "Sign in to Track Deals" : "View Deals"}
