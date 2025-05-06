@@ -15,6 +15,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, For
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { StrategyState } from "@/types/marketing";
 
 const strategyFormSchema = z.object({
   name: z.string().min(3, { message: "Strategy name must be at least 3 characters" }),
@@ -68,7 +69,7 @@ const CreateStrategy = () => {
           product_url: values.productUrl || "",
           additional_info: values.additionalInfo || "",
           status: 'in_progress',
-          state: 'briefing'
+          state: 'briefing' as StrategyState
         })
         .select()
         .single();
@@ -79,7 +80,7 @@ const CreateStrategy = () => {
       const initialTask = {
         strategy_id: strategy.id,
         title: "Create AI Briefing",
-        state: 'briefing',
+        state: 'briefing' as StrategyState,
         is_completed: false
       };
       
@@ -102,65 +103,32 @@ const CreateStrategy = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
       <NavBar />
-      
-      <div className="flex justify-start">
-        <Button variant="ghost" onClick={() => navigate("/dashboard")} className="mb-6">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
-        </Button>
-      </div>
-      
-      <div className="max-w-3xl mx-auto">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Create New Marketing Strategy</CardTitle>
-          </CardHeader>
-          
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)}>
-              <CardContent className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Strategy Name *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="E.g., Q3 Product Launch Strategy" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Briefly describe your marketing strategy and objectives..."
-                          rows={3}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-start mb-6">
+          <Button variant="ghost" onClick={() => navigate("/dashboard")}>
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
+          </Button>
+        </div>
+        
+        <div className="max-w-3xl mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Create New Marketing Strategy</CardTitle>
+            </CardHeader>
+            
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmit)}>
+                <CardContent className="space-y-6">
                   <FormField
                     control={form.control}
-                    name="companyName"
+                    name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Company Name *</FormLabel>
+                        <FormLabel>Strategy Name *</FormLabel>
                         <FormControl>
-                          <Input placeholder="Your Company Name" {...field} />
+                          <Input placeholder="E.g., Q3 Product Launch Strategy" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -169,83 +137,117 @@ const CreateStrategy = () => {
                   
                   <FormField
                     control={form.control}
-                    name="websiteUrl"
+                    name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Website URL</FormLabel>
+                        <FormLabel>Description</FormLabel>
                         <FormControl>
-                          <Input placeholder="https://yourcompany.com" {...field} />
+                          <Textarea 
+                            placeholder="Briefly describe your marketing strategy and objectives..."
+                            rows={3}
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="companyName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Company Name *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Your Company Name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="websiteUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Website URL</FormLabel>
+                          <FormControl>
+                            <Input placeholder="https://yourcompany.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <FormField
+                    control={form.control}
+                    name="productDescription"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Product Description</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Describe your product or service..."
+                            rows={3}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="productUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Product URL</FormLabel>
+                        <FormControl>
+                          <Input placeholder="https://yourcompany.com/product" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="additionalInfo"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Additional Information</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Any other relevant information about your strategy, target audience, goals, etc."
+                            rows={4}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
                 
-                <FormField
-                  control={form.control}
-                  name="productDescription"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Product Description</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Describe your product or service..."
-                          rows={3}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="productUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Product URL</FormLabel>
-                      <FormControl>
-                        <Input placeholder="https://yourcompany.com/product" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="additionalInfo"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Additional Information</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Any other relevant information about your strategy, target audience, goals, etc."
-                          rows={4}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-              
-              <CardFooter className="flex justify-between">
-                <Button type="button" variant="outline" onClick={() => navigate('/dashboard')}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={submitting}>
-                  {submitting ? "Processing..." : "Create Strategy"}
-                </Button>
-              </CardFooter>
-            </form>
-          </Form>
-        </Card>
+                <CardFooter className="flex justify-between">
+                  <Button type="button" variant="outline" onClick={() => navigate('/dashboard')}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={submitting}>
+                    {submitting ? "Processing..." : "Create Strategy"}
+                  </Button>
+                </CardFooter>
+              </form>
+            </Form>
+          </Card>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -772,34 +772,49 @@ export type Database = {
       }
       strategies: {
         Row: {
+          additional_info: string | null
+          company_name: string | null
           created_at: string
           description: string | null
           id: string
           name: string
+          product_description: string | null
+          product_url: string | null
           state: Database["public"]["Enums"]["strategy_state"]
           status: Database["public"]["Enums"]["strategy_status"]
           updated_at: string
           user_id: string | null
+          website_url: string | null
         }
         Insert: {
+          additional_info?: string | null
+          company_name?: string | null
           created_at?: string
           description?: string | null
           id?: string
           name: string
+          product_description?: string | null
+          product_url?: string | null
           state?: Database["public"]["Enums"]["strategy_state"]
           status?: Database["public"]["Enums"]["strategy_status"]
           updated_at?: string
           user_id?: string | null
+          website_url?: string | null
         }
         Update: {
+          additional_info?: string | null
+          company_name?: string | null
           created_at?: string
           description?: string | null
           id?: string
           name?: string
+          product_description?: string | null
+          product_url?: string | null
           state?: Database["public"]["Enums"]["strategy_state"]
           status?: Database["public"]["Enums"]["strategy_status"]
           updated_at?: string
           user_id?: string | null
+          website_url?: string | null
         }
         Relationships: []
       }
