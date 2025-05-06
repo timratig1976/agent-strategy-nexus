@@ -1,13 +1,21 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL');
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Initialize Supabase client with service role key (admin)
+const supabase = createClient(
+  supabaseUrl!,
+  supabaseServiceKey!
+);
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -18,11 +26,29 @@ serve(async (req) => {
   try {
     const { module, action, data } = await req.json();
     
-    // Construct system prompt based on module and action
-    let systemPrompt = getSystemPrompt(module, action);
+    // Fetch custom prompt from database if available
+    const { data: promptData, error: promptError } = await supabase
+      .from('ai_prompts')
+      .select('system_prompt, user_prompt')
+      .eq('module', module)
+      .maybeSingle();
     
-    // Create appropriate user prompt based on data and action
-    const userPrompt = constructUserPrompt(module, action, data);
+    // Construct system prompt based on custom prompt or fallback to default
+    let systemPrompt = "";
+    if (promptData && promptData.system_prompt) {
+      systemPrompt = promptData.system_prompt;
+    } else {
+      systemPrompt = getSystemPrompt(module, action);
+    }
+    
+    // Create appropriate user prompt based on custom template or fallback to default
+    let userPrompt = "";
+    if (promptData && promptData.user_prompt) {
+      // Replace variables in the template with actual data
+      userPrompt = replacePlaceholders(promptData.user_prompt, data);
+    } else {
+      userPrompt = constructUserPrompt(module, action, data);
+    }
     
     // Make OpenAI API call
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -46,11 +72,11 @@ serve(async (req) => {
       throw new Error(`OpenAI Error: ${error.error?.message || 'Unknown error'}`);
     }
 
-    const data = await response.json();
-    const result = data.choices[0].message.content;
+    const result = await response.json();
+    const content = result.choices[0].message.content;
     
     // Parse the result based on module and action
-    const parsedResult = parseAIResult(module, action, result);
+    const parsedResult = parseAIResult(module, action, content);
 
     return new Response(JSON.stringify({ result: parsedResult }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -63,6 +89,33 @@ serve(async (req) => {
     });
   }
 });
+
+// Helper function to replace placeholders in the prompt template
+function replacePlaceholders(template: string, data: any): string {
+  let result = template;
+  
+  // Replace all placeholders in format {{variable}} with the corresponding data
+  const placeholderPattern = /\{\{(\w+)\}\}/g;
+  let match;
+  
+  while ((match = placeholderPattern.exec(template)) !== null) {
+    const placeholder = match[0];
+    const key = match[1];
+    
+    if (data[key] !== undefined) {
+      let value = data[key];
+      
+      // Handle arrays specially
+      if (Array.isArray(value)) {
+        value = value.join(', ');
+      }
+      
+      result = result.replace(placeholder, value);
+    }
+  }
+  
+  return result;
+}
 
 // Helper functions for different modules
 function getSystemPrompt(module: string, action: string): string {

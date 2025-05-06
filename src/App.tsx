@@ -1,96 +1,62 @@
-
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/context/AuthProvider";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import CreateStrategy from "./pages/CreateStrategy";
-import StrategyDetailsWithNav from "./pages/StrategyDetailsWithNav";
-import SetupDatabase from "./pages/SetupDatabase";
-import AuthPage from "./pages/AuthPage";
-import NotFound from "./pages/NotFound";
-import Settings from "./pages/Settings";
-import CompanySummaryPage from "./pages/CompanySummaryPage";
-import ContactsPage from "./pages/crm/ContactsPage";
-import ContactDetailsPage from "./pages/crm/ContactDetailsPage";
-import DealsPage from "./pages/crm/DealsPage";
-import CrmDashboardPage from "./pages/crm/DashboardPage";
-import MarketingHubPage from "./pages/MarketingHubPage";
-import ModulePage from "./pages/ModulePage";
-import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { Toaster } from 'sonner';
+import Index from '@/pages/Index';
+import AuthPage from '@/pages/AuthPage';
+import SetupDatabase from '@/pages/SetupDatabase';
+import Dashboard from '@/pages/Dashboard';
+import Settings from '@/pages/Settings';
+import StrategyDetailsWithNav from '@/pages/StrategyDetailsWithNav';
+import StrategyDetails from '@/pages/StrategyDetails';
+import CreateStrategy from '@/pages/CreateStrategy';
+import CompanySummaryPage from '@/pages/CompanySummaryPage';
+import MarketingHubPage from '@/pages/MarketingHubPage';
+import ModulePage from '@/pages/ModulePage';
+import DashboardPage from "@/pages/crm/DashboardPage";
+import ContactsPage from "@/pages/crm/ContactsPage";
+import ContactDetailsPage from "@/pages/crm/ContactDetailsPage";
+import DealsPage from "@/pages/crm/DealsPage";
+import NotFound from "@/pages/NotFound";
 import { useAuth } from "@/context/AuthProvider";
-import { toast } from "@/components/ui/sonner";
+import { Navigate } from 'react-router-dom';
+import AIPromptManagerPage from "@/pages/AIPromptManagerPage";
 
-const AppContent = () => {
-  const { user, signOut } = useAuth();
+// Protected Route Component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
 
-  const handleLogout = async () => {
-    await signOut();
-    toast.success("Successfully logged out");
-  };
+  if (loading) {
+    return <div>Loading...</div>; // Replace with a proper loading indicator
+  }
 
-  return (
-    <div className="relative">
-      {user && (
-        <div className="fixed top-3 right-4 z-40">
-          <Button variant="outline" size="sm" onClick={handleLogout} className="flex items-center gap-2">
-            <LogOut className="h-4 w-4" />
-            Log out
-          </Button>
-        </div>
-      )}
-      
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/auth" element={<AuthPage />} />
-        <Route path="/setup-database" element={<SetupDatabase />} />
-        
-        {/* Protected routes */}
-        <Route element={<ProtectedRoute />}>
-          {/* Marketing Strategy Routes */}
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/create-strategy" element={<CreateStrategy />} />
-          <Route path="/strategy/:id" element={<StrategyDetailsWithNav />} />
-          <Route path="/company-summary" element={<CompanySummaryPage />} />
-          <Route path="/marketing-hub" element={<MarketingHubPage />} />
-          <Route path="/marketing/module" element={<ModulePage />} />
-          
-          {/* CRM Routes */}
-          <Route path="/crm/dashboard" element={<CrmDashboardPage />} />
-          <Route path="/crm/contacts" element={<ContactsPage />} />
-          <Route path="/crm/contacts/:id" element={<ContactDetailsPage />} />
-          <Route path="/crm/deals" element={<DealsPage />} />
-          
-          {/* Shared Routes */}
-          <Route path="/settings" element={<Settings />} />
-        </Route>
-        
-        {/* Catch-all route */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </div>
-  );
+  return user ? <>{children}</> : <Navigate to="/auth" />;
 };
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+function App() {
+  return (
+    <div className="App flex flex-col min-h-screen">
+      <Routes>
+        <Route index element={<Index />} />
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/setup-database" element={<SetupDatabase />} />
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+        <Route path="/strategy/:strategyId" element={<ProtectedRoute><StrategyDetailsWithNav /></ProtectedRoute>} />
+        <Route path="/strategy-details/:strategyId" element={<ProtectedRoute><StrategyDetails /></ProtectedRoute>} />
+        <Route path="/create-strategy" element={<ProtectedRoute><CreateStrategy /></ProtectedRoute>} />
+        <Route path="/company-summary" element={<ProtectedRoute><CompanySummaryPage /></ProtectedRoute>} />
+        <Route path="/marketing-hub" element={<ProtectedRoute><MarketingHubPage /></ProtectedRoute>} />
+        <Route path="/module" element={<ProtectedRoute><ModulePage /></ProtectedRoute>} />
+        <Route path="/ai-prompts" element={<ProtectedRoute><AIPromptManagerPage /></ProtectedRoute>} />
+        <Route path="/crm/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+        <Route path="/crm/contacts" element={<ProtectedRoute><ContactsPage /></ProtectedRoute>} />
+        <Route path="/crm/contacts/:contactId" element={<ProtectedRoute><ContactDetailsPage /></ProtectedRoute>} />
+        <Route path="/crm/deals" element={<ProtectedRoute><DealsPage /></ProtectedRoute>} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
       <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+    </div>
+  );
+}
 
 export default App;
