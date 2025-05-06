@@ -28,7 +28,7 @@ const MarketingTabContent = ({ dbStatus, isAuthenticated }: MarketingTabContentP
         <CardFooter>
           <Button 
             onClick={() => navigate("/create-strategy")} 
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+            className="w-full h-10 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
             disabled={dbStatus !== 'ready' || !isAuthenticated}
           >
             {!isAuthenticated ? "Sign in to Get Started" : "Get Started"}
@@ -50,7 +50,7 @@ const MarketingTabContent = ({ dbStatus, isAuthenticated }: MarketingTabContentP
           <Button 
             onClick={() => navigate("/dashboard")} 
             variant="outline" 
-            className="w-full border-purple-200 hover:bg-purple-50 hover:text-purple-700 dark:hover:bg-purple-950 dark:hover:text-purple-300"
+            className="w-full h-10 px-4 py-2 border-purple-200 hover:bg-purple-50 hover:text-purple-700 dark:hover:bg-purple-950 dark:hover:text-purple-300"
             disabled={dbStatus !== 'ready' || !isAuthenticated}
           >
             {!isAuthenticated ? "Sign in to View Dashboard" : "Go to Dashboard"}
