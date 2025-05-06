@@ -1,14 +1,49 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Interaction } from "@/types/crm";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface RecentActivityProps {
-  activities: any[];
   isLoading: boolean;
 }
 
-const RecentActivity = ({ activities, isLoading }: RecentActivityProps) => {
+const RecentActivity = ({ isLoading }: RecentActivityProps) => {
+  const { toast } = useToast();
+  const [activities, setActivities] = useState<Interaction[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRecentActivity = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('interactions')
+          .select(`
+            *,
+            contacts(name)
+          `)
+          .order('date', { ascending: false })
+          .limit(5);
+        
+        if (error) throw error;
+        setActivities(data || []);
+      } catch (error) {
+        console.error("Error fetching recent activity:", error);
+        toast({
+          title: "Error loading activity data",
+          description: "Please try again later",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchRecentActivity();
+  }, [toast]);
+  
   return (
     <Card className="col-span-1">
       <CardHeader>
@@ -16,7 +51,7 @@ const RecentActivity = ({ activities, isLoading }: RecentActivityProps) => {
         <CardDescription>Your latest interactions with contacts</CardDescription>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
+        {(isLoading || loading) ? (
           <div className="space-y-2">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="flex items-center space-x-2">
@@ -59,8 +94,8 @@ const RecentActivity = ({ activities, isLoading }: RecentActivityProps) => {
         )}
       </CardContent>
       <CardFooter>
-        <Button variant="outline" size="sm" className="w-full">
-          View All Activity
+        <Button variant="outline" size="sm" className="w-full" asChild>
+          <a href="/crm/contacts">View All Activity</a>
         </Button>
       </CardFooter>
     </Card>
