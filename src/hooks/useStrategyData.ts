@@ -26,7 +26,21 @@ export const useStrategyData = ({ id }: UseStrategyDataProps) => {
           .single();
         
         if (error) throw error;
-        return data;
+        
+        // Map to our Strategy type
+        return {
+          id: data.id,
+          name: data.name,
+          description: data.description || '',
+          status: data.status,
+          state: data.state,
+          createdAt: data.created_at,
+          updatedAt: data.updated_at,
+          userId: data.user_id,
+          agents: [],
+          results: [],
+          tasks: []
+        } as Strategy;
       } catch (err) {
         console.error("Error fetching strategy:", err);
         toast.error("Failed to load strategy details");
@@ -92,7 +106,16 @@ export const useStrategyData = ({ id }: UseStrategyDataProps) => {
           .order('created_at', { ascending: false });
         
         if (error) throw error;
-        return data as AgentResult[];
+        
+        // Map to our AgentResult type
+        return data.map(result => ({
+          id: result.id,
+          agentId: result.agent_id,
+          strategyId: result.strategy_id,
+          content: result.content,
+          createdAt: result.created_at,
+          metadata: result.metadata
+        })) as AgentResult[];
       } catch (err) {
         console.error("Error fetching agent results:", err);
         return [];

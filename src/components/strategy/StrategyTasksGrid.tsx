@@ -1,7 +1,7 @@
 
 import React from "react";
 import { StrategyTask, StrategyState } from "@/types/marketing";
-import StrategyTaskList from "@/components/StrategyTaskList";
+import { TaskList } from "@/components/strategy/tasks";
 
 interface StrategyTasksGridProps {
   strategyId: string;
@@ -17,7 +17,7 @@ const StrategyTasksGrid: React.FC<StrategyTasksGridProps> = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
       {['briefing', 'persona', 'pain_gains', 'funnel', 'ads'].map((state) => (
-        <StrategyTaskList
+        <TaskList
           key={state}
           strategyId={strategyId}
           tasks={tasks || []}
