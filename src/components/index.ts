@@ -9,6 +9,7 @@ import CrmTabContent from "./home/CrmTabContent";
 import StrategyCards from "./home/marketing/StrategyCards";
 import QuickAccessTools from "./home/marketing/QuickAccessTools";
 import { DashboardHeader, StrategyCard, StrategyList, StrategySkeleton } from "./dashboard";
+import { StatCard, StatsGrid, RecentActivity, CompaniesCard, CrmDashboardContent } from "./crm/dashboard";
 
 export {
   NavBar,
@@ -23,5 +24,10 @@ export {
   DashboardHeader,
   StrategyCard,
   StrategyList,
-  StrategySkeleton
+  StrategySkeleton,
+  StatCard,
+  StatsGrid,
+  RecentActivity,
+  CompaniesCard,
+  CrmDashboardContent
 };
