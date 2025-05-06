@@ -5,8 +5,8 @@ import NavBar from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import ProjectBriefingModule from "@/components/marketing/modules/ProjectBriefingModule";
-import WebsiteCrawlingModule from "@/components/marketing/modules/WebsiteCrawlingModule";
-import PersonaGeneratorModule from "@/components/marketing/modules/PersonaGeneratorModule";
+import WebsiteCrawlingModule from "@/components/marketing/modules/website-crawler";
+import PersonaGeneratorModule from "@/components/marketing/modules/persona-generator";
 
 const ModulePage = () => {
   const [searchParams] = useSearchParams();
