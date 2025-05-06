@@ -8,13 +8,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 interface DistributionStrategyAccordionProps {
-  contentFormats: string[];
-  distributionChannels: string[];
+  formats: string[];
+  channels: string[];
 }
 
 const DistributionStrategyAccordion = ({ 
-  contentFormats, 
-  distributionChannels 
+  formats, 
+  channels 
 }: DistributionStrategyAccordionProps) => {
   return (
     <AccordionItem value="distribution">
@@ -26,7 +26,7 @@ const DistributionStrategyAccordion = ({
           <div>
             <h5 className="text-sm font-medium">Content Formats</h5>
             <div className="flex flex-wrap gap-2 mt-1">
-              {contentFormats.map((format, idx) => (
+              {formats.map((format, idx) => (
                 <Badge key={idx} variant="secondary">{format}</Badge>
               ))}
             </div>
@@ -35,7 +35,7 @@ const DistributionStrategyAccordion = ({
           <div>
             <h5 className="text-sm font-medium">Distribution Channels</h5>
             <div className="flex flex-wrap gap-2 mt-1">
-              {distributionChannels.map((channel, idx) => (
+              {channels.map((channel, idx) => (
                 <Badge key={idx} variant="secondary">{channel}</Badge>
               ))}
             </div>

@@ -76,11 +76,11 @@ const SavedContentPillars = ({
                 <div>
                   <h4 className="text-sm font-medium mb-1">Key Subtopics:</h4>
                   <div className="flex flex-wrap gap-2">
-                    {pillar.keySubtopics.slice(0, 3).map((subtopic, index) => (
-                      <Badge key={index} variant="secondary">{subtopic}</Badge>
+                    {pillar.subtopics.slice(0, 3).map((subtopic, index) => (
+                      <Badge key={index} variant="secondary">{subtopic.title}</Badge>
                     ))}
-                    {pillar.keySubtopics.length > 3 && (
-                      <Badge variant="outline">+{pillar.keySubtopics.length - 3} more</Badge>
+                    {pillar.subtopics.length > 3 && (
+                      <Badge variant="outline">+{pillar.subtopics.length - 3} more</Badge>
                     )}
                   </div>
                 </div>
@@ -88,7 +88,7 @@ const SavedContentPillars = ({
                 <div>
                   <h4 className="text-sm font-medium mb-1">Content Ideas:</h4>
                   <p className="text-sm text-muted-foreground">
-                    {pillar.contentIdeas.length} content ideas across {pillar.contentFormats.length} formats
+                    {pillar.subtopics.reduce((count, subtopic) => count + subtopic.contentIdeas.length, 0)} content ideas across {pillar.formats.length} formats
                   </p>
                 </div>
               </div>

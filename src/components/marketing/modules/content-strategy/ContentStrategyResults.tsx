@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Download, Save } from "lucide-react";
+import { CheckCircle, Download, Save, FileText } from "lucide-react";
 import { type ContentPillar, ContentPillarCardProps, ContentIdeasAccordionProps, KeywordsAccordionProps, DistributionStrategyAccordionProps, LoadingStateProps, EmptyStateProps } from "./types";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -208,7 +208,7 @@ const KeywordsAccordion = ({ keywords }: KeywordsAccordionProps) => {
   return (
     <Accordion type="single" collapsible className="w-full">
       {Object.entries(groupedKeywords).map(([group, groupKeywords], index) => (
-        groupKeywords.length > 0 && (
+        groupKeywords && groupKeywords.length > 0 && (
           <AccordionItem key={index} value={`item-${index}`}>
             <AccordionTrigger>{group}</AccordionTrigger>
             <AccordionContent>

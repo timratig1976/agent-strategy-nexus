@@ -9,21 +9,18 @@ const ContentStrategyModule = () => {
   const { 
     formData, 
     setFormData, 
-    contentPillar, 
-    isLoading, 
+    contentPillars, 
+    isGenerating, 
     error,
-    generateContentStrategy,
-    saveContentStrategy,
+    activeTab,
+    generateContentPillars,
+    savePillar,
     resetGenerator
   } = useContentStrategy();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    generateContentStrategy();
-  };
-
-  const handleSave = () => {
-    saveContentStrategy();
+    generateContentPillars();
   };
 
   return (
@@ -40,21 +37,21 @@ const ContentStrategyModule = () => {
         </div>
       </div>
 
-      {!contentPillar && (
+      {activeTab === "form" && (
         <ContentStrategyForm
           formData={formData}
           setFormData={setFormData}
-          isLoading={isLoading}
+          isGenerating={isGenerating}
           error={error}
           onSubmit={handleSubmit}
         />
       )}
 
-      {contentPillar && (
+      {activeTab === "results" && contentPillars.length > 0 && (
         <ContentStrategyResults
-          pillar={contentPillar}
+          pillar={contentPillars[0]}
           onReset={resetGenerator}
-          onSave={handleSave}
+          onSave={() => savePillar(contentPillars[0])}
         />
       )}
     </div>

@@ -39,18 +39,20 @@ const ContentPillarCard = ({ pillar, onSave }: ContentPillarCardProps) => {
         <div>
           <h4 className="text-sm font-medium mb-2">Key Subtopics</h4>
           <div className="flex flex-wrap gap-2">
-            {pillar.keySubtopics.map((topic, idx) => (
-              <Badge key={idx} variant="secondary">{topic}</Badge>
+            {pillar.subtopics.map((topic, idx) => (
+              <Badge key={idx} variant="secondary">{topic.title}</Badge>
             ))}
           </div>
         </div>
         
         <Accordion type="single" collapsible className="w-full">
-          <ContentIdeasAccordion contentIdeas={pillar.contentIdeas} />
+          {pillar.subtopics.map((subtopic, idx) => (
+            <ContentIdeasAccordion key={idx} contentIdeas={subtopic.contentIdeas} />
+          ))}
           <KeywordsAccordion keywords={pillar.keywords} />
           <DistributionStrategyAccordion 
-            contentFormats={pillar.contentFormats} 
-            distributionChannels={pillar.distributionChannels}
+            formats={pillar.formats} 
+            channels={pillar.channels}
           />
         </Accordion>
       </CardContent>

@@ -12,17 +12,14 @@ const AdCreativeModule = () => {
     formData,
     setFormData,
     result,
-    adCreatives,
-    savedCreatives,
     isLoading,
     isSaving,
     error,
-    activeTab,
-    setActiveTab,
     handleSubmit,
     saveCreative,
     deleteSavedCreative,
-    resetGenerator
+    resetGenerator,
+    savedCreatives
   } = useAdCreative();
 
   return (
@@ -39,10 +36,10 @@ const AdCreativeModule = () => {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs defaultValue="form">
         <TabsList className="grid grid-cols-3 mb-6">
           <TabsTrigger value="form">Generator</TabsTrigger>
-          <TabsTrigger value="results" disabled={adCreatives.length === 0}>Results</TabsTrigger>
+          <TabsTrigger value="results" disabled={!result}>Results</TabsTrigger>
           <TabsTrigger value="saved">Saved Creatives</TabsTrigger>
         </TabsList>
         
@@ -60,21 +57,13 @@ const AdCreativeModule = () => {
           {result ? (
             <AdCreativeResults
               result={result}
-              onSave={saveCreative}
+              onSave={() => saveCreative(result)}
               onReset={resetGenerator}
               isSaving={isSaving}
             />
           ) : (
-            <div className="space-y-6">
-              {adCreatives.map((creative, index) => (
-                <AdCreativeResults
-                  key={index}
-                  result={creative}
-                  onSave={() => saveCreative(creative)}
-                  onReset={resetGenerator}
-                  isSaving={isSaving}
-                />
-              ))}
+            <div className="text-center p-12 text-muted-foreground">
+              Generate an ad creative to see results here.
             </div>
           )}
         </TabsContent>

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -80,16 +79,20 @@ const AdCreativeForm = ({
     },
   });
 
-  const handleFormSubmit = async (values: z.infer<typeof formSchema>) => {
-    // Generate image if requested and not already generated
-    if (values.generateImage && !generatedImage && values.imageDescription) {
-      await generateAdImage(values.imageDescription, values.platform);
-    }
-    
+  const handleFormSubmit = (values: z.infer<typeof formSchema>) => {
     // Include the generated image URL in form data if available
     const updatedFormData: AdCreativeFormData = {
-      ...values,
-      imageUrl: generatedImage || formData.imageUrl, // Keep existing image URL if no new one
+      platform: values.platform,
+      adType: values.adType,
+      productName: values.productName,
+      targetAudience: values.targetAudience,
+      productDescription: values.productDescription,
+      uniqueSellingPoints: values.uniqueSellingPoints,
+      callToAction: values.callToAction,
+      tone: values.tone,
+      generateImage: values.generateImage,
+      imageDescription: values.imageDescription,
+      imageUrl: generatedImage || formData.imageUrl
     };
     
     setFormData(updatedFormData);
@@ -113,11 +116,6 @@ const AdCreativeForm = ({
 
       if (data?.image_url) {
         setGeneratedImage(data.image_url);
-        // Update form data with image URL
-        setFormData({
-          ...formData,
-          imageUrl: data.image_url,
-        });
         
         toast({
           title: "Image generated",

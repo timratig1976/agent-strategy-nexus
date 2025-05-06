@@ -1,6 +1,6 @@
 
 import React from "react";
-import { ContentPillarFormData } from "./types";
+import { ContentStrategyFormData, ContentStrategyFormProps } from "./types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,24 +14,16 @@ import BrandVoiceSelector from "./components/BrandVoiceSelector";
 import TopicInput from "./components/TopicInput";
 import AdvancedOptions from "./components/AdvancedOptions";
 
-interface ContentStrategyFormProps {
-  formData: ContentPillarFormData;
-  setFormData: React.Dispatch<React.SetStateAction<ContentPillarFormData>>;
-  onGenerate: () => void;
-  isGenerating: boolean;
-  error: string | null;
-}
-
 const ContentStrategyForm = ({
   formData,
   setFormData,
-  onGenerate,
+  onSubmit,
   isGenerating,
   error
 }: ContentStrategyFormProps) => {
   // Array option handlers
   const handleCheckboxChange = (
-    field: keyof ContentPillarFormData,
+    field: keyof ContentStrategyFormData,
     value: string,
     isChecked: boolean
   ) => {
@@ -51,25 +43,20 @@ const ContentStrategyForm = ({
   const addTopic = (topic: string) => {
     setFormData({
       ...formData,
-      keyTopics: [...formData.keyTopics, topic]
+      keyword: topic
     });
   };
 
   const removeTopic = (topic: string) => {
     setFormData({
       ...formData,
-      keyTopics: formData.keyTopics.filter(t => t !== topic)
+      keyword: ""
     });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onGenerate();
   };
 
   return (
     <Card className="bg-white dark:bg-gray-950">
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={onSubmit}>
         <CardContent className="pt-6">
           {error && (
             <div className="mb-4 p-3 border border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-800 text-red-700 dark:text-red-400 rounded-md">
@@ -84,8 +71,8 @@ const ContentStrategyForm = ({
                 <Input
                   id="businessNiche"
                   placeholder="e.g., Digital Marketing, Healthcare, SaaS"
-                  value={formData.businessNiche}
-                  onChange={(e) => setFormData({...formData, businessNiche: e.target.value})}
+                  value={formData.businessGoals}
+                  onChange={(e) => setFormData({...formData, businessGoals: e.target.value})}
                   required
                 />
               </div>
@@ -103,13 +90,13 @@ const ContentStrategyForm = ({
             </div>
             
             <TopicInput 
-              topics={formData.keyTopics}
+              topics={[formData.keyword]}
               onAddTopic={addTopic}
               onRemoveTopic={removeTopic}
             />
 
             <BrandVoiceSelector 
-              selectedVoices={formData.brandVoice} 
+              selectedVoices={[formData.tone]} 
               onChange={handleCheckboxChange}
             />
 
@@ -124,7 +111,7 @@ const ContentStrategyForm = ({
         <CardFooter className="flex justify-end border-t p-6">
           <Button 
             type="submit" 
-            disabled={isGenerating || formData.keyTopics.length === 0}
+            disabled={isGenerating || !formData.keyword}
             className="w-full md:w-auto"
           >
             {isGenerating ? (

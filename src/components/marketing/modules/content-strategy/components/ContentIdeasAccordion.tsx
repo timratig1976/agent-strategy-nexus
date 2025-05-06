@@ -1,6 +1,6 @@
 
 import React from "react";
-import { ContentIdeaItem } from "../types";
+import { ContentIdea } from "../types";
 import { 
   AccordionItem,
   AccordionTrigger,
@@ -9,7 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 interface ContentIdeasAccordionProps {
-  contentIdeas: ContentIdeaItem[];
+  contentIdeas: ContentIdea[];
 }
 
 const ContentIdeasAccordion = ({ contentIdeas }: ContentIdeasAccordionProps) => {
@@ -24,11 +24,10 @@ const ContentIdeasAccordion = ({ contentIdeas }: ContentIdeasAccordionProps) => 
             <div key={idx} className="border rounded-md p-3 bg-secondary/20">
               <div className="flex justify-between">
                 <h5 className="font-medium">{idea.title}</h5>
-                <Badge variant="outline" className="text-xs">{idea.estimatedEffort} effort</Badge>
+                <Badge variant="outline" className="text-xs">{idea.format}</Badge>
               </div>
-              <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                <div>Format: <span className="text-foreground">{idea.format}</span></div>
-                <div>Channel: <span className="text-foreground">{idea.channel}</span></div>
+              <div className="mt-2 text-xs text-muted-foreground">
+                {idea.description}
               </div>
             </div>
           ))}

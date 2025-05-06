@@ -16,6 +16,7 @@ export interface ContentPillar {
   keywords: string[];
   formats: string[];
   channels: string[];
+  createdAt: Date;
 }
 
 export interface ContentSubtopic {
@@ -57,4 +58,13 @@ export interface LoadingStateProps {
 
 export interface EmptyStateProps {
   message?: string;
+}
+
+// Added for ContentStrategyForm
+export interface ContentStrategyFormProps {
+  formData: ContentStrategyFormData;
+  setFormData: React.Dispatch<React.SetStateAction<ContentStrategyFormData>>;
+  onSubmit: (e: React.FormEvent) => void;
+  isGenerating: boolean;
+  error: string | null;
 }

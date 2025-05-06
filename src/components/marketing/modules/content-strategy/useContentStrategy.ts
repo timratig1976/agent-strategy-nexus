@@ -1,21 +1,18 @@
 
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { ContentPillarFormData, ContentPillar, ContentIdeaItem } from "./types";
+import { ContentStrategyFormData, ContentPillar, ContentIdea, ContentSubtopic } from "./types";
 import { useToast } from "@/components/ui/use-toast";
 
 export const useContentStrategy = () => {
   const { toast } = useToast();
-  const [formData, setFormData] = useState<ContentPillarFormData>({
-    businessNiche: "",
+  const [formData, setFormData] = useState<ContentStrategyFormData>({
+    keyword: "",
     targetAudience: "",
-    brandVoice: [],
-    marketingGoals: [],
-    existingContent: "",
-    competitorInsights: "",
-    keyTopics: [],
-    contentFormats: [],
-    distributionChannels: []
+    businessGoals: "",
+    contentType: "",
+    tone: "",
+    additionalInfo: ""
   });
 
   const [contentPillars, setContentPillars] = useState<ContentPillar[]>([]);
@@ -31,10 +28,10 @@ export const useContentStrategy = () => {
     try {
       // In a real app, this would be an API call to generate content pillars
       // For now, we'll simulate the response with mock data
-      const mockPillars = generateMockContentPillars(formData);
+      const mockPillar = generateMockContentPillar(formData);
       
       setTimeout(() => {
-        setContentPillars(mockPillars);
+        setContentPillars([mockPillar]);
         setActiveTab("results");
         setIsGenerating(false);
       }, 2000);
@@ -84,74 +81,64 @@ export const useContentStrategy = () => {
   };
 };
 
-// Helper function to generate mock pillars
-const generateMockContentPillars = (formData: ContentPillarFormData): ContentPillar[] => {
-  const pillars: ContentPillar[] = [];
+// Helper function to generate mock pillar
+const generateMockContentPillar = (formData: ContentStrategyFormData): ContentPillar => {
+  // Generate subtopics
+  const subtopics = [
+    'Fundamentals',
+    'Advanced strategies',
+    'Case studies',
+    'Trends and insights'
+  ].map(name => {
+    return {
+      id: uuidv4(),
+      title: `${formData.keyword} ${name}`,
+      description: `A detailed exploration of ${formData.keyword} ${name.toLowerCase()} for ${formData.targetAudience}.`,
+      contentIdeas: generateContentIdeas(formData.keyword, name)
+    };
+  });
   
-  // Generate between 3-5 pillars
-  const topicCount = Math.min(formData.keyTopics.length, 5);
-  
-  for (let i = 0; i < topicCount; i++) {
-    if (formData.keyTopics[i]) {
-      const topicName = formData.keyTopics[i];
-      
-      const subtopics = [
-        `${topicName} fundamentals`,
-        `Advanced ${topicName} strategies`,
-        `${topicName} case studies`,
-        `${topicName} trends and insights`
-      ];
-      
-      const contentIdeas = createContentIdeas(
-        topicName, 
-        formData.contentFormats,
-        formData.distributionChannels,
-        formData.targetAudience
-      );
-      
-      pillars.push({
-        id: uuidv4(),
-        title: topicName,
-        description: `A comprehensive content pillar about ${topicName} for ${formData.targetAudience} in the ${formData.businessNiche} industry.`,
-        targetAudience: formData.targetAudience,
-        keySubtopics: subtopics,
-        contentIdeas: contentIdeas,
-        keywords: generateKeywords(topicName),
-        contentFormats: formData.contentFormats,
-        distributionChannels: formData.distributionChannels,
-        createdAt: new Date()
-      });
-    }
-  }
-  
-  return pillars;
+  return {
+    id: uuidv4(),
+    title: formData.keyword,
+    description: `A comprehensive content pillar about ${formData.keyword} for ${formData.targetAudience} in the ${formData.businessGoals} industry.`,
+    subtopics: subtopics,
+    keywords: generateKeywords(formData.keyword),
+    formats: ['Blog Post', 'Video', 'Infographic', 'Webinar', 'Podcast'],
+    channels: ['Website', 'LinkedIn', 'Email', 'YouTube', 'Twitter'],
+    createdAt: new Date()
+  };
 };
 
-const createContentIdeas = (
-  topic: string,
-  formats: string[],
-  channels: string[],
-  audience: string
-): ContentIdeaItem[] => {
-  const ideas: ContentIdeaItem[] = [];
-  
-  const possibleEfforts = ["Low", "Medium", "High"];
-  
-  for (let i = 0; i < Math.min(formats.length, 5); i++) {
-    if (formats[i]) {
-      ideas.push({
-        title: `The ultimate guide to ${topic}`,
-        format: formats[i],
-        channel: channels[Math.min(i, channels.length - 1)],
-        audience: audience,
-        estimatedEffort: possibleEfforts[Math.floor(Math.random() * possibleEfforts.length)]
-      });
+// Helper function to generate mock content ideas
+const generateContentIdeas = (topic: string, subtopic: string): ContentIdea[] => {
+  const ideas = [
+    {
+      id: uuidv4(),
+      title: `Ultimate guide to ${topic} ${subtopic.toLowerCase()}`,
+      description: `An in-depth guide covering all aspects of ${topic} ${subtopic.toLowerCase()}.`,
+      format: 'Long-form Blog',
+      example: `"10 Essential ${topic} ${subtopic.toLowerCase()} Every Professional Should Know"`
+    },
+    {
+      id: uuidv4(),
+      title: `${topic} ${subtopic.toLowerCase()} explained`,
+      description: `Simple explanation of complex ${topic} ${subtopic.toLowerCase()} concepts.`,
+      format: 'Video',
+      example: `"${topic} ${subtopic.toLowerCase()} Explained in 5 Minutes"`
+    },
+    {
+      id: uuidv4(),
+      title: `${subtopic} checklist for ${topic}`,
+      description: `A practical checklist for implementing ${topic} ${subtopic.toLowerCase()}.`,
+      format: 'Downloadable PDF'
     }
-  }
+  ];
   
   return ideas;
 };
 
+// Helper function to generate keywords
 const generateKeywords = (topic: string): string[] => {
   return [
     topic,
