@@ -9,6 +9,63 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ad_creatives: {
+        Row: {
+          body: string | null
+          campaign_id: string | null
+          created_at: string
+          cta: string | null
+          headline: string | null
+          id: string
+          image_url: string | null
+          platform: string
+          project_id: string
+          updated_at: string
+          version: number | null
+        }
+        Insert: {
+          body?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          cta?: string | null
+          headline?: string | null
+          id?: string
+          image_url?: string | null
+          platform: string
+          project_id: string
+          updated_at?: string
+          version?: number | null
+        }
+        Update: {
+          body?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          cta?: string | null
+          headline?: string | null
+          id?: string
+          image_url?: string | null
+          platform?: string
+          project_id?: string
+          updated_at?: string
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_creatives_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_ideas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_creatives_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_data_sources: {
         Row: {
           agent_id: string | null
@@ -159,6 +216,111 @@ export type Database = {
           },
         ]
       }
+      campaign_ideas: {
+        Row: {
+          created_at: string
+          cta: string | null
+          framework: string | null
+          hook: string | null
+          id: string
+          is_selected: boolean | null
+          persona_id: string | null
+          project_id: string
+          storyline: string | null
+          updated_at: string
+          usp_id: string | null
+          version: number | null
+        }
+        Insert: {
+          created_at?: string
+          cta?: string | null
+          framework?: string | null
+          hook?: string | null
+          id?: string
+          is_selected?: boolean | null
+          persona_id?: string | null
+          project_id: string
+          storyline?: string | null
+          updated_at?: string
+          usp_id?: string | null
+          version?: number | null
+        }
+        Update: {
+          created_at?: string
+          cta?: string | null
+          framework?: string | null
+          hook?: string | null
+          id?: string
+          is_selected?: boolean | null
+          persona_id?: string | null
+          project_id?: string
+          storyline?: string | null
+          updated_at?: string
+          usp_id?: string | null
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_ideas_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: false
+            referencedRelation: "personas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_ideas_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_ideas_usp_id_fkey"
+            columns: ["usp_id"]
+            isOneToOne: false
+            referencedRelation: "usps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channel_strategies: {
+        Row: {
+          channels: Json | null
+          created_at: string
+          id: string
+          project_id: string
+          total_budget: number | null
+          updated_at: string
+          version: number | null
+        }
+        Insert: {
+          channels?: Json | null
+          created_at?: string
+          id?: string
+          project_id: string
+          total_budget?: number | null
+          updated_at?: string
+          version?: number | null
+        }
+        Update: {
+          channels?: Json | null
+          created_at?: string
+          id?: string
+          project_id?: string
+          total_budget?: number | null
+          updated_at?: string
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_strategies_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_settings: {
         Row: {
           created_at: string
@@ -230,6 +392,54 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      content_pillars: {
+        Row: {
+          cluster_content: Json | null
+          created_at: string
+          id: string
+          main_topic: string
+          persona_id: string | null
+          pillar_content: string | null
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          cluster_content?: Json | null
+          created_at?: string
+          id?: string
+          main_topic: string
+          persona_id?: string | null
+          pillar_content?: string | null
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          cluster_content?: Json | null
+          created_at?: string
+          id?: string
+          main_topic?: string
+          persona_id?: string | null
+          pillar_content?: string | null
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_pillars_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: false
+            referencedRelation: "personas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_pillars_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       deals: {
         Row: {
@@ -318,6 +528,217 @@ export type Database = {
             columns: ["contact_id"]
             isOneToOne: false
             referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_magnets: {
+        Row: {
+          created_at: string
+          description: string | null
+          funnel_stage: Database["public"]["Enums"]["funnel_stage"] | null
+          id: string
+          is_selected: boolean | null
+          magnet_type: string | null
+          persona_id: string | null
+          project_id: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          funnel_stage?: Database["public"]["Enums"]["funnel_stage"] | null
+          id?: string
+          is_selected?: boolean | null
+          magnet_type?: string | null
+          persona_id?: string | null
+          project_id: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          funnel_stage?: Database["public"]["Enums"]["funnel_stage"] | null
+          id?: string
+          is_selected?: boolean | null
+          magnet_type?: string | null
+          persona_id?: string | null
+          project_id?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_magnets_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: false
+            referencedRelation: "personas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_magnets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personas: {
+        Row: {
+          behaviors: string | null
+          created_at: string
+          demographic: string | null
+          gains: Json | null
+          id: string
+          industry: string | null
+          is_active: boolean | null
+          name: string
+          pain_points: Json | null
+          project_id: string
+          triggers: string | null
+          updated_at: string
+          version: number | null
+        }
+        Insert: {
+          behaviors?: string | null
+          created_at?: string
+          demographic?: string | null
+          gains?: Json | null
+          id?: string
+          industry?: string | null
+          is_active?: boolean | null
+          name: string
+          pain_points?: Json | null
+          project_id: string
+          triggers?: string | null
+          updated_at?: string
+          version?: number | null
+        }
+        Update: {
+          behaviors?: string | null
+          created_at?: string
+          demographic?: string | null
+          gains?: Json | null
+          id?: string
+          industry?: string | null
+          is_active?: boolean | null
+          name?: string
+          pain_points?: Json | null
+          project_id?: string
+          triggers?: string | null
+          updated_at?: string
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personas_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          company_name: string
+          created_at: string
+          current_module: Database["public"]["Enums"]["module_type"] | null
+          description: string | null
+          goals: string | null
+          id: string
+          is_completed: boolean | null
+          name: string
+          product_details: string | null
+          status: string | null
+          target_audience: string | null
+          updated_at: string
+          user_id: string
+          website_url: string | null
+        }
+        Insert: {
+          company_name: string
+          created_at?: string
+          current_module?: Database["public"]["Enums"]["module_type"] | null
+          description?: string | null
+          goals?: string | null
+          id?: string
+          is_completed?: boolean | null
+          name: string
+          product_details?: string | null
+          status?: string | null
+          target_audience?: string | null
+          updated_at?: string
+          user_id: string
+          website_url?: string | null
+        }
+        Update: {
+          company_name?: string
+          created_at?: string
+          current_module?: Database["public"]["Enums"]["module_type"] | null
+          description?: string | null
+          goals?: string | null
+          id?: string
+          is_completed?: boolean | null
+          name?: string
+          product_details?: string | null
+          status?: string | null
+          target_audience?: string | null
+          updated_at?: string
+          user_id?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      roas_calculations: {
+        Row: {
+          breakeven_forecast: Json | null
+          cac: number | null
+          cost_targets: Json | null
+          created_at: string
+          ctr: number | null
+          cvr: number | null
+          deal_size: number | null
+          id: string
+          project_id: string
+          roas: number | null
+          updated_at: string
+        }
+        Insert: {
+          breakeven_forecast?: Json | null
+          cac?: number | null
+          cost_targets?: Json | null
+          created_at?: string
+          ctr?: number | null
+          cvr?: number | null
+          deal_size?: number | null
+          id?: string
+          project_id: string
+          roas?: number | null
+          updated_at?: string
+        }
+        Update: {
+          breakeven_forecast?: Json | null
+          cac?: number | null
+          cost_targets?: Json | null
+          created_at?: string
+          ctr?: number | null
+          cvr?: number | null
+          deal_size?: number | null
+          id?: string
+          project_id?: string
+          roas?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roas_calculations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -432,6 +853,133 @@ export type Database = {
           },
         ]
       }
+      usp_canvas: {
+        Row: {
+          created_at: string
+          customer_jobs: Json | null
+          differentiators: Json | null
+          gains: Json | null
+          id: string
+          pain_points: Json | null
+          project_id: string
+          updated_at: string
+          version: number | null
+        }
+        Insert: {
+          created_at?: string
+          customer_jobs?: Json | null
+          differentiators?: Json | null
+          gains?: Json | null
+          id?: string
+          pain_points?: Json | null
+          project_id: string
+          updated_at?: string
+          version?: number | null
+        }
+        Update: {
+          created_at?: string
+          customer_jobs?: Json | null
+          differentiators?: Json | null
+          gains?: Json | null
+          id?: string
+          pain_points?: Json | null
+          project_id?: string
+          updated_at?: string
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usp_canvas_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usps: {
+        Row: {
+          canvas_id: string | null
+          created_at: string
+          id: string
+          is_selected: boolean | null
+          project_id: string
+          statement: string
+          updated_at: string
+          version: number | null
+        }
+        Insert: {
+          canvas_id?: string | null
+          created_at?: string
+          id?: string
+          is_selected?: boolean | null
+          project_id: string
+          statement: string
+          updated_at?: string
+          version?: number | null
+        }
+        Update: {
+          canvas_id?: string | null
+          created_at?: string
+          id?: string
+          is_selected?: boolean | null
+          project_id?: string
+          statement?: string
+          updated_at?: string
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usps_canvas_id_fkey"
+            columns: ["canvas_id"]
+            isOneToOne: false
+            referencedRelation: "usp_canvas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usps_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_crawls: {
+        Row: {
+          created_at: string
+          extracted_content: Json
+          id: string
+          project_id: string
+          status: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          extracted_content: Json
+          id?: string
+          project_id: string
+          status?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string
+          extracted_content?: Json
+          id?: string
+          project_id?: string
+          status?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_crawls_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -447,6 +995,19 @@ export type Database = {
         | "social"
         | "email"
         | "analytics"
+      funnel_stage: "awareness" | "consideration" | "decision"
+      module_type:
+        | "briefing"
+        | "website_analysis"
+        | "persona"
+        | "usp_canvas"
+        | "usp_generator"
+        | "channel_strategy"
+        | "roas_calculator"
+        | "campaign_ideas"
+        | "ad_creative"
+        | "lead_magnets"
+        | "content_strategy"
       strategy_state: "briefing" | "persona" | "pain_gains" | "funnel" | "ads"
       strategy_status: "draft" | "in_progress" | "completed"
     }
@@ -571,6 +1132,20 @@ export const Constants = {
         "social",
         "email",
         "analytics",
+      ],
+      funnel_stage: ["awareness", "consideration", "decision"],
+      module_type: [
+        "briefing",
+        "website_analysis",
+        "persona",
+        "usp_canvas",
+        "usp_generator",
+        "channel_strategy",
+        "roas_calculator",
+        "campaign_ideas",
+        "ad_creative",
+        "lead_magnets",
+        "content_strategy",
       ],
       strategy_state: ["briefing", "persona", "pain_gains", "funnel", "ads"],
       strategy_status: ["draft", "in_progress", "completed"],
