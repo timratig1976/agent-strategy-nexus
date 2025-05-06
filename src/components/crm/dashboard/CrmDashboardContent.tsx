@@ -4,9 +4,9 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Activity, Building2, Clock, Contact, DollarSign, FileText } from "lucide-react";
-import { StatsGrid } from "./StatsGrid";
-import { RecentActivity } from "./RecentActivity";
-import { CompaniesCard } from "./CompaniesCard";
+import StatsGrid from "./StatsGrid";
+import RecentActivity from "./RecentActivity";
+import CompaniesCard from "./CompaniesCard";
 
 const CrmDashboardContent: React.FC = () => {
   const { toast } = useToast();
