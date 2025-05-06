@@ -46,33 +46,48 @@ export const useRoasCalculator = () => {
     setIsLoading(true);
 
     try {
+      // Convert form data to numbers to ensure proper calculations
+      const adSpend = Number(formData.adSpend);
+      const clicks = Number(formData.clicks);
+      const ctr = Number(formData.ctr);
+      const conversionRate = Number(formData.conversionRate);
+      const averageOrderValue = Number(formData.averageOrderValue);
+      const profitMargin = Number(formData.profitMargin);
+      const targetRoas = formData.targetRoas ? Number(formData.targetRoas) : undefined;
+      
       // Calculate conversions
-      const conversions = Math.round(formData.clicks * (formData.conversionRate / 100));
+      const conversions = Math.round(clicks * (conversionRate / 100));
       
       // Calculate revenue
-      const revenue = conversions * formData.averageOrderValue;
+      const revenue = conversions * averageOrderValue;
       
       // Calculate ROAS
-      const roas = revenue / formData.adSpend;
+      const roas = revenue / adSpend;
       
       // Calculate CPC
-      const cpc = formData.adSpend / formData.clicks;
+      const cpc = adSpend / clicks;
       
       // Calculate CPA
-      const cpa = conversions > 0 ? formData.adSpend / conversions : 0;
+      const cpa = conversions > 0 ? adSpend / conversions : 0;
       
       // Calculate profit
-      const profit = revenue * (formData.profitMargin / 100) - formData.adSpend;
+      const profit = revenue * (profitMargin / 100) - adSpend;
 
-      // Set results
+      // Set results with proper number types
       const calculatedResults: RoasResults = {
-        ...formData,
+        adSpend,
+        clicks,
+        ctr,
+        conversionRate,
+        averageOrderValue,
+        profitMargin,
+        targetRoas,
         conversions,
         revenue,
         roas,
         cpc,
         cpa,
-        profit,
+        profit
       };
 
       setResults(calculatedResults);
