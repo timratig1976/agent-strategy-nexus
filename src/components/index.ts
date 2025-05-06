@@ -8,6 +8,7 @@ import MarketingTabContent from "./home/MarketingTabContent";
 import CrmTabContent from "./home/CrmTabContent";
 import StrategyCards from "./home/marketing/StrategyCards";
 import QuickAccessTools from "./home/marketing/QuickAccessTools";
+import { DashboardHeader, StrategyCard, StrategyList, StrategySkeleton } from "./dashboard";
 
 export {
   NavBar,
@@ -18,5 +19,9 @@ export {
   MarketingTabContent,
   CrmTabContent,
   StrategyCards,
-  QuickAccessTools
+  QuickAccessTools,
+  DashboardHeader,
+  StrategyCard,
+  StrategyList,
+  StrategySkeleton
 };
