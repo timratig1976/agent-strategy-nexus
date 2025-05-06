@@ -6,7 +6,7 @@ import { Interaction } from "@/types/crm";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
-interface RecentActivityProps {
+export interface RecentActivityProps {
   isLoading: boolean;
 }
 

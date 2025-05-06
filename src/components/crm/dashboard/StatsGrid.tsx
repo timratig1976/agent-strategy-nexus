@@ -3,7 +3,7 @@ import React from "react";
 import { User, Target, BarChart } from "lucide-react";
 import StatCard from "./StatCard";
 
-type StatItem = {
+export type StatItem = {
   title: string;
   value: number | string;
   description: string;
@@ -12,7 +12,7 @@ type StatItem = {
   color: string;
 };
 
-interface StatsGridProps {
+export interface StatsGridProps {
   stats: StatItem[];
   isLoading: boolean;
 }

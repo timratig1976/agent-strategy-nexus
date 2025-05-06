@@ -7,7 +7,7 @@ import { Briefcase } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface CompaniesCardProps {
-  isLoading?: boolean;
+  isLoading: boolean;
 }
 
 type CompanyCount = {
@@ -15,7 +15,7 @@ type CompanyCount = {
   count: number;
 };
 
-const CompaniesCard = ({ isLoading = false }: CompaniesCardProps) => {
+const CompaniesCard = ({ isLoading }: CompaniesCardProps) => {
   const [topCompanies, setTopCompanies] = useState<CompanyCount[]>([]);
   const [loading, setLoading] = useState(true);
   
