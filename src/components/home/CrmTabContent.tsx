@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Users, Target } from "lucide-react";
+import { Users, Target, LayoutDashboard } from "lucide-react";
 
 interface CrmTabContentProps {
   dbStatus: 'checking' | 'ready' | 'not-setup';
@@ -14,11 +14,32 @@ const CrmTabContent = ({ dbStatus, isAuthenticated }: CrmTabContentProps) => {
   const navigate = useNavigate();
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
       <Card className="border-l-4 border-l-green-500 shadow-sm hover:shadow-md transition-all">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-green-500" />
+            <LayoutDashboard className="h-5 w-5 text-green-500" />
+            CRM Dashboard
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">Get a complete overview of your CRM with contacts, companies, and deals at a glance.</p>
+        </CardContent>
+        <CardFooter>
+          <Button 
+            onClick={() => navigate("/crm/dashboard")} 
+            className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+            disabled={dbStatus !== 'ready' || !isAuthenticated}
+          >
+            {!isAuthenticated ? "Sign in to View Dashboard" : "View Dashboard"}
+          </Button>
+        </CardFooter>
+      </Card>
+
+      <Card className="border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-all">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-blue-500" />
             Manage Contacts
           </CardTitle>
         </CardHeader>
@@ -28,7 +49,8 @@ const CrmTabContent = ({ dbStatus, isAuthenticated }: CrmTabContentProps) => {
         <CardFooter>
           <Button 
             onClick={() => navigate("/crm/contacts")} 
-            className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+            variant="outline" 
+            className="w-full border-blue-200 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-950 dark:hover:text-blue-300"
             disabled={dbStatus !== 'ready' || !isAuthenticated}
           >
             {!isAuthenticated ? "Sign in to View Contacts" : "View Contacts"}

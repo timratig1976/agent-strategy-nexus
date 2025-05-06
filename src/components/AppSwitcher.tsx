@@ -63,7 +63,7 @@ const AppSwitcher = () => {
                 </li>
                 <li>
                   <Link
-                    to="/crm/contacts"
+                    to="/crm/dashboard"
                     className={cn(
                       "flex h-full items-center gap-3 p-4 rounded-md hover:bg-accent group",
                       isInCrm && "bg-green-50 dark:bg-green-950/30"

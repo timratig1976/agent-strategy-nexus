@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Menu, X, Settings } from "lucide-react";
+import { Menu, X, Settings, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -30,6 +30,7 @@ export default function NavBar() {
   ];
 
   const crmNavItems = [
+    { name: "Dashboard", href: "/crm/dashboard" },
     { name: "Contacts", href: "/crm/contacts" },
     { name: "Deals", href: "/crm/deals" },
     { name: "Settings", href: "/settings", icon: Settings },
