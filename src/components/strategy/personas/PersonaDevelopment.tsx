@@ -39,7 +39,8 @@ const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({
 
   // Handler for going back to the briefing step
   const handleGoToPreviousStep = () => {
-    navigate(`/strategy-details/${strategy.id}?state=briefing`);
+    // Navigate back to strategy details with briefing state
+    navigate(`/strategy/${strategy.id}?state=briefing`);
   };
   
   // Function to generate AI persona with progress updates
@@ -202,7 +203,7 @@ const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({
             aiDebugInfo={aiDebugInfo}
             customTitle="Persona Generator"
             generateButtonText="Generate Persona"
-            saveButtonText="Save Persona"
+            saveButtonText="Save Persona Draft"
             saveFinalButtonText="Save Final Persona"
             placeholderText="Generated personas will appear here..."
           />
