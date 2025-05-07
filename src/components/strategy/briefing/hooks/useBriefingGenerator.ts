@@ -44,7 +44,7 @@ export const useBriefingGenerator = (strategyId: string) => {
           // Ensure metadata is treated as a record by providing a default empty object
           metadata: (typeof result.metadata === 'object' && result.metadata !== null) 
             ? result.metadata as Record<string, any>
-            : {} // Default to empty object if metadata is not an object or null
+            : {} 
         }));
 
         setBriefingHistory(formattedResults);
@@ -99,27 +99,33 @@ export const useBriefingGenerator = (strategyId: string) => {
           ((briefingHistory[0].metadata?.version || 0) as number) + 1 : 1;
         
         // Add the new result with version metadata to the briefing history
+        const currentTime = new Date().toISOString();
         const updatedResult: AgentResult = {
           ...data,
           metadata: {
             ...(data.metadata || {}),
             version: nextVersion,
-            generated_at: new Date().toISOString()
+            generated_at: currentTime
           }
         };
         
         console.log("Updated result with metadata:", updatedResult);
         
-        // Update the database with the version information
-        const { error: updateError } = await supabase
-          .from('agent_results')
-          .update({
-            metadata: updatedResult.metadata
-          })
-          .eq('id', updatedResult.id);
-          
-        if (updateError) {
-          console.error("Error updating agent result metadata:", updateError);
+        // Only update the database if we have a valid ID
+        if (updatedResult.id) {
+          // Update the database with the version information
+          const { error: updateError } = await supabase
+            .from('agent_results')
+            .update({
+              metadata: updatedResult.metadata
+            })
+            .eq('id', updatedResult.id);
+            
+          if (updateError) {
+            console.error("Error updating agent result metadata:", updateError);
+          }
+        } else {
+          console.error("Cannot update metadata: result ID is missing");
         }
           
         // Update local state
@@ -149,15 +155,19 @@ export const useBriefingGenerator = (strategyId: string) => {
         return false;
       }
       
+      const now = new Date().toISOString();
+      
+      const metadata = {
+        ...(updatedResult.metadata || {}),
+        manually_edited: true,
+        edited_at: now
+      };
+      
       const { error } = await supabase
         .from('agent_results')
         .update({
           content: updatedResult.content,
-          metadata: { 
-            ...(updatedResult.metadata || {}),
-            manually_edited: true,
-            edited_at: new Date().toISOString()
-          }
+          metadata: metadata
         })
         .eq('id', updatedResult.id);
       
@@ -172,11 +182,7 @@ export const useBriefingGenerator = (strategyId: string) => {
           {
             ...result,
             content: updatedResult.content,
-            metadata: { 
-              ...(updatedResult.metadata || {}),
-              manually_edited: true,
-              edited_at: new Date().toISOString()
-            }
+            metadata: metadata
           } : result
       );
       

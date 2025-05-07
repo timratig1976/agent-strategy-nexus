@@ -9,7 +9,6 @@ import StrategyInfoCard from "./components/strategy-info/StrategyInfoCard";
 import WebsiteCrawlerWrapper from "./WebsiteCrawlerWrapper";
 import { WebsiteCrawlResult } from "@/components/marketing/modules/website-crawler/types";
 import { useBriefingGenerator } from "./hooks/useBriefingGenerator";
-import { BriefingProgressBar } from "./components";
 import { BriefingResult } from "./components/briefing-result/BriefingResult";
 import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -21,6 +20,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   const navigate = useNavigate();
   const [showCrawler, setShowCrawler] = useState<boolean>(false);
   const [crawlResults, setCrawlResults] = useState<WebsiteCrawlResult | undefined>();
+  const [hasFinalBriefing, setHasFinalBriefing] = useState<boolean>(false);
   
   // Initialize form values with empty strings and include the strategy id
   const [formValues, setFormValues] = useState<StrategyFormValues & { id: string }>({
@@ -47,6 +47,14 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   useEffect(() => {
     fetchStrategyMetadata();
   }, [strategy.id]);
+  
+  // Check if there's a final briefing in the history
+  useEffect(() => {
+    const finalBriefing = briefingHistory.find(briefing => 
+      briefing.metadata && briefing.metadata.is_final === true
+    );
+    setHasFinalBriefing(!!finalBriefing);
+  }, [briefingHistory]);
   
   const fetchStrategyMetadata = async () => {
     try {
@@ -190,17 +198,20 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
       });
   };
 
+  const handleBriefingSaved = (isFinal: boolean) => {
+    if (isFinal) {
+      setHasFinalBriefing(true);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {isGenerating && (
-        <BriefingProgressBar progress={progress} />
-      )}
-      
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Strategy Briefing</h2>
         <Button 
           onClick={goToNextStep}
           className="flex items-center"
+          disabled={!hasFinalBriefing}
         >
           Next: Persona Development <ArrowRight className="ml-2" />
         </Button>
@@ -227,10 +238,12 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
         <BriefingResult 
           latestBriefing={latestBriefing}
           isGenerating={isGenerating}
+          progress={progress}
           generateBriefing={() => generateBriefing(formValues)}
           saveAgentResult={saveAgentResult}
           briefingHistory={briefingHistory}
           setBriefingHistory={setBriefingHistory}
+          onBriefingSaved={handleBriefingSaved}
         />
       </div>
     </div>

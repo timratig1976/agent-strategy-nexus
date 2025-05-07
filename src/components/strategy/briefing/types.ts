@@ -23,8 +23,10 @@ export interface BriefingResultCardProps {
 export interface BriefingResultProps {
   latestBriefing: AgentResult | null;
   isGenerating: boolean;
+  progress: number;
   generateBriefing: () => Promise<void>;
   saveAgentResult: (result: AgentResult) => Promise<boolean>;
   briefingHistory: AgentResult[];
   setBriefingHistory: (history: AgentResult[]) => void;
+  onBriefingSaved: (isFinal: boolean) => void;
 }

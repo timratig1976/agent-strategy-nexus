@@ -14,23 +14,28 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { BriefingProgressBar } from "../BriefingProgressBar";
 
 export interface BriefingResultProps {
   latestBriefing: AgentResult | null;
   isGenerating: boolean;
+  progress: number;
   generateBriefing: () => Promise<void>;
   saveAgentResult: (result: AgentResult) => Promise<boolean>;
   briefingHistory: AgentResult[];
   setBriefingHistory: (history: AgentResult[]) => void;
+  onBriefingSaved: (isFinal: boolean) => void;
 }
 
 export const BriefingResult: React.FC<BriefingResultProps> = ({
   latestBriefing,
   isGenerating,
+  progress,
   generateBriefing,
   saveAgentResult,
   briefingHistory,
-  setBriefingHistory
+  setBriefingHistory,
+  onBriefingSaved
 }) => {
   const [selectedBriefingId, setSelectedBriefingId] = useState<string | null>(
     latestBriefing ? latestBriefing.id : null
@@ -60,7 +65,7 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
       const result = await saveAgentResult({
         ...selectedBriefing,
         metadata: {
-          ...selectedBriefing.metadata,
+          ...(selectedBriefing.metadata || {}),
           is_final: true,
           saved_at: new Date().toISOString()
         }
@@ -75,7 +80,7 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
             ? {
                 ...briefing,
                 metadata: {
-                  ...briefing.metadata,
+                  ...(briefing.metadata || {}),
                   is_final: true,
                   saved_at: new Date().toISOString()
                 }
@@ -84,6 +89,7 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
         );
         
         setBriefingHistory(updatedHistory);
+        onBriefingSaved(true);
       }
     } catch (error) {
       console.error("Error saving briefing:", error);
@@ -91,19 +97,29 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit'
-    }).format(date);
+  const formatDate = (dateString?: string) => {
+    if (!dateString) {
+      return "N/A";
+    }
+    
+    try {
+      const date = new Date(dateString);
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return "Invalid Date";
+      }
+      
+      return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+      }).format(date);
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "Error";
+    }
   };
-
-  console.log("Current briefing history:", briefingHistory);
-  console.log("Latest briefing:", latestBriefing);
-  console.log("Selected briefing:", selectedBriefing);
 
   return (
     <Card className="h-full">
@@ -136,6 +152,11 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
             Generate an AI briefing based on your strategy information
           </CardDescription>
         )}
+
+        {isGenerating && (
+          <BriefingProgressBar progress={progress} />
+        )}
+        
         {briefingHistory.length > 1 && (
           <div className="mt-2">
             <CardDescription className="mb-1">Select version:</CardDescription>
@@ -176,7 +197,11 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
             description="Fine-tune the AI-generated content"
             originalContent={selectedBriefing}
             contentField="content"
-            onSave={saveAgentResult}
+            onSave={(updatedResult) => {
+              saveAgentResult(updatedResult);
+              onBriefingSaved(false);
+              return Promise.resolve(true);
+            }}
           />
         ) : (
           <div className="p-6 text-center border rounded-md bg-muted/20">
