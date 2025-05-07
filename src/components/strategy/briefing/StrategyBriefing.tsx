@@ -4,6 +4,11 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { StrategyFormValues } from "@/components/strategy-form";
 import { StrategyBriefingProps, StrategyMetadata } from "./types";
+import {
+  StrategyMetadataRow,
+  GetStrategyMetadataParams,
+  UpsertStrategyMetadataParams
+} from "./types";
 import StrategyInfoCard from "./StrategyInfoCard";
 import BriefingResultCard from "./BriefingResultCard";
 import WebsiteCrawlerWrapper from "./WebsiteCrawlerWrapper";
@@ -56,10 +61,12 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   const fetchStrategyMetadata = async () => {
     try {
       // Use the stored function to get metadata with proper type parameters
-      const { data, error } = await supabase.rpc<StrategyMetadataRow[], { strategy_id_param: string }>(
-        'get_strategy_metadata', 
-        { strategy_id_param: strategy.id }
-      );
+      const { data, error } = await supabase.rpc<
+  StrategyMetadataRow[],
+  GetStrategyMetadataParams
+>('get_strategy_metadata', {
+  strategy_id_param: strategy.id,
+});
         
       if (error) throw error;
       
@@ -84,24 +91,17 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   const saveStrategyMetadata = async (updatedValues: StrategyFormValues): Promise<boolean> => {
     try {
       // Use the stored procedure for upserting metadata with proper type parameters
-      const { error } = await supabase.rpc<null, {
-        strategy_id_param: string;
-        company_name_param: string;
-        website_url_param: string;
-        product_description_param: string;
-        product_url_param: string;
-        additional_info_param: string;
-      }>(
-        'upsert_strategy_metadata', 
-        {
-          strategy_id_param: strategy.id,
-          company_name_param: updatedValues.companyName,
-          website_url_param: updatedValues.websiteUrl,
-          product_description_param: updatedValues.productDescription,
-          product_url_param: updatedValues.productUrl,
-          additional_info_param: updatedValues.additionalInfo
-        }
-      );
+      const { error } = await supabase.rpc<
+  void,
+  UpsertStrategyMetadataParams
+>('upsert_strategy_metadata', {
+  strategy_id_param: strategy.id,
+  company_name_param: updatedValues.companyName,
+  website_url_param: updatedValues.websiteUrl,
+  product_description_param: updatedValues.productDescription,
+  product_url_param: updatedValues.productUrl,
+  additional_info_param: updatedValues.additionalInfo
+});
       
       if (error) throw error;
       
