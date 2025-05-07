@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Save } from "lucide-react";
@@ -36,6 +36,13 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
     latestBriefing ? latestBriefing.id : null
   );
 
+  // Update the selected briefing ID when the latest briefing changes
+  useEffect(() => {
+    if (latestBriefing && (!selectedBriefingId || selectedBriefingId !== latestBriefing.id)) {
+      setSelectedBriefingId(latestBriefing.id);
+    }
+  }, [latestBriefing, selectedBriefingId]);
+
   const selectedBriefing = selectedBriefingId 
     ? briefingHistory.find(b => b.id === selectedBriefingId) || latestBriefing
     : latestBriefing;
@@ -47,17 +54,40 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
   const handleSaveBriefing = async () => {
     if (!selectedBriefing) return;
 
-    const result = await saveAgentResult({
-      ...selectedBriefing,
-      metadata: {
-        ...selectedBriefing.metadata,
-        is_final: true,
-        saved_at: new Date().toISOString()
-      }
-    });
+    try {
+      console.log("Saving briefing as final version:", selectedBriefing);
+      
+      const result = await saveAgentResult({
+        ...selectedBriefing,
+        metadata: {
+          ...selectedBriefing.metadata,
+          is_final: true,
+          saved_at: new Date().toISOString()
+        }
+      });
 
-    if (result) {
-      toast.success("Briefing saved as final version");
+      if (result) {
+        toast.success("Briefing saved as final version");
+        
+        // Update the briefing in the history list
+        const updatedHistory = briefingHistory.map(briefing => 
+          briefing.id === selectedBriefing.id
+            ? {
+                ...briefing,
+                metadata: {
+                  ...briefing.metadata,
+                  is_final: true,
+                  saved_at: new Date().toISOString()
+                }
+              }
+            : briefing
+        );
+        
+        setBriefingHistory(updatedHistory);
+      }
+    } catch (error) {
+      console.error("Error saving briefing:", error);
+      toast.error("Failed to save briefing");
     }
   };
 
@@ -70,6 +100,10 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
       minute: '2-digit'
     }).format(date);
   };
+
+  console.log("Current briefing history:", briefingHistory);
+  console.log("Latest briefing:", latestBriefing);
+  console.log("Selected briefing:", selectedBriefing);
 
   return (
     <Card className="h-full">

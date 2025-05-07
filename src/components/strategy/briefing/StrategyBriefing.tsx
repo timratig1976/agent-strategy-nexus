@@ -24,7 +24,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   
   // Initialize form values with empty strings and include the strategy id
   const [formValues, setFormValues] = useState<StrategyFormValues & { id: string }>({
-    id: strategy.id, // Add the id here
+    id: strategy.id,
     name: strategy.name,
     description: strategy.description || '',
     companyName: '',
@@ -113,7 +113,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
       
       // Set all form values at once with the most up-to-date data
       setFormValues({
-        id: strategy.id, // Include the id in the form values
+        id: strategy.id,
         name: strategy.name,
         description: strategy.description || '',
         companyName,
@@ -155,7 +155,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
       console.log("Strategy metadata updated successfully");
       setFormValues({
         ...updatedValues,
-        id: strategy.id // Ensure we keep the id when updating
+        id: strategy.id
       });
       toast.success("Strategy information updated");
       return true;
@@ -165,9 +165,11 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
       return false;
     }
   };
-  
-  // Find the latest briefing result
-  const latestBriefing = agentResults && agentResults.length > 0 ? agentResults[0] : null;
+
+  // Find the latest briefing from the history or use the first result from agentResults
+  const latestBriefing = briefingHistory.length > 0 
+    ? briefingHistory[0] 
+    : (agentResults && agentResults.length > 0 ? agentResults[0] : null);
 
   // Navigate to persona development
   const goToNextStep = () => {

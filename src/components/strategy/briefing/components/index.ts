@@ -1,2 +1,3 @@
 
-export { default as BriefingProgressBar } from './BriefingProgressBar';
+export * from './BriefingProgressBar';
+export * from './briefing-result';

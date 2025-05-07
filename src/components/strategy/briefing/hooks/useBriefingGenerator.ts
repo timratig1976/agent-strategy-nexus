@@ -18,6 +18,8 @@ export const useBriefingGenerator = (strategyId: string) => {
 
   const fetchBriefingHistory = async () => {
     try {
+      console.log("Fetching briefing history for strategy ID:", strategyId);
+      
       const { data, error } = await supabase
         .from('agent_results')
         .select('*')
@@ -25,10 +27,13 @@ export const useBriefingGenerator = (strategyId: string) => {
         .order('created_at', { ascending: false });
 
       if (error) {
+        console.error("Error fetching briefing history:", error);
         throw error;
       }
 
-      if (data) {
+      if (data && data.length > 0) {
+        console.log("Briefing history data:", data);
+        
         // Map the data from snake_case to camelCase and ensure metadata is properly typed
         const formattedResults: AgentResult[] = data.map(result => ({
           id: result.id,
@@ -43,6 +48,9 @@ export const useBriefingGenerator = (strategyId: string) => {
         }));
 
         setBriefingHistory(formattedResults);
+        console.log("Formatted briefing history:", formattedResults);
+      } else {
+        console.log("No briefing history found");
       }
     } catch (error) {
       console.error("Error fetching briefing history:", error);
@@ -54,6 +62,8 @@ export const useBriefingGenerator = (strategyId: string) => {
     try {
       setIsGenerating(true);
       setProgress(10);
+      
+      console.log("Generating briefing for strategy ID:", strategyId, "with values:", formValues);
       
       // Simulate progress updates
       const progressInterval = setInterval(() => {
@@ -82,6 +92,8 @@ export const useBriefingGenerator = (strategyId: string) => {
       
       // Add version information
       if (data) {
+        console.log("Generated briefing data:", data);
+        
         // Calculate the next version number
         const nextVersion = briefingHistory.length > 0 ? 
           ((briefingHistory[0].metadata?.version || 0) as number) + 1 : 1;
@@ -90,22 +102,30 @@ export const useBriefingGenerator = (strategyId: string) => {
         const updatedResult: AgentResult = {
           ...data,
           metadata: {
-            ...data.metadata,
+            ...(data.metadata || {}),
             version: nextVersion,
             generated_at: new Date().toISOString()
           }
         };
         
+        console.log("Updated result with metadata:", updatedResult);
+        
         // Update the database with the version information
-        await supabase
+        const { error: updateError } = await supabase
           .from('agent_results')
           .update({
             metadata: updatedResult.metadata
           })
           .eq('id', updatedResult.id);
           
+        if (updateError) {
+          console.error("Error updating agent result metadata:", updateError);
+        }
+          
         // Update local state
         setBriefingHistory(prev => [updatedResult, ...prev]);
+        
+        console.log("Updated briefing history:", [updatedResult, ...briefingHistory]);
       }
       
       toast.success("AI Briefing generated successfully");
@@ -121,19 +141,30 @@ export const useBriefingGenerator = (strategyId: string) => {
   // Save agent result changes
   const saveAgentResult = async (updatedResult: AgentResult): Promise<boolean> => {
     try {
+      console.log("Saving agent result:", updatedResult);
+      
+      if (!updatedResult.id) {
+        console.error("Cannot save result: ID is undefined");
+        toast.error("Cannot save: Result ID is missing");
+        return false;
+      }
+      
       const { error } = await supabase
         .from('agent_results')
         .update({
           content: updatedResult.content,
           metadata: { 
-            ...updatedResult.metadata,
+            ...(updatedResult.metadata || {}),
             manually_edited: true,
             edited_at: new Date().toISOString()
           }
         })
         .eq('id', updatedResult.id);
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating agent result:", error);
+        throw error;
+      }
       
       // Update the briefing history
       const updatedHistory = briefingHistory.map(result => 
@@ -142,7 +173,7 @@ export const useBriefingGenerator = (strategyId: string) => {
             ...result,
             content: updatedResult.content,
             metadata: { 
-              ...updatedResult.metadata,
+              ...(updatedResult.metadata || {}),
               manually_edited: true,
               edited_at: new Date().toISOString()
             }
