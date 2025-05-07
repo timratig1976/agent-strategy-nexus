@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { AlertCircle, ArrowUpDown, FileText, MoreHorizontal } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { BriefingContentEditor } from './BriefingContentEditor';
-import { BriefingHistorySheet } from './BriefingHistorySheet';
-import { BriefingAIEnhancer } from './BriefingAIEnhancer';
-import PromptMonitor from '../PromptMonitor';
+import BriefingContentEditor from './BriefingContentEditor';
+import BriefingHistorySheet from './BriefingHistorySheet';
+import BriefingAIEnhancer from './BriefingAIEnhancer';
+import PromptMonitor from './PromptMonitor'; // Fixed import path
 import { AgentResult } from '@/types/marketing';
 
 interface BriefingResultProps {
@@ -86,7 +86,7 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
             {briefingHistory.length > 0 && (
               <BriefingHistorySheet 
                 briefingHistory={briefingHistory} 
-                setBriefingHistory={setBriefingHistory}
+                loadHistoricalVersion={(briefing) => setEditedContent(briefing.content)}
               />
             )}
           </div>
@@ -144,6 +144,8 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
       <BriefingAIEnhancer 
         enhancementText={enhancementText}
         setEnhancementText={setEnhancementText}
+        isExpanded={true}
+        onToggleExpand={() => {}}
       />
     </div>
   );

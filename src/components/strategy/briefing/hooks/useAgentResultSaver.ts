@@ -4,44 +4,60 @@ import { AgentResult } from "@/types/marketing";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useAgentResultSaver = () => {
-  // Save agent result changes
-  const saveAgentResult = async (updatedResult: AgentResult): Promise<boolean> => {
+  // Save agent result as a new record with content and optional metadata
+  const saveAgentResult = async (
+    strategyId: string, 
+    content: string, 
+    metadata: Record<string, any> = {}
+  ): Promise<AgentResult> => {
     try {
-      console.log("Saving agent result:", updatedResult);
+      console.log("Saving new agent result:", { strategyId, content, metadata });
       
-      if (!updatedResult.id) {
-        console.error("Cannot save result: ID is undefined");
-        toast.error("Cannot save: Result ID is missing");
-        return false;
+      if (!content.trim()) {
+        throw new Error("Content is empty");
       }
       
-      const now = new Date().toISOString();
-      
-      const metadata = {
-        ...(updatedResult.metadata || {}),
-        manually_edited: true,
-        edited_at: now
+      const newRecord = {
+        agent_id: null,
+        strategy_id: strategyId,
+        content: content.trim(),
+        metadata: metadata
       };
       
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('agent_results')
-        .update({
-          content: updatedResult.content,
-          metadata: metadata
-        })
-        .eq('id', updatedResult.id);
+        .insert(newRecord)
+        .select('*')
+        .single();
       
       if (error) {
-        console.error("Error updating agent result:", error);
+        console.error("Error saving agent result:", error);
         throw error;
       }
       
-      toast.success("Briefing content updated");
-      return true;
+      if (!data) {
+        throw new Error("No data returned from insert");
+      }
+      
+      console.log("Agent result saved successfully:", data);
+      
+      // Format the saved result to match the AgentResult type
+      const formattedResult: AgentResult = {
+        id: data.id,
+        agentId: data.agent_id,
+        strategyId: data.strategy_id,
+        content: data.content,
+        createdAt: data.created_at,
+        metadata: (typeof data.metadata === 'object' && data.metadata !== null) 
+          ? data.metadata 
+          : {}
+      };
+      
+      return formattedResult;
     } catch (error) {
-      console.error("Error updating agent result:", error);
-      toast.error("Failed to update briefing content");
-      return false;
+      console.error("Error in saveAgentResult:", error);
+      toast.error("Failed to save result");
+      throw error;
     }
   };
 

@@ -14,6 +14,7 @@ import WebsiteCrawlerWrapper from "./WebsiteCrawlerWrapper";
 // Import hooks
 import { useBriefingGenerator } from "./hooks/useBriefingGenerator";
 import { useStrategyMetadata } from "./hooks/useStrategyMetadata";
+import { useAgentResultSaver } from "./hooks/useAgentResultSaver";
 
 const StrategyBriefing: React.FC<StrategyBriefingProps> = ({ 
   strategy, 
@@ -27,12 +28,14 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   // Use our custom hook for form state management
   const { formValues, saveStrategyMetadata } = useStrategyMetadata(strategy.id);
   
+  // Use our custom hook for saving agent results
+  const { saveAgentResult: saveAgentResultToDb } = useAgentResultSaver();
+  
   // Use our custom hook for briefing generation
   const {
     isGenerating,
     progress,
     generateBriefing,
-    saveAgentResult,
     briefingHistory,
     setBriefingHistory,
     aiDebugInfo
@@ -70,6 +73,32 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
           toast.success("Moving to persona development");
         }
       });
+  };
+
+  // Wrapper function to save agent results with the correct interface
+  const saveAgentResult = async (content: string, isFinal?: boolean): Promise<void> => {
+    try {
+      const metadata = {
+        version: briefingHistory.length > 0 ? 
+          ((briefingHistory[0].metadata?.version || 0) + 1) : 1,
+        is_final: isFinal || false,
+        saved_at: new Date().toISOString()
+      };
+      
+      const savedResult = await saveAgentResultToDb(strategy.id, content, metadata);
+      
+      if (savedResult) {
+        // Add to the local state
+        setBriefingHistory(prev => [savedResult, ...prev]);
+      }
+      
+      if (isFinal) {
+        setHasFinalBriefing(true);
+      }
+    } catch (error) {
+      console.error("Error saving briefing:", error);
+      throw error;
+    }
   };
 
   const handleBriefingSaved = (isFinal: boolean) => {

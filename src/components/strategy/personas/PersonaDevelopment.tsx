@@ -4,8 +4,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { PersonaDevelopmentProps } from "./types";
 import { useAgentResultSaver } from "../briefing/hooks/useAgentResultSaver";
-import { BriefingResult } from "../briefing/components/briefing-result/BriefingResult";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { BriefingResult } from "../briefing/components/briefing-result/BriefingResult";
 import PersonaEditor from "./PersonaEditor";
 
 const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({ 
@@ -20,9 +20,10 @@ const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [aiDebugInfo, setAiDebugInfo] = useState<any>(null);
+  const [editedContent, setEditedContent] = useState("");
   
   // Use our custom hook for saving results
-  const { saveAgentResult } = useAgentResultSaver();
+  const { saveAgentResult: saveAgentResultToDb } = useAgentResultSaver();
   
   // Find the latest briefing from the history or use the provided one
   const latestBriefing = briefingAgentResult || 
@@ -55,7 +56,7 @@ const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({
       }, 1000);
       
       // Generate the persona content using the AI service
-      const { data: aiResponse, error: aiError, debugInfo } = await supabase.functions.invoke('marketing-ai', {
+      const { data: aiResponse, error: aiError } = await supabase.functions.invoke('marketing-ai', {
         body: { 
           module: 'persona', 
           action: 'generate',
@@ -67,8 +68,22 @@ const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({
         }
       });
       
-      // Store debug info for monitoring
-      setAiDebugInfo(debugInfo || { requestData: {}, responseData: aiResponse });
+      // Store debug info for monitoring - note we can't access the debugInfo directly from the response
+      if (aiResponse) {
+        setAiDebugInfo({
+          requestData: {
+            module: 'persona',
+            action: 'generate',
+            data: {
+              strategyId: strategy.id,
+              // Don't include full briefing content in debug to avoid clutter
+              briefingContentLength: latestBriefing.content.length,
+              enhancementTextLength: (enhancementText || '').length
+            }
+          },
+          responseData: aiResponse
+        });
+      }
       
       if (aiError) {
         clearInterval(progressInterval);
@@ -83,52 +98,33 @@ const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({
         // Create a timestamp for the generation
         const currentTime = new Date().toISOString();
         
-        // Create the agent result to save to the database
-        const newResult = {
-          agent_id: null,
-          strategy_id: strategy.id,
-          content: aiResponse.result.rawOutput || "",
-          metadata: {
-            version: nextVersion,
-            generated_at: currentTime,
-            enhanced_with: enhancementText || undefined,
-            type: 'persona'
-          }
+        // Create metadata for the agent result
+        const metadata = {
+          version: nextVersion,
+          generated_at: currentTime,
+          enhanced_with: enhancementText || undefined,
+          type: 'persona'
         };
         
-        // Save the generated persona to the database
-        const { data: savedResult, error } = await supabase
-          .from('agent_results')
-          .insert(newResult)
-          .select()
-          .single();
+        // Save the generated persona using our utility function
+        const savedResult = await saveAgentResultToDb(
+          strategy.id,
+          aiResponse.result.rawOutput || "",
+          metadata
+        );
         
         clearInterval(progressInterval);
         setProgress(100);
         
-        if (error) {
-          console.error("Error saving new persona:", error);
-          throw error;
-        }
-        
         if (savedResult) {
-          // Format the saved result to match our AgentResult type
-          const formattedResult = {
-            id: savedResult.id,
-            agentId: savedResult.agent_id,
-            strategyId: savedResult.strategy_id,
-            content: savedResult.content,
-            createdAt: savedResult.created_at,
-            metadata: (typeof savedResult.metadata === 'object' && savedResult.metadata !== null) 
-              ? savedResult.metadata as Record<string, any>
-              : {}
-          };
+          // Update local state with the new persona
+          setPersonaHistory(prev => [savedResult, ...prev]);
           
-          // Update local state
-          setPersonaHistory(prev => [formattedResult, ...prev]);
+          // Update the edited content for the editor
+          setEditedContent(savedResult.content);
+          
+          toast.success("AI Persona generated successfully");
         }
-        
-        toast.success("AI Persona generated successfully");
       }
     } catch (error: any) {
       console.error("Error generating persona:", error);
@@ -155,7 +151,7 @@ const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({
         type: 'persona'
       };
       
-      const savedResult = await saveAgentResult(strategy.id, content, metadata);
+      const savedResult = await saveAgentResultToDb(strategy.id, content, metadata);
       
       if (savedResult) {
         // Add to the local state

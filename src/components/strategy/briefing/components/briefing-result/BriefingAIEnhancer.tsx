@@ -7,14 +7,14 @@ import { ChevronDown, ChevronUp, Sparkles } from "lucide-react";
 
 interface BriefingAIEnhancerProps {
   enhancementText: string;
-  onEnhancementChange: (text: string) => void;
+  setEnhancementText: (text: string) => void;
   isExpanded: boolean;
   onToggleExpand: () => void;
 }
 
 const BriefingAIEnhancer: React.FC<BriefingAIEnhancerProps> = ({
   enhancementText,
-  onEnhancementChange,
+  setEnhancementText,
   isExpanded,
   onToggleExpand
 }) => {
@@ -47,7 +47,7 @@ const BriefingAIEnhancer: React.FC<BriefingAIEnhancerProps> = ({
             </p>
             <Textarea
               value={enhancementText}
-              onChange={(e) => onEnhancementChange(e.target.value)}
+              onChange={(e) => setEnhancementText(e.target.value)}
               placeholder="E.g., Focus on digital marketing strategies rather than traditional advertising. Include specific recommendations for our social media presence."
               className="min-h-[100px]"
             />

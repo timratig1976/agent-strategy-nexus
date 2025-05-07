@@ -18,9 +18,9 @@ export interface BriefingResultProps {
   isGenerating: boolean;
   progress: number;
   generateBriefing: (enhancementText?: string) => void;
-  saveAgentResult: (result: AgentResult) => Promise<boolean>;
+  saveAgentResult: (content: string, isFinal?: boolean) => Promise<void>;
   briefingHistory: AgentResult[];
-  setBriefingHistory: (history: AgentResult[] | ((prev: AgentResult[]) => AgentResult[])) => void;
+  setBriefingHistory: React.Dispatch<React.SetStateAction<AgentResult[]>>;
   onBriefingSaved?: (isFinal: boolean) => void;
   aiDebugInfo?: any;
 }
