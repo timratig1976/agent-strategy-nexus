@@ -10,7 +10,6 @@ import WebsiteCrawlerWrapper from "./WebsiteCrawlerWrapper";
 import { WebsiteCrawlResult } from "@/components/marketing/modules/website-crawler/types";
 import { useBriefingGenerator } from "./hooks/useBriefingGenerator";
 import { BriefingProgressBar } from "./components";
-import { AgentResult } from "@/types/marketing";
 
 const StrategyBriefing: React.FC<StrategyBriefingProps> = ({ 
   strategy, 
@@ -44,14 +43,14 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
     try {
       console.log("Fetching strategy metadata for ID:", strategy.id);
       
-      const { data, error } = await supabase
-        .rpc('get_strategy_metadata', { 
-          strategy_id_param: strategy.id 
-        });
-        
+      const { data, error } = await supabase.rpc(
+        'get_strategy_metadata',
+        { strategy_id_param: strategy.id }
+      );
+      
       if (error) {
         console.error("RPC error:", error);
-        throw error;
+        return; // Don't throw error, just log it
       }
       
       console.log("Metadata response:", data);
@@ -73,7 +72,6 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
       }
     } catch (error) {
       console.error("Error fetching strategy metadata:", error);
-      toast.error("Failed to load strategy details");
     }
   };
 
@@ -82,15 +80,17 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
     try {
       console.log("Saving strategy metadata for ID:", strategy.id, "Values:", updatedValues);
       
-      const { error } = await supabase
-        .rpc('upsert_strategy_metadata', {
+      const { error } = await supabase.rpc(
+        'upsert_strategy_metadata',
+        {
           strategy_id_param: strategy.id,
           company_name_param: updatedValues.companyName || '',
           website_url_param: updatedValues.websiteUrl || '',
           product_description_param: updatedValues.productDescription || '',
           product_url_param: updatedValues.productUrl || '',
           additional_info_param: updatedValues.additionalInfo || ''
-        });
+        }
+      );
       
       if (error) {
         console.error("RPC error during save:", error);

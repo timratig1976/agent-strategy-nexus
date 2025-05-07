@@ -8,6 +8,18 @@ interface UseStrategyDataProps {
   id?: string;
 }
 
+export interface StrategyMetadata {
+  id: string;
+  strategy_id: string;
+  company_name: string | null;
+  website_url: string | null;
+  product_description: string | null;
+  product_url: string | null;
+  additional_info: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export const useStrategyData = ({ id }: UseStrategyDataProps) => {
   // Fetch strategy details
   const { 
