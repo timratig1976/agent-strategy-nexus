@@ -11,40 +11,6 @@ import { WebsiteCrawlResult } from "@/components/marketing/modules/website-crawl
 import { useBriefingGenerator } from "./hooks/useBriefingGenerator";
 import { BriefingProgressBar } from "./components";
 import { AgentResult } from "@/types/marketing";
-import { 
-  StrategyMetadataRow,
-  GetStrategyMetadataParams,
-  UpsertStrategyMetadataParams
-} from "./types";
-
-// Create a type for the Supabase Database type structure
-type SupabaseRpcFunctions = {
-  get_strategy_metadata: {
-    Args: { strategy_id_param: string };
-    Returns: {
-      id: string;
-      strategy_id: string;
-      company_name: string | null;
-      website_url: string | null;
-      product_description: string | null;
-      product_url: string | null;
-      additional_info: string | null;
-      created_at: string;
-      updated_at: string;
-    }[];
-  };
-  upsert_strategy_metadata: {
-    Args: {
-      strategy_id_param: string;
-      company_name_param: string;
-      website_url_param: string;
-      product_description_param: string;
-      product_url_param: string;
-      additional_info_param: string;
-    };
-    Returns: undefined;
-  };
-};
 
 const StrategyBriefing: React.FC<StrategyBriefingProps> = ({ 
   strategy, 
@@ -78,7 +44,6 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
     try {
       console.log("Fetching strategy metadata for ID:", strategy.id);
       
-      // Using standard RPC call without custom generics
       const { data, error } = await supabase
         .rpc('get_strategy_metadata', { 
           strategy_id_param: strategy.id 
@@ -117,15 +82,14 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
     try {
       console.log("Saving strategy metadata for ID:", strategy.id, "Values:", updatedValues);
       
-      // Using standard RPC call without custom generics
       const { error } = await supabase
         .rpc('upsert_strategy_metadata', {
           strategy_id_param: strategy.id,
-          company_name_param: updatedValues.companyName,
-          website_url_param: updatedValues.websiteUrl,
-          product_description_param: updatedValues.productDescription,
-          product_url_param: updatedValues.productUrl,
-          additional_info_param: updatedValues.additionalInfo
+          company_name_param: updatedValues.companyName || '',
+          website_url_param: updatedValues.websiteUrl || '',
+          product_description_param: updatedValues.productDescription || '',
+          product_url_param: updatedValues.productUrl || '',
+          additional_info_param: updatedValues.additionalInfo || ''
         });
       
       if (error) {

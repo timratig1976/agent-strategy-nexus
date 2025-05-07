@@ -146,6 +146,7 @@ export const useStrategyData = ({ id }: UseStrategyDataProps) => {
       }
     },
     enabled: !!id && !!strategy, // Only run query if id is available and strategy loaded
+    retry: 2
   });
   
   // Handle task changes

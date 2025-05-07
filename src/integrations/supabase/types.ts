@@ -854,6 +854,50 @@ export type Database = {
           },
         ]
       }
+      strategy_metadata: {
+        Row: {
+          additional_info: string | null
+          company_name: string | null
+          created_at: string | null
+          id: string
+          product_description: string | null
+          product_url: string | null
+          strategy_id: string
+          updated_at: string | null
+          website_url: string | null
+        }
+        Insert: {
+          additional_info?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          id?: string
+          product_description?: string | null
+          product_url?: string | null
+          strategy_id: string
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          additional_info?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          id?: string
+          product_description?: string | null
+          product_url?: string | null
+          strategy_id?: string
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategy_metadata_strategy_id_fkey"
+            columns: ["strategy_id"]
+            isOneToOne: true
+            referencedRelation: "strategies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       strategy_tasks: {
         Row: {
           created_at: string
@@ -1027,7 +1071,31 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_strategy_metadata: {
+        Args: { strategy_id_param: string }
+        Returns: {
+          id: string
+          strategy_id: string
+          company_name: string
+          website_url: string
+          product_description: string
+          product_url: string
+          additional_info: string
+          created_at: string
+          updated_at: string
+        }[]
+      }
+      upsert_strategy_metadata: {
+        Args: {
+          strategy_id_param: string
+          company_name_param: string
+          website_url_param: string
+          product_description_param: string
+          product_url_param: string
+          additional_info_param: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       agent_type:
