@@ -14,6 +14,9 @@ const PainGainsModule: React.FC<PainGainsModuleProps> = ({
   agentResults,
   briefingAgentResult 
 }) => {
+  // Extract briefing content to pass to the USP Canvas
+  const briefingContent = briefingAgentResult?.content || "";
+  
   return (
     <div className="space-y-8">
       <h2 className="text-2xl font-bold">Pain Points & Gains Analysis</h2>
@@ -22,7 +25,10 @@ const PainGainsModule: React.FC<PainGainsModuleProps> = ({
       </p>
       
       <div className="mt-8">
-        <UspCanvasModule />
+        <UspCanvasModule 
+          strategyId={strategy.id}
+          briefingContent={briefingContent}
+        />
       </div>
     </div>
   );

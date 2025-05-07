@@ -5,12 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { 
   RotateCw, 
   CheckCircle2, 
   PlusCircle, 
   Settings,
-  MessageSquareText 
+  MessageSquareText,
+  Filter
 } from "lucide-react";
 import { toast } from "sonner";
 import { 
@@ -45,6 +47,7 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
   const [progress, setProgress] = useState<number>(0);
   const [aiResult, setAiResult] = useState<UspCanvasAIResult | null>(null);
   const [aiDebugInfo, setAiDebugInfo] = useState<any>(null);
+  const [selectedPriorityFilter, setSelectedPriorityFilter] = useState<'all' | 'low' | 'medium' | 'high'>('all');
 
   // Handle generation of USP Canvas profile elements
   const handleGenerate = async () => {
@@ -151,6 +154,29 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
     toast.success("All generated elements added to canvas");
   };
 
+  // Filter items by priority/severity/importance
+  const getFilteredItems = <T extends {priority?: 'low' | 'medium' | 'high', severity?: 'low' | 'medium' | 'high', importance?: 'low' | 'medium' | 'high'}>(
+    items: T[] | undefined,
+    priorityKey: 'priority' | 'severity' | 'importance'
+  ): T[] => {
+    if (!items) return [];
+    if (selectedPriorityFilter === 'all') return items;
+    
+    return items.filter(item => item[priorityKey] === selectedPriorityFilter);
+  };
+
+  // Get filtered jobs, pains, and gains
+  const filteredJobs = getFilteredItems(aiResult?.jobs, 'priority');
+  const filteredPains = getFilteredItems(aiResult?.pains, 'severity');
+  const filteredGains = getFilteredItems(aiResult?.gains, 'importance');
+
+  // Check if results are available to display filter UI
+  const hasResults = aiResult && (
+    (aiResult.jobs && aiResult.jobs.length > 0) ||
+    (aiResult.pains && aiResult.pains.length > 0) ||
+    (aiResult.gains && aiResult.gains.length > 0)
+  );
+
   return (
     <div className="space-y-4">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -244,6 +270,55 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
             </CardContent>
           </Card>
           
+          {hasResults && (
+            <Card className="mb-4">
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-medium">Filter by Priority</h3>
+                  <div className="flex items-center space-x-2">
+                    <Button 
+                      size="sm"
+                      variant={selectedPriorityFilter === "all" ? "default" : "outline"}
+                      onClick={() => setSelectedPriorityFilter("all")}
+                    >
+                      All
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={selectedPriorityFilter === "high" ? "default" : "outline"}
+                      onClick={() => setSelectedPriorityFilter("high")}
+                    >
+                      High
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={selectedPriorityFilter === "medium" ? "default" : "outline"}
+                      onClick={() => setSelectedPriorityFilter("medium")}
+                    >
+                      Medium
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={selectedPriorityFilter === "low" ? "default" : "outline"}
+                      onClick={() => setSelectedPriorityFilter("low")}
+                    >
+                      Low
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {selectedPriorityFilter === 'all' 
+                      ? 'Showing all priorities' 
+                      : `Showing ${selectedPriorityFilter} priority items only`}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {aiResult && (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -252,12 +327,14 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
                   title="Customer Jobs"
                   colorClass="bg-blue-50"
                   titleColorClass="text-blue-800"
-                  items={(aiResult.jobs || []).map(job => ({
+                  items={filteredJobs.map(job => ({
                     content: job.content,
                     level: job.priority,
                     levelLabel: "Priority"
                   }))}
-                  onAdd={() => handleAddJobs(aiResult.jobs || [])}
+                  totalCount={aiResult.jobs?.length || 0}
+                  filteredCount={filteredJobs.length}
+                  onAdd={() => handleAddJobs(filteredJobs)}
                 />
                 
                 {/* Pains Panel */}
@@ -265,12 +342,14 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
                   title="Customer Pains"
                   colorClass="bg-red-50"
                   titleColorClass="text-red-800"
-                  items={(aiResult.pains || []).map(pain => ({
+                  items={filteredPains.map(pain => ({
                     content: pain.content,
                     level: pain.severity,
                     levelLabel: "Severity"
                   }))}
-                  onAdd={() => handleAddPains(aiResult.pains || [])}
+                  totalCount={aiResult.pains?.length || 0}
+                  filteredCount={filteredPains.length}
+                  onAdd={() => handleAddPains(filteredPains)}
                 />
                 
                 {/* Gains Panel */}
@@ -278,12 +357,14 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
                   title="Customer Gains"
                   colorClass="bg-green-50"
                   titleColorClass="text-green-800"
-                  items={(aiResult.gains || []).map(gain => ({
+                  items={filteredGains.map(gain => ({
                     content: gain.content,
                     level: gain.importance,
                     levelLabel: "Importance"
                   }))}
-                  onAdd={() => handleAddGains(aiResult.gains || [])}
+                  totalCount={aiResult.gains?.length || 0}
+                  filteredCount={filteredGains.length}
+                  onAdd={() => handleAddGains(filteredGains)}
                 />
               </div>
               
@@ -291,8 +372,8 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
                (aiResult.pains?.length || 0) + 
                (aiResult.gains?.length || 0)) > 0 && (
                 <div className="flex justify-end">
-                  <Button onClick={handleAddAll}>
-                    <PlusCircle className="h-4 w-4 mr-2" />
+                  <Button onClick={handleAddAll} className="gap-2">
+                    <PlusCircle className="h-4 w-4" />
                     Add All to Canvas
                   </Button>
                 </div>
@@ -325,6 +406,8 @@ interface AICanvasResultPanelProps {
     level: 'low' | 'medium' | 'high';
     levelLabel: string;
   }[];
+  totalCount: number;
+  filteredCount: number;
   onAdd: () => void;
 }
 
@@ -333,17 +416,34 @@ const AICanvasResultPanel: React.FC<AICanvasResultPanelProps> = ({
   colorClass,
   titleColorClass,
   items,
+  totalCount,
+  filteredCount,
   onAdd
 }) => {
   return (
     <div className={`p-4 rounded-md ${colorClass}`}>
-      <h3 className={`text-base font-medium mb-3 ${titleColorClass}`}>{title}</h3>
+      <div className="flex justify-between items-center mb-3">
+        <h3 className={`text-base font-medium ${titleColorClass}`}>{title}</h3>
+        {filteredCount !== totalCount && (
+          <Badge variant="outline">
+            Showing {filteredCount} of {totalCount}
+          </Badge>
+        )}
+      </div>
+
       {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No items generated</p>
+        <p className="text-sm text-muted-foreground">No items{filteredCount !== totalCount ? " matching filter" : " generated"}</p>
       ) : (
         <div className="space-y-2">
           {items.map((item, index) => (
-            <div key={index} className="bg-white p-3 rounded shadow-sm">
+            <div 
+              key={index} 
+              className={`bg-white p-3 rounded shadow-sm border-l-4 ${
+                item.level === 'high' ? 'border-red-400' : 
+                item.level === 'medium' ? 'border-amber-400' : 
+                'border-green-400'
+              }`}
+            >
               <p className="text-sm">{item.content}</p>
               <div className="flex justify-between items-center mt-2">
                 <span className="text-xs text-muted-foreground">
@@ -361,7 +461,13 @@ const AICanvasResultPanel: React.FC<AICanvasResultPanelProps> = ({
           ))}
           
           <div className="mt-3">
-            <Button variant="secondary" size="sm" onClick={onAdd} className="w-full">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              onClick={onAdd} 
+              className="w-full"
+              disabled={items.length === 0}
+            >
               <PlusCircle className="h-3 w-3 mr-2" />
               Add to Canvas
             </Button>

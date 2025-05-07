@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { CustomerJob } from './types';
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, ArrowUpDown, CheckSquare, Square } from "lucide-react";
 
 interface CustomerJobsProps {
   jobs: CustomerJob[];
@@ -17,6 +17,9 @@ interface CustomerJobsProps {
 const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete }: CustomerJobsProps) => {
   const [newJobContent, setNewJobContent] = useState('');
   const [newJobPriority, setNewJobPriority] = useState<'low' | 'medium' | 'high'>('medium');
+  const [sortOrder, setSortOrder] = useState<'default' | 'priority-high' | 'priority-low'>('default');
+  const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
+  const [isSelectMode, setIsSelectMode] = useState(false);
 
   const handleAddJob = () => {
     if (newJobContent.trim()) {
@@ -24,6 +27,48 @@ const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete }: CustomerJobsProps) =>
       setNewJobContent('');
       setNewJobPriority('medium');
     }
+  };
+
+  const toggleSelectJob = (jobId: string) => {
+    if (selectedJobs.includes(jobId)) {
+      setSelectedJobs(selectedJobs.filter(id => id !== jobId));
+    } else {
+      setSelectedJobs([...selectedJobs, jobId]);
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    selectedJobs.forEach(id => onDelete(id));
+    setSelectedJobs([]);
+    setIsSelectMode(false);
+  };
+
+  const toggleSelectMode = () => {
+    setIsSelectMode(!isSelectMode);
+    setSelectedJobs([]);
+  };
+
+  const priorityValue = (priority: 'low' | 'medium' | 'high'): number => {
+    switch (priority) {
+      case 'high': return 3;
+      case 'medium': return 2;
+      case 'low': return 1;
+    }
+  };
+
+  const sortedJobs = [...jobs].sort((a, b) => {
+    if (sortOrder === 'default') return 0;
+    const priorityA = priorityValue(a.priority);
+    const priorityB = priorityValue(b.priority);
+    return sortOrder === 'priority-high' 
+      ? priorityB - priorityA 
+      : priorityA - priorityB;
+  });
+
+  const handleSort = () => {
+    if (sortOrder === 'default') setSortOrder('priority-high');
+    else if (sortOrder === 'priority-high') setSortOrder('priority-low');
+    else setSortOrder('default');
   };
 
   return (
@@ -36,10 +81,73 @@ const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete }: CustomerJobsProps) =>
         </p>
       </div>
 
+      {sortedJobs.length > 0 && (
+        <div className="flex justify-between items-center">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleSort}
+            className="flex items-center space-x-1 text-sm"
+          >
+            <ArrowUpDown className="h-3 w-3" />
+            <span>
+              {sortOrder === 'default' ? 'Default Order' : 
+               sortOrder === 'priority-high' ? 'Highest Priority First' : 
+               'Lowest Priority First'}
+            </span>
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleSelectMode}
+            className="text-sm"
+          >
+            {isSelectMode ? (
+              <>Cancel Selection</>
+            ) : (
+              <>Select Multiple</>
+            )}
+          </Button>
+        </div>
+      )}
+
+      {isSelectMode && selectedJobs.length > 0 && (
+        <div className="flex items-center justify-between p-2 bg-slate-100 rounded-md">
+          <span className="text-sm">{selectedJobs.length} jobs selected</span>
+          <Button 
+            variant="destructive"
+            size="sm"
+            onClick={handleDeleteSelected}
+          >
+            Delete Selected
+          </Button>
+        </div>
+      )}
+
       <div className="space-y-4">
-        {jobs.map((job) => (
-          <div key={job.id} className="p-4 bg-white border rounded-md">
+        {sortedJobs.map((job) => (
+          <div 
+            key={job.id} 
+            className={`p-4 bg-white border rounded-md ${
+              isSelectMode && selectedJobs.includes(job.id) ? 'border-primary bg-primary/5' : ''
+            }`}
+          >
             <div className="flex items-start space-x-3 mb-3">
+              {isSelectMode && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="p-0 h-6 w-6"
+                  onClick={() => toggleSelectJob(job.id)}
+                >
+                  {selectedJobs.includes(job.id) ? (
+                    <CheckSquare className="h-5 w-5 text-primary" />
+                  ) : (
+                    <Square className="h-5 w-5" />
+                  )}
+                </Button>
+              )}
               <div className="flex-1">
                 <Input 
                   value={job.content}
@@ -47,14 +155,16 @@ const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete }: CustomerJobsProps) =>
                   placeholder="What is your customer trying to accomplish?"
                 />
               </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => onDelete(job.id)}
-                className="text-red-500 hover:text-red-700 hover:bg-red-50"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              {!isSelectMode && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => onDelete(job.id)}
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
             </div>
             
             <div className="mt-3">
@@ -77,6 +187,19 @@ const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete }: CustomerJobsProps) =>
                   <Label htmlFor={`job-${job.id}-high`} className="text-sm">High</Label>
                 </div>
               </RadioGroup>
+            </div>
+
+            {/* Priority indicator badge */}
+            <div className="mt-2">
+              <span className={`inline-block text-xs px-2 py-1 rounded-full ${
+                job.priority === 'high' ? 'bg-red-100 text-red-800' :
+                job.priority === 'medium' ? 'bg-amber-100 text-amber-800' :
+                'bg-green-100 text-green-800'
+              }`}>
+                {job.priority === 'high' ? 'High Priority' :
+                 job.priority === 'medium' ? 'Medium Priority' :
+                 'Low Priority'}
+              </span>
             </div>
           </div>
         ))}

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { LayoutDashboard, Save, RotateCcw, Bot } from "lucide-react";
+import { LayoutDashboard, Save, RotateCcw, Bot, Info } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -10,11 +10,20 @@ import ValueMapCanvas from "./ValueMapCanvas";
 import UspCanvasOverview from "./UspCanvasOverview";
 import UspCanvasAIGenerator from "./UspCanvasAIGenerator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { toast } from "sonner";
 import { UspCanvasJob, UspCanvasPain, UspCanvasGain } from "@/services/marketingAIService";
+import { AlertCircle } from "lucide-react";
 
-const UspCanvasModule = () => {
+interface UspCanvasModuleProps {
+  strategyId?: string;
+  briefingContent?: string;
+}
+
+const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({ 
+  strategyId = "", 
+  briefingContent = "" 
+}) => {
   const {
     canvas,
     activeTab,
@@ -47,56 +56,16 @@ const UspCanvasModule = () => {
   } = useUspCanvas();
 
   const [showAiGenerator, setShowAiGenerator] = useState<boolean>(false);
-  const [strategyId, setStrategyId] = useState<string>("");
-  const [briefingContent, setBriefingContent] = useState<string>("");
+  const [isGuidanceOpen, setIsGuidanceOpen] = useState<boolean>(true);
+  const [aiMode, setAiMode] = useState<"extend" | "replace">("extend");
   const [isLoadingBriefing, setIsLoadingBriefing] = useState<boolean>(false);
   
-  // Fetch the latest strategy briefing
-  useEffect(() => {
-    const fetchLatestBriefing = async () => {
-      try {
-        setIsLoadingBriefing(true);
-        // Get the latest strategy (for demo purposes - in a real app you'd use the current strategy)
-        const { data: strategies, error: strategyError } = await supabase
-          .from('strategies')
-          .select('id')
-          .order('created_at', { ascending: false })
-          .limit(1);
-        
-        if (strategyError) throw strategyError;
-        
-        if (strategies && strategies.length > 0) {
-          const latestStrategyId = strategies[0].id;
-          setStrategyId(latestStrategyId);
-          
-          // Get the latest briefing for this strategy
-          const { data: results, error: resultsError } = await supabase
-            .from('agent_results')
-            .select('content, strategy_id')
-            .eq('strategy_id', latestStrategyId)
-            .order('created_at', { ascending: false })
-            .limit(1);
-          
-          if (resultsError) throw resultsError;
-          
-          if (results && results.length > 0) {
-            setBriefingContent(results[0].content);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching briefing:', error);
-        toast.error('Failed to load strategy briefing');
-      } finally {
-        setIsLoadingBriefing(false);
-      }
-    };
-    
-    fetchLatestBriefing();
-  }, []);
+  // Use the provided briefing content and strategy ID if available
+  const hasProvidedStrategy = !!strategyId && !!briefingContent;
 
   const hasCustomerData = canvas.customerJobs.length > 0 || 
-                          canvas.customerPains.length > 0 || 
-                          canvas.customerGains.length > 0;
+                         canvas.customerPains.length > 0 || 
+                         canvas.customerGains.length > 0;
                           
   const hasValueMapData = canvas.productServices.length > 0 || 
                          canvas.painRelievers.length > 0 || 
@@ -104,23 +73,95 @@ const UspCanvasModule = () => {
 
   // Handle adding AI generated jobs to the canvas
   const handleAddAIJobs = (jobs: UspCanvasJob[]) => {
-    jobs.forEach(job => {
-      addCustomerJob(job.content, job.priority);
-    });
+    if (aiMode === "extend") {
+      // Add new items without removing existing ones
+      jobs.forEach(job => {
+        // Check for duplicates based on content similarity
+        const isDuplicate = canvas.customerJobs.some(
+          existingJob => existingJob.content.toLowerCase().trim() === job.content.toLowerCase().trim()
+        );
+        
+        if (!isDuplicate) {
+          addCustomerJob(job.content, job.priority);
+        }
+      });
+      
+      toast.success(`Added ${jobs.length} new customer jobs to canvas`);
+    } else {
+      // Replace mode - clear existing jobs first
+      canvas.customerJobs.forEach(job => {
+        deleteCustomerJob(job.id);
+      });
+      
+      // Then add the new ones
+      jobs.forEach(job => {
+        addCustomerJob(job.content, job.priority);
+      });
+      
+      toast.success(`Replaced customer jobs with ${jobs.length} new items`);
+    }
   };
   
   // Handle adding AI generated pains to the canvas
   const handleAddAIPains = (pains: UspCanvasPain[]) => {
-    pains.forEach(pain => {
-      addCustomerPain(pain.content, pain.severity);
-    });
+    if (aiMode === "extend") {
+      // Add new items without removing existing ones
+      pains.forEach(pain => {
+        // Check for duplicates
+        const isDuplicate = canvas.customerPains.some(
+          existingPain => existingPain.content.toLowerCase().trim() === pain.content.toLowerCase().trim()
+        );
+        
+        if (!isDuplicate) {
+          addCustomerPain(pain.content, pain.severity);
+        }
+      });
+      
+      toast.success(`Added new customer pains to canvas`);
+    } else {
+      // Replace mode - clear existing pains first
+      canvas.customerPains.forEach(pain => {
+        deleteCustomerPain(pain.id);
+      });
+      
+      // Then add the new ones
+      pains.forEach(pain => {
+        addCustomerPain(pain.content, pain.severity);
+      });
+      
+      toast.success(`Replaced customer pains with ${pains.length} new items`);
+    }
   };
   
   // Handle adding AI generated gains to the canvas
   const handleAddAIGains = (gains: UspCanvasGain[]) => {
-    gains.forEach(gain => {
-      addCustomerGain(gain.content, gain.importance);
-    });
+    if (aiMode === "extend") {
+      // Add new items without removing existing ones
+      gains.forEach(gain => {
+        // Check for duplicates
+        const isDuplicate = canvas.customerGains.some(
+          existingGain => existingGain.content.toLowerCase().trim() === gain.content.toLowerCase().trim()
+        );
+        
+        if (!isDuplicate) {
+          addCustomerGain(gain.content, gain.importance);
+        }
+      });
+      
+      toast.success(`Added new customer gains to canvas`);
+    } else {
+      // Replace mode - clear existing gains first
+      canvas.customerGains.forEach(gain => {
+        deleteCustomerGain(gain.id);
+      });
+      
+      // Then add the new ones
+      gains.forEach(gain => {
+        addCustomerGain(gain.content, gain.importance);
+      });
+      
+      toast.success(`Replaced customer gains with ${gains.length} new items`);
+    }
   };
 
   return (
@@ -137,9 +178,70 @@ const UspCanvasModule = () => {
         </div>
       </div>
 
+      {/* User guidance panel */}
+      <Collapsible
+        open={isGuidanceOpen}
+        onOpenChange={setIsGuidanceOpen}
+        className="mb-6 border rounded-md bg-slate-50"
+      >
+        <div className="p-4 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Info className="h-5 w-5 text-blue-500" />
+            <h3 className="font-medium">How to use the USP Canvas</h3>
+          </div>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm">
+              {isGuidanceOpen ? "Hide" : "Show"} Guidance
+            </Button>
+          </CollapsibleTrigger>
+        </div>
+        <CollapsibleContent>
+          <div className="p-4 pt-0 space-y-2 text-sm">
+            <p className="mb-2">
+              You have two ways to build your unique selling proposition canvas:
+            </p>
+            <div className="flex gap-4 mb-4">
+              <div className="flex-1 border rounded-md p-3 bg-white">
+                <h4 className="font-semibold flex items-center gap-1">
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-800">1</span> 
+                  Manual Creation
+                </h4>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Add and edit each element yourself by filling in the forms in each section.
+                </p>
+                <p className="text-xs mt-2 text-blue-600">
+                  Best for full customization and specific industry knowledge
+                </p>
+              </div>
+              <div className="flex-1 border rounded-md p-3 bg-white">
+                <h4 className="font-semibold flex items-center gap-1">
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-800">2</span>
+                  AI Generation
+                </h4>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Use our AI to generate elements based on your strategy briefing.
+                </p>
+                <p className="text-xs mt-2 text-blue-600">
+                  Best for quickly populating your canvas with smart suggestions
+                </p>
+              </div>
+            </div>
+            <div className="bg-blue-50 p-3 rounded-md border border-blue-100">
+              <p className="text-blue-800 text-sm font-medium">Pro Tips</p>
+              <ul className="list-disc list-inside space-y-1 mt-1 text-blue-700 text-xs">
+                <li>Use the AI generator to create a foundation, then refine manually</li>
+                <li>In the "Add to existing" mode, the AI will avoid duplicates</li>
+                <li>Elements are color-coded by priority/severity/importance</li>
+                <li>Connect your products to customer jobs, pains, and gains in Value Map</li>
+              </ul>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+
       {/* Save controls */}
-      <div className="mb-8 flex justify-between items-center">
-        <div className="flex space-x-3">
+      <div className="mb-8 flex flex-wrap gap-y-4 justify-between items-center">
+        <div className="flex flex-wrap gap-3">
           <Button 
             onClick={saveCanvas}
             disabled={isSaved || saveProgress > 0}
@@ -183,7 +285,52 @@ const UspCanvasModule = () => {
       {/* AI Generator Panel */}
       {showAiGenerator && (
         <div className="mb-8">
-          {isLoadingBriefing ? (
+          <Card className="mb-4">
+            <CardContent className="pt-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-medium">AI Generation Mode</h3>
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    size="sm"
+                    variant={aiMode === "extend" ? "default" : "outline"}
+                    onClick={() => setAiMode("extend")}
+                  >
+                    Add to existing
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={aiMode === "replace" ? "default" : "outline"}
+                    onClick={() => setAiMode("replace")}
+                  >
+                    Replace existing
+                  </Button>
+                </div>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {aiMode === "extend" ? (
+                  <div className="flex items-center gap-2 text-green-700 bg-green-50 p-2 rounded">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>New AI-generated elements will be added to your existing content, avoiding duplicates</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-amber-700 bg-amber-50 p-2 rounded">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>Warning: This will replace your existing elements with new AI-generated ones</span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          
+          {(hasProvidedStrategy || (strategyId && briefingContent)) ? (
+            <UspCanvasAIGenerator
+              strategyId={strategyId}
+              briefingContent={briefingContent}
+              onAddJobs={handleAddAIJobs}
+              onAddPains={handleAddAIPains}
+              onAddGains={handleAddAIGains}
+            />
+          ) : isLoadingBriefing ? (
             <Card>
               <CardHeader>
                 <CardTitle>Loading Strategy Briefing...</CardTitle>
@@ -192,30 +339,6 @@ const UspCanvasModule = () => {
                 <Progress value={50} className="w-full" />
               </CardContent>
             </Card>
-          ) : briefingContent ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-1">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Strategy Briefing</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="max-h-96 overflow-y-auto">
-                      <p className="whitespace-pre-line">{briefingContent}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-              <div className="lg:col-span-2">
-                <UspCanvasAIGenerator
-                  strategyId={strategyId}
-                  briefingContent={briefingContent}
-                  onAddJobs={handleAddAIJobs}
-                  onAddPains={handleAddAIPains}
-                  onAddGains={handleAddAIGains}
-                />
-              </div>
-            </div>
           ) : (
             <Card>
               <CardHeader>
@@ -234,8 +357,12 @@ const UspCanvasModule = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid grid-cols-3">
-          <TabsTrigger value="customer-profile">Customer Profile</TabsTrigger>
-          <TabsTrigger value="value-map">Value Map</TabsTrigger>
+          <TabsTrigger value="customer-profile">
+            Customer Profile {hasCustomerData && <span className="ml-2 bg-blue-100 text-blue-800 text-xs px-1.5 py-0.5 rounded-full">{canvas.customerJobs.length + canvas.customerPains.length + canvas.customerGains.length}</span>}
+          </TabsTrigger>
+          <TabsTrigger value="value-map">
+            Value Map {hasValueMapData && <span className="ml-2 bg-blue-100 text-blue-800 text-xs px-1.5 py-0.5 rounded-full">{canvas.productServices.length + canvas.painRelievers.length + canvas.gainCreators.length}</span>}
+          </TabsTrigger>
           <TabsTrigger value="overview" disabled={!hasCustomerData && !hasValueMapData}>
             Canvas Overview
           </TabsTrigger>
