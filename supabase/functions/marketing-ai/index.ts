@@ -203,7 +203,7 @@ function getSystemPrompt(module: string, action: string): string {
       'edit': `${basePrompt} Your task is to refine and improve an existing channel strategy based on feedback and updated performance data.`
     },
     'usp_canvas_profile': {
-      'generate': `${basePrompt} Your task is to create a comprehensive customer profile for a Value Proposition Canvas based on the provided briefing and persona information. Focus on customer jobs (tasks they're trying to accomplish), pains (problems, risks, negative experiences), and gains (positive outcomes, benefits). Make each item specific, concrete and actionable.`
+      'generate': `${basePrompt} Your task is to create a comprehensive customer profile for a Value Proposition Canvas based on the provided briefing and persona information. Focus on customer jobs (tasks they're trying to accomplish), pains (problems, risks, negative experiences), and gains (positive outcomes, benefits). Make each item specific, concrete and actionable. Clearly indicate the priority (high, medium, or low) for each job, severity for each pain, and importance for each gain.`
     },
     'usp_canvas_value_map': {
       'generate': `${basePrompt} Your task is to create a value map for a Value Proposition Canvas that directly addresses the customer profile. Focus on products/services that help customers complete jobs, pain relievers that address specific customer pains, and gain creators that produce customer gains. Make sure each item relates directly to specific elements in the customer profile.`
@@ -291,18 +291,18 @@ function constructUserPrompt(module: string, action: string, data: any): string 
       prompt += `${profileSection === 'all' ? 'Please provide all three components of the customer profile:' : `Please focus only on the "${profileSection}" section of the customer profile:`}\n\n`;
       
       if (profileSection === 'all' || profileSection === 'jobs') {
-        prompt += `1. Customer Jobs: What are the functional, social, and emotional jobs your customer is trying to get done? Include key tasks they're trying to complete, problems they're trying to solve, or needs they're trying to satisfy. For each job, indicate its priority (high, medium, or low).\n\n`;
+        prompt += `1. Customer Jobs: What are the functional, social, and emotional jobs your customer is trying to get done? Include key tasks they're trying to complete, problems they're trying to solve, or needs they're trying to satisfy. For each job, clearly indicate its priority (high, medium, or low) by using the format "Job description (Priority: high|medium|low)".\n\n`;
       }
       
       if (profileSection === 'all' || profileSection === 'pains') {
-        prompt += `2. Customer Pains: What are the negative outcomes, risks, obstacles, or bad experiences your customer encounters when trying to complete their jobs? For each pain, indicate its severity (high, medium, or low).\n\n`;
+        prompt += `2. Customer Pains: What are the negative outcomes, risks, obstacles, or bad experiences your customer encounters when trying to complete their jobs? For each pain, clearly indicate its severity (high, medium, or low) by using the format "Pain description (Severity: high|medium|low)".\n\n`;
       }
       
       if (profileSection === 'all' || profileSection === 'gains') {
-        prompt += `3. Customer Gains: What benefits and positive outcomes does your customer expect, desire, or would be surprised by? For each gain, indicate its importance (high, medium, or low).\n\n`;
+        prompt += `3. Customer Gains: What benefits and positive outcomes does your customer expect, desire, or would be surprised by? For each gain, clearly indicate its importance (high, medium, or low) by using the format "Gain description (Importance: high|medium|low)".\n\n`;
       }
       
-      prompt += `Format your response in a structured way, with clearly labeled sections for each component.`;
+      prompt += `Format your response in a structured way, with clearly labeled sections for each component and using bullet points for individual items. Make sure to clearly indicate the priority/severity/importance level for each item.`;
       return prompt;
     
     case 'usp_canvas_value_map':
@@ -501,17 +501,20 @@ function parseAIResult(module: string, action: string, result: string): any {
             let priority: 'low' | 'medium' | 'high' = 'medium';
             
             if (content.toLowerCase().includes('priority: high') || 
-                content.toLowerCase().includes('high priority')) {
+                content.toLowerCase().includes('high priority') ||
+                content.toLowerCase().includes('priority:high')) {
               priority = 'high';
             } else if (content.toLowerCase().includes('priority: low') || 
-                      content.toLowerCase().includes('low priority')) {
+                      content.toLowerCase().includes('low priority') ||
+                      content.toLowerCase().includes('priority:low')) {
               priority = 'low';
             }
             
             // Remove any priority text from the content
             const cleanContent = content
-              .replace(/priority: (high|medium|low)/i, '')
-              .replace(/(high|medium|low) priority/i, '')
+              .replace(/priority:\s*(high|medium|low)/i, '')
+              .replace(/(high|medium|low)\s*priority/i, '')
+              .replace(/\(.*?\)/g, '') // Remove any parenthetical content
               .trim();
               
             return {
@@ -534,17 +537,20 @@ function parseAIResult(module: string, action: string, result: string): any {
             let severity: 'low' | 'medium' | 'high' = 'medium';
             
             if (content.toLowerCase().includes('severity: high') || 
-                content.toLowerCase().includes('high severity')) {
+                content.toLowerCase().includes('high severity') ||
+                content.toLowerCase().includes('severity:high')) {
               severity = 'high';
             } else if (content.toLowerCase().includes('severity: low') || 
-                      content.toLowerCase().includes('low severity')) {
+                      content.toLowerCase().includes('low severity') ||
+                      content.toLowerCase().includes('severity:low')) {
               severity = 'low';
             }
             
             // Remove any severity text from the content
             const cleanContent = content
-              .replace(/severity: (high|medium|low)/i, '')
-              .replace(/(high|medium|low) severity/i, '')
+              .replace(/severity:\s*(high|medium|low)/i, '')
+              .replace(/(high|medium|low)\s*severity/i, '')
+              .replace(/\(.*?\)/g, '') // Remove any parenthetical content
               .trim();
               
             return {
@@ -567,17 +573,20 @@ function parseAIResult(module: string, action: string, result: string): any {
             let importance: 'low' | 'medium' | 'high' = 'medium';
             
             if (content.toLowerCase().includes('importance: high') || 
-                content.toLowerCase().includes('high importance')) {
+                content.toLowerCase().includes('high importance') ||
+                content.toLowerCase().includes('importance:high')) {
               importance = 'high';
             } else if (content.toLowerCase().includes('importance: low') || 
-                      content.toLowerCase().includes('low importance')) {
+                      content.toLowerCase().includes('low importance') ||
+                      content.toLowerCase().includes('importance:low')) {
               importance = 'low';
             }
             
             // Remove any importance text from the content
             const cleanContent = content
-              .replace(/importance: (high|medium|low)/i, '')
-              .replace(/(high|medium|low) importance/i, '')
+              .replace(/importance:\s*(high|medium|low)/i, '')
+              .replace(/(high|medium|low)\s*importance/i, '')
+              .replace(/\(.*?\)/g, '') // Remove any parenthetical content
               .trim();
               
             return {
