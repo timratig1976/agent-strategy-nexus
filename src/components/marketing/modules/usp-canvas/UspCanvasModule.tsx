@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import UspCanvasOverview from "./UspCanvasOverview";
@@ -7,6 +7,7 @@ import CustomerProfileCanvas from "./CustomerProfileCanvas";
 import ValueMapCanvas from "./ValueMapCanvas";
 import { useUspCanvas } from "./useUspCanvas";
 import UspCanvasAIGenerator from "./UspCanvasAIGenerator";
+import { StoredAIResult } from "./types";
 
 interface UspCanvasModuleProps {
   strategyId: string;
@@ -19,6 +20,13 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
   briefingContent,
   personaContent 
 }) => {
+  // Store AI results between tab switches
+  const [storedAIResult, setStoredAIResult] = useState<StoredAIResult>({});
+  // Track IDs of already added items to prevent duplicates
+  const [addedJobIds, setAddedJobIds] = useState<Set<string>>(new Set());
+  const [addedPainIds, setAddedPainIds] = useState<Set<string>>(new Set());
+  const [addedGainIds, setAddedGainIds] = useState<Set<string>>(new Set());
+  
   const { 
     canvas,
     addCustomerJob,
@@ -50,22 +58,78 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     reorderCustomerGains
   } = useUspCanvas();
 
-  // Handle adding AI-generated elements
+  // Handle saving AI results when switching tabs
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+  };
+
+  // Handle adding AI-generated elements with duplicate prevention
   const handleAddAIJobs = (jobs) => {
-    jobs.forEach(job => {
+    const newAddedIds = new Set(addedJobIds);
+    const uniqueJobs = jobs.filter(job => {
+      // Create a unique identifier based on content and priority
+      const idKey = `${job.content}-${job.priority}`;
+      // Check if this combination already exists
+      const isDuplicate = newAddedIds.has(idKey);
+      if (!isDuplicate) {
+        newAddedIds.add(idKey);
+        return true;
+      }
+      return false;
+    });
+    
+    setAddedJobIds(newAddedIds);
+    
+    uniqueJobs.forEach(job => {
       addCustomerJob(job.content, job.priority, true);
     });
   };
 
   const handleAddAIPains = (pains) => {
-    pains.forEach(pain => {
+    const newAddedIds = new Set(addedPainIds);
+    const uniquePains = pains.filter(pain => {
+      const idKey = `${pain.content}-${pain.severity}`;
+      const isDuplicate = newAddedIds.has(idKey);
+      if (!isDuplicate) {
+        newAddedIds.add(idKey);
+        return true;
+      }
+      return false;
+    });
+    
+    setAddedPainIds(newAddedIds);
+    
+    uniquePains.forEach(pain => {
       addCustomerPain(pain.content, pain.severity, true);
     });
   };
 
   const handleAddAIGains = (gains) => {
-    gains.forEach(gain => {
+    const newAddedIds = new Set(addedGainIds);
+    const uniqueGains = gains.filter(gain => {
+      const idKey = `${gain.content}-${gain.importance}`;
+      const isDuplicate = newAddedIds.has(idKey);
+      if (!isDuplicate) {
+        newAddedIds.add(idKey);
+        return true;
+      }
+      return false;
+    });
+    
+    setAddedGainIds(newAddedIds);
+    
+    uniqueGains.forEach(gain => {
       addCustomerGain(gain.content, gain.importance, true);
+    });
+  };
+
+  // Handle storing AI results
+  const handleAIResultsGenerated = (result, debugInfo) => {
+    setStoredAIResult({
+      jobs: result?.jobs || [],
+      pains: result?.pains || [],
+      gains: result?.gains || [],
+      debugInfo
     });
   };
 
@@ -76,7 +140,7 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
         Define your value proposition by mapping customer jobs, pains, and gains to your products and services.
       </p>
 
-      <Tabs defaultValue="canvas" className="mt-8" onValueChange={setActiveTab}>
+      <Tabs defaultValue="canvas" className="mt-8" onValueChange={handleTabChange}>
         <TabsList className="w-full">
           <TabsTrigger value="canvas">Canvas</TabsTrigger>
           <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -154,6 +218,8 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
             onAddJobs={handleAddAIJobs}
             onAddPains={handleAddAIPains}
             onAddGains={handleAddAIGains}
+            storedAIResult={storedAIResult}
+            onResultsGenerated={handleAIResultsGenerated}
           />
         </TabsContent>
       </Tabs>

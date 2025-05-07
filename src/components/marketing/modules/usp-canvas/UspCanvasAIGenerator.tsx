@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,7 +16,9 @@ import {
   MessageSquareText,
   Filter,
   User,
-  UsersRound
+  UsersRound,
+  Info,
+  Bug
 } from "lucide-react";
 import { toast } from "sonner";
 import { 
@@ -28,6 +30,7 @@ import {
 } from "@/services/marketingAIService";
 import AIDebugPanel from "@/components/shared/AIDebugPanel";
 import { AIPromptSettings } from "@/components/strategy/briefing/components/AIPromptSettings";
+import { StoredAIResult } from "./types";
 
 interface UspCanvasAIGeneratorProps {
   strategyId: string;
@@ -36,6 +39,8 @@ interface UspCanvasAIGeneratorProps {
   onAddJobs?: (jobs: UspCanvasJob[]) => void;
   onAddPains?: (pains: UspCanvasPain[]) => void;
   onAddGains?: (gains: UspCanvasGain[]) => void;
+  storedAIResult?: StoredAIResult;
+  onResultsGenerated?: (results: UspCanvasAIResult | null, debugInfo: any) => void;
 }
 
 export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
@@ -44,7 +49,9 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
   personaContent = "",
   onAddJobs,
   onAddPains,
-  onAddGains
+  onAddGains,
+  storedAIResult,
+  onResultsGenerated
 }) => {
   const [activeTab, setActiveTab] = useState<string>("generate");
   const [activeSection, setActiveSection] = useState<string>("all");
@@ -55,6 +62,24 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
   const [aiDebugInfo, setAiDebugInfo] = useState<any>(null);
   const [selectedPriorityFilter, setSelectedPriorityFilter] = useState<'all' | 'low' | 'medium' | 'high'>('all');
   const [includePersonaData, setIncludePersonaData] = useState<boolean>(true);
+  const [isDebugVisible, setIsDebugVisible] = useState<boolean>(false);
+
+  // Load stored AI results when the component mounts or when stored results change
+  useEffect(() => {
+    if (storedAIResult) {
+      if (storedAIResult.jobs || storedAIResult.pains || storedAIResult.gains) {
+        setAiResult({
+          jobs: storedAIResult.jobs || [],
+          pains: storedAIResult.pains || [],
+          gains: storedAIResult.gains || []
+        });
+      }
+      
+      if (storedAIResult.debugInfo) {
+        setAiDebugInfo(storedAIResult.debugInfo);
+      }
+    }
+  }, [storedAIResult]);
 
   // Handle generation of USP Canvas profile elements
   const handleGenerate = async () => {
@@ -118,6 +143,11 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
         clearInterval(progressInterval);
         setProgress(100);
         toast.success("USP Canvas profile elements generated successfully");
+        
+        // Pass the results back to parent component to preserve between tab changes
+        if (onResultsGenerated) {
+          onResultsGenerated(result.data, result.debugInfo);
+        }
       }
     } catch (error) {
       clearInterval(progressInterval);
@@ -168,6 +198,11 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
     }
     
     toast.success("All generated elements added to canvas");
+  };
+
+  // Toggle debug panel visibility
+  const toggleDebugPanel = () => {
+    setIsDebugVisible(!isDebugVisible);
   };
 
   // Filter items by priority/severity/importance
@@ -273,7 +308,19 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
                 />
               </div>
               
-              <div className="flex justify-end">
+              <div className="flex justify-between">
+                {aiDebugInfo && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleDebugPanel}
+                    className="flex items-center gap-2"
+                  >
+                    <Bug className="h-4 w-4" />
+                    {isDebugVisible ? 'Hide Debug Info' : 'Show Debug Info'}
+                  </Button>
+                )}
+
                 <Button 
                   onClick={handleGenerate} 
                   disabled={isGenerating}
@@ -303,6 +350,10 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
               )}
             </CardContent>
           </Card>
+          
+          {isDebugVisible && aiDebugInfo && (
+            <AIDebugPanel debugInfo={aiDebugInfo} title="USP Canvas AI Debug Information" />
+          )}
           
           {hasResults && (
             <Card className="mb-4">
@@ -412,8 +463,6 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
                   </Button>
                 </div>
               )}
-              
-              {aiDebugInfo && <AIDebugPanel debugInfo={aiDebugInfo} />}
             </div>
           )}
         </TabsContent>

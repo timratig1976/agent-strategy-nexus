@@ -59,3 +59,11 @@ export interface PersonaContextData {
   behaviors?: string;
   preferences?: string;
 }
+
+// For storing AI-generated results between tab switches
+export interface StoredAIResult {
+  jobs?: CustomerJob[];
+  pains?: CustomerPain[];
+  gains?: CustomerGain[];
+  debugInfo?: any;
+}
