@@ -3,6 +3,13 @@ import { toast } from "sonner";
 import { AgentResult } from "@/types/marketing";
 import { supabase } from "@/integrations/supabase/client";
 
+// Define a specific type for the jsonb_set_key_to_value function parameters
+interface JsonbSetParams {
+  json_data: Record<string, any>;
+  key_name: string;
+  new_value: string;
+}
+
 export const useAgentResultSaver = () => {
   // Save agent result as a new record with content and optional metadata
   const saveAgentResult = async (
@@ -25,14 +32,14 @@ export const useAgentResultSaver = () => {
         const resultType = metadata.type || 'briefing';
         
         // Remove 'final' status from all previous results of the same type
+        // Using a direct SQL query instead of RPC to avoid type issues
         const { error: updateError } = await supabase
           .from('agent_results')
           .update({ 
-            metadata: supabase.rpc('jsonb_set_key_to_value', { 
-              json_data: supabase.raw('metadata::jsonb'),
-              key_name: 'is_final', 
-              new_value: 'false' 
-            })
+            metadata: {
+              ...metadata,
+              is_final: false
+            }
           })
           .eq('strategy_id', strategyId)
           .eq('metadata->is_final', 'true')

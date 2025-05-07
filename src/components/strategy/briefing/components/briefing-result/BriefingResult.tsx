@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sheet } from "@/components/ui/sheet";
+import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { History, Sparkles } from "lucide-react";
 import { BriefingResultProps } from "../../types";
 import BriefingContentEditor from "./BriefingContentEditor";
@@ -97,11 +97,11 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
             {isGenerating ? "Generating..." : generateButtonText}
           </Button>
           <Sheet>
-            <Sheet.Trigger asChild>
+            <SheetTrigger asChild>
               <Button variant="outline" size="sm" className="flex gap-1">
                 <History className="h-4 w-4" /> History
               </Button>
-            </Sheet.Trigger>
+            </SheetTrigger>
             <BriefingHistorySheet
               briefingHistory={briefingHistory}
               loadHistoricalVersion={(briefing) => setEditedContent(briefing.content)}
