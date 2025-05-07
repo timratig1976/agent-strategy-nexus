@@ -12,20 +12,28 @@ export const useStrategyData = ({ id }: UseStrategyDataProps) => {
   // Fetch strategy details
   const { 
     data: strategy, 
-    isLoading: isStrategyLoading 
+    isLoading: isStrategyLoading,
+    error: strategyError
   } = useQuery({
     queryKey: ['strategy', id],
     queryFn: async () => {
       if (!id) return null;
       
       try {
+        console.log("Fetching strategy data for ID:", id);
+        
         const { data, error } = await supabase
           .from('strategies')
           .select('*')
           .eq('id', id)
           .single();
         
-        if (error) throw error;
+        if (error) {
+          console.error("Strategy fetch error:", error);
+          throw error;
+        }
+        
+        console.log("Strategy data retrieved:", data);
         
         // Map to our Strategy type
         return {
@@ -44,10 +52,12 @@ export const useStrategyData = ({ id }: UseStrategyDataProps) => {
       } catch (err) {
         console.error("Error fetching strategy:", err);
         toast.error("Failed to load strategy details");
-        return null;
+        throw err; // Re-throw to let React Query handle it
       }
     },
-    enabled: !!id // Only run query if id is available
+    enabled: !!id, // Only run query if id is available
+    retry: 2, // Retry up to 2 times on failure
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
   });
   
   // Fetch tasks for this strategy
@@ -61,13 +71,20 @@ export const useStrategyData = ({ id }: UseStrategyDataProps) => {
       if (!id) return [];
       
       try {
+        console.log("Fetching tasks for strategy ID:", id);
+        
         const { data, error } = await supabase
           .from('strategy_tasks')
           .select('*')
           .eq('strategy_id', id)
           .order('created_at', { ascending: true });
         
-        if (error) throw error;
+        if (error) {
+          console.error("Tasks fetch error:", error);
+          throw error;
+        }
+        
+        console.log("Tasks retrieved:", data?.length || 0);
         
         // Map to our StrategyTask type
         return data.map(task => ({
@@ -86,7 +103,7 @@ export const useStrategyData = ({ id }: UseStrategyDataProps) => {
         return [];
       }
     },
-    enabled: !!id // Only run query if id is available
+    enabled: !!id && !!strategy, // Only run query if id is available and strategy loaded
   });
   
   // Fetch agent results for this strategy
@@ -99,13 +116,20 @@ export const useStrategyData = ({ id }: UseStrategyDataProps) => {
       if (!id) return [];
       
       try {
+        console.log("Fetching agent results for strategy ID:", id);
+        
         const { data, error } = await supabase
           .from('agent_results')
           .select('*')
           .eq('strategy_id', id)
           .order('created_at', { ascending: false });
         
-        if (error) throw error;
+        if (error) {
+          console.error("Agent results fetch error:", error);
+          throw error;
+        }
+        
+        console.log("Agent results retrieved:", data?.length || 0);
         
         // Map to our AgentResult type
         return data.map(result => ({
@@ -121,7 +145,7 @@ export const useStrategyData = ({ id }: UseStrategyDataProps) => {
         return [];
       }
     },
-    enabled: !!id // Only run query if id is available
+    enabled: !!id && !!strategy, // Only run query if id is available and strategy loaded
   });
   
   // Handle task changes
@@ -134,6 +158,7 @@ export const useStrategyData = ({ id }: UseStrategyDataProps) => {
     tasks,
     agentResults,
     isLoading: isStrategyLoading || isTasksLoading || isResultsLoading,
+    isError: !!strategyError,
     handleTasksChange
   };
 };
