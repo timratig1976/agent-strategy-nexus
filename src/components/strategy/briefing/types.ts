@@ -20,6 +20,31 @@ export interface StrategyMetadata {
   updated_at?: string;
 }
 
+export type StrategyMetadataRow = {
+  id: string;
+  strategy_id: string;
+  company_name: string | null;
+  website_url: string | null;
+  product_description: string | null;
+  product_url: string | null;
+  additional_info: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type GetStrategyMetadataParams = {
+  strategy_id_param: string;
+};
+
+export type UpsertStrategyMetadataParams = {
+  strategy_id_param: string;
+  company_name_param: string;
+  website_url_param: string;
+  product_description_param: string;
+  product_url_param: string;
+  additional_info_param: string;
+};
+
 export interface StrategyInfoCardProps {
   formValues: StrategyFormValues;
   saveStrategyMetadata: (updatedValues: StrategyFormValues) => Promise<boolean>;
