@@ -18,11 +18,9 @@ export default function NavBar() {
   // Get the current route for active link highlighting
   const currentRoute = location.pathname;
   
-  // Define navigation items
+  // Define navigation items - removed Strategies and Company items
   const navItems = [
     { name: "Dashboard", href: "/dashboard" },
-    { name: "Strategies", href: "/create-strategy" },
-    { name: "Company", href: "/company-summary" },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
 
@@ -85,7 +83,7 @@ export default function NavBar() {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="font-semibold text-lg mr-6">
-            Marketing Hub
+            Marketing Strategy Hub
           </Link>
 
           {!isMobile && (

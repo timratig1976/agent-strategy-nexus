@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,8 @@ interface CrmTabContentProps {
   isAuthenticated: boolean;
 }
 
+// This component is no longer being used in the app
+// but we keep it to avoid breaking any imports
 const CrmTabContent = ({ dbStatus, isAuthenticated }: CrmTabContentProps) => {
   const navigate = useNavigate();
   

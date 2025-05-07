@@ -9,11 +9,8 @@ import {
   PageHeader, 
   DatabaseStatus, 
   HowItWorks, 
-  MarketingTabContent, 
-  CrmTabContent 
+  MarketingTabContent
 } from "@/components";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LayoutDashboard, Users } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -59,32 +56,15 @@ const Index = () => {
 
       <div className="text-center mb-12">
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Complete business management solution with marketing strategy tools and customer relationship management.
+          Complete business management solution with marketing strategy tools.
         </p>
       </div>
 
       <DatabaseStatus status={dbStatus} />
 
-      <Tabs defaultValue="marketing" className="mb-12">
-        <TabsList className="grid w-full grid-cols-2 mb-8 max-w-lg mx-auto shadow-sm">
-          <TabsTrigger value="marketing" className="flex gap-2 items-center py-3 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 dark:data-[state=active]:bg-blue-950 dark:data-[state=active]:text-blue-300">
-            <LayoutDashboard className="h-4 w-4" />
-            Marketing Strategy
-          </TabsTrigger>
-          <TabsTrigger value="crm" className="flex gap-2 items-center py-3 data-[state=active]:bg-green-50 data-[state=active]:text-green-700 dark:data-[state=active]:bg-green-950 dark:data-[state=active]:text-green-300">
-            <Users className="h-4 w-4" />
-            CRM
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="marketing" className="mt-0">
-          <MarketingTabContent dbStatus={dbStatus} isAuthenticated={!!user} />
-        </TabsContent>
-        
-        <TabsContent value="crm" className="mt-0">
-          <CrmTabContent dbStatus={dbStatus} isAuthenticated={!!user} />
-        </TabsContent>
-      </Tabs>
+      <div className="mb-12">
+        <MarketingTabContent dbStatus={dbStatus} isAuthenticated={!!user} />
+      </div>
 
       <HowItWorks />
     </div>
