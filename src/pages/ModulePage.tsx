@@ -33,6 +33,7 @@ const ModulePage = () => {
       case "persona_development":
         return <PersonaGeneratorModule />;
       case "usp_canvas":
+        // Pass the required props to UspCanvasModule
         return <UspCanvasModule strategyId={defaultStrategyId} briefingContent="" />;
       case "usp_generator":
         return <UspGeneratorModule />;

@@ -1,4 +1,3 @@
 
-import UspCanvasModule from "./UspCanvasModule";
-
-export default UspCanvasModule;
+export { default } from './UspCanvasModule';
+export * from './types';
