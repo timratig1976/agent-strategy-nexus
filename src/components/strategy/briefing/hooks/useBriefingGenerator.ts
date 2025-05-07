@@ -5,7 +5,6 @@ import { MarketingAIService } from "@/services/marketingAIService";
 import { AgentResult } from "@/types/marketing";
 import { StrategyFormValues } from "@/components/strategy-form";
 import { supabase } from "@/integrations/supabase/client";
-import { v4 as uuidv4 } from "uuid";
 
 export const useBriefingGenerator = (strategyId: string) => {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -101,12 +100,10 @@ export const useBriefingGenerator = (strategyId: string) => {
       // Create a timestamp for the generation
       const currentTime = new Date().toISOString();
       
-      // Generate a UUID for the agent_id instead of using the string "briefing"
-      const agentId = uuidv4();
-      
-      // Create the agent result to save to the database
+      // Create the agent result to save to the database with null agent_id
+      // This should work if agent_id is nullable in the agent_results table
       const newResult = {
-        agent_id: agentId, // Use UUID instead of string "briefing"
+        agent_id: null, // Use null instead of a UUID or string
         strategy_id: strategyId,
         content: aiResponse?.rawOutput || "",
         metadata: {
