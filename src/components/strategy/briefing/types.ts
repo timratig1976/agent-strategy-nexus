@@ -23,6 +23,11 @@ export interface BriefingResultProps {
   setBriefingHistory: React.Dispatch<React.SetStateAction<AgentResult[]>>;
   onBriefingSaved?: (isFinal: boolean) => void;
   aiDebugInfo?: any;
+  customTitle?: string;
+  generateButtonText?: string;
+  saveButtonText?: string;
+  saveFinalButtonText?: string;
+  placeholderText?: string;
 }
 
 export interface BriefingResultCardProps {

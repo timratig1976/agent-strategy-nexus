@@ -5,14 +5,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { PersonaDevelopmentProps } from "./types";
 import { useAgentResultSaver } from "../briefing/hooks/useAgentResultSaver";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { BriefingResult } from "../briefing/components/briefing-result/BriefingResult";
 import PersonaEditor from "./PersonaEditor";
+import { ChevronLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({ 
   strategy, 
   agentResults = [],
   briefingAgentResult
 }) => {
+  const navigate = useNavigate();
   const [briefingHistory, setBriefingHistory] = useState(agentResults.filter(r => 
     r.metadata?.type === 'briefing' || !r.metadata?.type));
   const [personaHistory, setPersonaHistory] = useState(agentResults.filter(r => 
@@ -31,6 +35,11 @@ const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({
   
   // Find the latest persona from the history
   const latestPersona = personaHistory.length > 0 ? personaHistory[0] : null;
+
+  // Handler for going back to the briefing step
+  const handleGoToPreviousStep = () => {
+    navigate(`/strategy-details/${strategy.id}?state=briefing`);
+  };
   
   // Function to generate AI persona with progress updates
   const generatePersona = async (enhancementText?: string): Promise<void> => {
@@ -68,21 +77,9 @@ const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({
         }
       });
       
-      // Store debug info for monitoring - note we can't access the debugInfo directly from the response
+      // Store debug info for monitoring
       if (aiResponse) {
-        setAiDebugInfo({
-          requestData: {
-            module: 'persona',
-            action: 'generate',
-            data: {
-              strategyId: strategy.id,
-              // Don't include full briefing content in debug to avoid clutter
-              briefingContentLength: latestBriefing.content.length,
-              enhancementTextLength: (enhancementText || '').length
-            }
-          },
-          responseData: aiResponse
-        });
+        setAiDebugInfo(aiResponse);
       }
       
       if (aiError) {
@@ -177,6 +174,16 @@ const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({
                 content={latestBriefing?.content || "No briefing available"}
                 readOnly={true}
               />
+              <div className="mt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={handleGoToPreviousStep}
+                  className="flex items-center"
+                >
+                  <ChevronLeft className="mr-2 h-4 w-4" /> 
+                  Back to Briefing
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -192,6 +199,11 @@ const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({
             briefingHistory={personaHistory}
             setBriefingHistory={setPersonaHistory}
             aiDebugInfo={aiDebugInfo}
+            customTitle="Persona Generator"
+            generateButtonText="Generate Persona"
+            saveButtonText="Save Persona"
+            saveFinalButtonText="Save Final Persona"
+            placeholderText="Generated personas will appear here..."
           />
         </div>
       </div>

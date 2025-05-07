@@ -2,7 +2,6 @@
 import React from "react";
 import { BriefingProgressBar } from "../../components/BriefingProgressBar";
 import { Textarea } from "@/components/ui/textarea";
-import ReactMarkdown from "react-markdown";
 
 interface BriefingContentEditorProps {
   content: string;
@@ -10,6 +9,7 @@ interface BriefingContentEditorProps {
   setEditedContent: (content: string) => void;
   isGenerating: boolean;
   progress: number;
+  placeholder?: string;
 }
 
 const BriefingContentEditor: React.FC<BriefingContentEditorProps> = ({ 
@@ -17,7 +17,8 @@ const BriefingContentEditor: React.FC<BriefingContentEditorProps> = ({
   editedContent, 
   setEditedContent, 
   isGenerating, 
-  progress 
+  progress,
+  placeholder = "Generated content will appear here..."
 }) => {
   // Initialize edited content if it's empty but we have content
   React.useEffect(() => {
@@ -44,7 +45,7 @@ const BriefingContentEditor: React.FC<BriefingContentEditorProps> = ({
       className="min-h-[300px] font-mono text-sm"
       value={editedContent}
       onChange={(e) => setEditedContent(e.target.value)}
-      placeholder="Generated content will appear here..."
+      placeholder={placeholder}
     />
   );
 };
