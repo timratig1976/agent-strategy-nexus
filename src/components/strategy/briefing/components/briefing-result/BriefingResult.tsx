@@ -30,6 +30,7 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
   const [editedContent, setEditedContent] = useState(latestBriefing?.content || "");
   const [enhancementText, setEnhancementText] = useState("");
   const [showPromptMonitor, setShowPromptMonitor] = useState(aiDebugInfo !== null && aiDebugInfo !== undefined);
+  const [enhancerExpanded, setEnhancerExpanded] = useState(false);
 
   // Effect to update edited content when latest briefing changes
   React.useEffect(() => {
@@ -48,6 +49,7 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
   const handleGenerateBriefing = () => {
     generateBriefing(enhancementText);
     setEnhancementText("");
+    setEnhancerExpanded(false);
   };
 
   const handleSaveBriefing = async (isFinal: boolean = false) => {
@@ -80,10 +82,11 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
             </SheetTrigger>
             <BriefingHistorySheet
               briefingHistory={briefingHistory}
+              loadHistoricalVersion={(briefing) => setEditedContent(briefing.content)}
               onSelect={(content) => setEditedContent(content)}
             />
           </Sheet>
-          {showPromptMonitor && (
+          {aiDebugInfo && (
             <Button 
               variant="outline" 
               size="sm" 
@@ -118,6 +121,8 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
         <BriefingAIEnhancer 
           enhancementText={enhancementText} 
           setEnhancementText={setEnhancementText}
+          isExpanded={enhancerExpanded}
+          onToggleExpand={() => setEnhancerExpanded(!enhancerExpanded)}
           onSubmit={handleGenerateBriefing}
           isGenerating={isGenerating}
         />

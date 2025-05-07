@@ -8,38 +8,56 @@ import { ChevronDown, ChevronUp, Sparkles } from "lucide-react";
 interface BriefingAIEnhancerProps {
   enhancementText: string;
   setEnhancementText: (text: string) => void;
-  isExpanded: boolean;
-  onToggleExpand: () => void;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
+  onSubmit?: () => void; // Added onSubmit as an optional prop
+  isGenerating?: boolean; // Added isGenerating as an optional prop
 }
 
 const BriefingAIEnhancer: React.FC<BriefingAIEnhancerProps> = ({
   enhancementText,
   setEnhancementText,
-  isExpanded,
-  onToggleExpand
+  isExpanded = true, // Default to expanded if not provided
+  onToggleExpand = () => {}, // Default empty function if not provided
+  onSubmit,
+  isGenerating = false // Default to false if not provided
 }) => {
+  const [internalExpanded, setInternalExpanded] = useState<boolean>(isExpanded);
+  
+  // Use either the prop toggle function or internal state
+  const handleToggle = () => {
+    if (onToggleExpand) {
+      onToggleExpand();
+    } else {
+      setInternalExpanded(!internalExpanded);
+    }
+  };
+  
+  // Use the appropriate expanded state
+  const expanded = typeof isExpanded !== 'undefined' ? isExpanded : internalExpanded;
+  
   return (
     <Card className="mb-4">
-      <CardHeader className="py-3 cursor-pointer" onClick={onToggleExpand}>
+      <CardHeader className="py-3 cursor-pointer" onClick={handleToggle}>
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
             <CardTitle className="text-sm font-medium">Special Instructions</CardTitle>
           </div>
-          {isExpanded ? (
+          {expanded ? (
             <ChevronUp className="h-4 w-4" />
           ) : (
             <ChevronDown className="h-4 w-4" />
           )}
         </div>
-        {!isExpanded && (
+        {!expanded && (
           <CardDescription className="text-xs">
             Add special instructions to enhance your AI briefing
           </CardDescription>
         )}
       </CardHeader>
       
-      {isExpanded && (
+      {expanded && (
         <CardContent>
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">
@@ -51,6 +69,16 @@ const BriefingAIEnhancer: React.FC<BriefingAIEnhancerProps> = ({
               placeholder="E.g., Focus on digital marketing strategies rather than traditional advertising. Include specific recommendations for our social media presence."
               className="min-h-[100px]"
             />
+            
+            {onSubmit && (
+              <Button 
+                className="w-full mt-2" 
+                onClick={onSubmit}
+                disabled={isGenerating || !enhancementText.trim()}
+              >
+                {isGenerating ? "Processing..." : "Apply Instructions"}
+              </Button>
+            )}
           </div>
         </CardContent>
       )}
