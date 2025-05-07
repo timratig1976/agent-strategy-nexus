@@ -3,12 +3,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { StrategyFormValues } from "@/components/strategy-form";
-import { StrategyBriefingProps, StrategyMetadata } from "./types";
-import {
-  StrategyMetadataRow,
-  GetStrategyMetadataParams,
-  UpsertStrategyMetadataParams
-} from "./types";
+import { StrategyBriefingProps } from "./types";
 import StrategyInfoCard from "./StrategyInfoCard";
 import BriefingResultCard from "./BriefingResultCard";
 import WebsiteCrawlerWrapper from "./WebsiteCrawlerWrapper";
@@ -16,19 +11,11 @@ import { WebsiteCrawlResult } from "@/components/marketing/modules/website-crawl
 import { useBriefingGenerator } from "./hooks/useBriefingGenerator";
 import { BriefingProgressBar } from "./components";
 import { AgentResult } from "@/types/marketing";
-
-// Define a type for the get_strategy_metadata function return value
-interface StrategyMetadataRow {
-  id: string;
-  strategy_id: string;
-  company_name: string | null;
-  website_url: string | null;
-  product_description: string | null;
-  product_url: string | null;
-  additional_info: string | null;
-  created_at: string;
-  updated_at: string;
-}
+import { 
+  StrategyMetadataRow,
+  GetStrategyMetadataParams,
+  UpsertStrategyMetadataParams
+} from "./types";
 
 const StrategyBriefing: React.FC<StrategyBriefingProps> = ({ 
   strategy, 
@@ -60,13 +47,11 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   
   const fetchStrategyMetadata = async () => {
     try {
-      // Use the stored function to get metadata with proper type parameters
-      const { data, error } = await supabase.rpc<
-  StrategyMetadataRow[],
-  GetStrategyMetadataParams
->('get_strategy_metadata', {
-  strategy_id_param: strategy.id,
-});
+      // Fix the RPC call typing
+      const { data, error } = await supabase.rpc<StrategyMetadataRow[], GetStrategyMetadataParams>(
+        'get_strategy_metadata',
+        { strategy_id_param: strategy.id }
+      );
         
       if (error) throw error;
       
@@ -90,18 +75,18 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   // Function to update strategy metadata
   const saveStrategyMetadata = async (updatedValues: StrategyFormValues): Promise<boolean> => {
     try {
-      // Use the stored procedure for upserting metadata with proper type parameters
-      const { error } = await supabase.rpc<
-  void,
-  UpsertStrategyMetadataParams
->('upsert_strategy_metadata', {
-  strategy_id_param: strategy.id,
-  company_name_param: updatedValues.companyName,
-  website_url_param: updatedValues.websiteUrl,
-  product_description_param: updatedValues.productDescription,
-  product_url_param: updatedValues.productUrl,
-  additional_info_param: updatedValues.additionalInfo
-});
+      // Fix the RPC call typing
+      const { error } = await supabase.rpc<void, UpsertStrategyMetadataParams>(
+        'upsert_strategy_metadata',
+        {
+          strategy_id_param: strategy.id,
+          company_name_param: updatedValues.companyName,
+          website_url_param: updatedValues.websiteUrl,
+          product_description_param: updatedValues.productDescription,
+          product_url_param: updatedValues.productUrl,
+          additional_info_param: updatedValues.additionalInfo
+        }
+      );
       
       if (error) throw error;
       
