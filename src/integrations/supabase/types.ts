@@ -916,6 +916,10 @@ export type Database = {
           updated_at: string
         }[]
       }
+      update_agent_results_final_status: {
+        Args: { strategy_id_param: string; result_type_param: string }
+        Returns: undefined
+      }
       upsert_strategy_metadata: {
         Args: {
           strategy_id_param: string

@@ -24,8 +24,8 @@ export const useAgentResultSaver = () => {
         // First, find the type of result we're saving (briefing, persona, etc.)
         const resultType = metadata.type || 'briefing';
         
-        // Use raw SQL query via rpc to avoid TypeScript issues
-        // This directly sets the is_final field to false for all matching records
+        // Use our dedicated RPC function to update the final status
+        // This avoids the TypeScript type instantiation issue
         await supabase.rpc('update_agent_results_final_status', {
           strategy_id_param: strategyId,
           result_type_param: resultType
