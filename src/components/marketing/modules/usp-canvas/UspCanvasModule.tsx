@@ -1,6 +1,6 @@
 
-import React from "react";
-import { LayoutDashboard, Save, RotateCcw } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { LayoutDashboard, Save, RotateCcw, Bot } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -8,6 +8,11 @@ import { useUspCanvas } from "./useUspCanvas";
 import CustomerProfileCanvas from "./CustomerProfileCanvas";
 import ValueMapCanvas from "./ValueMapCanvas";
 import UspCanvasOverview from "./UspCanvasOverview";
+import UspCanvasAIGenerator from "./UspCanvasAIGenerator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { UspCanvasJob, UspCanvasPain, UspCanvasGain } from "@/services/marketingAIService";
 
 const UspCanvasModule = () => {
   const {
@@ -41,6 +46,54 @@ const UspCanvasModule = () => {
     resetCanvas
   } = useUspCanvas();
 
+  const [showAiGenerator, setShowAiGenerator] = useState<boolean>(false);
+  const [strategyId, setStrategyId] = useState<string>("");
+  const [briefingContent, setBriefingContent] = useState<string>("");
+  const [isLoadingBriefing, setIsLoadingBriefing] = useState<boolean>(false);
+  
+  // Fetch the latest strategy briefing
+  useEffect(() => {
+    const fetchLatestBriefing = async () => {
+      try {
+        setIsLoadingBriefing(true);
+        // Get the latest strategy (for demo purposes - in a real app you'd use the current strategy)
+        const { data: strategies, error: strategyError } = await supabase
+          .from('strategies')
+          .select('id')
+          .order('created_at', { ascending: false })
+          .limit(1);
+        
+        if (strategyError) throw strategyError;
+        
+        if (strategies && strategies.length > 0) {
+          const latestStrategyId = strategies[0].id;
+          setStrategyId(latestStrategyId);
+          
+          // Get the latest briefing for this strategy
+          const { data: results, error: resultsError } = await supabase
+            .from('agent_results')
+            .select('content, strategy_id')
+            .eq('strategy_id', latestStrategyId)
+            .order('created_at', { ascending: false })
+            .limit(1);
+          
+          if (resultsError) throw resultsError;
+          
+          if (results && results.length > 0) {
+            setBriefingContent(results[0].content);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching briefing:', error);
+        toast.error('Failed to load strategy briefing');
+      } finally {
+        setIsLoadingBriefing(false);
+      }
+    };
+    
+    fetchLatestBriefing();
+  }, []);
+
   const hasCustomerData = canvas.customerJobs.length > 0 || 
                           canvas.customerPains.length > 0 || 
                           canvas.customerGains.length > 0;
@@ -48,6 +101,27 @@ const UspCanvasModule = () => {
   const hasValueMapData = canvas.productServices.length > 0 || 
                          canvas.painRelievers.length > 0 || 
                          canvas.gainCreators.length > 0;
+
+  // Handle adding AI generated jobs to the canvas
+  const handleAddAIJobs = (jobs: UspCanvasJob[]) => {
+    jobs.forEach(job => {
+      addCustomerJob(job.content, job.priority);
+    });
+  };
+  
+  // Handle adding AI generated pains to the canvas
+  const handleAddAIPains = (pains: UspCanvasPain[]) => {
+    pains.forEach(pain => {
+      addCustomerPain(pain.content, pain.severity);
+    });
+  };
+  
+  // Handle adding AI generated gains to the canvas
+  const handleAddAIGains = (gains: UspCanvasGain[]) => {
+    gains.forEach(gain => {
+      addCustomerGain(gain.content, gain.importance);
+    });
+  };
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -82,6 +156,14 @@ const UspCanvasModule = () => {
             <RotateCcw className="h-4 w-4" />
             <span>Reset</span>
           </Button>
+          <Button
+            variant={showAiGenerator ? "default" : "outline"}
+            onClick={() => setShowAiGenerator(!showAiGenerator)}
+            className="flex items-center space-x-2"
+          >
+            <Bot className="h-4 w-4" />
+            <span>{showAiGenerator ? "Hide AI Generator" : "Show AI Generator"}</span>
+          </Button>
         </div>
         
         {saveProgress > 0 && !isSaved && (
@@ -97,6 +179,58 @@ const UspCanvasModule = () => {
           </div>
         )}
       </div>
+
+      {/* AI Generator Panel */}
+      {showAiGenerator && (
+        <div className="mb-8">
+          {isLoadingBriefing ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Loading Strategy Briefing...</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Progress value={50} className="w-full" />
+              </CardContent>
+            </Card>
+          ) : briefingContent ? (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-1">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Strategy Briefing</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="max-h-96 overflow-y-auto">
+                      <p className="whitespace-pre-line">{briefingContent}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              <div className="lg:col-span-2">
+                <UspCanvasAIGenerator
+                  strategyId={strategyId}
+                  briefingContent={briefingContent}
+                  onAddJobs={handleAddAIJobs}
+                  onAddPains={handleAddAIPains}
+                  onAddGains={handleAddAIGains}
+                />
+              </div>
+            </div>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>No Strategy Briefing Available</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>
+                  To use the AI generator, you need to have a strategy briefing. 
+                  Please create a strategy and complete the briefing stage first.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid grid-cols-3">

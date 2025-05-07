@@ -188,4 +188,88 @@ export class MarketingAIService {
       };
     }
   }
+  
+  /**
+   * Generate USP Canvas Profile elements (Jobs, Pains, Gains)
+   */
+  static async generateUspCanvasProfile(
+    strategyId: string,
+    briefingContent: string,
+    section?: 'jobs' | 'pains' | 'gains',
+    enhancementText?: string
+  ): Promise<AIServiceResponse<UspCanvasAIResult>> {
+    return this.generateContent<UspCanvasAIResult>(
+      'usp_canvas_profile',
+      'generate',
+      {
+        strategyId,
+        briefingContent,
+        section,
+        enhancementText
+      }
+    );
+  }
+  
+  /**
+   * Generate USP Canvas Value Map elements (Products, Pain Relievers, Gain Creators)
+   */
+  static async generateUspCanvasValueMap(
+    strategyId: string,
+    briefingContent: string,
+    customerProfile: any,
+    section?: 'products' | 'painRelievers' | 'gainCreators',
+    enhancementText?: string
+  ): Promise<AIServiceResponse<UspCanvasAIResult>> {
+    return this.generateContent<UspCanvasAIResult>(
+      'usp_canvas_value_map',
+      'generate',
+      {
+        strategyId,
+        briefingContent,
+        customerProfile,
+        section,
+        enhancementText
+      }
+    );
+  }
+}
+
+// Types for USP Canvas AI generation
+export interface UspCanvasAIResult {
+  jobs?: UspCanvasJob[];
+  pains?: UspCanvasPain[];
+  gains?: UspCanvasGain[];
+  products?: UspCanvasProduct[];
+  painRelievers?: UspCanvasPainReliever[];
+  gainCreators?: UspCanvasGainCreator[];
+}
+
+export interface UspCanvasJob {
+  content: string;
+  priority: 'low' | 'medium' | 'high';
+}
+
+export interface UspCanvasPain {
+  content: string;
+  severity: 'low' | 'medium' | 'high';
+}
+
+export interface UspCanvasGain {
+  content: string;
+  importance: 'low' | 'medium' | 'high';
+}
+
+export interface UspCanvasProduct {
+  content: string;
+  relatedJobIds?: string[];
+}
+
+export interface UspCanvasPainReliever {
+  content: string;
+  relatedPainIds?: string[];
+}
+
+export interface UspCanvasGainCreator {
+  content: string;
+  relatedGainIds?: string[];
 }

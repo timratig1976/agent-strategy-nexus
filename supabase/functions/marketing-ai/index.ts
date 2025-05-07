@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
@@ -201,6 +200,12 @@ function getSystemPrompt(module: string, action: string): string {
     'channelStrategy': {
       'generate': `${basePrompt} Your task is to recommend the optimal marketing channel mix based on the business goals, budget, and target audience provided.`,
       'edit': `${basePrompt} Your task is to refine and improve an existing channel strategy based on feedback and updated performance data.`
+    },
+    'usp_canvas_profile': {
+      'generate': `${basePrompt} Your task is to create a comprehensive customer profile for a Value Proposition Canvas based on the provided briefing. Focus on customer jobs (tasks they're trying to accomplish), pains (problems, risks, negative experiences), and gains (positive outcomes, benefits). Make each item specific, concrete and actionable.`
+    },
+    'usp_canvas_value_map': {
+      'generate': `${basePrompt} Your task is to create a value map for a Value Proposition Canvas that directly addresses the customer profile. Focus on products/services that help customers complete jobs, pain relievers that address specific customer pains, and gain creators that produce customer gains. Make sure each item relates directly to specific elements in the customer profile.`
     }
   };
   
@@ -272,6 +277,43 @@ function constructUserPrompt(module: string, action: string, data: any): string 
       - Customer Pain Points: ${data.customerPainPoints}
       
       Please generate 3 compelling unique selling propositions with supporting points and differentiators.`;
+    
+    // Add cases for USP Canvas modules
+    switch (module) {
+    case 'usp_canvas_profile':
+      let profileSection = data.section || 'all';
+      return `I need to create a customer profile for a Value Proposition Canvas based on the following marketing briefing:
+
+      ${data.briefingContent}
+      
+      ${profileSection === 'all' ? 'Please provide all three components of the customer profile:' : `Please focus only on the "${profileSection}" section of the customer profile:`}
+      
+      ${profileSection === 'all' || profileSection === 'jobs' ? `1. Customer Jobs: What are the functional, social, and emotional jobs your customer is trying to get done? Include key tasks they're trying to complete, problems they're trying to solve, or needs they're trying to satisfy. For each job, indicate its priority (high, medium, or low).` : ''}
+      
+      ${profileSection === 'all' || profileSection === 'pains' ? `2. Customer Pains: What are the negative outcomes, risks, obstacles, or bad experiences your customer encounters when trying to complete their jobs? For each pain, indicate its severity (high, medium, or low).` : ''}
+      
+      ${profileSection === 'all' || profileSection === 'gains' ? `3. Customer Gains: What benefits and positive outcomes does your customer expect, desire, or would be surprised by? For each gain, indicate its importance (high, medium, or low).` : ''}
+      
+      Format your response in a structured way, with clearly labeled sections for each component.`;
+    
+    case 'usp_canvas_value_map':
+      let valueMapSection = data.section || 'all';
+      return `I need to create a value map for a Value Proposition Canvas that addresses the following customer profile:
+
+      ${JSON.stringify(data.customerProfile, null, 2)}
+      
+      Additional context from the marketing briefing:
+      ${data.briefingContent}
+      
+      ${valueMapSection === 'all' ? 'Please provide all three components of the value map:' : `Please focus only on the "${valueMapSection}" section of the value map:`}
+      
+      ${valueMapSection === 'all' || valueMapSection === 'products' ? `1. Products & Services: What products and services do you offer that help your customer get their functional, social, and emotional jobs done? These should be linked to specific customer jobs where possible.` : ''}
+      
+      ${valueMapSection === 'all' || valueMapSection === 'painRelievers' ? `2. Pain Relievers: How do your products and services alleviate customer pains? Describe how they eliminate or reduce negative outcomes, obstacles, and risks. These should be linked to specific customer pains where possible.` : ''}
+      
+      ${valueMapSection === 'all' || valueMapSection === 'gainCreators' ? `3. Gain Creators: How do your products and services create customer gains? Describe how they produce outcomes and benefits that match your customer's expectations, desires, or would surprise them. These should be linked to specific customer gains where possible.` : ''}
+      
+      Format your response in a structured way, with clearly labeled sections for each component.`;
     
     // Add similar constructions for other modules as needed
     default:
@@ -419,6 +461,166 @@ function parseAIResult(module: string, action: string, result: string): any {
     // For persona generation, just return raw output
     if (module === 'persona' && action === 'generate') {
       return { rawOutput: result };
+    }
+
+    // Parse USP Canvas Profile results
+    if (module === 'usp_canvas_profile' && action === 'generate') {
+      const uspCanvasResult: {
+        jobs?: Array<{content: string, priority: 'low' | 'medium' | 'high'}>,
+        pains?: Array<{content: string, severity: 'low' | 'medium' | 'high'}>,
+        gains?: Array<{content: string, importance: 'low' | 'medium' | 'high'}>
+      } = {};
+      
+      // Extract customer jobs
+      const jobsRegex = /(?:Customer Jobs|Jobs)[\s\S]*?((?:(?:[-•*]\s*|[0-9]+\.\s*).+(?:\n|$))+)/im;
+      const jobsMatch = result.match(jobsRegex);
+      
+      if (jobsMatch && jobsMatch[1]) {
+        uspCanvasResult.jobs = jobsMatch[1].split('\n')
+          .filter(line => line.trim().match(/^[-•*]|^\d+\./))
+          .map(line => {
+            const content = line.replace(/^[-•*]|^\d+\./, '').trim();
+            // Check for priority indicators in the content
+            let priority: 'low' | 'medium' | 'high' = 'medium';
+            
+            if (content.toLowerCase().includes('priority: high') || 
+                content.toLowerCase().includes('high priority')) {
+              priority = 'high';
+            } else if (content.toLowerCase().includes('priority: low') || 
+                      content.toLowerCase().includes('low priority')) {
+              priority = 'low';
+            }
+            
+            // Remove any priority text from the content
+            const cleanContent = content
+              .replace(/priority: (high|medium|low)/i, '')
+              .replace(/(high|medium|low) priority/i, '')
+              .trim();
+              
+            return {
+              content: cleanContent,
+              priority
+            };
+          });
+      }
+      
+      // Extract customer pains
+      const painsRegex = /(?:Customer Pains|Pains)[\s\S]*?((?:(?:[-•*]\s*|[0-9]+\.\s*).+(?:\n|$))+)/im;
+      const painsMatch = result.match(painsRegex);
+      
+      if (painsMatch && painsMatch[1]) {
+        uspCanvasResult.pains = painsMatch[1].split('\n')
+          .filter(line => line.trim().match(/^[-•*]|^\d+\./))
+          .map(line => {
+            const content = line.replace(/^[-•*]|^\d+\./, '').trim();
+            // Check for severity indicators in the content
+            let severity: 'low' | 'medium' | 'high' = 'medium';
+            
+            if (content.toLowerCase().includes('severity: high') || 
+                content.toLowerCase().includes('high severity')) {
+              severity = 'high';
+            } else if (content.toLowerCase().includes('severity: low') || 
+                      content.toLowerCase().includes('low severity')) {
+              severity = 'low';
+            }
+            
+            // Remove any severity text from the content
+            const cleanContent = content
+              .replace(/severity: (high|medium|low)/i, '')
+              .replace(/(high|medium|low) severity/i, '')
+              .trim();
+              
+            return {
+              content: cleanContent,
+              severity
+            };
+          });
+      }
+      
+      // Extract customer gains
+      const gainsRegex = /(?:Customer Gains|Gains)[\s\S]*?((?:(?:[-•*]\s*|[0-9]+\.\s*).+(?:\n|$))+)/im;
+      const gainsMatch = result.match(gainsRegex);
+      
+      if (gainsMatch && gainsMatch[1]) {
+        uspCanvasResult.gains = gainsMatch[1].split('\n')
+          .filter(line => line.trim().match(/^[-•*]|^\d+\./))
+          .map(line => {
+            const content = line.replace(/^[-•*]|^\d+\./, '').trim();
+            // Check for importance indicators in the content
+            let importance: 'low' | 'medium' | 'high' = 'medium';
+            
+            if (content.toLowerCase().includes('importance: high') || 
+                content.toLowerCase().includes('high importance')) {
+              importance = 'high';
+            } else if (content.toLowerCase().includes('importance: low') || 
+                      content.toLowerCase().includes('low importance')) {
+              importance = 'low';
+            }
+            
+            // Remove any importance text from the content
+            const cleanContent = content
+              .replace(/importance: (high|medium|low)/i, '')
+              .replace(/(high|medium|low) importance/i, '')
+              .trim();
+              
+            return {
+              content: cleanContent,
+              importance
+            };
+          });
+      }
+      
+      return uspCanvasResult;
+    }
+    
+    // Parse USP Canvas Value Map results
+    if (module === 'usp_canvas_value_map' && action === 'generate') {
+      const valueMapResult: {
+        products?: Array<{content: string, relatedJobIds?: string[]}>,
+        painRelievers?: Array<{content: string, relatedPainIds?: string[]}>,
+        gainCreators?: Array<{content: string, relatedGainIds?: string[]}>
+      } = {};
+      
+      // Extract products & services (similar approach as above)
+      const productsRegex = /(?:Products & Services|Products and Services)[\s\S]*?((?:(?:[-•*]\s*|[0-9]+\.\s*).+(?:\n|$))+)/im;
+      const productsMatch = result.match(productsRegex);
+      
+      if (productsMatch && productsMatch[1]) {
+        valueMapResult.products = productsMatch[1].split('\n')
+          .filter(line => line.trim().match(/^[-•*]|^\d+\./))
+          .map(line => ({
+            content: line.replace(/^[-•*]|^\d+\./, '').trim(),
+            relatedJobIds: [] // These would need to be connected by the user in the UI
+          }));
+      }
+      
+      // Extract pain relievers
+      const painRelieversRegex = /(?:Pain Relievers)[\s\S]*?((?:(?:[-•*]\s*|[0-9]+\.\s*).+(?:\n|$))+)/im;
+      const painRelieversMatch = result.match(painRelieversRegex);
+      
+      if (painRelieversMatch && painRelieversMatch[1]) {
+        valueMapResult.painRelievers = painRelieversMatch[1].split('\n')
+          .filter(line => line.trim().match(/^[-•*]|^\d+\./))
+          .map(line => ({
+            content: line.replace(/^[-•*]|^\d+\./, '').trim(),
+            relatedPainIds: [] // These would need to be connected by the user in the UI
+          }));
+      }
+      
+      // Extract gain creators
+      const gainCreatorsRegex = /(?:Gain Creators)[\s\S]*?((?:(?:[-•*]\s*|[0-9]+\.\s*).+(?:\n|$))+)/im;
+      const gainCreatorsMatch = result.match(gainCreatorsRegex);
+      
+      if (gainCreatorsMatch && gainCreatorsMatch[1]) {
+        valueMapResult.gainCreators = gainCreatorsMatch[1].split('\n')
+          .filter(line => line.trim().match(/^[-•*]|^\d+\./))
+          .map(line => ({
+            content: line.replace(/^[-•*]|^\d+\./, '').trim(),
+            relatedGainIds: [] // These would need to be connected by the user in the UI
+          }));
+      }
+      
+      return valueMapResult;
     }
     
     // Default parsing behavior - just return the result as-is
