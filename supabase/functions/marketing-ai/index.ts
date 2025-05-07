@@ -65,15 +65,17 @@ serve(async (req) => {
     console.log("Final user prompt:", userPrompt);
     
     // Add enhancement text if provided
-    if (data.enhancementText && data.enhancementText.trim()) {
+    const enhancementIncluded = !!(data.enhancementText && data.enhancementText.trim());
+    if (enhancementIncluded) {
       console.log("Enhancement text provided:", data.enhancementText);
       userPrompt += `\n\nAdditional instructions for customizing output: ${data.enhancementText.trim()}`;
     }
     
     // Make OpenAI API call
     console.log("Calling OpenAI API...");
+    const model = 'gpt-4o-mini'; // Use the most efficient model by default
     const openaiRequest = {
-      model: 'gpt-4o-mini',
+      model,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
@@ -115,7 +117,8 @@ serve(async (req) => {
           user: userPrompt
         },
         response: result,
-        enhancementIncluded: !!data.enhancementText
+        enhancementIncluded,
+        model
       }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -167,6 +170,10 @@ function getSystemPrompt(module: string, action: string): string {
   const basePrompt = "You are an expert marketing strategist AI assistant helping to create professional marketing content.";
   
   const modulePrompts: Record<string, Record<string, string>> = {
+    'briefing': {
+      'generate': `${basePrompt} Your task is to create a comprehensive marketing strategy briefing based on the provided company and product information. Include key strategy elements, target audience, main marketing channels, and actionable next steps.`,
+      'edit': `${basePrompt} Your task is to refine and improve an existing marketing strategy briefing based on feedback and updated information.`
+    },
     'contentStrategy': {
       'generate': `${basePrompt} Your task is to create a comprehensive content strategy with content pillars based on the provided keyword, target audience, and business goals. Include subtopics, content ideas, and distribution recommendations.`,
       'edit': `${basePrompt} Your task is to refine and improve an existing content strategy based on feedback and updated information.`
@@ -198,6 +205,22 @@ function getSystemPrompt(module: string, action: string): string {
 
 function constructUserPrompt(module: string, action: string, data: any): string {
   switch (module) {
+    case 'briefing':
+      return `I need to create a marketing strategy briefing for:
+      - Strategy ID: ${data.strategyId}
+      - Strategy Name: ${data.formData?.name || ''}
+      - Company Name: ${data.formData?.companyName || ''}
+      - Website URL: ${data.formData?.websiteUrl || ''}
+      - Product/Service Description: ${data.formData?.productDescription || data.formData?.description || ''}
+      - Additional Information: ${data.formData?.additionalInfo || ''}
+      
+      Please provide a comprehensive marketing strategy briefing that includes:
+      1. An overview of the company and its offerings
+      2. Target audience analysis
+      3. Key marketing channels to prioritize
+      4. Key benefits of the product/service to highlight
+      5. Call to action and next steps`;
+    
     case 'contentStrategy':
       return `I need to create a content strategy for my business with these details:
       - Main Topic/Keyword: ${data.keyword}
@@ -372,8 +395,6 @@ function parseAIResult(module: string, action: string, result: string): any {
         };
       });
     }
-    
-    // Add similar parsing functions for other modules
     
     // Default parsing behavior - just return the result as-is
     return { rawOutput: result };

@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Check, AlertTriangle, MonitorPlay } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface PromptMonitorProps {
   debugInfo?: {
@@ -20,7 +21,11 @@ const PromptMonitor: React.FC<PromptMonitorProps> = ({ debugInfo, isError = fals
   }
 
   const { requestData, responseData } = debugInfo;
-
+  
+  // Extract token usage stats if available
+  const tokenUsage = responseData?.debug?.response?.usage || {};
+  const aiModel = responseData?.debug?.response?.model || 'Unknown model';
+  
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -46,10 +51,32 @@ const PromptMonitor: React.FC<PromptMonitorProps> = ({ debugInfo, isError = fals
           </SheetTitle>
         </SheetHeader>
         
+        <div className="flex flex-wrap gap-2 mt-2">
+          <Badge variant="outline">
+            Model: {aiModel}
+          </Badge>
+          {tokenUsage.prompt_tokens && (
+            <Badge variant="outline" className="bg-blue-50">
+              Prompt tokens: {tokenUsage.prompt_tokens}
+            </Badge>
+          )}
+          {tokenUsage.completion_tokens && (
+            <Badge variant="outline" className="bg-green-50">
+              Completion tokens: {tokenUsage.completion_tokens}
+            </Badge>
+          )}
+          {tokenUsage.total_tokens && (
+            <Badge variant="outline" className="bg-purple-50">
+              Total tokens: {tokenUsage.total_tokens}
+            </Badge>
+          )}
+        </div>
+        
         <Tabs defaultValue="request" className="mt-4">
           <TabsList>
             <TabsTrigger value="request">Request</TabsTrigger>
             <TabsTrigger value="response">Response</TabsTrigger>
+            <TabsTrigger value="prompt">Full Prompt</TabsTrigger>
           </TabsList>
           <TabsContent value="request" className="space-y-4 pt-4">
             <div className="space-y-2">
@@ -92,6 +119,39 @@ const PromptMonitor: React.FC<PromptMonitorProps> = ({ debugInfo, isError = fals
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
                     No response data available
+                  </div>
+                )}
+              </ScrollArea>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="prompt" className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">Full Prompt</h3>
+              <ScrollArea className="h-[400px] rounded-md border p-4">
+                {responseData?.debug?.prompt ? (
+                  <div className="space-y-6">
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-semibold">System Prompt</h4>
+                      <div className="bg-gray-50 p-3 rounded text-sm">
+                        {responseData.debug.prompt.system}
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-semibold">User Prompt</h4>
+                      <div className="bg-gray-50 p-3 rounded text-sm">
+                        {responseData.debug.prompt.user}
+                      </div>
+                    </div>
+                    {responseData.debug.enhancementIncluded && (
+                      <div className="text-xs text-green-600 font-medium">
+                        ✓ Enhancement text was included in the prompt
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No prompt data available
                   </div>
                 )}
               </ScrollArea>

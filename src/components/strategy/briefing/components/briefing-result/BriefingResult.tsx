@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -69,7 +70,7 @@ export function BriefingResult({
   };
 
   const handleGenerateBriefing = () => {
-    // Pass enhancement text to the generate function if needed
+    // Pass enhancement text to the generate function
     generateBriefing(enhancementText);
   };
 
@@ -88,7 +89,7 @@ export function BriefingResult({
     }).format(date);
   };
 
-  // Fixed: Correctly handle the loading of a historical version
+  // Correctly handle the loading of a historical version
   const loadHistoricalVersion = (briefing: AgentResult) => {
     // Create a new array with the selected briefing first, followed by all other briefings
     const updatedHistory = [

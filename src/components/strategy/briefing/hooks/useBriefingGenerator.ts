@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { MarketingAIService } from "@/services/marketingAIService";
@@ -103,6 +104,7 @@ export const useBriefingGenerator = (strategyId: string) => {
       setAiDebugInfo(null); // Reset debug info
       
       console.log("Generating briefing for strategy ID:", strategyId, "with values:", formValues);
+      console.log("Enhancement text:", enhancementText);
       
       // Simulate progress updates
       const progressInterval = setInterval(() => {
@@ -122,7 +124,7 @@ export const useBriefingGenerator = (strategyId: string) => {
         {
           strategyId: strategyId,
           formData: formValues,
-          enhancementText: enhancementText || '' // Pass the enhancement text if provided
+          enhancementText: enhancementText || '' // Ensure enhancement text is included
         }
       );
       

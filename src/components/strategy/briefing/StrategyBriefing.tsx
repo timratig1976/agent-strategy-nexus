@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +19,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
 }) => {
   const navigate = useNavigate();
   const [showCrawler, setShowCrawler] = useState<boolean>(false);
-  const [crawlResults, setCrawlResults] = useState<WebsiteCrawlResult | undefined>();
+  const [crawlResults, setCrawlResults] = useState<WebsiteCrawlResult | null>(null);
   const [hasFinalBriefing, setHasFinalBriefing] = useState<boolean>(false);
   
   // Initialize form values with empty strings and include the strategy id
@@ -207,11 +208,10 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
     }
   };
 
-  const [enhancementText, setEnhancementText] = useState<string>("");
-  
-  // Update the generateBriefing function call to pass the enhancement text
-  const handleGenerateBriefing = () => {
-    return generateBriefing(formValues, enhancementText);
+  // Modified to properly handle the enhancement text
+  const handleGenerateBriefing = (enhancementText?: string): void => {
+    console.log("Generating briefing with enhancement:", enhancementText);
+    generateBriefing(formValues, enhancementText);
   };
 
   return (
