@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
@@ -25,6 +26,8 @@ serve(async (req) => {
 
   try {
     const { module, action, data } = await req.json();
+    console.log("Marketing AI function called with:", { module, action });
+    console.log("Request data:", JSON.stringify(data));
     
     // Fetch custom prompt from database if available
     const { data: promptData, error: promptError } = await supabase
@@ -33,12 +36,18 @@ serve(async (req) => {
       .eq('module', module)
       .maybeSingle();
     
+    if (promptError) {
+      console.log("Error fetching prompt:", promptError);
+    }
+    
     // Construct system prompt based on custom prompt or fallback to default
     let systemPrompt = "";
     if (promptData && promptData.system_prompt) {
       systemPrompt = promptData.system_prompt;
+      console.log("Using custom system prompt from database");
     } else {
       systemPrompt = getSystemPrompt(module, action);
+      console.log("Using default system prompt");
     }
     
     // Create appropriate user prompt based on custom template or fallback to default
@@ -46,44 +55,80 @@ serve(async (req) => {
     if (promptData && promptData.user_prompt) {
       // Replace variables in the template with actual data
       userPrompt = replacePlaceholders(promptData.user_prompt, data);
+      console.log("Using custom user prompt template from database (after replacement)");
     } else {
       userPrompt = constructUserPrompt(module, action, data);
+      console.log("Using default user prompt");
+    }
+    
+    console.log("Final system prompt:", systemPrompt);
+    console.log("Final user prompt:", userPrompt);
+    
+    // Add enhancement text if provided
+    if (data.enhancementText && data.enhancementText.trim()) {
+      console.log("Enhancement text provided:", data.enhancementText);
+      userPrompt += `\n\nAdditional instructions for customizing output: ${data.enhancementText.trim()}`;
     }
     
     // Make OpenAI API call
+    console.log("Calling OpenAI API...");
+    const openaiRequest = {
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      temperature: 0.7,
+    };
+    
+    console.log("OpenAI request:", JSON.stringify(openaiRequest));
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini', // Use mini version for cost efficiency
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.7,
-      }),
+      body: JSON.stringify(openaiRequest),
     });
 
     if (!response.ok) {
       const error = await response.json();
+      console.error("OpenAI API error:", JSON.stringify(error));
       throw new Error(`OpenAI Error: ${error.error?.message || 'Unknown error'}`);
     }
 
     const result = await response.json();
+    console.log("OpenAI response received:", JSON.stringify(result));
+    
     const content = result.choices[0].message.content;
     
     // Parse the result based on module and action
     const parsedResult = parseAIResult(module, action, content);
+    console.log("Parsed result:", JSON.stringify(parsedResult));
 
-    return new Response(JSON.stringify({ result: parsedResult }), {
+    return new Response(JSON.stringify({ 
+      result: parsedResult,
+      debug: {
+        prompt: {
+          system: systemPrompt,
+          user: userPrompt
+        },
+        response: result,
+        enhancementIncluded: !!data.enhancementText
+      }
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Error in marketing-ai function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      debug: {
+        timestamp: new Date().toISOString(),
+        error: error.toString()
+      }
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

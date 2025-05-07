@@ -1,9 +1,12 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface AIServiceResponse<T> {
   data?: T;
   error?: string;
+  debugInfo?: {
+    requestData?: any;
+    responseData?: any;
+  };
 }
 
 export interface AIPrompt {
@@ -22,22 +25,39 @@ export class MarketingAIService {
     data: any
   ): Promise<AIServiceResponse<T>> {
     try {
+      console.log('Sending request to AI service:', { module, action, data });
+      
       const { data: result, error } = await supabase.functions.invoke('marketing-ai', {
         body: { module, action, data }
       });
       
       if (error) {
         console.error('Error invoking marketing AI function:', error);
-        return { error: error.message || 'Failed to generate content' };
+        return { 
+          error: error.message || 'Failed to generate content',
+          debugInfo: {
+            requestData: { module, action, data },
+            responseData: error
+          }
+        };
       }
       
-      return { data: result.result as T };
+      return { 
+        data: result.result as T,
+        debugInfo: {
+          requestData: { module, action, data },
+          responseData: result
+        }
+      };
     } catch (error) {
       console.error('Error in marketing AI service:', error);
       return { 
         error: error instanceof Error 
           ? error.message 
-          : 'An unexpected error occurred while generating content' 
+          : 'An unexpected error occurred while generating content',
+        debugInfo: {
+          requestData: { module, action, data }
+        }
       };
     }
   }

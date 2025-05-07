@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import BriefingAIEnhancer from "./BriefingAIEnhancer";
 import { BriefingResultProps } from "../../types";
+import PromptMonitor from "./PromptMonitor";
 
 export function BriefingResult({
   latestBriefing,
@@ -24,7 +24,8 @@ export function BriefingResult({
   saveAgentResult,
   briefingHistory,
   setBriefingHistory,
-  onBriefingSaved
+  onBriefingSaved,
+  aiDebugInfo
 }: BriefingResultProps) {
   const [editedContent, setEditedContent] = useState<string>("");
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -69,7 +70,7 @@ export function BriefingResult({
 
   const handleGenerateBriefing = () => {
     // Pass enhancement text to the generate function if needed
-    generateBriefing();
+    generateBriefing(enhancementText);
   };
 
   const handleToggleExpand = () => {
@@ -103,55 +104,63 @@ export function BriefingResult({
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
         <CardTitle className="text-xl font-semibold">Strategy Briefing</CardTitle>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="sm" className="flex items-center gap-1">
-              <History className="h-4 w-4" />
-              <span>Version History</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>Briefing History</SheetTitle>
-            </SheetHeader>
-            <div className="py-4 space-y-4">
-              {briefingHistory.map((briefing, index) => (
-                <div key={briefing.id} className="border rounded-md p-3">
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="text-sm font-medium">
-                      Version {(briefingHistory.length - index)}
-                      {briefing.metadata?.is_final && (
-                        <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
-                          Final
-                        </span>
-                      )}
+        <div className="flex items-center gap-2">
+          {aiDebugInfo && (
+            <PromptMonitor 
+              debugInfo={aiDebugInfo}
+              isError={!!aiDebugInfo?.responseData?.error}
+            />
+          )}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm" className="flex items-center gap-1">
+                <History className="h-4 w-4" />
+                <span>Version History</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Briefing History</SheetTitle>
+              </SheetHeader>
+              <div className="py-4 space-y-4">
+                {briefingHistory.map((briefing, index) => (
+                  <div key={briefing.id} className="border rounded-md p-3">
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="text-sm font-medium">
+                        Version {(briefingHistory.length - index)}
+                        {briefing.metadata?.is_final && (
+                          <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                            Final
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {briefing.createdAt && formatDate(briefing.createdAt)}
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {briefing.createdAt && formatDate(briefing.createdAt)}
-                    </div>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {briefing.content.substring(0, 100)}...
+                    </p>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="mt-2"
+                      onClick={() => loadHistoricalVersion(briefing)}
+                    >
+                      Load This Version
+                    </Button>
                   </div>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {briefing.content.substring(0, 100)}...
-                  </p>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="mt-2"
-                    onClick={() => loadHistoricalVersion(briefing)}
-                  >
-                    Load This Version
-                  </Button>
-                </div>
-              ))}
-              
-              {briefingHistory.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  No history available
-                </div>
-              )}
-            </div>
-          </SheetContent>
-        </Sheet>
+                ))}
+                
+                {briefingHistory.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No history available
+                  </div>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </CardHeader>
 
       <CardContent>

@@ -39,7 +39,8 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
     generateBriefing,
     saveAgentResult,
     briefingHistory,
-    setBriefingHistory
+    setBriefingHistory,
+    aiDebugInfo
   } = useBriefingGenerator(strategy.id);
 
   // Fetch strategy metadata
@@ -253,6 +254,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
           briefingHistory={briefingHistory}
           setBriefingHistory={setBriefingHistory}
           onBriefingSaved={handleBriefingSaved}
+          aiDebugInfo={aiDebugInfo}
         />
       </div>
     </div>

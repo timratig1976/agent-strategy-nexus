@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { MarketingAIService } from "@/services/marketingAIService";
@@ -10,46 +9,7 @@ export const useBriefingGenerator = (strategyId: string) => {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
   const [briefingHistory, setBriefingHistory] = useState<AgentResult[]>([]);
-
-  // Load briefing history on mount
-  useEffect(() => {
-    fetchBriefingHistory();
-
-    // Set up real-time subscription for agent_results
-    const channel = supabase
-      .channel('agent_results_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'agent_results',
-          filter: `strategy_id=eq.${strategyId}`
-        },
-        (payload) => {
-          console.log('New agent result added:', payload);
-          fetchBriefingHistory();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'agent_results',
-          filter: `strategy_id=eq.${strategyId}`
-        },
-        (payload) => {
-          console.log('Agent result updated:', payload);
-          fetchBriefingHistory();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [strategyId]);
+  const [aiDebugInfo, setAiDebugInfo] = useState<any>(null);
 
   const fetchBriefingHistory = async () => {
     try {
@@ -92,6 +52,46 @@ export const useBriefingGenerator = (strategyId: string) => {
     }
   };
 
+  // Load briefing history on mount
+  useEffect(() => {
+    fetchBriefingHistory();
+
+    // Set up real-time subscription for agent_results
+    const channel = supabase
+      .channel('agent_results_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'agent_results',
+          filter: `strategy_id=eq.${strategyId}`
+        },
+        (payload) => {
+          console.log('New agent result added:', payload);
+          fetchBriefingHistory();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'agent_results',
+          filter: `strategy_id=eq.${strategyId}`
+        },
+        (payload) => {
+          console.log('Agent result updated:', payload);
+          fetchBriefingHistory();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [strategyId]);
+
   // Function to generate AI briefing with progress updates
   const generateBriefing = async (
     formValues: StrategyFormValues, 
@@ -100,6 +100,7 @@ export const useBriefingGenerator = (strategyId: string) => {
     try {
       setIsGenerating(true);
       setProgress(10);
+      setAiDebugInfo(null); // Reset debug info
       
       console.log("Generating briefing for strategy ID:", strategyId, "with values:", formValues);
       
@@ -115,7 +116,7 @@ export const useBriefingGenerator = (strategyId: string) => {
       }, 1000);
       
       // Generate the briefing content using the AI service
-      const { data: aiResponse, error: aiError } = await MarketingAIService.generateContent<{ rawOutput: string }>(
+      const { data: aiResponse, error: aiError, debugInfo } = await MarketingAIService.generateContent<{ rawOutput: string }>(
         'briefing',
         'generate',
         {
@@ -124,6 +125,9 @@ export const useBriefingGenerator = (strategyId: string) => {
           enhancementText: enhancementText || '' // Pass the enhancement text if provided
         }
       );
+      
+      // Store debug info for monitoring
+      setAiDebugInfo(debugInfo);
       
       if (aiError) {
         clearInterval(progressInterval);
@@ -255,6 +259,7 @@ export const useBriefingGenerator = (strategyId: string) => {
     generateBriefing,
     saveAgentResult,
     briefingHistory,
-    setBriefingHistory
+    setBriefingHistory,
+    aiDebugInfo
   };
 };

@@ -1,32 +1,32 @@
 
-import { AgentResult, Strategy } from "@/types/marketing";
-import { WebsiteCrawlResult } from "@/components/marketing/modules/website-crawler/types";
+import { AgentResult } from "@/types/marketing";
+import { StrategyFormValues } from "@/components/strategy-form";
 
 export interface StrategyBriefingProps {
-  strategy: Strategy;
+  strategy: {
+    id: string;
+    name: string;
+    description?: string;
+    state?: string;
+  };
   agentResults?: AgentResult[];
-}
-
-export interface WebsiteCrawlerWrapperProps {
-  onBack: () => void;
-  crawlResults?: WebsiteCrawlResult;
-  setCrawlResults: (results?: WebsiteCrawlResult) => void;
-}
-
-export interface BriefingResultCardProps {
-  latestBriefing: AgentResult | null;
-  isGenerating: boolean;
-  generateBriefing: () => Promise<void>;
-  saveAgentResult: (result: AgentResult) => Promise<boolean>;
 }
 
 export interface BriefingResultProps {
   latestBriefing: AgentResult | null;
   isGenerating: boolean;
   progress: number;
-  generateBriefing: () => Promise<void>;
+  generateBriefing: (enhancementText?: string) => void;
   saveAgentResult: (result: AgentResult) => Promise<boolean>;
   briefingHistory: AgentResult[];
-  setBriefingHistory: (history: AgentResult[]) => void;
-  onBriefingSaved: (isFinal: boolean) => void;
+  setBriefingHistory: (history: AgentResult[] | ((prev: AgentResult[]) => AgentResult[])) => void;
+  onBriefingSaved?: (isFinal: boolean) => void;
+  aiDebugInfo?: any;
+}
+
+export interface BriefingResultCardProps {
+  latestBriefing: AgentResult | null;
+  isGenerating: boolean;
+  generateBriefing: () => void;
+  saveAgentResult: (result: AgentResult) => Promise<boolean>;
 }
