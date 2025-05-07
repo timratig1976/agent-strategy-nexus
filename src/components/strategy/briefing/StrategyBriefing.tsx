@@ -49,7 +49,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
     try {
       const { data, error } = await supabase.rpc('get_strategy_metadata', {
         strategy_id_param: strategy.id
-      });
+      } as GetStrategyMetadataParams);
         
       if (error) throw error;
       
@@ -83,7 +83,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
         product_description_param: updatedValues.productDescription,
         product_url_param: updatedValues.productUrl,
         additional_info_param: updatedValues.additionalInfo
-      });
+      } as UpsertStrategyMetadataParams);
       
       if (error) throw error;
       
