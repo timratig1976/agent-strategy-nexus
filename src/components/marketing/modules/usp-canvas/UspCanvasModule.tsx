@@ -11,9 +11,14 @@ import UspCanvasAIGenerator from "./UspCanvasAIGenerator";
 interface UspCanvasModuleProps {
   strategyId: string;
   briefingContent: string;
+  personaContent?: string;
 }
 
-const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({ strategyId, briefingContent }) => {
+const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({ 
+  strategyId, 
+  briefingContent,
+  personaContent 
+}) => {
   const { 
     canvas,
     addCustomerJob,
@@ -137,6 +142,7 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({ strategyId, briefingC
           <UspCanvasOverview 
             canvas={canvas} 
             briefingContent={briefingContent}
+            personaContent={personaContent}
           />
         </TabsContent>
 
@@ -144,6 +150,7 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({ strategyId, briefingC
           <UspCanvasAIGenerator
             strategyId={strategyId}
             briefingContent={briefingContent}
+            personaContent={personaContent}
             onAddJobs={handleAddAIJobs}
             onAddPains={handleAddAIPains}
             onAddGains={handleAddAIGains}

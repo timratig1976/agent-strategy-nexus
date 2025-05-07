@@ -74,9 +74,15 @@ const StrategyDetails = () => {
   const finalBriefing = agentResults?.find(result => 
     result.metadata?.is_final === true && (!result.metadata?.type || result.metadata?.type === 'briefing')
   ) || null;
+  
+  // Determine the final persona result to pass to pain_gains page
+  const finalPersona = agentResults?.find(result =>
+    result.metadata?.is_final === true && result.metadata?.type === 'persona'
+  ) || null;
 
   console.log("Current strategy state:", strategy.state);
   console.log("Final briefing found:", !!finalBriefing);
+  console.log("Final persona found:", !!finalPersona);
 
   // Determine which component to render based on the strategy state
   let contentComponent;
@@ -101,6 +107,7 @@ const StrategyDetails = () => {
         strategy={strategy}
         agentResults={agentResults || []}
         briefingAgentResult={finalBriefing}
+        personaAgentResult={finalPersona}
       />
     );
   }

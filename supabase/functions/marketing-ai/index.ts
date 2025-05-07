@@ -202,7 +202,7 @@ function getSystemPrompt(module: string, action: string): string {
       'edit': `${basePrompt} Your task is to refine and improve an existing channel strategy based on feedback and updated performance data.`
     },
     'usp_canvas_profile': {
-      'generate': `${basePrompt} Your task is to create a comprehensive customer profile for a Value Proposition Canvas based on the provided briefing. Focus on customer jobs (tasks they're trying to accomplish), pains (problems, risks, negative experiences), and gains (positive outcomes, benefits). Make each item specific, concrete and actionable.`
+      'generate': `${basePrompt} Your task is to create a comprehensive customer profile for a Value Proposition Canvas based on the provided briefing and persona information. Focus on customer jobs (tasks they're trying to accomplish), pains (problems, risks, negative experiences), and gains (positive outcomes, benefits). Make each item specific, concrete and actionable.`
     },
     'usp_canvas_value_map': {
       'generate': `${basePrompt} Your task is to create a value map for a Value Proposition Canvas that directly addresses the customer profile. Focus on products/services that help customers complete jobs, pain relievers that address specific customer pains, and gain creators that produce customer gains. Make sure each item relates directly to specific elements in the customer profile.`
@@ -282,38 +282,57 @@ function constructUserPrompt(module: string, action: string, data: any): string 
     switch (module) {
     case 'usp_canvas_profile':
       let profileSection = data.section || 'all';
-      return `I need to create a customer profile for a Value Proposition Canvas based on the following marketing briefing:
-
-      ${data.briefingContent}
+      let prompt = `I need to create a customer profile for a Value Proposition Canvas based on the following marketing briefing:\n\n${data.briefingContent}\n\n`;
       
-      ${profileSection === 'all' ? 'Please provide all three components of the customer profile:' : `Please focus only on the "${profileSection}" section of the customer profile:`}
+      // Add persona data if available
+      if (data.personaContent) {
+        prompt += `Consider the following target persona when creating the customer profile:\n\n${data.personaContent}\n\n`;
+      }
       
-      ${profileSection === 'all' || profileSection === 'jobs' ? `1. Customer Jobs: What are the functional, social, and emotional jobs your customer is trying to get done? Include key tasks they're trying to complete, problems they're trying to solve, or needs they're trying to satisfy. For each job, indicate its priority (high, medium, or low).` : ''}
+      prompt += `${profileSection === 'all' ? 'Please provide all three components of the customer profile:' : `Please focus only on the "${profileSection}" section of the customer profile:`}\n\n`;
       
-      ${profileSection === 'all' || profileSection === 'pains' ? `2. Customer Pains: What are the negative outcomes, risks, obstacles, or bad experiences your customer encounters when trying to complete their jobs? For each pain, indicate its severity (high, medium, or low).` : ''}
+      if (profileSection === 'all' || profileSection === 'jobs') {
+        prompt += `1. Customer Jobs: What are the functional, social, and emotional jobs your customer is trying to get done? Include key tasks they're trying to complete, problems they're trying to solve, or needs they're trying to satisfy. For each job, indicate its priority (high, medium, or low).\n\n`;
+      }
       
-      ${profileSection === 'all' || profileSection === 'gains' ? `3. Customer Gains: What benefits and positive outcomes does your customer expect, desire, or would be surprised by? For each gain, indicate its importance (high, medium, or low).` : ''}
+      if (profileSection === 'all' || profileSection === 'pains') {
+        prompt += `2. Customer Pains: What are the negative outcomes, risks, obstacles, or bad experiences your customer encounters when trying to complete their jobs? For each pain, indicate its severity (high, medium, or low).\n\n`;
+      }
       
-      Format your response in a structured way, with clearly labeled sections for each component.`;
+      if (profileSection === 'all' || profileSection === 'gains') {
+        prompt += `3. Customer Gains: What benefits and positive outcomes does your customer expect, desire, or would be surprised by? For each gain, indicate its importance (high, medium, or low).\n\n`;
+      }
+      
+      prompt += `Format your response in a structured way, with clearly labeled sections for each component.`;
+      return prompt;
     
     case 'usp_canvas_value_map':
       let valueMapSection = data.section || 'all';
-      return `I need to create a value map for a Value Proposition Canvas that addresses the following customer profile:
-
-      ${JSON.stringify(data.customerProfile, null, 2)}
+      let valueMapPrompt = `I need to create a value map for a Value Proposition Canvas that addresses the following customer profile:\n\n${JSON.stringify(data.customerProfile, null, 2)}\n\n`;
       
-      Additional context from the marketing briefing:
-      ${data.briefingContent}
+      valueMapPrompt += `Additional context from the marketing briefing:\n${data.briefingContent}\n\n`;
       
-      ${valueMapSection === 'all' ? 'Please provide all three components of the value map:' : `Please focus only on the "${valueMapSection}" section of the value map:`}
+      // Add persona data if available
+      if (data.personaContent) {
+        valueMapPrompt += `Consider this persona when creating value propositions:\n\n${data.personaContent}\n\n`;
+      }
       
-      ${valueMapSection === 'all' || valueMapSection === 'products' ? `1. Products & Services: What products and services do you offer that help your customer get their functional, social, and emotional jobs done? These should be linked to specific customer jobs where possible.` : ''}
+      valueMapPrompt += `${valueMapSection === 'all' ? 'Please provide all three components of the value map:' : `Please focus only on the "${valueMapSection}" section of the value map:`}\n\n`;
       
-      ${valueMapSection === 'all' || valueMapSection === 'painRelievers' ? `2. Pain Relievers: How do your products and services alleviate customer pains? Describe how they eliminate or reduce negative outcomes, obstacles, and risks. These should be linked to specific customer pains where possible.` : ''}
+      if (valueMapSection === 'all' || valueMapSection === 'products') {
+        valueMapPrompt += `1. Products & Services: What products and services do you offer that help your customer get their functional, social, and emotional jobs done? These should be linked to specific customer jobs where possible.\n\n`;
+      }
       
-      ${valueMapSection === 'all' || valueMapSection === 'gainCreators' ? `3. Gain Creators: How do your products and services create customer gains? Describe how they produce outcomes and benefits that match your customer's expectations, desires, or would surprise them. These should be linked to specific customer gains where possible.` : ''}
+      if (valueMapSection === 'all' || valueMapSection === 'painRelievers') {
+        valueMapPrompt += `2. Pain Relievers: How do your products and services alleviate customer pains? Describe how they eliminate or reduce negative outcomes, obstacles, and risks. These should be linked to specific customer pains where possible.\n\n`;
+      }
       
-      Format your response in a structured way, with clearly labeled sections for each component.`;
+      if (valueMapSection === 'all' || valueMapSection === 'gainCreators') {
+        valueMapPrompt += `3. Gain Creators: How do your products and services create customer gains? Describe how they produce outcomes and benefits that match your customer's expectations, desires, or would surprise them. These should be linked to specific customer gains where possible.\n\n`;
+      }
+      
+      valueMapPrompt += `Format your response in a structured way, with clearly labeled sections for each component.`;
+      return valueMapPrompt;
     
     // Add similar constructions for other modules as needed
     default:

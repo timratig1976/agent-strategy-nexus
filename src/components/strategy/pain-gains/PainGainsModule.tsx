@@ -7,15 +7,20 @@ interface PainGainsModuleProps {
   strategy: Strategy;
   agentResults: AgentResult[];
   briefingAgentResult: AgentResult | null;
+  personaAgentResult: AgentResult | null;
 }
 
 const PainGainsModule: React.FC<PainGainsModuleProps> = ({ 
   strategy, 
   agentResults,
-  briefingAgentResult 
+  briefingAgentResult,
+  personaAgentResult 
 }) => {
   // Extract briefing content to pass to the USP Canvas
   const briefingContent = briefingAgentResult?.content || "";
+  
+  // Extract persona content to pass to the USP Canvas
+  const personaContent = personaAgentResult?.content || "";
   
   return (
     <div className="w-full">
@@ -28,6 +33,7 @@ const PainGainsModule: React.FC<PainGainsModuleProps> = ({
         <UspCanvasModule 
           strategyId={strategy.id}
           briefingContent={briefingContent}
+          personaContent={personaContent}
         />
       </div>
     </div>

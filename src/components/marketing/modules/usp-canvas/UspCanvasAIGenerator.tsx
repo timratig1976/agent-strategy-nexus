@@ -6,13 +6,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { 
   RotateCw, 
   CheckCircle2, 
   PlusCircle, 
   Settings,
   MessageSquareText,
-  Filter
+  Filter,
+  User,
+  UsersRound
 } from "lucide-react";
 import { toast } from "sonner";
 import { 
@@ -28,6 +32,7 @@ import { AIPromptSettings } from "@/components/strategy/briefing/components/AIPr
 interface UspCanvasAIGeneratorProps {
   strategyId: string;
   briefingContent: string;
+  personaContent?: string;
   onAddJobs?: (jobs: UspCanvasJob[]) => void;
   onAddPains?: (pains: UspCanvasPain[]) => void;
   onAddGains?: (gains: UspCanvasGain[]) => void;
@@ -36,6 +41,7 @@ interface UspCanvasAIGeneratorProps {
 export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
   strategyId,
   briefingContent,
+  personaContent = "",
   onAddJobs,
   onAddPains,
   onAddGains
@@ -48,6 +54,7 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
   const [aiResult, setAiResult] = useState<UspCanvasAIResult | null>(null);
   const [aiDebugInfo, setAiDebugInfo] = useState<any>(null);
   const [selectedPriorityFilter, setSelectedPriorityFilter] = useState<'all' | 'low' | 'medium' | 'high'>('all');
+  const [includePersonaData, setIncludePersonaData] = useState<boolean>(true);
 
   // Handle generation of USP Canvas profile elements
   const handleGenerate = async () => {
@@ -79,11 +86,20 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
       else if (activeSection === "pains") section = "pains";
       else if (activeSection === "gains") section = "gains";
       
+      // Build the prompt enhancement
+      let finalEnhancement = enhancementText;
+      
+      // Include persona data if available and opted-in
+      if (personaContent && includePersonaData) {
+        finalEnhancement += `\n\nConsider the following persona when generating ${activeSection === 'all' ? 'content' : activeSection}:\n${personaContent}`;
+      }
+      
       const result = await MarketingAIService.generateUspCanvasProfile(
         strategyId,
         briefingContent,
         section,
-        enhancementText
+        finalEnhancement,
+        includePersonaData ? personaContent : undefined
       );
 
       // Store debug info
@@ -226,6 +242,24 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
                   </Button>
                 </div>
               </div>
+              
+              {personaContent && (
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="include-persona"
+                    checked={includePersonaData}
+                    onCheckedChange={setIncludePersonaData}
+                  />
+                  <div>
+                    <Label htmlFor="include-persona" className="flex items-center gap-1">
+                      <UsersRound className="h-4 w-4" /> Include persona data in generation
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Use the persona information to improve AI generation
+                    </p>
+                  </div>
+                </div>
+              )}
               
               <div>
                 <label className="block text-sm font-medium mb-2">

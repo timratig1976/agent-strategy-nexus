@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface AIServiceResponse<T> {
@@ -217,7 +216,8 @@ export class MarketingAIService {
     strategyId: string,
     briefingContent: string,
     section?: 'jobs' | 'pains' | 'gains',
-    enhancementText?: string
+    enhancementText?: string,
+    personaContent?: string
   ): Promise<AIServiceResponse<UspCanvasAIResult>> {
     return this.generateContent<UspCanvasAIResult>(
       'usp_canvas_profile',
@@ -226,7 +226,8 @@ export class MarketingAIService {
         strategyId,
         briefingContent,
         section,
-        enhancementText
+        enhancementText,
+        personaContent
       }
     );
   }
@@ -239,7 +240,8 @@ export class MarketingAIService {
     briefingContent: string,
     customerProfile: any,
     section?: 'products' | 'painRelievers' | 'gainCreators',
-    enhancementText?: string
+    enhancementText?: string,
+    personaContent?: string
   ): Promise<AIServiceResponse<UspCanvasAIResult>> {
     return this.generateContent<UspCanvasAIResult>(
       'usp_canvas_value_map',
@@ -249,7 +251,8 @@ export class MarketingAIService {
         briefingContent,
         customerProfile,
         section,
-        enhancementText
+        enhancementText,
+        personaContent
       }
     );
   }

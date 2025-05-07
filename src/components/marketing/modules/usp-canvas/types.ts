@@ -48,3 +48,12 @@ export interface UspCanvas {
   painRelievers: PainReliever[];
   gainCreators: GainCreator[];
 }
+
+// For handling persona data integration
+export interface PersonaContextData {
+  name?: string;
+  demographics?: string;
+  goals?: string;
+  painPoints?: string;
+  content?: string; // Raw content from the agent result
+}
