@@ -14,6 +14,41 @@ export const useBriefingGenerator = (strategyId: string) => {
   // Load briefing history on mount
   useEffect(() => {
     fetchBriefingHistory();
+
+    // Set up real-time subscription for agent_results
+    const channel = supabase
+      .channel('agent_results_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'agent_results',
+          filter: `strategy_id=eq.${strategyId}`
+        },
+        (payload) => {
+          console.log('New agent result added:', payload);
+          fetchBriefingHistory();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'agent_results',
+          filter: `strategy_id=eq.${strategyId}`
+        },
+        (payload) => {
+          console.log('Agent result updated:', payload);
+          fetchBriefingHistory();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [strategyId]);
 
   const fetchBriefingHistory = async () => {
@@ -58,7 +93,10 @@ export const useBriefingGenerator = (strategyId: string) => {
   };
 
   // Function to generate AI briefing with progress updates
-  const generateBriefing = async (formValues: StrategyFormValues): Promise<void> => {
+  const generateBriefing = async (
+    formValues: StrategyFormValues, 
+    enhancementText?: string
+  ): Promise<void> => {
     try {
       setIsGenerating(true);
       setProgress(10);
@@ -82,7 +120,8 @@ export const useBriefingGenerator = (strategyId: string) => {
         'generate',
         {
           strategyId: strategyId,
-          formData: formValues
+          formData: formValues,
+          enhancementText: enhancementText || '' // Pass the enhancement text if provided
         }
       );
       
@@ -108,7 +147,8 @@ export const useBriefingGenerator = (strategyId: string) => {
         content: aiResponse?.rawOutput || "",
         metadata: {
           version: nextVersion,
-          generated_at: currentTime
+          generated_at: currentTime,
+          enhanced_with: enhancementText || undefined
         }
       };
 

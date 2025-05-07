@@ -1,33 +1,22 @@
 
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import React, { useState, useEffect, useCallback } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Save } from "lucide-react";
-import { AIResultEditor } from "@/components/marketing/shared/AIResultEditor";
-import { Skeleton } from "@/components/ui/skeleton";
 import { AgentResult } from "@/types/marketing";
-import { toast } from "sonner";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
 import { BriefingProgressBar } from "../BriefingProgressBar";
+import { Sparkles, Check, ChevronDown, ChevronUp, History } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetHeader, 
+  SheetTitle, 
+  SheetTrigger 
+} from "@/components/ui/sheet";
+import BriefingAIEnhancer from "./BriefingAIEnhancer";
+import { BriefingResultProps } from "../../types";
 
-export interface BriefingResultProps {
-  latestBriefing: AgentResult | null;
-  isGenerating: boolean;
-  progress: number;
-  generateBriefing: () => Promise<void>;
-  saveAgentResult: (result: AgentResult) => Promise<boolean>;
-  briefingHistory: AgentResult[];
-  setBriefingHistory: (history: AgentResult[]) => void;
-  onBriefingSaved: (isFinal: boolean) => void;
-}
-
-export const BriefingResult: React.FC<BriefingResultProps> = ({
+export function BriefingResult({
   latestBriefing,
   isGenerating,
   progress,
@@ -36,197 +25,214 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
   briefingHistory,
   setBriefingHistory,
   onBriefingSaved
-}) => {
-  const [selectedBriefingId, setSelectedBriefingId] = useState<string | null>(
-    latestBriefing ? latestBriefing.id : null
-  );
+}: BriefingResultProps) {
+  const [editedContent, setEditedContent] = useState<string>("");
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isExpanded, setIsExpanded] = useState<boolean>(true);
+  const [enhancementText, setEnhancementText] = useState<string>("");
+  const [isEnhancerExpanded, setIsEnhancerExpanded] = useState<boolean>(false);
 
-  // Update the selected briefing ID when the latest briefing changes
+  // Reset edited content when latestBriefing changes
   useEffect(() => {
-    if (latestBriefing && (!selectedBriefingId || selectedBriefingId !== latestBriefing.id)) {
-      setSelectedBriefingId(latestBriefing.id);
+    if (latestBriefing) {
+      setEditedContent(latestBriefing.content);
+    } else {
+      setEditedContent("");
     }
-  }, [latestBriefing, selectedBriefingId]);
+  }, [latestBriefing]);
 
-  const selectedBriefing = selectedBriefingId 
-    ? briefingHistory.find(b => b.id === selectedBriefingId) || latestBriefing
-    : latestBriefing;
-
-  const handleSelectBriefing = (value: string) => {
-    setSelectedBriefingId(value);
-  };
-
-  const handleSaveBriefing = async () => {
-    if (!selectedBriefing) return;
-
-    try {
-      console.log("Saving briefing as final version:", selectedBriefing);
-      
-      const result = await saveAgentResult({
-        ...selectedBriefing,
-        metadata: {
-          ...(selectedBriefing.metadata || {}),
-          is_final: true,
-          saved_at: new Date().toISOString()
-        }
-      });
-
-      if (result) {
-        toast.success("Briefing saved as final version");
-        
-        // Update the briefing in the history list
-        const updatedHistory = briefingHistory.map(briefing => 
-          briefing.id === selectedBriefing.id
-            ? {
-                ...briefing,
-                metadata: {
-                  ...(briefing.metadata || {}),
-                  is_final: true,
-                  saved_at: new Date().toISOString()
-                }
-              }
-            : briefing
-        );
-        
-        setBriefingHistory(updatedHistory);
-        onBriefingSaved(true);
-      }
-    } catch (error) {
-      console.error("Error saving briefing:", error);
-      toast.error("Failed to save briefing");
-    }
-  };
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) {
-      return "N/A";
-    }
+  const handleSave = async (isFinal: boolean = false) => {
+    if (!latestBriefing) return;
     
+    setIsSaving(true);
     try {
-      const date = new Date(dateString);
-      // Check if date is valid
-      if (isNaN(date.getTime())) {
-        return "Invalid Date";
-      }
+      // Create a copy of the latest briefing with updated content
+      const updatedBriefing: AgentResult = {
+        ...latestBriefing,
+        content: editedContent,
+        metadata: {
+          ...latestBriefing.metadata,
+          is_final: isFinal, // Mark as final if specified
+          enhanced_with: enhancementText ? enhancementText : undefined,
+          manually_edited: true
+        }
+      };
       
-      return new Intl.DateTimeFormat('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit'
-      }).format(date);
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return "Error";
+      const success = await saveAgentResult(updatedBriefing);
+      if (success && onBriefingSaved) {
+        onBriefingSaved(isFinal);
+      }
+    } finally {
+      setIsSaving(false);
     }
+  };
+
+  const handleGenerateBriefing = () => {
+    // Pass enhancement text to the generate function if needed
+    generateBriefing();
+  };
+
+  const handleToggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
   };
 
   return (
-    <Card className="h-full">
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <CardTitle>AI Briefing</CardTitle>
-          <div className="flex gap-2">
-            <Button 
-              onClick={generateBriefing}
-              disabled={isGenerating}
-              className="flex items-center gap-1"
-            >
-              <RefreshCw className={`h-4 w-4 ${isGenerating ? 'animate-spin' : ''}`} />
-              {isGenerating ? "Generating..." : latestBriefing ? "Regenerate" : "Generate"}
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+        <CardTitle className="text-xl font-semibold">Strategy Briefing</CardTitle>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="sm" className="flex items-center gap-1">
+              <History className="h-4 w-4" />
+              <span>Version History</span>
             </Button>
-            {selectedBriefing && (
+          </SheetTrigger>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Briefing History</SheetTitle>
+            </SheetHeader>
+            <div className="py-4 space-y-4">
+              {briefingHistory.map((briefing, index) => (
+                <div key={briefing.id} className="border rounded-md p-3">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="text-sm font-medium">
+                      Version {(briefingHistory.length - index)}
+                      {briefing.metadata?.is_final && (
+                        <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                          Final
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {briefing.createdAt && formatDate(briefing.createdAt)}
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {briefing.content.substring(0, 100)}...
+                  </p>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="mt-2"
+                    onClick={() => {
+                      // Set this version as the current briefing
+                      setBriefingHistory(prev => 
+                        [briefing, ...prev.filter(b => b.id !== briefing.id)]
+                      );
+                    }}
+                  >
+                    Load This Version
+                  </Button>
+                </div>
+              ))}
+              
+              {briefingHistory.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  No history available
+                </div>
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
+      </CardHeader>
+
+      <CardContent>
+        <BriefingAIEnhancer
+          enhancementText={enhancementText}
+          onEnhancementChange={setEnhancementText}
+          isExpanded={isEnhancerExpanded}
+          onToggleExpand={() => setIsEnhancerExpanded(!isEnhancerExpanded)}
+        />
+
+        {isGenerating ? (
+          <div className="space-y-4">
+            <BriefingProgressBar progress={progress} />
+            <p className="text-sm text-center text-muted-foreground">
+              Generating your strategy briefing...
+            </p>
+          </div>
+        ) : latestBriefing ? (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center space-x-2">
+                <Button size="sm" variant="outline" onClick={handleToggleExpand}>
+                  {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  <span className="ml-1">{isExpanded ? "Collapse" : "Expand"}</span>
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  {latestBriefing.createdAt && `Last updated: ${formatDate(latestBriefing.createdAt)}`}
+                </span>
+              </div>
+              <div>
+                {latestBriefing.metadata?.is_final && (
+                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs flex items-center gap-1">
+                    <Check className="h-3.5 w-3.5" />
+                    Final Version
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {isExpanded && (
+              <Textarea
+                value={editedContent}
+                onChange={(e) => setEditedContent(e.target.value)}
+                className="min-h-[300px] font-mono text-sm"
+              />
+            )}
+
+            <div className="flex justify-between items-center pt-2">
               <Button 
-                onClick={handleSaveBriefing}
-                disabled={isGenerating || (selectedBriefing.metadata && selectedBriefing.metadata.is_final)}
+                onClick={handleGenerateBriefing} 
+                disabled={isGenerating || isSaving}
                 className="flex items-center gap-1"
               >
-                <Save className="h-4 w-4" />
-                Save Final
+                <Sparkles className="h-4 w-4" />
+                Regenerate
               </Button>
-            )}
+              <div className="space-x-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleSave(false)} 
+                  disabled={isSaving || isGenerating}
+                >
+                  {isSaving ? "Saving..." : "Save Draft"}
+                </Button>
+                <Button 
+                  variant="default" 
+                  onClick={() => handleSave(true)} 
+                  disabled={isSaving || isGenerating}
+                >
+                  {isSaving ? "Saving..." : "Save as Final"}
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
-        {!latestBriefing && !isGenerating && (
-          <CardDescription>
-            Generate an AI briefing based on your strategy information
-          </CardDescription>
-        )}
-
-        {/* Position the progress bar under the headline */}
-        {isGenerating && (
-          <BriefingProgressBar progress={progress} />
-        )}
-        
-        {briefingHistory.length > 1 && (
-          <div className="mt-2">
-            <CardDescription className="mb-1">Select version:</CardDescription>
-            <Select 
-              value={selectedBriefingId || ''} 
-              onValueChange={handleSelectBriefing}
-            >
-              <SelectTrigger className="w-full sm:w-[300px]">
-                <SelectValue placeholder="Select a version" />
-              </SelectTrigger>
-              <SelectContent>
-                {briefingHistory.map((briefing) => {
-                  // Make sure we're safely accessing version and created date
-                  const version = briefing.metadata?.version || "Unknown";
-                  let dateDisplay = "Unknown date";
-                  
-                  // Handle date formatting safely
-                  try {
-                    if (briefing.createdAt) {
-                      dateDisplay = formatDate(briefing.createdAt);
-                    }
-                  } catch (e) {
-                    console.error("Error formatting date for briefing:", briefing.id, e);
-                    dateDisplay = "Invalid date";
-                  }
-                  
-                  const isFinal = briefing.metadata?.is_final ? ' (Final)' : '';
-                  
-                  return (
-                    <SelectItem key={briefing.id} value={briefing.id}>
-                      Version {version} - {dateDisplay}{isFinal}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-      </CardHeader>
-      <CardContent>
-        {isGenerating ? (
-          <div className="space-y-3">
-            <Skeleton className="h-[20px] w-[250px]" />
-            <Skeleton className="h-[20px] w-full" />
-            <Skeleton className="h-[20px] w-[270px]" />
-            <Skeleton className="h-[20px] w-full" />
-            <Skeleton className="h-[20px] w-[290px]" />
-            <Skeleton className="h-[20px] w-full" />
-          </div>
-        ) : selectedBriefing ? (
-          <AIResultEditor 
-            title="Edit Briefing"
-            description="Fine-tune the AI-generated content"
-            originalContent={selectedBriefing}
-            contentField="content"
-            onSave={(updatedResult) => {
-              saveAgentResult(updatedResult);
-              onBriefingSaved(false);
-              return Promise.resolve(true);
-            }}
-          />
         ) : (
-          <div className="p-6 text-center border rounded-md bg-muted/20">
-            <p className="text-muted-foreground">
-              No briefing has been generated yet. Click 'Generate' to create an AI briefing based on the strategy information.
-            </p>
+          <div className="text-center py-12 space-y-4">
+            <p className="text-muted-foreground">No briefing has been generated yet.</p>
+            <Button 
+              onClick={handleGenerateBriefing} 
+              disabled={isGenerating}
+              className="flex items-center gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              Generate AI Briefing
+            </Button>
           </div>
         )}
       </CardContent>
     </Card>
   );
-};
+}

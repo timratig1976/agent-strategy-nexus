@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -207,6 +206,13 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
     }
   };
 
+  const [enhancementText, setEnhancementText] = useState<string>("");
+  
+  // Update the generateBriefing function call to pass the enhancement text
+  const handleGenerateBriefing = () => {
+    return generateBriefing(formValues, enhancementText);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-4">
@@ -242,7 +248,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
           latestBriefing={latestBriefing}
           isGenerating={isGenerating}
           progress={progress}
-          generateBriefing={() => generateBriefing(formValues)}
+          generateBriefing={handleGenerateBriefing}
           saveAgentResult={saveAgentResult}
           briefingHistory={briefingHistory}
           setBriefingHistory={setBriefingHistory}

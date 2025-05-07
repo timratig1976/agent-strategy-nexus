@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/components/ui/use-toast";
@@ -16,7 +15,20 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { AIPromptSettings } from "@/components/strategy/briefing/components/AIPromptSettings";
 
 type CompanySettings = {
   name: string;
@@ -182,87 +194,118 @@ const Settings = () => {
     <>
       <NavBar />
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Company Settings</h1>
+        <h1 className="text-3xl font-bold mb-6">Settings</h1>
+        
+        <Tabs defaultValue="company">
+          <TabsList className="mb-4">
+            <TabsTrigger value="company">Company Profile</TabsTrigger>
+            <TabsTrigger value="ai-prompts">AI Prompt Settings</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="company">
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>Company Profile</CardTitle>
+                <CardDescription>
+                  Manage your company information that will appear throughout the application.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Company Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Acme Inc." {...field} />
+                          </FormControl>
+                          <FormDescription>
+                            This will be displayed throughout the application.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Company Profile</CardTitle>
-            <CardDescription>
-              Manage your company information that will appear throughout the application.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
+                    <FormField
+                      control={form.control}
+                      name="website"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Company Website</FormLabel>
+                          <FormControl>
+                            <Input placeholder="https://example.com" {...field} />
+                          </FormControl>
+                          <FormDescription>
+                            Your company's website URL.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     <FormItem>
-                      <FormLabel>Company Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Acme Inc." {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        This will be displayed throughout the application.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="website"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Company Website</FormLabel>
-                      <FormControl>
-                        <Input placeholder="https://example.com" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Your company's website URL.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormItem>
-                  <FormLabel>Company Logo</FormLabel>
-                  <div className="flex items-start gap-4">
-                    <div>
-                      <Input
-                        id="logo"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleLogoChange}
-                        className="max-w-sm"
-                      />
-                      <FormDescription>
-                        Upload your company logo. Recommended size: 512x512px.
-                      </FormDescription>
-                    </div>
-                    {logoPreview && (
-                      <div className="mt-2">
-                        <p className="text-sm font-medium mb-1">Preview:</p>
-                        <img
-                          src={logoPreview}
-                          alt="Logo preview"
-                          className="w-20 h-20 object-contain border rounded"
-                        />
+                      <FormLabel>Company Logo</FormLabel>
+                      <div className="flex items-start gap-4">
+                        <div>
+                          <Input
+                            id="logo"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleLogoChange}
+                            className="max-w-sm"
+                          />
+                          <FormDescription>
+                            Upload your company logo. Recommended size: 512x512px.
+                          </FormDescription>
+                        </div>
+                        {logoPreview && (
+                          <div className="mt-2">
+                            <p className="text-sm font-medium mb-1">Preview:</p>
+                            <img
+                              src={logoPreview}
+                              alt="Logo preview"
+                              className="w-20 h-20 object-contain border rounded"
+                            />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </FormItem>
+                    </FormItem>
 
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? "Saving..." : "Save Settings"}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+                    <Button type="submit" disabled={isLoading}>
+                      {isLoading ? "Saving..." : "Save Settings"}
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="ai-prompts">
+            <div className="space-y-6">
+              <AIPromptSettings
+                module="briefing"
+                title="Strategy Briefing Prompts"
+                description="Customize how the AI generates strategy briefings"
+              />
+              
+              <AIPromptSettings
+                module="persona"
+                title="Persona Development Prompts"
+                description="Customize how the AI creates customer personas"
+              />
+              
+              <AIPromptSettings
+                module="content_strategy"
+                title="Content Strategy Prompts"
+                description="Customize how the AI develops content strategies"
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </>
   );
