@@ -170,6 +170,7 @@ export const useStrategyData = ({ id }: UseStrategyDataProps) => {
 
   // Function to refetch all data
   const refetch = () => {
+    console.log("Refetching all strategy data");
     refetchStrategy();
     refetchTasks();
     refetchResults();

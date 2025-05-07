@@ -57,22 +57,33 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
     : (agentResults && agentResults.length > 0 ? agentResults[0] : null);
 
   // Navigate to persona development
-  const goToNextStep = () => {
-    // First, try to update the strategy state to persona
-    supabase
-      .from('strategies')
-      .update({ state: 'persona' })
-      .eq('id', strategy.id)
-      .then(({ error }) => {
-        if (error) {
-          console.error("Error updating strategy state:", error);
-          toast.error("Failed to update strategy state");
-        } else {
-          // Navigate to the persona development page
-          navigate(`/strategy/${strategy.id}?tab=personas`);
-          toast.success("Moving to persona development");
-        }
-      });
+  const goToNextStep = async () => {
+    try {
+      console.log("Going to persona development for strategy:", strategy.id);
+      
+      // First, update the strategy state to persona
+      const { data, error } = await supabase
+        .from('strategies')
+        .update({ state: 'persona' })
+        .eq('id', strategy.id)
+        .select();
+      
+      if (error) {
+        console.error("Error updating strategy state:", error);
+        toast.error("Failed to update strategy state");
+        return;
+      }
+      
+      console.log("Strategy state updated successfully:", data);
+      toast.success("Moving to persona development");
+      
+      // Navigate directly to the strategy details page
+      // This ensures we load the persona development view based on the updated state
+      navigate(`/strategy-details/${strategy.id}`);
+    } catch (err) {
+      console.error("Failed to move to persona development:", err);
+      toast.error("Failed to move to persona development");
+    }
   };
 
   // Wrapper function to save agent results with the correct interface

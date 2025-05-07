@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import NavBar from "@/components/NavBar";
@@ -42,6 +42,7 @@ const StrategyDetails = () => {
   // Refresh the data when the component mounts or when the URL changes
   useEffect(() => {
     if (id) {
+      console.log("Refreshing strategy data for ID:", id);
       refetch();
     }
   }, [id, refetch]);
@@ -72,6 +73,9 @@ const StrategyDetails = () => {
   const finalBriefing = agentResults?.find(result => 
     result.metadata?.is_final === true && (!result.metadata?.type || result.metadata?.type === 'briefing')
   ) || null;
+
+  console.log("Current strategy state:", strategy.state);
+  console.log("Final briefing found:", !!finalBriefing);
 
   // Determine which component to render based on the strategy state
   let contentComponent;
