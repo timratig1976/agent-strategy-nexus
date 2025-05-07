@@ -2,9 +2,14 @@
 import React from "react";
 import { WebsiteCrawlResult } from "@/components/marketing/modules/website-crawler/types";
 import { CrawlPreviewProps } from "./types";
+import { AlertTriangle } from "lucide-react";
 
 const CrawlPreview: React.FC<CrawlPreviewProps> = ({ results, show }) => {
   if (!show || !results) return null;
+
+  // Check if content was successfully extracted
+  const contentExtracted = results.contentExtracted !== undefined ? 
+    results.contentExtracted : (results.data && results.data.length > 0);
 
   return (
     <div className="bg-muted/50 p-3 rounded-md text-sm mt-2 max-h-48 overflow-auto">
@@ -13,6 +18,16 @@ const CrawlPreview: React.FC<CrawlPreviewProps> = ({ results, show }) => {
         Pages crawled: {results.pagesCrawled || 0} | 
         Technologies: {(results.technologiesDetected || []).join(', ')}
       </p>
+      
+      {!contentExtracted && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 p-2 rounded-md flex items-start space-x-2 mb-2">
+          <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+          <div className="text-xs">
+            Limited content extraction. Consider manually checking the website.
+          </div>
+        </div>
+      )}
+      
       <p className="text-xs">{results.summary}</p>
       {results.keywordsFound && results.keywordsFound.length > 0 && (
         <div className="mt-2">

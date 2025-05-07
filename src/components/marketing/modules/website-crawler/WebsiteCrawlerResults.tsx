@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, AlertTriangle } from "lucide-react";
 import { WebsiteCrawlResult } from "./types";
 
 interface WebsiteCrawlerResultsProps {
@@ -58,6 +58,16 @@ const WebsiteCrawlerResults = ({ results }: WebsiteCrawlerResultsProps) => {
       <Card>
         <CardContent className="pt-6">
           <div className="space-y-4">
+            {!contentExtracted && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-md flex items-start space-x-2 mb-4">
+                <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium">Limited Content Extraction</p>
+                  <p className="text-sm mt-1">The crawler was unable to extract content from this website. This could be due to JavaScript rendering, content protection, or other technical limitations.</p>
+                </div>
+              </div>
+            )}
+            
             <div>
               <h4 className="text-sm font-medium mb-2">Summary</h4>
               <p className="text-sm text-muted-foreground mb-2">{summary}</p>
@@ -120,12 +130,20 @@ const WebsiteCrawlerResults = ({ results }: WebsiteCrawlerResultsProps) => {
                 </li>
                 <li className="flex items-center justify-between py-1">
                   <span className="text-muted-foreground">Content Extraction:</span>
-                  <span className="font-medium">
-                    {contentExtracted ? "Successful" : "Failed"}
-                  </span>
+                  <Badge variant={contentExtracted ? "success" : "outline"} className={contentExtracted ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}>
+                    {contentExtracted ? "Successful" : "Limited"}
+                  </Badge>
                 </li>
               </ul>
             </div>
+
+            {results.url && (
+              <div>
+                <h4 className="text-sm font-medium mb-1">Crawl Details</h4>
+                <p className="text-xs text-muted-foreground break-all">ID: {results.id || 'N/A'}</p>
+                <p className="text-xs text-muted-foreground break-all">URL: {results.url}</p>
+              </div>
+            )}
           </div>
         </CardContent>
         <CardFooter className="pt-0 pb-6">
@@ -135,7 +153,7 @@ const WebsiteCrawlerResults = ({ results }: WebsiteCrawlerResultsProps) => {
                 <h4 className="text-sm font-medium mb-2">Adopted Content</h4>
                 <div className="space-y-2">
                   {adoptedContent.map((content, index) => (
-                    <div key={index} className="text-xs text-muted-foreground bg-muted p-2 rounded">
+                    <div key={index} className="text-xs text-muted-foreground bg-muted p-2 rounded overflow-auto max-h-60">
                       {content.length > 100 ? `${content.substring(0, 100)}...` : content}
                     </div>
                   ))}

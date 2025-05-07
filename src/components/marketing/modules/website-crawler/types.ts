@@ -14,6 +14,9 @@ export interface WebsiteCrawlResult {
   summary?: string;
   keywordsFound?: string[];
   technologiesDetected?: string[];
+  // Additional fields for tracking
+  id?: string;
+  url?: string;
 }
 
 // Define additional type for saving website crawl data to strategy metadata
