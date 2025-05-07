@@ -1,5 +1,5 @@
 
-import React from "react";
+import React from 'react';
 import { Progress } from "@/components/ui/progress";
 
 interface BriefingProgressBarProps {
@@ -8,12 +8,12 @@ interface BriefingProgressBarProps {
 
 const BriefingProgressBar: React.FC<BriefingProgressBarProps> = ({ progress }) => {
   return (
-    <div className="mb-4">
-      <div className="flex justify-between mb-2 text-sm">
-        <span>Generating AI briefing...</span>
-        <span>{progress}%</span>
+    <div className="mb-6">
+      <div className="flex justify-between mb-2">
+        <span className="text-sm font-medium">Generating AI Briefing</span>
+        <span className="text-sm font-medium">{Math.round(progress)}%</span>
       </div>
-      <Progress value={progress} className="w-full" />
+      <Progress value={progress} className="h-2" />
     </div>
   );
 };
