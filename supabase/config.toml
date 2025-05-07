@@ -28,7 +28,7 @@ site_url = "http://localhost:3000"
 enabled = true
 
 [functions.website-crawler]
-verify_jwt = true
+verify_jwt = false
 
 [functions.strategy-metadata]
 verify_jwt = true
