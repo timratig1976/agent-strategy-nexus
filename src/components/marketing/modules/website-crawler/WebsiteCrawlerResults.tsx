@@ -130,7 +130,10 @@ const WebsiteCrawlerResults = ({ results }: WebsiteCrawlerResultsProps) => {
                 </li>
                 <li className="flex items-center justify-between py-1">
                   <span className="text-muted-foreground">Content Extraction:</span>
-                  <Badge variant={contentExtracted ? "success" : "outline"} className={contentExtracted ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}>
+                  <Badge 
+                    variant={contentExtracted ? "secondary" : "outline"} 
+                    className={contentExtracted ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}
+                  >
                     {contentExtracted ? "Successful" : "Limited"}
                   </Badge>
                 </li>
