@@ -20,11 +20,11 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   const [formValues, setFormValues] = useState<StrategyFormValues>({
     name: strategy.name,
     description: strategy.description || '',
-    companyName: '',
-    websiteUrl: '',
-    productDescription: '',
-    productUrl: '',
-    additionalInfo: ''
+    companyName: strategy.company_name || '',
+    websiteUrl: strategy.website_url || '',
+    productDescription: strategy.product_description || '',
+    productUrl: strategy.product_url || '',
+    additionalInfo: strategy.additional_info || ''
   });
 
   const {
@@ -37,7 +37,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   // Fetch strategy metadata
   useEffect(() => {
     fetchStrategyMetadata();
-  }, [strategy.id, strategy.name, strategy.description]);
+  }, [strategy.id]);
   
   const fetchStrategyMetadata = async () => {
     try {
@@ -63,14 +63,15 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
         
         setFormValues(prevFormValues => ({
           ...prevFormValues,
-          companyName: metadata.company_name || '',
-          websiteUrl: metadata.website_url || '',
-          productDescription: metadata.product_description || '',
-          productUrl: metadata.product_url || '',
-          additionalInfo: metadata.additional_info || ''
+          companyName: metadata.company_name || prevFormValues.companyName || '',
+          websiteUrl: metadata.website_url || prevFormValues.websiteUrl || '',
+          productDescription: metadata.product_description || prevFormValues.productDescription || '',
+          productUrl: metadata.product_url || prevFormValues.productUrl || '',
+          additionalInfo: metadata.additional_info || prevFormValues.additionalInfo || ''
         }));
       } else {
         console.log("No metadata found or empty array returned");
+        // If no metadata found, we're already using the strategy values (initialized in useState)
       }
     } catch (error) {
       console.error("Error fetching strategy metadata:", error);
