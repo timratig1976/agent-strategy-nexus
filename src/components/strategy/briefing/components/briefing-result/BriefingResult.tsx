@@ -153,6 +153,7 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
           </CardDescription>
         )}
 
+        {/* Position the progress bar under the headline */}
         {isGenerating && (
           <BriefingProgressBar progress={progress} />
         )}
@@ -168,14 +169,29 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
                 <SelectValue placeholder="Select a version" />
               </SelectTrigger>
               <SelectContent>
-                {briefingHistory.map((briefing) => (
-                  <SelectItem key={briefing.id} value={briefing.id}>
-                    {briefing.metadata?.version 
-                      ? `Version ${briefing.metadata.version}` 
-                      : 'Version'} - {formatDate(briefing.createdAt)}
-                    {briefing.metadata?.is_final ? ' (Final)' : ''}
-                  </SelectItem>
-                ))}
+                {briefingHistory.map((briefing) => {
+                  // Make sure we're safely accessing version and created date
+                  const version = briefing.metadata?.version || "Unknown";
+                  let dateDisplay = "Unknown date";
+                  
+                  // Handle date formatting safely
+                  try {
+                    if (briefing.createdAt) {
+                      dateDisplay = formatDate(briefing.createdAt);
+                    }
+                  } catch (e) {
+                    console.error("Error formatting date for briefing:", briefing.id, e);
+                    dateDisplay = "Invalid date";
+                  }
+                  
+                  const isFinal = briefing.metadata?.is_final ? ' (Final)' : '';
+                  
+                  return (
+                    <SelectItem key={briefing.id} value={briefing.id}>
+                      Version {version} - {dateDisplay}{isFinal}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>

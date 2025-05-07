@@ -50,10 +50,12 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   
   // Check if there's a final briefing in the history
   useEffect(() => {
+    console.log("Checking for final briefing in history:", briefingHistory);
     const finalBriefing = briefingHistory.find(briefing => 
       briefing.metadata && briefing.metadata.is_final === true
     );
     setHasFinalBriefing(!!finalBriefing);
+    console.log("Has final briefing:", !!finalBriefing);
   }, [briefingHistory]);
   
   const fetchStrategyMetadata = async () => {
@@ -199,6 +201,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   };
 
   const handleBriefingSaved = (isFinal: boolean) => {
+    console.log("Briefing saved with isFinal:", isFinal);
     if (isFinal) {
       setHasFinalBriefing(true);
     }

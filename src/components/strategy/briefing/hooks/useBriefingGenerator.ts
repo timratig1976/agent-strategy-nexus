@@ -76,7 +76,8 @@ export const useBriefingGenerator = (strategyId: string) => {
         });
       }, 1000);
       
-      const { data, error } = await MarketingAIService.generateContent<AgentResult>(
+      // Generate the briefing content using the AI service
+      const { data: aiResponse, error: aiError } = await MarketingAIService.generateContent<{ rawOutput: string }>(
         'briefing',
         'generate',
         {
@@ -85,53 +86,64 @@ export const useBriefingGenerator = (strategyId: string) => {
         }
       );
       
+      if (aiError) {
+        clearInterval(progressInterval);
+        throw new Error(aiError);
+      }
+      
+      console.log("Generated briefing data:", aiResponse);
+
+      // Calculate the next version number
+      const nextVersion = briefingHistory.length > 0 ? 
+        ((briefingHistory[0].metadata?.version || 0) as number) + 1 : 1;
+      
+      // Create a timestamp for the generation
+      const currentTime = new Date().toISOString();
+      
+      // Create the agent result to save to the database
+      const newResult = {
+        agent_id: 'briefing',
+        strategy_id: strategyId,
+        content: aiResponse?.rawOutput || "",
+        metadata: {
+          version: nextVersion,
+          generated_at: currentTime
+        }
+      };
+
+      console.log("Saving new briefing result to database:", newResult);
+      
+      // Save the generated briefing to the database
+      const { data: savedResult, error } = await supabase
+        .from('agent_results')
+        .insert(newResult)
+        .select()
+        .single();
+
       clearInterval(progressInterval);
       setProgress(100);
       
-      if (error) throw new Error(error);
+      if (error) {
+        console.error("Error saving new briefing:", error);
+        throw error;
+      }
       
-      // Add version information
-      if (data) {
-        console.log("Generated briefing data:", data);
-        
-        // Calculate the next version number
-        const nextVersion = briefingHistory.length > 0 ? 
-          ((briefingHistory[0].metadata?.version || 0) as number) + 1 : 1;
-        
-        // Add the new result with version metadata to the briefing history
-        const currentTime = new Date().toISOString();
-        const updatedResult: AgentResult = {
-          ...data,
-          metadata: {
-            ...(data.metadata || {}),
-            version: nextVersion,
-            generated_at: currentTime
-          }
+      if (savedResult) {
+        // Format the saved result to match our AgentResult type
+        const formattedResult: AgentResult = {
+          id: savedResult.id,
+          agentId: savedResult.agent_id,
+          strategyId: savedResult.strategy_id,
+          content: savedResult.content,
+          createdAt: savedResult.created_at,
+          metadata: (typeof savedResult.metadata === 'object' && savedResult.metadata !== null) 
+            ? savedResult.metadata as Record<string, any>
+            : {}
         };
         
-        console.log("Updated result with metadata:", updatedResult);
-        
-        // Only update the database if we have a valid ID
-        if (updatedResult.id) {
-          // Update the database with the version information
-          const { error: updateError } = await supabase
-            .from('agent_results')
-            .update({
-              metadata: updatedResult.metadata
-            })
-            .eq('id', updatedResult.id);
-            
-          if (updateError) {
-            console.error("Error updating agent result metadata:", updateError);
-          }
-        } else {
-          console.error("Cannot update metadata: result ID is missing");
-        }
-          
         // Update local state
-        setBriefingHistory(prev => [updatedResult, ...prev]);
-        
-        console.log("Updated briefing history:", [updatedResult, ...briefingHistory]);
+        setBriefingHistory(prev => [formattedResult, ...prev]);
+        console.log("Updated briefing history:", [formattedResult, ...briefingHistory]);
       }
       
       toast.success("AI Briefing generated successfully");
