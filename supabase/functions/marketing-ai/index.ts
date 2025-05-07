@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
@@ -278,8 +279,6 @@ function constructUserPrompt(module: string, action: string, data: any): string 
       
       Please generate 3 compelling unique selling propositions with supporting points and differentiators.`;
     
-    // Add cases for USP Canvas modules
-    switch (module) {
     case 'usp_canvas_profile':
       let profileSection = data.section || 'all';
       let prompt = `I need to create a customer profile for a Value Proposition Canvas based on the following marketing briefing:\n\n${data.briefingContent}\n\n`;
@@ -334,7 +333,6 @@ function constructUserPrompt(module: string, action: string, data: any): string 
       valueMapPrompt += `Format your response in a structured way, with clearly labeled sections for each component.`;
       return valueMapPrompt;
     
-    // Add similar constructions for other modules as needed
     default:
       return JSON.stringify(data);
   }
