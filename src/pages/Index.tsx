@@ -1,6 +1,5 @@
 
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { useAuth } from "@/context/AuthProvider";
@@ -12,8 +11,7 @@ import {
 } from "@/components";
 
 const Index = () => {
-  const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const [dbStatus, setDbStatus] = useState<'checking' | 'ready' | 'not-setup'>('checking');
 
   // Check if database tables exist
@@ -42,16 +40,11 @@ const Index = () => {
     checkDatabase();
   }, []);
 
-  const handleLogout = async () => {
-    await signOut();
-    toast.success("Successfully logged out");
-  };
-
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
       {user && <NavBar />}
       
-      <PageHeader user={user} onLogout={handleLogout} />
+      <PageHeader user={user} onLogout={() => {}} />
 
       <DatabaseStatus status={dbStatus} />
 

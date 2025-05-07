@@ -21,7 +21,6 @@ export default function NavBar() {
   // Define navigation items
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Settings", href: "/settings", icon: Settings },
   ];
 
   const handleLogout = async () => {
@@ -116,10 +115,17 @@ export default function NavBar() {
 
         <div className="flex items-center gap-2">
           {!isMobile && user && (
-            <Button variant="ghost" onClick={handleLogout} className="flex items-center gap-2">
-              <LogOut className="h-4 w-4" />
-              Logout
-            </Button>
+            <>
+              <Link to="/settings">
+                <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Button variant="ghost" onClick={handleLogout} size="sm" className="flex items-center gap-2">
+                <LogOut className="h-4 w-4" />
+                Logout
+              </Button>
+            </>
           )}
           {isMobile && user ? mobileNavigation : null}
         </div>
