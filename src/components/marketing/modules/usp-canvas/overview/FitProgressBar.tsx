@@ -22,7 +22,7 @@ const FitProgressBar: React.FC<FitProgressBarProps> = ({ label, percentage }) =>
     <div className="space-y-1">
       <div className="flex justify-between">
         <span className="text-sm">{label}</span>
-        <span className="text-sm font-medium">{validPercentage}%</span>
+        <span className="text-sm font-medium">{validPercentage.toFixed(0)}%</span>
       </div>
       <Progress 
         value={validPercentage} 
