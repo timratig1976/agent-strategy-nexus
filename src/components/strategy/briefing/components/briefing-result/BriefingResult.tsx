@@ -1,15 +1,28 @@
 
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AgentResult } from "@/types/marketing";
-import { BriefingProgressBar } from "../BriefingProgressBar";
-import BriefingAIEnhancer from "./BriefingAIEnhancer";
-import { BriefingResultProps } from "../../types";
-import PromptMonitor from "./PromptMonitor";
-import BriefingHistorySheet from "./BriefingHistorySheet";
-import BriefingContentEditor from "./BriefingContentEditor";
+import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { AlertCircle, ArrowUpDown, FileText, MoreHorizontal } from "lucide-react";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
+import { BriefingContentEditor } from './BriefingContentEditor';
+import { BriefingHistorySheet } from './BriefingHistorySheet';
+import { BriefingAIEnhancer } from './BriefingAIEnhancer';
+import PromptMonitor from '../PromptMonitor';
+import { AgentResult } from '@/types/marketing';
 
-export function BriefingResult({
+interface BriefingResultProps {
+  latestBriefing: AgentResult | null;
+  isGenerating: boolean;
+  progress: number;
+  generateBriefing: (enhancementText?: string) => void;
+  saveAgentResult: (content: string, isFinal?: boolean) => Promise<void>;
+  briefingHistory: AgentResult[];
+  setBriefingHistory: React.Dispatch<React.SetStateAction<AgentResult[]>>;
+  onBriefingSaved?: (isFinal: boolean) => void;
+  aiDebugInfo?: any;
+}
+
+export const BriefingResult: React.FC<BriefingResultProps> = ({
   latestBriefing,
   isGenerating,
   progress,
@@ -19,110 +32,119 @@ export function BriefingResult({
   setBriefingHistory,
   onBriefingSaved,
   aiDebugInfo
-}: BriefingResultProps) {
+}) => {
+  const [isSaving, setIsSaving] = useState(false);
   const [editedContent, setEditedContent] = useState<string>("");
-  const [isSaving, setIsSaving] = useState<boolean>(false);
   const [enhancementText, setEnhancementText] = useState<string>("");
-  const [isEnhancerExpanded, setIsEnhancerExpanded] = useState<boolean>(false);
-
-  // Reset edited content when latestBriefing changes
-  useEffect(() => {
-    if (latestBriefing) {
-      setEditedContent(latestBriefing.content);
-    } else {
-      setEditedContent("");
+  
+  // Get the latest briefing from history if available
+  const briefingContent = latestBriefing?.content || "";
+  
+  // Check if this briefing is marked as final
+  const isFinalBriefing = latestBriefing?.metadata?.is_final === true;
+  
+  // Handle save click
+  const handleSave = async (markAsFinal: boolean = false) => {
+    if (!editedContent.trim()) {
+      toast.error("Cannot save empty content");
+      return;
     }
-  }, [latestBriefing]);
-
-  const handleSave = async (isFinal: boolean = false) => {
-    if (!latestBriefing) return;
     
     setIsSaving(true);
     try {
-      // Create a copy of the latest briefing with updated content
-      const updatedBriefing: AgentResult = {
-        ...latestBriefing,
-        content: editedContent,
-        metadata: {
-          ...latestBriefing.metadata,
-          is_final: isFinal, // Mark as final if specified
-          enhanced_with: enhancementText ? enhancementText : undefined,
-          manually_edited: true
-        }
-      };
-      
-      const success = await saveAgentResult(updatedBriefing);
-      if (success && onBriefingSaved) {
-        onBriefingSaved(isFinal);
+      await saveAgentResult(editedContent, markAsFinal);
+      toast.success(markAsFinal ? "Briefing finalized" : "Briefing saved");
+      if (onBriefingSaved) {
+        onBriefingSaved(markAsFinal);
       }
+    } catch (error) {
+      console.error("Error saving briefing:", error);
+      toast.error("Failed to save briefing");
     } finally {
       setIsSaving(false);
     }
   };
-
-  const handleGenerateBriefing = () => {
-    // Pass enhancement text to the generate function
-    generateBriefing(enhancementText);
+  
+  // Handle regenerate click
+  const handleRegenerate = () => {
+    generateBriefing(enhancementText || undefined);
+    setEnhancementText("");
   };
-
-  // Handle loading a historical version
-  const loadHistoricalVersion = (briefing: AgentResult) => {
-    // Create a new array with the selected briefing first, followed by all other briefings
-    const updatedHistory = [
-      briefing,
-      ...briefingHistory.filter(b => b.id !== briefing.id)
-    ];
-    
-    // Set the updated history array directly
-    setBriefingHistory(updatedHistory);
-  };
-
+  
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-        <CardTitle className="text-xl font-semibold">Strategy Briefing</CardTitle>
-        <div className="flex items-center gap-2">
-          {aiDebugInfo && (
-            <PromptMonitor 
-              debugInfo={aiDebugInfo}
-              isError={!!aiDebugInfo?.responseData?.error}
-            />
-          )}
-          <BriefingHistorySheet 
-            briefingHistory={briefingHistory}
-            loadHistoricalVersion={loadHistoricalVersion}
-          />
-        </div>
-      </CardHeader>
-
-      <CardContent>
-        <BriefingAIEnhancer
-          enhancementText={enhancementText}
-          onEnhancementChange={setEnhancementText}
-          isExpanded={isEnhancerExpanded}
-          onToggleExpand={() => setIsEnhancerExpanded(!isEnhancerExpanded)}
-        />
-
-        {isGenerating ? (
-          <div className="space-y-4">
-            <BriefingProgressBar progress={progress} />
-            <p className="text-sm text-center text-muted-foreground">
-              Generating your strategy briefing...
-            </p>
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Strategy Briefing</CardTitle>
+          <div className="flex items-center space-x-2">
+            {aiDebugInfo && (
+              <PromptMonitor 
+                debugInfo={aiDebugInfo} 
+                isError={false}
+              />
+            )}
+            {briefingHistory.length > 0 && (
+              <BriefingHistorySheet 
+                briefingHistory={briefingHistory} 
+                setBriefingHistory={setBriefingHistory}
+              />
+            )}
           </div>
-        ) : (
-          <BriefingContentEditor
-            latestBriefing={latestBriefing}
+        </CardHeader>
+        
+        <CardContent>
+          <BriefingContentEditor 
+            content={briefingContent}
             editedContent={editedContent}
             setEditedContent={setEditedContent}
-            enhancementText={enhancementText}
             isGenerating={isGenerating}
-            isSaving={isSaving}
-            handleSave={handleSave}
-            handleGenerateBriefing={handleGenerateBriefing}
+            progress={progress}
           />
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+        
+        <CardFooter className="flex justify-between">
+          <div>
+            {briefingContent && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleSave(false)}
+                disabled={isSaving || isGenerating}
+              >
+                {isSaving ? "Saving..." : "Save Draft"}
+              </Button>
+            )}
+          </div>
+          
+          <div className="flex gap-2">
+            {briefingContent && !isFinalBriefing && (
+              <Button 
+                variant="default"
+                size="sm"
+                onClick={() => handleSave(true)}
+                disabled={isSaving || isGenerating}
+                title="Mark as final"
+              >
+                {isSaving ? "Saving..." : "Finalize Briefing"}
+              </Button>
+            )}
+            
+            <Button
+              variant={briefingContent ? "outline" : "default"}
+              size="sm"
+              onClick={handleRegenerate}
+              disabled={isGenerating}
+            >
+              {isGenerating ? "Generating..." : briefingContent ? "Regenerate" : "Generate Briefing"}
+            </Button>
+          </div>
+        </CardFooter>
+      </Card>
+      
+      <BriefingAIEnhancer 
+        enhancementText={enhancementText}
+        setEnhancementText={setEnhancementText}
+      />
+    </div>
   );
-}
+};

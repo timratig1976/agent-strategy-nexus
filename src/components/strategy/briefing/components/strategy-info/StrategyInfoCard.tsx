@@ -1,8 +1,6 @@
 
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Globe } from "lucide-react";
 import { StrategyInfoCardProps } from "./types";
 import StrategyForm from "./StrategyForm";
 import { useCrawlUrl } from "./hooks/useCrawlUrl";
@@ -55,20 +53,7 @@ const StrategyInfoCard: React.FC<StrategyInfoCardProps> = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Strategy Information</span>
-          {!showCrawler && localFormValues.websiteUrl && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setShowCrawler(true)}
-              className="flex items-center gap-1"
-            >
-              <Globe className="h-4 w-4" />
-              <span>Crawl Website</span>
-            </Button>
-          )}
-        </CardTitle>
+        <CardTitle>Strategy Information</CardTitle>
       </CardHeader>
       <CardContent>
         <StrategyForm

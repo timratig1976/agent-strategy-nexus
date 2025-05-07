@@ -61,7 +61,7 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
           setProductPreviewResults(data);
         }
         
-        // Save crawl results to the database
+        // Save crawl results to the database but don't modify additional info
         const { error: saveError } = await supabase.rpc(
           'upsert_strategy_metadata',
           {
@@ -72,11 +72,7 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
             product_description_param: urlType === 'productUrl' ? 
               (data.summary || formValues.productDescription) : formValues.productDescription,
             product_url_param: urlType === 'productUrl' ? url : formValues.productUrl,
-            additional_info_param: formValues.additionalInfo + 
-              (formValues.additionalInfo ? '\n\n' : '') + 
-              `Crawl results for ${urlType === 'websiteUrl' ? 'website' : 'product'} URL (${new Date().toLocaleString()}):\n` +
-              `Keywords: ${(data.keywordsFound || []).join(', ')}\n` +
-              `Technologies: ${(data.technologiesDetected || []).join(', ')}`
+            additional_info_param: formValues.additionalInfo
           }
         );
         
@@ -96,12 +92,7 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
           return {
             success: true,
             data,
-            urlType,
-            additionalInfo: formValues.additionalInfo + 
-              (formValues.additionalInfo ? '\n\n' : '') + 
-              `Crawl results for ${urlType === 'websiteUrl' ? 'website' : 'product'} URL (${new Date().toLocaleString()}):\n` +
-              `Keywords: ${(data.keywordsFound || []).join(', ')}\n` +
-              `Technologies: ${(data.technologiesDetected || []).join(', ')}`
+            urlType
           };
         }
       }

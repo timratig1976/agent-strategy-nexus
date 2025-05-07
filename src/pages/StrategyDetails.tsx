@@ -10,6 +10,7 @@ import StrategyHeader from "@/components/strategy/StrategyHeader";
 import LoadingStrategy from "@/components/strategy/loading/LoadingStrategy";
 import StrategyNotFound from "@/components/strategy/StrategyNotFound";
 import StrategyBriefing from "@/components/strategy/briefing";
+import { PersonaDevelopment } from "@/components/strategy/personas";
 
 // Import custom hooks and utilities
 import useStrategyData from "@/hooks/useStrategyData";
@@ -59,6 +60,11 @@ const StrategyDetails = () => {
     return <StrategyNotFound />;
   }
 
+  // Determine the final briefing result to pass to the persona page
+  const finalBriefing = agentResults?.find(result => 
+    result.metadata?.is_final === true && (!result.metadata?.type || result.metadata?.type === 'briefing')
+  ) || null;
+
   return (
     <>
       <NavBar />
@@ -75,10 +81,20 @@ const StrategyDetails = () => {
           <p className="text-gray-700">{strategy.description}</p>
         </div>
         
-        <StrategyBriefing 
-          strategy={strategy} 
-          agentResults={agentResults || []} 
-        />
+        {strategy.state === 'briefing' && (
+          <StrategyBriefing 
+            strategy={strategy} 
+            agentResults={agentResults || []} 
+          />
+        )}
+        
+        {strategy.state === 'persona' && (
+          <PersonaDevelopment 
+            strategy={strategy}
+            agentResults={agentResults || []}
+            briefingAgentResult={finalBriefing}
+          />
+        )}
       </div>
     </>
   );
