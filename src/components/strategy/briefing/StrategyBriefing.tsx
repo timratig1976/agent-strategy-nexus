@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +17,8 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
 }) => {
   const [showCrawler, setShowCrawler] = useState<boolean>(false);
   const [crawlResults, setCrawlResults] = useState<WebsiteCrawlResult | undefined>();
+  
+  // Initialize with strategy values (these fields exist in both Strategy and StrategyFormValues)
   const [formValues, setFormValues] = useState<StrategyFormValues>({
     name: strategy.name,
     description: strategy.description || '',
@@ -70,7 +73,26 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
         }));
       } else {
         console.log("No metadata found or empty array returned");
-        // If no metadata found, we're already using the strategy values (initialized in useState)
+        
+        // Extract any relevant fields from the strategy object if they exist in database
+        // These might be available from the strategies table directly
+        const strategyData = await supabase
+          .from('strategies')
+          .select('company_name, website_url, product_description, product_url, additional_info')
+          .eq('id', strategy.id)
+          .single();
+          
+        if (!strategyData.error && strategyData.data) {
+          console.log("Found strategy data in strategies table:", strategyData.data);
+          setFormValues(prevFormValues => ({
+            ...prevFormValues,
+            companyName: strategyData.data.company_name || prevFormValues.companyName || '',
+            websiteUrl: strategyData.data.website_url || prevFormValues.websiteUrl || '',
+            productDescription: strategyData.data.product_description || prevFormValues.productDescription || '',
+            productUrl: strategyData.data.product_url || prevFormValues.productUrl || '',
+            additionalInfo: strategyData.data.additional_info || prevFormValues.additionalInfo || ''
+          }));
+        }
       }
     } catch (error) {
       console.error("Error fetching strategy metadata:", error);
