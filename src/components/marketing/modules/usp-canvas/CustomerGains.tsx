@@ -6,17 +6,18 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { CustomerGain } from './types';
-import { Trash2, Plus, GripVertical, CheckSquare, Square } from "lucide-react";
+import { Trash2, Plus, GripVertical, CheckSquare, Square, User, Bot } from "lucide-react";
 
 interface CustomerGainsProps {
   gains: CustomerGain[];
-  onAdd: (content: string, importance: 'low' | 'medium' | 'high') => void;
+  onAdd: (content: string, importance: 'low' | 'medium' | 'high', isAIGenerated?: boolean) => void;
   onUpdate: (id: string, content: string, importance: 'low' | 'medium' | 'high') => void;
   onDelete: (id: string) => void;
   onReorder?: (reorderedGains: CustomerGain[]) => void;
+  formPosition?: 'top' | 'bottom';
 }
 
-const CustomerGains = ({ gains, onAdd, onUpdate, onDelete, onReorder }: CustomerGainsProps) => {
+const CustomerGains = ({ gains, onAdd, onUpdate, onDelete, onReorder, formPosition = 'bottom' }: CustomerGainsProps) => {
   const [newGainContent, setNewGainContent] = useState('');
   const [newGainImportance, setNewGainImportance] = useState<'low' | 'medium' | 'high'>('medium');
   const [selectedGains, setSelectedGains] = useState<string[]>([]);
@@ -25,7 +26,7 @@ const CustomerGains = ({ gains, onAdd, onUpdate, onDelete, onReorder }: Customer
 
   const handleAddGain = () => {
     if (newGainContent.trim()) {
-      onAdd(newGainContent.trim(), newGainImportance);
+      onAdd(newGainContent.trim(), newGainImportance, false);
       setNewGainContent('');
       setNewGainImportance('medium');
     }
@@ -78,6 +79,50 @@ const CustomerGains = ({ gains, onAdd, onUpdate, onDelete, onReorder }: Customer
     setDraggedItem(null);
   };
 
+  // Form to add new gains
+  const AddGainForm = () => (
+    <div className="p-4 border rounded-md space-y-4 mb-4">
+      <div>
+        <Input 
+          value={newGainContent}
+          onChange={(e) => setNewGainContent(e.target.value)}
+          placeholder="Add a new customer gain..."
+        />
+      </div>
+      
+      <div>
+        <Label className="text-sm font-medium mb-2">Gain Importance:</Label>
+        <RadioGroup 
+          value={newGainImportance} 
+          onValueChange={(value) => setNewGainImportance(value as 'low' | 'medium' | 'high')}
+          className="flex space-x-4 mt-1"
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="low" id="new-gain-low" />
+            <Label htmlFor="new-gain-low" className="text-sm">Low</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="medium" id="new-gain-medium" />
+            <Label htmlFor="new-gain-medium" className="text-sm">Medium</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="high" id="new-gain-high" />
+            <Label htmlFor="new-gain-high" className="text-sm">High</Label>
+          </div>
+        </RadioGroup>
+      </div>
+      
+      <div className="text-right">
+        <Button 
+          onClick={handleAddGain}
+          disabled={!newGainContent.trim()}
+        >
+          <Plus className="h-4 w-4 mr-1" /> Add Gain
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <div className="bg-green-50 p-4 rounded-lg">
@@ -88,6 +133,8 @@ const CustomerGains = ({ gains, onAdd, onUpdate, onDelete, onReorder }: Customer
           These include functional utility, social gains, positive emotions, and cost savings.
         </p>
       </div>
+
+      {formPosition === 'top' && <AddGainForm />}
 
       {gains.length > 0 && (
         <div className="flex justify-between items-center">
@@ -173,8 +220,10 @@ const CustomerGains = ({ gains, onAdd, onUpdate, onDelete, onReorder }: Customer
                 />
               </div>
               
-              {gain.isAIGenerated && (
-                <Badge variant="secondary" className="mr-2">AI</Badge>
+              {gain.isAIGenerated ? (
+                <Bot className="h-5 w-5 text-blue-500 mr-1" />
+              ) : (
+                <User className="h-5 w-5 text-gray-500 mr-1" />
               )}
               
               {!isSelectMode && (
@@ -192,46 +241,7 @@ const CustomerGains = ({ gains, onAdd, onUpdate, onDelete, onReorder }: Customer
         ))}
       </div>
 
-      <div className="p-4 border rounded-md space-y-4">
-        <div>
-          <Input 
-            value={newGainContent}
-            onChange={(e) => setNewGainContent(e.target.value)}
-            placeholder="Add a new customer gain..."
-          />
-        </div>
-        
-        <div>
-          <Label className="text-sm font-medium mb-2">Gain Importance:</Label>
-          <RadioGroup 
-            value={newGainImportance} 
-            onValueChange={(value) => setNewGainImportance(value as 'low' | 'medium' | 'high')}
-            className="flex space-x-4 mt-1"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="low" id="new-gain-low" />
-              <Label htmlFor="new-gain-low" className="text-sm">Low</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="medium" id="new-gain-medium" />
-              <Label htmlFor="new-gain-medium" className="text-sm">Medium</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="high" id="new-gain-high" />
-              <Label htmlFor="new-gain-high" className="text-sm">High</Label>
-            </div>
-          </RadioGroup>
-        </div>
-        
-        <div className="text-right">
-          <Button 
-            onClick={handleAddGain}
-            disabled={!newGainContent.trim()}
-          >
-            <Plus className="h-4 w-4 mr-1" /> Add Gain
-          </Button>
-        </div>
-      </div>
+      {formPosition === 'bottom' && <AddGainForm />}
     </div>
   );
 };

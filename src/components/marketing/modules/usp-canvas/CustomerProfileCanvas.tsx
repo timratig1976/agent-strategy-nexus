@@ -8,18 +8,19 @@ import { UspCanvas, CustomerJob, CustomerPain, CustomerGain } from "./types";
 
 interface CustomerProfileCanvasProps {
   canvas: UspCanvas;
-  addCustomerJob: (content: string, priority: 'low' | 'medium' | 'high') => void;
+  addCustomerJob: (content: string, priority: 'low' | 'medium' | 'high', isAIGenerated?: boolean) => void;
   updateCustomerJob: (id: string, content: string, priority: 'low' | 'medium' | 'high') => void;
   deleteCustomerJob: (id: string) => void;
   reorderCustomerJobs?: (reorderedJobs: CustomerJob[]) => void;
-  addCustomerPain: (content: string, severity: 'low' | 'medium' | 'high') => void;
+  addCustomerPain: (content: string, severity: 'low' | 'medium' | 'high', isAIGenerated?: boolean) => void;
   updateCustomerPain: (id: string, content: string, severity: 'low' | 'medium' | 'high') => void;
   deleteCustomerPain: (id: string) => void;
   reorderCustomerPains?: (reorderedPains: CustomerPain[]) => void;
-  addCustomerGain: (content: string, importance: 'low' | 'medium' | 'high') => void;
+  addCustomerGain: (content: string, importance: 'low' | 'medium' | 'high', isAIGenerated?: boolean) => void;
   updateCustomerGain: (id: string, content: string, importance: 'low' | 'medium' | 'high') => void;
   deleteCustomerGain: (id: string) => void;
   reorderCustomerGains?: (reorderedGains: CustomerGain[]) => void;
+  formPosition?: 'top' | 'bottom';
 }
 
 const CustomerProfileCanvas = ({
@@ -35,7 +36,8 @@ const CustomerProfileCanvas = ({
   addCustomerGain,
   updateCustomerGain,
   deleteCustomerGain,
-  reorderCustomerGains
+  reorderCustomerGains,
+  formPosition = 'bottom'
 }: CustomerProfileCanvasProps) => {
   return (
     <div>
@@ -59,6 +61,7 @@ const CustomerProfileCanvas = ({
             onUpdate={updateCustomerJob}
             onDelete={deleteCustomerJob}
             onReorder={reorderCustomerJobs}
+            formPosition={formPosition}
           />
         </TabsContent>
         
@@ -69,6 +72,7 @@ const CustomerProfileCanvas = ({
             onUpdate={updateCustomerPain}
             onDelete={deleteCustomerPain}
             onReorder={reorderCustomerPains}
+            formPosition={formPosition}
           />
         </TabsContent>
         
@@ -79,6 +83,7 @@ const CustomerProfileCanvas = ({
             onUpdate={updateCustomerGain}
             onDelete={deleteCustomerGain}
             onReorder={reorderCustomerGains}
+            formPosition={formPosition}
           />
         </TabsContent>
       </Tabs>

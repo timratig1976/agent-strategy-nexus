@@ -6,17 +6,18 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { CustomerJob } from './types';
-import { Trash2, Plus, ArrowUpDown, CheckSquare, Square, GripVertical } from "lucide-react";
+import { Trash2, Plus, ArrowUpDown, CheckSquare, Square, GripVertical, User, Bot } from "lucide-react";
 
 interface CustomerJobsProps {
   jobs: CustomerJob[];
-  onAdd: (content: string, priority: 'low' | 'medium' | 'high') => void;
+  onAdd: (content: string, priority: 'low' | 'medium' | 'high', isAIGenerated?: boolean) => void;
   onUpdate: (id: string, content: string, priority: 'low' | 'medium' | 'high') => void;
   onDelete: (id: string) => void;
   onReorder?: (reorderedJobs: CustomerJob[]) => void;
+  formPosition?: 'top' | 'bottom';
 }
 
-const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete, onReorder }: CustomerJobsProps) => {
+const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete, onReorder, formPosition = 'bottom' }: CustomerJobsProps) => {
   const [newJobContent, setNewJobContent] = useState('');
   const [newJobPriority, setNewJobPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [sortOrder, setSortOrder] = useState<'default' | 'priority-high' | 'priority-low'>('default');
@@ -26,7 +27,7 @@ const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete, onReorder }: CustomerJo
 
   const handleAddJob = () => {
     if (newJobContent.trim()) {
-      onAdd(newJobContent.trim(), newJobPriority);
+      onAdd(newJobContent.trim(), newJobPriority, false);
       setNewJobContent('');
       setNewJobPriority('medium');
     }
@@ -102,6 +103,50 @@ const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete, onReorder }: CustomerJo
     setDraggedItem(null);
   };
 
+  // Form to add new jobs
+  const AddJobForm = () => (
+    <div className="p-4 border rounded-md space-y-4 mb-4">
+      <div>
+        <Input 
+          value={newJobContent}
+          onChange={(e) => setNewJobContent(e.target.value)}
+          placeholder="Add a new customer job..."
+        />
+      </div>
+      
+      <div>
+        <Label className="text-sm font-medium mb-2">Priority Level:</Label>
+        <RadioGroup 
+          value={newJobPriority} 
+          onValueChange={(value) => setNewJobPriority(value as 'low' | 'medium' | 'high')}
+          className="flex space-x-4 mt-1"
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="low" id="new-job-low" />
+            <Label htmlFor="new-job-low" className="text-sm">Low</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="medium" id="new-job-medium" />
+            <Label htmlFor="new-job-medium" className="text-sm">Medium</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="high" id="new-job-high" />
+            <Label htmlFor="new-job-high" className="text-sm">High</Label>
+          </div>
+        </RadioGroup>
+      </div>
+      
+      <div className="text-right">
+        <Button 
+          onClick={handleAddJob}
+          disabled={!newJobContent.trim()}
+        >
+          <Plus className="h-4 w-4 mr-1" /> Add Job
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <div className="bg-blue-50 p-4 rounded-lg">
@@ -111,6 +156,8 @@ const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete, onReorder }: CustomerJo
           These could be tasks they're trying to complete, problems they're trying to solve, or needs they're trying to satisfy.
         </p>
       </div>
+
+      {formPosition === 'top' && <AddJobForm />}
 
       {sortedJobs.length > 0 && (
         <div className="flex justify-between items-center">
@@ -206,8 +253,10 @@ const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete, onReorder }: CustomerJo
                 />
               </div>
               
-              {job.isAIGenerated && (
-                <Badge variant="secondary" className="mr-2">AI</Badge>
+              {job.isAIGenerated ? (
+                <Bot className="h-5 w-5 text-blue-500 mr-1" />
+              ) : (
+                <User className="h-5 w-5 text-gray-500 mr-1" />
               )}
               
               {!isSelectMode && (
@@ -225,46 +274,7 @@ const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete, onReorder }: CustomerJo
         ))}
       </div>
 
-      <div className="p-4 border rounded-md space-y-4">
-        <div>
-          <Input 
-            value={newJobContent}
-            onChange={(e) => setNewJobContent(e.target.value)}
-            placeholder="Add a new customer job..."
-          />
-        </div>
-        
-        <div>
-          <Label className="text-sm font-medium mb-2">Priority Level:</Label>
-          <RadioGroup 
-            value={newJobPriority} 
-            onValueChange={(value) => setNewJobPriority(value as 'low' | 'medium' | 'high')}
-            className="flex space-x-4 mt-1"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="low" id="new-job-low" />
-              <Label htmlFor="new-job-low" className="text-sm">Low</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="medium" id="new-job-medium" />
-              <Label htmlFor="new-job-medium" className="text-sm">Medium</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="high" id="new-job-high" />
-              <Label htmlFor="new-job-high" className="text-sm">High</Label>
-            </div>
-          </RadioGroup>
-        </div>
-        
-        <div className="text-right">
-          <Button 
-            onClick={handleAddJob}
-            disabled={!newJobContent.trim()}
-          >
-            <Plus className="h-4 w-4 mr-1" /> Add Job
-          </Button>
-        </div>
-      </div>
+      {formPosition === 'bottom' && <AddJobForm />}
     </div>
   );
 };

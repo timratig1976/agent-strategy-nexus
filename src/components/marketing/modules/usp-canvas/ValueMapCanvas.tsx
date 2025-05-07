@@ -17,6 +17,7 @@ interface ValueMapCanvasProps {
   addGainCreator: (content: string, relatedGainIds: string[]) => void;
   updateGainCreator: (id: string, content: string, relatedGainIds: string[]) => void;
   deleteGainCreator: (id: string) => void;
+  formPosition?: 'top' | 'bottom';
 }
 
 const ValueMapCanvas = ({
@@ -29,7 +30,8 @@ const ValueMapCanvas = ({
   deletePainReliever,
   addGainCreator,
   updateGainCreator,
-  deleteGainCreator
+  deleteGainCreator,
+  formPosition = 'bottom'
 }: ValueMapCanvasProps) => {
   return (
     <div>
@@ -53,6 +55,7 @@ const ValueMapCanvas = ({
             onAdd={addProductService}
             onUpdate={updateProductService}
             onDelete={deleteProductService}
+            formPosition={formPosition}
           />
         </TabsContent>
         
@@ -63,6 +66,7 @@ const ValueMapCanvas = ({
             onAdd={addPainReliever}
             onUpdate={updatePainReliever}
             onDelete={deletePainReliever}
+            formPosition={formPosition}
           />
         </TabsContent>
         
@@ -73,6 +77,7 @@ const ValueMapCanvas = ({
             onAdd={addGainCreator}
             onUpdate={updateGainCreator}
             onDelete={deleteGainCreator}
+            formPosition={formPosition}
           />
         </TabsContent>
       </Tabs>

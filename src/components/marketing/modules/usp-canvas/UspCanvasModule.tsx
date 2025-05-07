@@ -6,6 +6,7 @@ import UspCanvasOverview from "./UspCanvasOverview";
 import CustomerProfileCanvas from "./CustomerProfileCanvas";
 import ValueMapCanvas from "./ValueMapCanvas";
 import { useUspCanvas } from "./useUspCanvas";
+import UspCanvasAIGenerator from "./UspCanvasAIGenerator";
 
 interface UspCanvasModuleProps {
   strategyId: string;
@@ -44,6 +45,25 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({ strategyId, briefingC
     reorderCustomerGains
   } = useUspCanvas();
 
+  // Handle adding AI-generated elements
+  const handleAddAIJobs = (jobs) => {
+    jobs.forEach(job => {
+      addCustomerJob(job.content, job.priority, true);
+    });
+  };
+
+  const handleAddAIPains = (pains) => {
+    pains.forEach(pain => {
+      addCustomerPain(pain.content, pain.severity, true);
+    });
+  };
+
+  const handleAddAIGains = (gains) => {
+    gains.forEach(gain => {
+      addCustomerGain(gain.content, gain.importance, true);
+    });
+  };
+
   return (
     <div className="w-full">
       <h2 className="text-2xl font-bold">Unique Selling Proposition Canvas</h2>
@@ -55,6 +75,7 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({ strategyId, briefingC
         <TabsList className="w-full">
           <TabsTrigger value="canvas">Canvas</TabsTrigger>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="ai-generator">AI Generator</TabsTrigger>
         </TabsList>
         
         <TabsContent value="canvas" className="mt-6 space-y-10">
@@ -74,6 +95,7 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({ strategyId, briefingC
                 updateCustomerGain={updateCustomerGain}
                 deleteCustomerGain={deleteCustomerGain}
                 reorderCustomerGains={reorderCustomerGains}
+                formPosition="top"
               />
             </div>
             
@@ -89,6 +111,7 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({ strategyId, briefingC
                 addGainCreator={addGainCreator}
                 updateGainCreator={updateGainCreator}
                 deleteGainCreator={deleteGainCreator}
+                formPosition="top"
               />
             </div>
           </div>
@@ -114,6 +137,16 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({ strategyId, briefingC
           <UspCanvasOverview 
             canvas={canvas} 
             briefingContent={briefingContent}
+          />
+        </TabsContent>
+
+        <TabsContent value="ai-generator" className="mt-6">
+          <UspCanvasAIGenerator
+            strategyId={strategyId}
+            briefingContent={briefingContent}
+            onAddJobs={handleAddAIJobs}
+            onAddPains={handleAddAIPains}
+            onAddGains={handleAddAIGains}
           />
         </TabsContent>
       </Tabs>
