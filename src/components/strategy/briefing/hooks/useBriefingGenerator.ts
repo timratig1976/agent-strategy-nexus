@@ -11,7 +11,7 @@ export const useBriefingGenerator = (strategyId: string) => {
   const [progress, setProgress] = useState<number>(0);
 
   // Function to generate AI briefing with progress updates
-  const generateBriefing = async (formValues: StrategyFormValues) => {
+  const generateBriefing = async (formValues: StrategyFormValues): Promise<void> => {
     try {
       setIsGenerating(true);
       setProgress(10);
