@@ -47,15 +47,15 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   
   const fetchStrategyMetadata = async () => {
     try {
-      const { data, error } = await supabase.rpc<StrategyMetadataRow[], GetStrategyMetadataParams>(
+      const { data, error } = await supabase.rpc(
         'get_strategy_metadata',
         { strategy_id_param: strategy.id }
       );
         
       if (error) throw error;
       
-      if (data && data.length > 0) {
-        const metadata = data[0];
+      if (data && Array.isArray(data) && data.length > 0) {
+        const metadata = data[0] as StrategyMetadataRow;
         setFormValues(prevFormValues => ({
           ...prevFormValues,
           companyName: metadata.company_name || '',
@@ -74,7 +74,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   // Function to update strategy metadata
   const saveStrategyMetadata = async (updatedValues: StrategyFormValues): Promise<boolean> => {
     try {
-      const { error } = await supabase.rpc<void, UpsertStrategyMetadataParams>(
+      const { error } = await supabase.rpc(
         'upsert_strategy_metadata',
         {
           strategy_id_param: strategy.id,
