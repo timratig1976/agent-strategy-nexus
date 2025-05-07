@@ -19,3 +19,12 @@ export interface BriefingResultCardProps {
   generateBriefing: () => Promise<void>;
   saveAgentResult: (result: AgentResult) => Promise<boolean>;
 }
+
+export interface BriefingResultProps {
+  latestBriefing: AgentResult | null;
+  isGenerating: boolean;
+  generateBriefing: () => Promise<void>;
+  saveAgentResult: (result: AgentResult) => Promise<boolean>;
+  briefingHistory: AgentResult[];
+  setBriefingHistory: (history: AgentResult[]) => void;
+}
