@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface AIServiceResponse<T> {
@@ -16,6 +17,19 @@ export interface AIPrompt {
   userPrompt: string;
   createdAt: string;
   updatedAt: string;
+}
+
+// Add the missing StrategyMetadata interface
+export interface StrategyMetadata {
+  id: string;
+  strategy_id: string;
+  company_name: string | null;
+  website_url: string | null;
+  product_description: string | null;
+  product_url: string | null;
+  additional_info: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export class MarketingAIService {
