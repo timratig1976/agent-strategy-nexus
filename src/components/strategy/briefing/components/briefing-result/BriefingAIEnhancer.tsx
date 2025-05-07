@@ -10,8 +10,8 @@ interface BriefingAIEnhancerProps {
   setEnhancementText: (text: string) => void;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
-  onSubmit?: () => void; // Added onSubmit as an optional prop
-  isGenerating?: boolean; // Added isGenerating as an optional prop
+  onSubmit?: () => void;
+  isGenerating?: boolean;
 }
 
 const BriefingAIEnhancer: React.FC<BriefingAIEnhancerProps> = ({
@@ -76,7 +76,7 @@ const BriefingAIEnhancer: React.FC<BriefingAIEnhancerProps> = ({
                 onClick={onSubmit}
                 disabled={isGenerating || !enhancementText.trim()}
               >
-                {isGenerating ? "Processing..." : "Apply Instructions"}
+                {isGenerating ? "Processing..." : "Generate"}
               </Button>
             )}
           </div>

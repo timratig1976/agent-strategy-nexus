@@ -99,7 +99,18 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
       </CardHeader>
       
       <CardContent className="flex-grow flex flex-col">
-        <div className="flex-grow">
+        {/* Special Instructions first */}
+        <BriefingAIEnhancer 
+          enhancementText={enhancementText} 
+          setEnhancementText={setEnhancementText}
+          isExpanded={enhancerExpanded}
+          onToggleExpand={() => setEnhancerExpanded(!enhancerExpanded)}
+          onSubmit={handleGenerateBriefing}
+          isGenerating={isGenerating}
+        />
+        
+        {/* Content Editor */}
+        <div className="flex-grow mt-4">
           <BriefingContentEditor 
             content={latestBriefing?.content || ""} 
             editedContent={editedContent}
@@ -117,33 +128,22 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
         )}
       </CardContent>
       
-      <CardFooter className="flex flex-col gap-4">
-        <BriefingAIEnhancer 
-          enhancementText={enhancementText} 
-          setEnhancementText={setEnhancementText}
-          isExpanded={enhancerExpanded}
-          onToggleExpand={() => setEnhancerExpanded(!enhancerExpanded)}
-          onSubmit={handleGenerateBriefing}
-          isGenerating={isGenerating}
-        />
-        
-        <div className="flex gap-2 w-full">
-          <Button 
-            variant="outline" 
-            onClick={() => handleSaveBriefing(false)} 
-            disabled={isGenerating || !editedContent.trim()} 
-            className="flex-1"
-          >
-            {saveButtonText}
-          </Button>
-          <Button 
-            onClick={() => handleSaveBriefing(true)} 
-            disabled={isGenerating || !editedContent.trim()} 
-            className="flex-1"
-          >
-            {saveFinalButtonText}
-          </Button>
-        </div>
+      <CardFooter className="flex gap-2 w-full">
+        <Button 
+          variant="outline" 
+          onClick={() => handleSaveBriefing(false)} 
+          disabled={isGenerating || !editedContent.trim()} 
+          className="flex-1"
+        >
+          {saveButtonText}
+        </Button>
+        <Button 
+          onClick={() => handleSaveBriefing(true)} 
+          disabled={isGenerating || !editedContent.trim()} 
+          className="flex-1"
+        >
+          {saveFinalButtonText}
+        </Button>
       </CardFooter>
     </Card>
   );

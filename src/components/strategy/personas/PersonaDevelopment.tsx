@@ -25,6 +25,7 @@ const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({
   const [progress, setProgress] = useState(0);
   const [aiDebugInfo, setAiDebugInfo] = useState<any>(null);
   const [editedContent, setEditedContent] = useState("");
+  const [enhancementText, setEnhancementText] = useState("");
   
   // Use our custom hook for saving results
   const { saveAgentResult: saveAgentResultToDb } = useAgentResultSaver();
@@ -84,7 +85,7 @@ const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({
       
       if (aiError) {
         clearInterval(progressInterval);
-        throw new Error(aiError);
+        throw new Error(aiError.message);
       }
       
       if (aiResponse && aiResponse.result) {
