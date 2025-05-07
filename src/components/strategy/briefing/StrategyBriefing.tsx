@@ -18,7 +18,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   const [showCrawler, setShowCrawler] = useState<boolean>(false);
   const [crawlResults, setCrawlResults] = useState<WebsiteCrawlResult | undefined>();
   
-  // Initialize with strategy values (these fields exist in both Strategy and StrategyFormValues)
+  // Initialize form values using strategy data
   const [formValues, setFormValues] = useState<StrategyFormValues>({
     name: strategy.name,
     description: strategy.description || '',
@@ -45,7 +45,26 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
     try {
       console.log("Fetching strategy metadata for ID:", strategy.id);
       
-      // Use RPC function to fetch strategy metadata
+      // First check if the strategy has direct properties we can use
+      const strategyData = await supabase
+        .from('strategies')
+        .select('company_name, website_url, product_description, product_url, additional_info')
+        .eq('id', strategy.id)
+        .single();
+        
+      if (!strategyData.error && strategyData.data) {
+        console.log("Found strategy data in strategies table:", strategyData.data);
+        setFormValues(prevFormValues => ({
+          ...prevFormValues,
+          companyName: strategyData.data.company_name || '',
+          websiteUrl: strategyData.data.website_url || '',
+          productDescription: strategyData.data.product_description || '',
+          productUrl: strategyData.data.product_url || '',
+          additionalInfo: strategyData.data.additional_info || ''
+        }));
+      }
+      
+      // Then try to get metadata from the strategy_metadata table
       const { data, error } = await supabase.rpc(
         'get_strategy_metadata',
         { strategy_id_param: strategy.id }
@@ -63,6 +82,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
         const metadata = data[0];
         console.log("Setting form values with metadata:", metadata);
         
+        // Metadata takes precedence over strategy data
         setFormValues(prevFormValues => ({
           ...prevFormValues,
           companyName: metadata.company_name || prevFormValues.companyName || '',
@@ -71,28 +91,6 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
           productUrl: metadata.product_url || prevFormValues.productUrl || '',
           additionalInfo: metadata.additional_info || prevFormValues.additionalInfo || ''
         }));
-      } else {
-        console.log("No metadata found or empty array returned");
-        
-        // Extract any relevant fields from the strategy object if they exist in database
-        // These might be available from the strategies table directly
-        const strategyData = await supabase
-          .from('strategies')
-          .select('company_name, website_url, product_description, product_url, additional_info')
-          .eq('id', strategy.id)
-          .single();
-          
-        if (!strategyData.error && strategyData.data) {
-          console.log("Found strategy data in strategies table:", strategyData.data);
-          setFormValues(prevFormValues => ({
-            ...prevFormValues,
-            companyName: strategyData.data.company_name || prevFormValues.companyName || '',
-            websiteUrl: strategyData.data.website_url || prevFormValues.websiteUrl || '',
-            productDescription: strategyData.data.product_description || prevFormValues.productDescription || '',
-            productUrl: strategyData.data.product_url || prevFormValues.productUrl || '',
-            additionalInfo: strategyData.data.additional_info || prevFormValues.additionalInfo || ''
-          }));
-        }
       }
     } catch (error) {
       console.error("Error fetching strategy metadata:", error);

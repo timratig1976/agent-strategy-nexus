@@ -24,7 +24,7 @@ export interface StrategyMetadata {
   updated_at: string;
 }
 
-// Define database type extensions for RPC functions if using Database type
+// Define database type extensions for RPC functions
 declare module '@supabase/supabase-js' {
   interface Database {
     public: {
