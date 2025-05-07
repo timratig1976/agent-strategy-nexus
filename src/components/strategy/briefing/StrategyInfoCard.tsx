@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Globe, Save } from "lucide-react";
@@ -17,6 +17,11 @@ const StrategyInfoCard: React.FC<StrategyInfoCardProps> = ({
 }) => {
   const [localFormValues, setLocalFormValues] = useState(formValues);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Update local form values when formValues prop changes
+  useEffect(() => {
+    setLocalFormValues(formValues);
+  }, [formValues]);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -61,7 +66,7 @@ const StrategyInfoCard: React.FC<StrategyInfoCardProps> = ({
             <Input 
               id="companyName"
               name="companyName"
-              value={localFormValues.companyName}
+              value={localFormValues.companyName || ''}
               onChange={handleInputChange}
               placeholder="Enter company name"
             />
@@ -72,7 +77,7 @@ const StrategyInfoCard: React.FC<StrategyInfoCardProps> = ({
             <Input 
               id="websiteUrl"
               name="websiteUrl"
-              value={localFormValues.websiteUrl}
+              value={localFormValues.websiteUrl || ''}
               onChange={handleInputChange}
               placeholder="https://example.com"
             />
@@ -83,7 +88,7 @@ const StrategyInfoCard: React.FC<StrategyInfoCardProps> = ({
             <Textarea 
               id="productDescription"
               name="productDescription"
-              value={localFormValues.productDescription}
+              value={localFormValues.productDescription || ''}
               onChange={handleInputChange}
               placeholder="Describe your product or service"
               rows={3}
@@ -95,7 +100,7 @@ const StrategyInfoCard: React.FC<StrategyInfoCardProps> = ({
             <Input 
               id="productUrl"
               name="productUrl"
-              value={localFormValues.productUrl}
+              value={localFormValues.productUrl || ''}
               onChange={handleInputChange}
               placeholder="https://example.com/product"
             />
@@ -106,7 +111,7 @@ const StrategyInfoCard: React.FC<StrategyInfoCardProps> = ({
             <Textarea 
               id="additionalInfo"
               name="additionalInfo"
-              value={localFormValues.additionalInfo}
+              value={localFormValues.additionalInfo || ''}
               onChange={handleInputChange}
               placeholder="Any other relevant information"
               rows={3}

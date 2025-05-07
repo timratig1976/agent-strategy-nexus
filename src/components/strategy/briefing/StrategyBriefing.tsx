@@ -46,7 +46,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
       console.log("Fetching strategy metadata for ID:", strategy.id);
       
       // First check if the strategy has direct properties we can use
-      const strategyData = await supabase
+      const { data: strategyData, error: strategyError } = await supabase
         .from('strategies')
         .select('company_name, website_url, product_description, product_url, additional_info')
         .eq('id', strategy.id)
@@ -60,13 +60,13 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
       let additionalInfo = '';
       
       // Set values from strategies table if available
-      if (!strategyData.error && strategyData.data) {
-        console.log("Found strategy data in strategies table:", strategyData.data);
-        companyName = strategyData.data.company_name || '';
-        websiteUrl = strategyData.data.website_url || '';
-        productDescription = strategyData.data.product_description || '';
-        productUrl = strategyData.data.product_url || '';
-        additionalInfo = strategyData.data.additional_info || '';
+      if (!strategyError && strategyData) {
+        console.log("Found strategy data in strategies table:", strategyData);
+        companyName = strategyData.company_name || '';
+        websiteUrl = strategyData.website_url || '';
+        productDescription = strategyData.product_description || '';
+        productUrl = strategyData.product_url || '';
+        additionalInfo = strategyData.additional_info || '';
       }
       
       // Then try to get metadata from the strategy_metadata table via RPC
@@ -78,22 +78,30 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
       if (error) {
         console.error("RPC error:", error);
         toast.error("Error loading strategy information");
-      } else {
+      } else if (data && Array.isArray(data) && data.length > 0) {
         console.log("Metadata response:", data);
         
         // Use metadata values if available (they override strategy table values)
-        if (data && Array.isArray(data) && data.length > 0) {
-          const metadata = data[0];
-          console.log("Setting form values with metadata:", metadata);
-          
-          // Override values with metadata if they exist
-          companyName = metadata.company_name || companyName;
-          websiteUrl = metadata.website_url || websiteUrl;
-          productDescription = metadata.product_description || productDescription;
-          productUrl = metadata.product_url || productUrl;
-          additionalInfo = metadata.additional_info || additionalInfo;
-        }
+        const metadata = data[0];
+        console.log("Setting form values with metadata:", metadata);
+        
+        // Override values with metadata if they exist
+        if (metadata.company_name !== null) companyName = metadata.company_name;
+        if (metadata.website_url !== null) websiteUrl = metadata.website_url;
+        if (metadata.product_description !== null) productDescription = metadata.product_description;
+        if (metadata.product_url !== null) productUrl = metadata.product_url;
+        if (metadata.additional_info !== null) additionalInfo = metadata.additional_info;
       }
+      
+      console.log("Setting final form values:", {
+        name: strategy.name,
+        description: strategy.description || '',
+        companyName,
+        websiteUrl,
+        productDescription,
+        productUrl,
+        additionalInfo
+      });
       
       // Set all form values at once with the most up-to-date data
       setFormValues({
