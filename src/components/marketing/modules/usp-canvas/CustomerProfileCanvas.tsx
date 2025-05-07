@@ -4,19 +4,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CustomerJobs from "./CustomerJobs";
 import CustomerPains from "./CustomerPains";
 import CustomerGains from "./CustomerGains";
-import { UspCanvas } from "./types";
+import { UspCanvas, CustomerJob, CustomerPain, CustomerGain } from "./types";
 
 interface CustomerProfileCanvasProps {
   canvas: UspCanvas;
   addCustomerJob: (content: string, priority: 'low' | 'medium' | 'high') => void;
   updateCustomerJob: (id: string, content: string, priority: 'low' | 'medium' | 'high') => void;
   deleteCustomerJob: (id: string) => void;
+  reorderCustomerJobs?: (reorderedJobs: CustomerJob[]) => void;
   addCustomerPain: (content: string, severity: 'low' | 'medium' | 'high') => void;
   updateCustomerPain: (id: string, content: string, severity: 'low' | 'medium' | 'high') => void;
   deleteCustomerPain: (id: string) => void;
+  reorderCustomerPains?: (reorderedPains: CustomerPain[]) => void;
   addCustomerGain: (content: string, importance: 'low' | 'medium' | 'high') => void;
   updateCustomerGain: (id: string, content: string, importance: 'low' | 'medium' | 'high') => void;
   deleteCustomerGain: (id: string) => void;
+  reorderCustomerGains?: (reorderedGains: CustomerGain[]) => void;
 }
 
 const CustomerProfileCanvas = ({
@@ -24,12 +27,15 @@ const CustomerProfileCanvas = ({
   addCustomerJob,
   updateCustomerJob,
   deleteCustomerJob,
+  reorderCustomerJobs,
   addCustomerPain,
   updateCustomerPain,
   deleteCustomerPain,
+  reorderCustomerPains,
   addCustomerGain,
   updateCustomerGain,
-  deleteCustomerGain
+  deleteCustomerGain,
+  reorderCustomerGains
 }: CustomerProfileCanvasProps) => {
   return (
     <div>
@@ -52,6 +58,7 @@ const CustomerProfileCanvas = ({
             onAdd={addCustomerJob}
             onUpdate={updateCustomerJob}
             onDelete={deleteCustomerJob}
+            onReorder={reorderCustomerJobs}
           />
         </TabsContent>
         
@@ -61,6 +68,7 @@ const CustomerProfileCanvas = ({
             onAdd={addCustomerPain}
             onUpdate={updateCustomerPain}
             onDelete={deleteCustomerPain}
+            onReorder={reorderCustomerPains}
           />
         </TabsContent>
         
@@ -70,6 +78,7 @@ const CustomerProfileCanvas = ({
             onAdd={addCustomerGain}
             onUpdate={updateCustomerGain}
             onDelete={deleteCustomerGain}
+            onReorder={reorderCustomerGains}
           />
         </TabsContent>
       </Tabs>

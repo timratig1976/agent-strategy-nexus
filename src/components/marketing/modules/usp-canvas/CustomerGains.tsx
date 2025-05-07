@@ -4,19 +4,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { CustomerGain } from './types';
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, GripVertical, CheckSquare, Square } from "lucide-react";
 
 interface CustomerGainsProps {
   gains: CustomerGain[];
   onAdd: (content: string, importance: 'low' | 'medium' | 'high') => void;
   onUpdate: (id: string, content: string, importance: 'low' | 'medium' | 'high') => void;
   onDelete: (id: string) => void;
+  onReorder?: (reorderedGains: CustomerGain[]) => void;
 }
 
-const CustomerGains = ({ gains, onAdd, onUpdate, onDelete }: CustomerGainsProps) => {
+const CustomerGains = ({ gains, onAdd, onUpdate, onDelete, onReorder }: CustomerGainsProps) => {
   const [newGainContent, setNewGainContent] = useState('');
   const [newGainImportance, setNewGainImportance] = useState<'low' | 'medium' | 'high'>('medium');
+  const [selectedGains, setSelectedGains] = useState<string[]>([]);
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [draggedItem, setDraggedItem] = useState<null | string>(null);
 
   const handleAddGain = () => {
     if (newGainContent.trim()) {
@@ -24,6 +29,53 @@ const CustomerGains = ({ gains, onAdd, onUpdate, onDelete }: CustomerGainsProps)
       setNewGainContent('');
       setNewGainImportance('medium');
     }
+  };
+
+  const toggleSelectGain = (gainId: string) => {
+    if (selectedGains.includes(gainId)) {
+      setSelectedGains(selectedGains.filter(id => id !== gainId));
+    } else {
+      setSelectedGains([...selectedGains, gainId]);
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    selectedGains.forEach(id => onDelete(id));
+    setSelectedGains([]);
+    setIsSelectMode(false);
+  };
+
+  const toggleSelectMode = () => {
+    setIsSelectMode(!isSelectMode);
+    setSelectedGains([]);
+  };
+
+  const handleDragStart = (e: React.DragEvent, gainId: string) => {
+    setDraggedItem(gainId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    
+    if (draggedItem !== null && draggedItem !== targetId && onReorder) {
+      const currentGains = [...gains];
+      const draggedIndex = currentGains.findIndex(gain => gain.id === draggedItem);
+      const targetIndex = currentGains.findIndex(gain => gain.id === targetId);
+      
+      if (draggedIndex !== -1 && targetIndex !== -1) {
+        const [removed] = currentGains.splice(draggedIndex, 1);
+        currentGains.splice(targetIndex, 0, removed);
+        onReorder(currentGains);
+      }
+    }
+    
+    setDraggedItem(null);
   };
 
   return (
@@ -37,10 +89,82 @@ const CustomerGains = ({ gains, onAdd, onUpdate, onDelete }: CustomerGainsProps)
         </p>
       </div>
 
-      <div className="space-y-4">
+      {gains.length > 0 && (
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-1 text-sm invisible">
+            <span>Placeholder</span>
+          </div>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleSelectMode}
+            className="text-sm"
+          >
+            {isSelectMode ? (
+              <>Cancel Selection</>
+            ) : (
+              <>Select Multiple</>
+            )}
+          </Button>
+        </div>
+      )}
+
+      {isSelectMode && selectedGains.length > 0 && (
+        <div className="flex items-center justify-between p-2 bg-slate-100 rounded-md">
+          <span className="text-sm">{selectedGains.length} gains selected</span>
+          <Button 
+            variant="destructive"
+            size="sm"
+            onClick={handleDeleteSelected}
+          >
+            Delete Selected
+          </Button>
+        </div>
+      )}
+
+      <div className="space-y-2">
         {gains.map((gain) => (
-          <div key={gain.id} className="p-4 bg-white border rounded-md">
-            <div className="flex items-start space-x-3 mb-3">
+          <div 
+            key={gain.id} 
+            className={`p-3 bg-white border rounded-md ${
+              isSelectMode && selectedGains.includes(gain.id) ? 'border-primary bg-primary/5' : ''
+            } ${draggedItem === gain.id ? 'opacity-50' : 'opacity-100'}`}
+            draggable={onReorder !== undefined}
+            onDragStart={(e) => handleDragStart(e, gain.id)}
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, gain.id)}
+          >
+            <div className="flex items-center space-x-2">
+              {onReorder && (
+                <div className="cursor-grab">
+                  <GripVertical className="h-5 w-5 text-gray-400" />
+                </div>
+              )}
+              
+              {isSelectMode ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="p-0 h-6 w-6"
+                  onClick={() => toggleSelectGain(gain.id)}
+                >
+                  {selectedGains.includes(gain.id) ? (
+                    <CheckSquare className="h-5 w-5 text-primary" />
+                  ) : (
+                    <Square className="h-5 w-5" />
+                  )}
+                </Button>
+              ) : null}
+              
+              <Badge 
+                variant={gain.importance === 'high' ? 'destructive' : 
+                        gain.importance === 'medium' ? 'warning' : 'success'}
+                className="w-16 flex justify-center"
+              >
+                {gain.importance.charAt(0).toUpperCase() + gain.importance.slice(1)}
+              </Badge>
+              
               <div className="flex-1">
                 <Input 
                   value={gain.content}
@@ -48,36 +172,21 @@ const CustomerGains = ({ gains, onAdd, onUpdate, onDelete }: CustomerGainsProps)
                   placeholder="What benefits does your customer desire?"
                 />
               </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => onDelete(gain.id)}
-                className="text-red-500 hover:text-red-700 hover:bg-red-50"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <div className="mt-3">
-              <Label className="text-sm font-medium mb-2">Gain Importance:</Label>
-              <RadioGroup 
-                value={gain.importance} 
-                onValueChange={(value) => onUpdate(gain.id, gain.content, value as 'low' | 'medium' | 'high')}
-                className="flex space-x-4 mt-1"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="low" id={`gain-${gain.id}-low`} />
-                  <Label htmlFor={`gain-${gain.id}-low`} className="text-sm">Low</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="medium" id={`gain-${gain.id}-medium`} />
-                  <Label htmlFor={`gain-${gain.id}-medium`} className="text-sm">Medium</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="high" id={`gain-${gain.id}-high`} />
-                  <Label htmlFor={`gain-${gain.id}-high`} className="text-sm">High</Label>
-                </div>
-              </RadioGroup>
+              
+              {gain.isAIGenerated && (
+                <Badge variant="secondary" className="mr-2">AI</Badge>
+              )}
+              
+              {!isSelectMode && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => onDelete(gain.id)}
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50 h-9 w-9 p-0"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
         ))}

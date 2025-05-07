@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { UspCanvas } from './types';
+import { UspCanvas, CustomerJob, CustomerPain, CustomerGain } from './types';
 import { useCustomerProfile, useValueMap, useCanvasManager } from './hooks';
 
 const initialCanvas: UspCanvas = {
@@ -81,6 +81,19 @@ export const useUspCanvas = () => {
     });
   };
 
+  // Reordering functions for the customer profile elements
+  const reorderCustomerJobs = (reorderedJobs: CustomerJob[]) => {
+    customerProfile.reorderCustomerJobs(reorderedJobs);
+  };
+
+  const reorderCustomerPains = (reorderedPains: CustomerPain[]) => {
+    customerProfile.reorderCustomerPains(reorderedPains);
+  };
+
+  const reorderCustomerGains = (reorderedGains: CustomerGain[]) => {
+    customerProfile.reorderCustomerGains(reorderedGains);
+  };
+
   // Reset canvas functionality
   const resetCanvas = () => {
     setCanvas(initialCanvas);
@@ -95,6 +108,9 @@ export const useUspCanvas = () => {
     deleteCustomerJob,
     deleteCustomerPain,
     deleteCustomerGain,
+    reorderCustomerJobs,
+    reorderCustomerPains,
+    reorderCustomerGains,
     resetCanvas
   };
 };

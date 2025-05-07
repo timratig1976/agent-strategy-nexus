@@ -4,22 +4,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { CustomerJob } from './types';
-import { Trash2, Plus, ArrowUpDown, CheckSquare, Square } from "lucide-react";
+import { Trash2, Plus, ArrowUpDown, CheckSquare, Square, GripVertical } from "lucide-react";
 
 interface CustomerJobsProps {
   jobs: CustomerJob[];
   onAdd: (content: string, priority: 'low' | 'medium' | 'high') => void;
   onUpdate: (id: string, content: string, priority: 'low' | 'medium' | 'high') => void;
   onDelete: (id: string) => void;
+  onReorder?: (reorderedJobs: CustomerJob[]) => void;
 }
 
-const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete }: CustomerJobsProps) => {
+const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete, onReorder }: CustomerJobsProps) => {
   const [newJobContent, setNewJobContent] = useState('');
   const [newJobPriority, setNewJobPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [sortOrder, setSortOrder] = useState<'default' | 'priority-high' | 'priority-low'>('default');
   const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
   const [isSelectMode, setIsSelectMode] = useState(false);
+  const [draggedItem, setDraggedItem] = useState<null | string>(null);
 
   const handleAddJob = () => {
     if (newJobContent.trim()) {
@@ -69,6 +72,34 @@ const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete }: CustomerJobsProps) =>
     if (sortOrder === 'default') setSortOrder('priority-high');
     else if (sortOrder === 'priority-high') setSortOrder('priority-low');
     else setSortOrder('default');
+  };
+
+  const handleDragStart = (e: React.DragEvent, jobId: string) => {
+    setDraggedItem(jobId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    
+    if (draggedItem !== null && draggedItem !== targetId && onReorder) {
+      const currentJobs = [...sortedJobs];
+      const draggedIndex = currentJobs.findIndex(job => job.id === draggedItem);
+      const targetIndex = currentJobs.findIndex(job => job.id === targetId);
+      
+      if (draggedIndex !== -1 && targetIndex !== -1) {
+        const [removed] = currentJobs.splice(draggedIndex, 1);
+        currentJobs.splice(targetIndex, 0, removed);
+        onReorder(currentJobs);
+      }
+    }
+    
+    setDraggedItem(null);
   };
 
   return (
@@ -125,16 +156,26 @@ const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete }: CustomerJobsProps) =>
         </div>
       )}
 
-      <div className="space-y-4">
+      <div className="space-y-2">
         {sortedJobs.map((job) => (
           <div 
             key={job.id} 
-            className={`p-4 bg-white border rounded-md ${
+            className={`p-3 bg-white border rounded-md ${
               isSelectMode && selectedJobs.includes(job.id) ? 'border-primary bg-primary/5' : ''
-            }`}
+            } ${draggedItem === job.id ? 'opacity-50' : 'opacity-100'}`}
+            draggable={onReorder !== undefined}
+            onDragStart={(e) => handleDragStart(e, job.id)}
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, job.id)}
           >
-            <div className="flex items-start space-x-3 mb-3">
-              {isSelectMode && (
+            <div className="flex items-center space-x-2">
+              {onReorder && (
+                <div className="cursor-grab">
+                  <GripVertical className="h-5 w-5 text-gray-400" />
+                </div>
+              )}
+              
+              {isSelectMode ? (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -147,7 +188,16 @@ const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete }: CustomerJobsProps) =>
                     <Square className="h-5 w-5" />
                   )}
                 </Button>
-              )}
+              ) : null}
+              
+              <Badge 
+                variant={job.priority === 'high' ? 'destructive' : 
+                        job.priority === 'medium' ? 'warning' : 'success'}
+                className="w-16 flex justify-center"
+              >
+                {job.priority.charAt(0).toUpperCase() + job.priority.slice(1)}
+              </Badge>
+              
               <div className="flex-1">
                 <Input 
                   value={job.content}
@@ -155,51 +205,21 @@ const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete }: CustomerJobsProps) =>
                   placeholder="What is your customer trying to accomplish?"
                 />
               </div>
+              
+              {job.isAIGenerated && (
+                <Badge variant="secondary" className="mr-2">AI</Badge>
+              )}
+              
               {!isSelectMode && (
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => onDelete(job.id)}
-                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50 h-9 w-9 p-0"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               )}
-            </div>
-            
-            <div className="mt-3">
-              <Label className="text-sm font-medium mb-2">Priority Level:</Label>
-              <RadioGroup 
-                value={job.priority} 
-                onValueChange={(value) => onUpdate(job.id, job.content, value as 'low' | 'medium' | 'high')}
-                className="flex space-x-4 mt-1"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="low" id={`job-${job.id}-low`} />
-                  <Label htmlFor={`job-${job.id}-low`} className="text-sm">Low</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="medium" id={`job-${job.id}-medium`} />
-                  <Label htmlFor={`job-${job.id}-medium`} className="text-sm">Medium</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="high" id={`job-${job.id}-high`} />
-                  <Label htmlFor={`job-${job.id}-high`} className="text-sm">High</Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {/* Priority indicator badge */}
-            <div className="mt-2">
-              <span className={`inline-block text-xs px-2 py-1 rounded-full ${
-                job.priority === 'high' ? 'bg-red-100 text-red-800' :
-                job.priority === 'medium' ? 'bg-amber-100 text-amber-800' :
-                'bg-green-100 text-green-800'
-              }`}>
-                {job.priority === 'high' ? 'High Priority' :
-                 job.priority === 'medium' ? 'Medium Priority' :
-                 'Low Priority'}
-              </span>
             </div>
           </div>
         ))}
