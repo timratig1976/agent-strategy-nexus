@@ -12,6 +12,19 @@ import { useBriefingGenerator } from "./hooks/useBriefingGenerator";
 import { BriefingProgressBar } from "./components";
 import { AgentResult } from "@/types/marketing";
 
+// Define a type for the strategy_metadata table data
+interface StrategyMetadataRow {
+  id?: string;
+  strategy_id: string;
+  company_name: string | null;
+  website_url: string | null;
+  product_description: string | null;
+  product_url: string | null;
+  additional_info: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
 const StrategyBriefing: React.FC<StrategyBriefingProps> = ({ 
   strategy, 
   agentResults = [] 
@@ -42,11 +55,12 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   
   const fetchStrategyMetadata = async () => {
     try {
-      // Fix: Use the correct type parameter structure for RPC calls
+      // Use proper typing for the query
       const { data, error } = await supabase
         .from('strategy_metadata')
         .select('*')
-        .eq('strategy_id', strategy.id);
+        .eq('strategy_id', strategy.id)
+        .returns<StrategyMetadataRow[]>();
         
       if (error) throw error;
       
@@ -70,7 +84,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   // Function to update strategy metadata
   const saveStrategyMetadata = async (updatedValues: StrategyFormValues): Promise<boolean> => {
     try {
-      // Fix: Use the correct approach for upsert operation
+      // Use proper typing for the upsert operation
       const { error } = await supabase
         .from('strategy_metadata')
         .upsert({
@@ -83,7 +97,8 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'strategy_id'
-        });
+        })
+        .returns<{id: string}>();
       
       if (error) throw error;
       
