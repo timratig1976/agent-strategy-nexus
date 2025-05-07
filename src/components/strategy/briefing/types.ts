@@ -1,6 +1,7 @@
 
 import { AgentResult } from "@/types/marketing";
 import { StrategyFormValues } from "@/components/strategy-form";
+import { WebsiteCrawlResult } from "@/components/marketing/modules/website-crawler/types";
 
 export interface StrategyBriefingProps {
   strategy: {
@@ -29,4 +30,10 @@ export interface BriefingResultCardProps {
   isGenerating: boolean;
   generateBriefing: () => void;
   saveAgentResult: (result: AgentResult) => Promise<boolean>;
+}
+
+export interface WebsiteCrawlerWrapperProps {
+  onBack: () => void;
+  crawlResults: WebsiteCrawlResult | null;
+  setCrawlResults: (results: WebsiteCrawlResult | null) => void;
 }
