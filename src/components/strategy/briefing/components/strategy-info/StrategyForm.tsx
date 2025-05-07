@@ -23,6 +23,15 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
   setShowWebsitePreview,
   setShowProductPreview
 }) => {
+  // Create wrapper functions that return Promise<void> for each URL type
+  const handleWebsiteCrawl = async () => {
+    await handleCrawl('websiteUrl');
+  };
+  
+  const handleProductCrawl = async () => {
+    await handleCrawl('productUrl');
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
@@ -42,7 +51,7 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
         label="Website URL"
         value={localFormValues.websiteUrl || ''}
         onChange={handleInputChange}
-        onCrawl={() => handleCrawl('websiteUrl')}
+        onCrawl={handleWebsiteCrawl}
         isCrawling={crawlingUrl === 'websiteUrl'}
         crawlProgress={crawlProgress}
         showPreview={showWebsitePreview}
@@ -69,7 +78,7 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
         label="Product URL"
         value={localFormValues.productUrl || ''}
         onChange={handleInputChange}
-        onCrawl={() => handleCrawl('productUrl')}
+        onCrawl={handleProductCrawl}
         isCrawling={crawlingUrl === 'productUrl'}
         crawlProgress={crawlProgress}
         showPreview={showProductPreview}

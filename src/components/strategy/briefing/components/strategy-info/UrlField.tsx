@@ -24,6 +24,10 @@ const UrlField: React.FC<UrlFieldProps> = ({
 }) => {
   const isProductUrl = name === 'productUrl';
   
+  const handleCrawlClick = async () => {
+    await onCrawl();
+  };
+
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
@@ -40,7 +44,7 @@ const UrlField: React.FC<UrlFieldProps> = ({
           type="button"
           variant="outline"
           size="icon"
-          onClick={onCrawl}
+          onClick={handleCrawlClick}
           disabled={crawlingUrl !== null}
           title={`Crawl ${isProductUrl ? 'product page' : 'website'} for information`}
         >

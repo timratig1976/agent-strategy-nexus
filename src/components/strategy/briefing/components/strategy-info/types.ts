@@ -37,7 +37,7 @@ export interface StrategyFormProps {
   handleSubmit: (e: React.FormEvent) => void;
   isSaving: boolean;
   crawlingUrl: string | null;
-  handleCrawl: (urlType: CrawlUrlType) => Promise<void>;
+  handleCrawl: (urlType: CrawlUrlType) => Promise<any>; // Updated return type to be more flexible
   crawlProgress: number;
   websitePreviewResults: WebsiteCrawlResult | null;
   productPreviewResults: WebsiteCrawlResult | null;

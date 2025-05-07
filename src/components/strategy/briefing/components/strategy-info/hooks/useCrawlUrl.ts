@@ -20,12 +20,12 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
     
     if (!url) {
       toast.error("Please enter a URL to crawl");
-      return;
+      return { success: false };
     }
 
     if (!/^https?:\/\//i.test(url)) {
       toast.error("Please enter a valid URL starting with http:// or https://");
-      return;
+      return { success: false };
     }
 
     setCrawlingUrl(urlType);
