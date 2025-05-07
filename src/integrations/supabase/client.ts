@@ -10,3 +10,38 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+// Declare additional Database types for RPC functions
+declare module '@supabase/supabase-js' {
+  interface Database {
+    public: {
+      Functions: {
+        get_strategy_metadata: {
+          Args: { strategy_id_param: string };
+          Returns: {
+            id: string;
+            strategy_id: string;
+            company_name: string | null;
+            website_url: string | null;
+            product_description: string | null;
+            product_url: string | null;
+            additional_info: string | null;
+            created_at: string;
+            updated_at: string;
+          }[];
+        };
+        upsert_strategy_metadata: {
+          Args: {
+            strategy_id_param: string;
+            company_name_param: string;
+            website_url_param: string;
+            product_description_param: string;
+            product_url_param: string;
+            additional_info_param: string;
+          };
+          Returns: void;
+        };
+      };
+    };
+  }
+}

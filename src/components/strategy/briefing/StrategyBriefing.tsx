@@ -43,14 +43,17 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
     try {
       console.log("Fetching strategy metadata for ID:", strategy.id);
       
-      const { data, error } = await supabase.rpc(
-        'get_strategy_metadata',
-        { strategy_id_param: strategy.id }
-      );
+      const { data, error } = await supabase.functions.invoke<any>('strategy-metadata', {
+        body: { 
+          action: 'get',
+          strategyId: strategy.id 
+        }
+      });
       
       if (error) {
-        console.error("RPC error:", error);
-        return; // Don't throw error, just log it
+        console.error("Function error:", error);
+        toast.error("Error loading strategy information");
+        return;
       }
       
       console.log("Metadata response:", data);
@@ -72,6 +75,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
       }
     } catch (error) {
       console.error("Error fetching strategy metadata:", error);
+      toast.error("Failed to load strategy information");
     }
   };
 
@@ -80,24 +84,24 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
     try {
       console.log("Saving strategy metadata for ID:", strategy.id, "Values:", updatedValues);
       
-      const { error } = await supabase.rpc(
-        'upsert_strategy_metadata',
-        {
-          strategy_id_param: strategy.id,
-          company_name_param: updatedValues.companyName || '',
-          website_url_param: updatedValues.websiteUrl || '',
-          product_description_param: updatedValues.productDescription || '',
-          product_url_param: updatedValues.productUrl || '',
-          additional_info_param: updatedValues.additionalInfo || ''
+      const { data, error } = await supabase.functions.invoke<any>('strategy-metadata', {
+        body: {
+          action: 'update',
+          strategyId: strategy.id,
+          companyName: updatedValues.companyName || '',
+          websiteUrl: updatedValues.websiteUrl || '',
+          productDescription: updatedValues.productDescription || '',
+          productUrl: updatedValues.productUrl || '',
+          additionalInfo: updatedValues.additionalInfo || ''
         }
-      );
+      });
       
       if (error) {
-        console.error("RPC error during save:", error);
+        console.error("Function error during save:", error);
         throw error;
       }
       
-      console.log("Strategy metadata updated successfully");
+      console.log("Strategy metadata updated successfully:", data);
       setFormValues(updatedValues);
       toast.success("Strategy information updated");
       return true;
