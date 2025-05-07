@@ -8,7 +8,6 @@ import {
   NavBar, 
   PageHeader, 
   DatabaseStatus, 
-  HowItWorks, 
   MarketingTabContent
 } from "@/components";
 
@@ -54,19 +53,11 @@ const Index = () => {
       
       <PageHeader user={user} onLogout={handleLogout} />
 
-      <div className="text-center mb-12">
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Complete business management solution with marketing strategy tools.
-        </p>
-      </div>
-
       <DatabaseStatus status={dbStatus} />
 
       <div className="mb-12">
         <MarketingTabContent dbStatus={dbStatus} isAuthenticated={!!user} />
       </div>
-
-      <HowItWorks />
     </div>
   );
 };

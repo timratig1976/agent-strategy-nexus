@@ -2,6 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react";
 
 interface PageHeaderProps {
   user: any;
@@ -18,9 +19,8 @@ const PageHeader = ({ user, onLogout }: PageHeaderProps) => {
     <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8 pb-6 border-b">
       <div>
         <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
-          Marketing Strategy Hub
+          Strategy Hub
         </h1>
-        <p className="text-muted-foreground mt-2">Complete marketing strategy solution for your business</p>
       </div>
       
       {user ? (
@@ -28,6 +28,15 @@ const PageHeader = ({ user, onLogout }: PageHeaderProps) => {
           <div className="bg-muted px-3 py-2 rounded-md text-sm text-muted-foreground">
             {userDisplayName}
           </div>
+          <Button 
+            onClick={onLogout}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
         </div>
       ) : (
         <Button 
