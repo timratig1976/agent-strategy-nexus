@@ -18,7 +18,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   const [showCrawler, setShowCrawler] = useState<boolean>(false);
   const [crawlResults, setCrawlResults] = useState<WebsiteCrawlResult | undefined>();
   
-  // Initialize form values using strategy data
+  // Initialize form values with empty strings
   const [formValues, setFormValues] = useState<StrategyFormValues>({
     name: strategy.name,
     description: strategy.description || '',
@@ -52,19 +52,24 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
         .eq('id', strategy.id)
         .single();
         
+      // Get strategy data values first
+      let companyName = '';
+      let websiteUrl = '';
+      let productDescription = '';
+      let productUrl = '';
+      let additionalInfo = '';
+      
+      // Set values from strategies table if available
       if (!strategyData.error && strategyData.data) {
         console.log("Found strategy data in strategies table:", strategyData.data);
-        setFormValues(prevFormValues => ({
-          ...prevFormValues,
-          companyName: strategyData.data.company_name || '',
-          websiteUrl: strategyData.data.website_url || '',
-          productDescription: strategyData.data.product_description || '',
-          productUrl: strategyData.data.product_url || '',
-          additionalInfo: strategyData.data.additional_info || ''
-        }));
+        companyName = strategyData.data.company_name || '';
+        websiteUrl = strategyData.data.website_url || '';
+        productDescription = strategyData.data.product_description || '';
+        productUrl = strategyData.data.product_url || '';
+        additionalInfo = strategyData.data.additional_info || '';
       }
       
-      // Then try to get metadata from the strategy_metadata table
+      // Then try to get metadata from the strategy_metadata table via RPC
       const { data, error } = await supabase.rpc(
         'get_strategy_metadata',
         { strategy_id_param: strategy.id }
@@ -73,25 +78,34 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
       if (error) {
         console.error("RPC error:", error);
         toast.error("Error loading strategy information");
-        return;
-      }
-      
-      console.log("Metadata response:", data);
-      
-      if (data && Array.isArray(data) && data.length > 0) {
-        const metadata = data[0];
-        console.log("Setting form values with metadata:", metadata);
+      } else {
+        console.log("Metadata response:", data);
         
-        // Metadata takes precedence over strategy data
-        setFormValues(prevFormValues => ({
-          ...prevFormValues,
-          companyName: metadata.company_name || prevFormValues.companyName || '',
-          websiteUrl: metadata.website_url || prevFormValues.websiteUrl || '',
-          productDescription: metadata.product_description || prevFormValues.productDescription || '',
-          productUrl: metadata.product_url || prevFormValues.productUrl || '',
-          additionalInfo: metadata.additional_info || prevFormValues.additionalInfo || ''
-        }));
+        // Use metadata values if available (they override strategy table values)
+        if (data && Array.isArray(data) && data.length > 0) {
+          const metadata = data[0];
+          console.log("Setting form values with metadata:", metadata);
+          
+          // Override values with metadata if they exist
+          companyName = metadata.company_name || companyName;
+          websiteUrl = metadata.website_url || websiteUrl;
+          productDescription = metadata.product_description || productDescription;
+          productUrl = metadata.product_url || productUrl;
+          additionalInfo = metadata.additional_info || additionalInfo;
+        }
       }
+      
+      // Set all form values at once with the most up-to-date data
+      setFormValues({
+        name: strategy.name,
+        description: strategy.description || '',
+        companyName,
+        websiteUrl,
+        productDescription,
+        productUrl,
+        additionalInfo
+      });
+      
     } catch (error) {
       console.error("Error fetching strategy metadata:", error);
       toast.error("Failed to load strategy information");
