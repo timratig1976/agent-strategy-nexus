@@ -4,9 +4,12 @@ import { SupabaseClient } from "@supabase/supabase-js";
 declare module "@supabase/supabase-js" {
   interface SupabaseClient<Database = any> {
     rpc<
-      FunctionName extends string,
-      Args extends Record<string, unknown> = Record<string, unknown>,
-      Result = unknown
+      // Use the function name from the Database["public"]["Functions"] interface
+      FunctionName extends keyof Database["public"]["Functions"],
+      // Use the Args type from the specified function
+      Args extends Database["public"]["Functions"][FunctionName]["Args"],
+      // Use the Returns type from the specified function
+      Returns = Database["public"]["Functions"][FunctionName]["Returns"]
     >(
       fn: FunctionName,
       params?: Args,
@@ -15,7 +18,7 @@ declare module "@supabase/supabase-js" {
         head?: boolean
       }
     ): Promise<{
-      data: Result;
+      data: Returns;
       error: Error | null;
       count: number | null;
       status: number;
