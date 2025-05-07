@@ -25,7 +25,8 @@ export const useStrategyData = ({ id }: UseStrategyDataProps) => {
   const { 
     data: strategy, 
     isLoading: isStrategyLoading,
-    error: strategyError
+    error: strategyError,
+    refetch: refetchStrategy
   } = useQuery({
     queryKey: ['strategy', id],
     queryFn: async () => {
@@ -121,7 +122,8 @@ export const useStrategyData = ({ id }: UseStrategyDataProps) => {
   // Fetch agent results for this strategy
   const { 
     data: agentResults, 
-    isLoading: isResultsLoading 
+    isLoading: isResultsLoading,
+    refetch: refetchResults
   } = useQuery({
     queryKey: ['strategy-results', id],
     queryFn: async () => {
@@ -166,13 +168,21 @@ export const useStrategyData = ({ id }: UseStrategyDataProps) => {
     refetchTasks();
   };
 
+  // Function to refetch all data
+  const refetch = () => {
+    refetchStrategy();
+    refetchTasks();
+    refetchResults();
+  };
+
   return {
     strategy,
     tasks,
     agentResults,
     isLoading: isStrategyLoading || isTasksLoading || isResultsLoading,
     isError: !!strategyError,
-    handleTasksChange
+    handleTasksChange,
+    refetch
   };
 };
 

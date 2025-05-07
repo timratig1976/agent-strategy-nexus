@@ -35,8 +35,16 @@ const StrategyDetails = () => {
   const { 
     strategy, 
     agentResults, 
-    isLoading
+    isLoading,
+    refetch 
   } = useStrategyData({ id });
+
+  // Refresh the data when the component mounts or when the URL changes
+  useEffect(() => {
+    if (id) {
+      refetch();
+    }
+  }, [id, refetch]);
   
   // If there's no ID, show a loading state until the redirect happens
   if (!id) {

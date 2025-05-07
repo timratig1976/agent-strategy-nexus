@@ -37,19 +37,26 @@ const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({
   // Find the latest persona from the history
   const latestPersona = personaHistory.length > 0 ? personaHistory[0] : null;
 
-  // Handler for going back to the briefing step - fixed to properly navigate
+  // Handler for going back to the briefing step - fixed to properly work
   const handleGoToPreviousStep = async () => {
     try {
+      console.log("Going back to briefing step for strategy:", strategy.id);
+      
       // First update the strategy state back to briefing
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('strategies')
         .update({ state: 'briefing' })
-        .eq('id', strategy.id);
+        .eq('id', strategy.id)
+        .select();
       
       if (error) {
         console.error("Error updating strategy state:", error);
-        throw error;
+        toast.error("Failed to go back to briefing stage");
+        return;
       }
+      
+      console.log("Strategy state updated successfully:", data);
+      toast.success("Returned to Briefing stage");
       
       // Then navigate back to the strategy details page
       navigate(`/strategy-details/${strategy.id}`);
