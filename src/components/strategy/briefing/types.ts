@@ -64,3 +64,8 @@ export interface WebsiteCrawlerWrapperProps {
   crawlResults?: WebsiteCrawlResult;
   setCrawlResults?: React.Dispatch<React.SetStateAction<WebsiteCrawlResult | undefined>>;
 }
+
+export interface CrawlPreviewProps {
+  results: WebsiteCrawlResult;
+  isOpen: boolean;
+}
