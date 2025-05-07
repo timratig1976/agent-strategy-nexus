@@ -37,12 +37,26 @@ const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({
   // Find the latest persona from the history
   const latestPersona = personaHistory.length > 0 ? personaHistory[0] : null;
 
-  // Handler for going back to the briefing step
-  const handleGoToPreviousStep = () => {
-    // Updated to navigate directly back to the strategy details page 
-    // without the /tab=personas parameter since the main issue could be
-    // the URL parameter handling
-    navigate(`/strategy-details/${strategy.id}`);
+  // Handler for going back to the briefing step - fixed to properly navigate
+  const handleGoToPreviousStep = async () => {
+    try {
+      // First update the strategy state back to briefing
+      const { error } = await supabase
+        .from('strategies')
+        .update({ state: 'briefing' })
+        .eq('id', strategy.id);
+      
+      if (error) {
+        console.error("Error updating strategy state:", error);
+        throw error;
+      }
+      
+      // Then navigate back to the strategy details page
+      navigate(`/strategy-details/${strategy.id}`);
+    } catch (err) {
+      console.error("Failed to go back to briefing:", err);
+      toast.error("Failed to go back to briefing stage");
+    }
   };
   
   // Function to generate AI persona with progress updates
