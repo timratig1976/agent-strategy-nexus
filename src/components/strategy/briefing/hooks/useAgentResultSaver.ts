@@ -24,22 +24,12 @@ export const useAgentResultSaver = () => {
         // First, find the type of result we're saving (briefing, persona, etc.)
         const resultType = metadata.type || 'briefing';
         
-        // Remove 'final' status from all previous results of the same type
-        // Using a direct SQL query instead of RPC to avoid type issues
-        const { error: updateError } = await supabase
-          .from('agent_results')
-          .update({ 
-            metadata: {
-              is_final: false
-            }
-          })
-          .eq('strategy_id', strategyId)
-          .eq('metadata->is_final', 'true')
-          .eq('metadata->type', resultType);
-        
-        if (updateError) {
-          console.error("Error updating previous final results:", updateError);
-        }
+        // Use raw SQL query via rpc to avoid TypeScript issues
+        // This directly sets the is_final field to false for all matching records
+        await supabase.rpc('update_agent_results_final_status', {
+          strategy_id_param: strategyId,
+          result_type_param: resultType
+        });
       }
       
       // Now insert the new record

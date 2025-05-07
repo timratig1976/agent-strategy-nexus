@@ -44,5 +44,24 @@ declare module "@supabase/supabase-js" {
       status: number;
       statusText: string;
     }>;
+    
+    // Add our custom RPC function for updating agent results final status
+    rpc(
+      fn: 'update_agent_results_final_status',
+      params: { 
+        strategy_id_param: string, 
+        result_type_param: string
+      },
+      options?: {
+        count?: null | 'exact' | 'planned' | 'estimated',
+        head?: boolean
+      }
+    ): Promise<{
+      data: any;
+      error: Error | null;
+      count: number | null;
+      status: number;
+      statusText: string;
+    }>;
   }
 }

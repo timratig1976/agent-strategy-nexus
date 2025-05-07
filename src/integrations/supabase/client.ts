@@ -35,6 +35,13 @@ declare global {
           };
           Returns: void;
         };
+        update_agent_results_final_status: {
+          Args: {
+            strategy_id_param: string;
+            result_type_param: string;
+          };
+          Returns: void;
+        };
       };
     };
   }
