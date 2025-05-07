@@ -47,17 +47,15 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   
   const fetchStrategyMetadata = async () => {
     try {
-      const { data, error } = await supabase.rpc('get_strategy_metadata', {
-        strategy_id_param: strategy.id
-      } as GetStrategyMetadataParams);
+      const { data, error } = await supabase.rpc<StrategyMetadataRow[], GetStrategyMetadataParams>(
+        'get_strategy_metadata',
+        { strategy_id_param: strategy.id }
+      );
         
       if (error) throw error;
       
-      // Type assertion to handle the data
-      const typedData = data as StrategyMetadataRow[];
-      
-      if (typedData && typedData.length > 0) {
-        const metadata = typedData[0];
+      if (data && data.length > 0) {
+        const metadata = data[0];
         setFormValues(prevFormValues => ({
           ...prevFormValues,
           companyName: metadata.company_name || '',
@@ -76,14 +74,17 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   // Function to update strategy metadata
   const saveStrategyMetadata = async (updatedValues: StrategyFormValues): Promise<boolean> => {
     try {
-      const { error } = await supabase.rpc('upsert_strategy_metadata', {
-        strategy_id_param: strategy.id,
-        company_name_param: updatedValues.companyName,
-        website_url_param: updatedValues.websiteUrl,
-        product_description_param: updatedValues.productDescription,
-        product_url_param: updatedValues.productUrl,
-        additional_info_param: updatedValues.additionalInfo
-      } as UpsertStrategyMetadataParams);
+      const { error } = await supabase.rpc<void, UpsertStrategyMetadataParams>(
+        'upsert_strategy_metadata',
+        {
+          strategy_id_param: strategy.id,
+          company_name_param: updatedValues.companyName,
+          website_url_param: updatedValues.websiteUrl,
+          product_description_param: updatedValues.productDescription,
+          product_url_param: updatedValues.productUrl,
+          additional_info_param: updatedValues.additionalInfo
+        }
+      );
       
       if (error) throw error;
       
