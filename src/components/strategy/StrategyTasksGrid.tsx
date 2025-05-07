@@ -14,14 +14,17 @@ const StrategyTasksGrid: React.FC<StrategyTasksGridProps> = ({
   tasks,
   onTasksChange
 }) => {
+  // Define the states to display in order
+  const states: StrategyState[] = ['briefing', 'persona', 'pain_gains', 'funnel', 'ads'];
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
-      {['briefing', 'persona', 'pain_gains', 'funnel', 'ads'].map((state) => (
+      {states.map((state) => (
         <div key={state} className="flex flex-col h-full">
           <TaskList
             strategyId={strategyId}
             tasks={tasks || []}
-            state={state as StrategyState}
+            state={state}
             onTasksChange={onTasksChange}
           />
         </div>

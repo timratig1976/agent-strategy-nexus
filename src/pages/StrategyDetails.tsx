@@ -11,6 +11,7 @@ import LoadingStrategy from "@/components/strategy/loading/LoadingStrategy";
 import StrategyNotFound from "@/components/strategy/StrategyNotFound";
 import StrategyBriefing from "@/components/strategy/briefing";
 import { PersonaDevelopment } from "@/components/strategy/personas";
+import PainGainsModule from "@/components/strategy/pain-gains";
 
 // Import custom hooks and utilities
 import useStrategyData from "@/hooks/useStrategyData";
@@ -69,7 +70,7 @@ const StrategyDetails = () => {
     return <StrategyNotFound />;
   }
 
-  // Determine the final briefing result to pass to the persona page
+  // Determine the final briefing result to pass to other pages
   const finalBriefing = agentResults?.find(result => 
     result.metadata?.is_final === true && (!result.metadata?.type || result.metadata?.type === 'briefing')
   ) || null;
@@ -89,6 +90,14 @@ const StrategyDetails = () => {
   } else if (strategy.state === 'persona') {
     contentComponent = (
       <PersonaDevelopment 
+        strategy={strategy}
+        agentResults={agentResults || []}
+        briefingAgentResult={finalBriefing}
+      />
+    );
+  } else if (strategy.state === 'pain_gains') {
+    contentComponent = (
+      <PainGainsModule 
         strategy={strategy}
         agentResults={agentResults || []}
         briefingAgentResult={finalBriefing}
