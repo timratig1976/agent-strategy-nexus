@@ -46,7 +46,7 @@ export type UpsertStrategyMetadataParams = {
 };
 
 export interface StrategyInfoCardProps {
-  formValues: StrategyFormValues;
+  formValues: StrategyFormValues & { id?: string }; // Add id as an optional property
   saveStrategyMetadata: (updatedValues: StrategyFormValues) => Promise<boolean>;
   showCrawler: boolean;
   setShowCrawler: React.Dispatch<React.SetStateAction<boolean>>;

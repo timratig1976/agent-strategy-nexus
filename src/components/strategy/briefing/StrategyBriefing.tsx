@@ -18,8 +18,9 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   const [showCrawler, setShowCrawler] = useState<boolean>(false);
   const [crawlResults, setCrawlResults] = useState<WebsiteCrawlResult | undefined>();
   
-  // Initialize form values with empty strings
-  const [formValues, setFormValues] = useState<StrategyFormValues>({
+  // Initialize form values with empty strings and include the strategy id
+  const [formValues, setFormValues] = useState<StrategyFormValues & { id: string }>({
+    id: strategy.id, // Add the id here
     name: strategy.name,
     description: strategy.description || '',
     companyName: '',
@@ -94,6 +95,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
       }
       
       console.log("Setting final form values:", {
+        id: strategy.id,
         name: strategy.name,
         description: strategy.description || '',
         companyName,
@@ -105,6 +107,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
       
       // Set all form values at once with the most up-to-date data
       setFormValues({
+        id: strategy.id, // Include the id in the form values
         name: strategy.name,
         description: strategy.description || '',
         companyName,
@@ -144,7 +147,10 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
       }
       
       console.log("Strategy metadata updated successfully");
-      setFormValues(updatedValues);
+      setFormValues({
+        ...updatedValues,
+        id: strategy.id // Ensure we keep the id when updating
+      });
       toast.success("Strategy information updated");
       return true;
     } catch (error) {
