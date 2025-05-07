@@ -1,8 +1,8 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { UspCanvas } from "./types";
-import { CustomerProfileSummary, ValueMapSummary, ValuePropositionFit } from "./overview";
+import { UspCanvas } from "../types";
+import { CustomerProfileSummary, ValueMapSummary, ValuePropositionFit, FitProgressBar } from "./index";
 
 interface UspCanvasOverviewProps {
   canvas: UspCanvas;

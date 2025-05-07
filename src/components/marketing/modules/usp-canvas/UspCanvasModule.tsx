@@ -1,12 +1,11 @@
-import React, { useState, useCallback } from "react";
+
+import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import UspCanvasOverview from "./overview/UspCanvasOverview";
+import UspCanvasOverview from "./UspCanvasOverview";
 import CustomerProfileCanvas from "./CustomerProfileCanvas";
 import ValueMapCanvas from "./ValueMapCanvas";
 import { useUspCanvas } from "./useUspCanvas";
-import { Strategy } from "@/types/marketing";
-import { CustomerJob, CustomerPain, CustomerGain } from './types';
 
 interface UspCanvasModuleProps {
   strategyId: string;
@@ -45,30 +44,6 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({ strategyId, briefingC
     reorderCustomerGains
   } = useUspCanvas();
 
-  // Handle the reordering of customer jobs
-  const handleReorderCustomerJobs = (reorderedJobs: CustomerJob[]) => {
-    setCanvas(prevCanvas => ({
-      ...prevCanvas,
-      customerJobs: reorderedJobs
-    }));
-  };
-
-  // Handle the reordering of customer pains
-  const handleReorderCustomerPains = (reorderedPains: CustomerPain[]) => {
-    setCanvas(prevCanvas => ({
-      ...prevCanvas,
-      customerPains: reorderedPains
-    }));
-  };
-
-  // Handle the reordering of customer gains
-  const handleReorderCustomerGains = (reorderedGains: CustomerGain[]) => {
-    setCanvas(prevCanvas => ({
-      ...prevCanvas,
-      customerGains: reorderedGains
-    }));
-  };
-
   return (
     <div className="w-full">
       <h2 className="text-2xl font-bold">Unique Selling Proposition Canvas</h2>
@@ -90,15 +65,15 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({ strategyId, briefingC
                 addCustomerJob={addCustomerJob}
                 updateCustomerJob={updateCustomerJob}
                 deleteCustomerJob={deleteCustomerJob}
-                reorderCustomerJobs={handleReorderCustomerJobs}
+                reorderCustomerJobs={reorderCustomerJobs}
                 addCustomerPain={addCustomerPain}
                 updateCustomerPain={updateCustomerPain}
                 deleteCustomerPain={deleteCustomerPain}
-                reorderCustomerPains={handleReorderCustomerPains}
+                reorderCustomerPains={reorderCustomerPains}
                 addCustomerGain={addCustomerGain}
                 updateCustomerGain={updateCustomerGain}
                 deleteCustomerGain={deleteCustomerGain}
-                reorderCustomerGains={handleReorderCustomerGains}
+                reorderCustomerGains={reorderCustomerGains}
               />
             </div>
             

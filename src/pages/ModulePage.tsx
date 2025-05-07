@@ -21,6 +21,9 @@ const ModulePage = () => {
   const navigate = useNavigate();
   const moduleType = searchParams.get("type") || "briefing";
 
+  // Set a default strategy ID for modules that require it in standalone mode
+  const defaultStrategyId = "standalone-module";
+
   const renderModule = () => {
     switch (moduleType) {
       case "briefing":
@@ -30,7 +33,7 @@ const ModulePage = () => {
       case "persona_development":
         return <PersonaGeneratorModule />;
       case "usp_canvas":
-        return <UspCanvasModule />;
+        return <UspCanvasModule strategyId={defaultStrategyId} briefingContent="" />;
       case "usp_generator":
         return <UspGeneratorModule />;
       case "channel_strategy":
