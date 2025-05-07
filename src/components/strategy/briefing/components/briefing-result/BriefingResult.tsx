@@ -87,6 +87,18 @@ export function BriefingResult({
     }).format(date);
   };
 
+  // Fixed: Correctly handle the loading of a historical version
+  const loadHistoricalVersion = (briefing: AgentResult) => {
+    // Create a new array with the selected briefing first, followed by all other briefings
+    const updatedHistory = [
+      briefing,
+      ...briefingHistory.filter(b => b.id !== briefing.id)
+    ];
+    
+    // Set the updated history array directly
+    setBriefingHistory(updatedHistory);
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -125,12 +137,7 @@ export function BriefingResult({
                     variant="ghost" 
                     size="sm" 
                     className="mt-2"
-                    onClick={() => {
-                      // Set this version as the current briefing
-                      setBriefingHistory(prev => 
-                        [briefing, ...prev.filter(b => b.id !== briefing.id)]
-                      );
-                    }}
+                    onClick={() => loadHistoricalVersion(briefing)}
                   >
                     Load This Version
                   </Button>
