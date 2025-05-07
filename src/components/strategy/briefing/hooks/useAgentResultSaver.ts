@@ -3,13 +3,6 @@ import { toast } from "sonner";
 import { AgentResult } from "@/types/marketing";
 import { supabase } from "@/integrations/supabase/client";
 
-// Define a specific type for the jsonb_set_key_to_value function parameters
-interface JsonbSetParams {
-  json_data: Record<string, any>;
-  key_name: string;
-  new_value: string;
-}
-
 export const useAgentResultSaver = () => {
   // Save agent result as a new record with content and optional metadata
   const saveAgentResult = async (
@@ -37,7 +30,6 @@ export const useAgentResultSaver = () => {
           .from('agent_results')
           .update({ 
             metadata: {
-              ...metadata,
               is_final: false
             }
           })
