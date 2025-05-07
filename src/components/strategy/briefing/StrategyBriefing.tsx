@@ -55,8 +55,8 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   
   const fetchStrategyMetadata = async () => {
     try {
-      // Use the stored function to get metadata with proper type assertion
-      const { data, error } = await supabase.rpc<StrategyMetadataRow[]>(
+      // Use the stored function to get metadata with proper type parameters
+      const { data, error } = await supabase.rpc<StrategyMetadataRow[], { strategy_id_param: string }>(
         'get_strategy_metadata', 
         { strategy_id_param: strategy.id }
       );
@@ -83,8 +83,15 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   // Function to update strategy metadata
   const saveStrategyMetadata = async (updatedValues: StrategyFormValues): Promise<boolean> => {
     try {
-      // Use the stored procedure for upserting metadata with proper type assertion
-      const { error } = await supabase.rpc<null>(
+      // Use the stored procedure for upserting metadata with proper type parameters
+      const { error } = await supabase.rpc<null, {
+        strategy_id_param: string;
+        company_name_param: string;
+        website_url_param: string;
+        product_description_param: string;
+        product_url_param: string;
+        additional_info_param: string;
+      }>(
         'upsert_strategy_metadata', 
         {
           strategy_id_param: strategy.id,
