@@ -174,6 +174,10 @@ function getSystemPrompt(module: string, action: string): string {
       'generate': `${basePrompt} Your task is to create a comprehensive marketing strategy briefing based on the provided company and product information. Include key strategy elements, target audience, main marketing channels, and actionable next steps.`,
       'edit': `${basePrompt} Your task is to refine and improve an existing marketing strategy briefing based on feedback and updated information.`
     },
+    'persona': {
+      'generate': `${basePrompt} Your task is to create detailed customer personas based on the marketing briefing. Include demographics, behavior patterns, motivations, goals, pain points, and preferred communication channels.`,
+      'edit': `${basePrompt} Your task is to refine and improve existing customer personas based on feedback and additional information.`
+    },
     'contentStrategy': {
       'generate': `${basePrompt} Your task is to create a comprehensive content strategy with content pillars based on the provided keyword, target audience, and business goals. Include subtopics, content ideas, and distribution recommendations.`,
       'edit': `${basePrompt} Your task is to refine and improve an existing content strategy based on feedback and updated information.`
@@ -220,6 +224,22 @@ function constructUserPrompt(module: string, action: string, data: any): string 
       3. Key marketing channels to prioritize
       4. Key benefits of the product/service to highlight
       5. Call to action and next steps`;
+    
+    case 'persona':
+      return `I need to create detailed customer personas based on the following marketing briefing:
+
+      ${data.briefingContent}
+      
+      Please provide detailed customer persona(s) that include:
+      1. Demographics (age, gender, income, education, job position)
+      2. Behavioral traits and motivations
+      3. Goals and challenges
+      4. Pain points and objections
+      5. Preferred communication channels and content types
+      6. Decision-making factors
+      7. Buying journey stages
+      
+      Format the personas in a clear, structured way that can be used for developing targeted marketing strategies.`;
     
     case 'contentStrategy':
       return `I need to create a content strategy for my business with these details:
@@ -394,6 +414,11 @@ function parseAIResult(module: string, action: string, result: string): any {
           createdAt: new Date()
         };
       });
+    }
+    
+    // For persona generation, just return raw output
+    if (module === 'persona' && action === 'generate') {
+      return { rawOutput: result };
     }
     
     // Default parsing behavior - just return the result as-is

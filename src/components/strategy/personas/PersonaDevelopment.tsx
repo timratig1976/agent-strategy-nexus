@@ -10,6 +10,7 @@ import { BriefingResult } from "../briefing/components/briefing-result/BriefingR
 import PersonaEditor from "./PersonaEditor";
 import { ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { MarketingAIService } from "@/services/marketingAIService";
 
 const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({ 
   strategy, 
@@ -37,7 +38,7 @@ const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({
   // Find the latest persona from the history
   const latestPersona = personaHistory.length > 0 ? personaHistory[0] : null;
 
-  // Handler for going back to the briefing step - fixed to properly work
+  // Handler for going back to the briefing step
   const handleGoToPreviousStep = async () => {
     try {
       console.log("Going back to briefing step for strategy:", strategy.id);
@@ -66,7 +67,7 @@ const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({
     }
   };
   
-  // Function to generate AI persona with progress updates
+  // Function to generate AI persona with progress updates and using custom prompts
   const generatePersona = async (enhancementText?: string): Promise<void> => {
     try {
       if (!latestBriefing || !latestBriefing.content) {
@@ -89,30 +90,30 @@ const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({
         });
       }, 1000);
       
-      // Generate the persona content using the AI service
-      const { data: aiResponse, error: aiError } = await supabase.functions.invoke('marketing-ai', {
-        body: { 
-          module: 'persona', 
-          action: 'generate',
-          data: {
-            strategyId: strategy.id,
-            briefingContent: latestBriefing.content,
-            enhancementText: enhancementText || ''
-          }
+      console.log("Generating persona using custom AI prompts...");
+      
+      // Generate the persona content using the AI service with custom prompts
+      const { data: aiResponse, error: aiError, debugInfo } = await MarketingAIService.generateContent<{ rawOutput: string }>(
+        'persona',
+        'generate',
+        {
+          strategyId: strategy.id,
+          briefingContent: latestBriefing.content,
+          enhancementText: enhancementText || ''
         }
-      });
+      );
       
       // Store debug info for monitoring
-      if (aiResponse) {
-        setAiDebugInfo(aiResponse);
-      }
+      setAiDebugInfo(debugInfo);
       
       if (aiError) {
         clearInterval(progressInterval);
-        throw new Error(aiError.message);
+        throw new Error(aiError);
       }
       
-      if (aiResponse && aiResponse.result) {
+      console.log("Generated persona data:", aiResponse);
+      
+      if (aiResponse) {
         // Calculate the next version number
         const nextVersion = personaHistory.length > 0 ? 
           ((personaHistory[0].metadata?.version || 0) as number) + 1 : 1;
@@ -131,7 +132,7 @@ const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({
         // Save the generated persona using our utility function
         const savedResult = await saveAgentResultToDb(
           strategy.id,
-          aiResponse.result.rawOutput || "",
+          aiResponse.rawOutput || "",
           metadata
         );
         
