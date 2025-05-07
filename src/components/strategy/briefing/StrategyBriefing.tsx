@@ -47,11 +47,9 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   
   const fetchStrategyMetadata = async () => {
     try {
-      // Use type assertion to fix TypeScript errors
-      const { data, error } = await supabase.rpc<StrategyMetadataRow[], GetStrategyMetadataParams>(
-  'get_strategy_metadata',
-  { strategy_id_param: strategy.id }
-);
+      const { data, error } = await supabase.rpc('get_strategy_metadata', {
+        strategy_id_param: strategy.id
+      });
         
       if (error) throw error;
       
@@ -78,18 +76,14 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   // Function to update strategy metadata
   const saveStrategyMetadata = async (updatedValues: StrategyFormValues): Promise<boolean> => {
     try {
-      // Use type assertion for the RPC call
-      const { error } = await supabase.rpc<void, UpsertStrategyMetadataParams>(
-  'upsert_strategy_metadata',
-  {
-    strategy_id_param: strategy.id,
-    company_name_param: updatedValues.companyName,
-    website_url_param: updatedValues.websiteUrl,
-    product_description_param: updatedValues.productDescription,
-    product_url_param: updatedValues.productUrl,
-    additional_info_param: updatedValues.additionalInfo
-  }
-);
+      const { error } = await supabase.rpc('upsert_strategy_metadata', {
+        strategy_id_param: strategy.id,
+        company_name_param: updatedValues.companyName,
+        website_url_param: updatedValues.websiteUrl,
+        product_description_param: updatedValues.productDescription,
+        product_url_param: updatedValues.productUrl,
+        additional_info_param: updatedValues.additionalInfo
+      });
       
       if (error) throw error;
       
