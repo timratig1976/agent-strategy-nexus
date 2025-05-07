@@ -18,7 +18,7 @@ const PainGainsModule: React.FC<PainGainsModuleProps> = ({
   const briefingContent = briefingAgentResult?.content || "";
   
   return (
-    <div className="space-y-8">
+    <div className="w-full">
       <h2 className="text-2xl font-bold">Pain Points & Gains Analysis</h2>
       <p className="text-muted-foreground">
         Identify your customer pain points and desired gains to create a compelling unique selling proposition.

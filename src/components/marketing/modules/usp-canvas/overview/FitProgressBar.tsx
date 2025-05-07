@@ -26,15 +26,15 @@ const FitProgressBar = ({ label, percentage }: FitProgressBarProps) => {
   const statusLabel = getStatusLabel(percentage);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 w-full">
       <div className="flex justify-between text-sm">
-        <span>{label}</span>
+        <span className="font-medium">{label}</span>
         <span className="font-medium">{percentage}%</span>
       </div>
       <div className="relative">
         <Progress 
           value={percentage} 
-          className={`h-2 ${progressColor}`} 
+          className={`h-2.5 ${progressColor}`} 
         />
       </div>
       <div className="flex justify-end">

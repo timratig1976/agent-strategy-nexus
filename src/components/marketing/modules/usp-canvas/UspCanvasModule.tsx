@@ -165,7 +165,7 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="w-full">
       <div className="mb-8 flex items-center space-x-3">
         <div className="p-2 rounded-md bg-primary/10">
           <LayoutDashboard className="h-6 w-6" />
