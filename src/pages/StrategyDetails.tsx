@@ -1,14 +1,12 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import NavBar from "@/components/NavBar";
 
 // Import refactored components
 import StrategyBackButton from "@/components/strategy/StrategyBackButton";
 import StrategyHeader from "@/components/strategy/StrategyHeader";
-import StrategyResults from "@/components/strategy/StrategyResults";
 import LoadingStrategy from "@/components/strategy/loading/LoadingStrategy";
 import StrategyNotFound from "@/components/strategy/StrategyNotFound";
 import StrategyBriefing from "@/components/strategy/briefing";
@@ -22,7 +20,6 @@ const StrategyDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState("briefing");
   
   // Redirect to dashboard if no ID is provided
   useEffect(() => {
@@ -30,12 +27,6 @@ const StrategyDetails = () => {
       toast.error("Strategy ID is missing");
       navigate('/dashboard');
       return;
-    }
-
-    // Check if there's a tab parameter in the URL
-    const tabParam = searchParams.get("tab");
-    if (tabParam) {
-      setActiveTab(tabParam);
     }
   }, [id, navigate, searchParams]);
   
@@ -84,26 +75,10 @@ const StrategyDetails = () => {
           <p className="text-gray-700">{strategy.description}</p>
         </div>
         
-        <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="briefing">AI Briefing</TabsTrigger>
-            <TabsTrigger value="results">Results</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="briefing">
-            <StrategyBriefing 
-              strategy={strategy} 
-              agentResults={agentResults || []} 
-            />
-          </TabsContent>
-          
-          <TabsContent value="results">
-            <StrategyResults 
-              strategyId={id}
-              agentResults={agentResults}
-            />
-          </TabsContent>
-        </Tabs>
+        <StrategyBriefing 
+          strategy={strategy} 
+          agentResults={agentResults || []} 
+        />
       </div>
     </>
   );

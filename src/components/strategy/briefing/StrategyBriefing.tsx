@@ -2,19 +2,23 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 import { StrategyFormValues } from "@/components/strategy-form";
 import { StrategyBriefingProps } from "./types";
-import StrategyInfoCard from "./StrategyInfoCard";
-import BriefingResultCard from "./BriefingResultCard";
+import StrategyInfoCard from "./components/strategy-info/StrategyInfoCard";
 import WebsiteCrawlerWrapper from "./WebsiteCrawlerWrapper";
 import { WebsiteCrawlResult } from "@/components/marketing/modules/website-crawler/types";
 import { useBriefingGenerator } from "./hooks/useBriefingGenerator";
 import { BriefingProgressBar } from "./components";
+import { BriefingResult } from "./components/briefing-result/BriefingResult";
+import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const StrategyBriefing: React.FC<StrategyBriefingProps> = ({ 
   strategy, 
   agentResults = [] 
 }) => {
+  const navigate = useNavigate();
   const [showCrawler, setShowCrawler] = useState<boolean>(false);
   const [crawlResults, setCrawlResults] = useState<WebsiteCrawlResult | undefined>();
   
@@ -34,7 +38,9 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
     isGenerating,
     progress,
     generateBriefing,
-    saveAgentResult
+    saveAgentResult,
+    briefingHistory,
+    setBriefingHistory
   } = useBriefingGenerator(strategy.id);
 
   // Fetch strategy metadata
@@ -163,11 +169,41 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   // Find the latest briefing result
   const latestBriefing = agentResults && agentResults.length > 0 ? agentResults[0] : null;
 
+  // Navigate to persona development
+  const goToNextStep = () => {
+    // First, try to update the strategy state to persona
+    supabase
+      .from('strategies')
+      .update({ state: 'persona' })
+      .eq('id', strategy.id)
+      .then(({ error }) => {
+        if (error) {
+          console.error("Error updating strategy state:", error);
+          toast.error("Failed to update strategy state");
+        } else {
+          // Navigate to the persona development page
+          navigate(`/strategy/${strategy.id}?tab=personas`);
+          toast.success("Moving to persona development");
+        }
+      });
+  };
+
   return (
     <div className="space-y-6">
       {isGenerating && (
         <BriefingProgressBar progress={progress} />
       )}
+      
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Strategy Briefing</h2>
+        <Button 
+          onClick={goToNextStep}
+          className="flex items-center"
+        >
+          Next: Persona Development <ArrowRight className="ml-2" />
+        </Button>
+      </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           {showCrawler ? (
@@ -186,11 +222,13 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
           )}
         </div>
 
-        <BriefingResultCard 
+        <BriefingResult 
           latestBriefing={latestBriefing}
           isGenerating={isGenerating}
           generateBriefing={() => generateBriefing(formValues)}
           saveAgentResult={saveAgentResult}
+          briefingHistory={briefingHistory}
+          setBriefingHistory={setBriefingHistory}
         />
       </div>
     </div>
