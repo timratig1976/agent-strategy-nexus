@@ -22,6 +22,8 @@ const UrlField: React.FC<UrlFieldProps> = ({
   previewResults,
   crawlingUrl
 }) => {
+  const isProductUrl = name === 'productUrl';
+  
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
@@ -31,7 +33,7 @@ const UrlField: React.FC<UrlFieldProps> = ({
           name={name}
           value={value || ''}
           onChange={onChange}
-          placeholder={`https://example.com${name === 'productUrl' ? '/product' : ''}`}
+          placeholder={`https://example.com${isProductUrl ? '/product' : ''}`}
           className="flex-1"
         />
         <Button
@@ -40,7 +42,7 @@ const UrlField: React.FC<UrlFieldProps> = ({
           size="icon"
           onClick={onCrawl}
           disabled={crawlingUrl !== null}
-          title={`Crawl ${name === 'websiteUrl' ? 'website' : 'product page'} for information`}
+          title={`Crawl ${isProductUrl ? 'product page' : 'website'} for information`}
         >
           {isCrawling ? (
             <div className="animate-spin">
@@ -50,7 +52,7 @@ const UrlField: React.FC<UrlFieldProps> = ({
             <Search className="h-4 w-4" />
           )}
         </Button>
-        {previewResults && crawlingUrl === null && name === 'websiteUrl' && (
+        {previewResults && crawlingUrl === null && (
           <Button
             type="button"
             variant="outline"
@@ -65,8 +67,12 @@ const UrlField: React.FC<UrlFieldProps> = ({
       {isCrawling && (
         <Progress value={crawlProgress} className="h-1 mt-1" />
       )}
-      {name === 'websiteUrl' && (
-        <CrawlPreview results={previewResults} show={showPreview} />
+      {previewResults && (
+        <CrawlPreview 
+          results={previewResults} 
+          show={showPreview} 
+          source={isProductUrl ? 'product' : 'website'} 
+        />
       )}
     </div>
   );

@@ -1,13 +1,6 @@
 
-import { StrategyFormValues } from "@/components/strategy-form";
 import { WebsiteCrawlResult } from "@/components/marketing/modules/website-crawler/types";
-
-export interface StrategyInfoCardProps {
-  formValues: StrategyFormValues & { id?: string };
-  saveStrategyMetadata: (updatedValues: StrategyFormValues) => Promise<boolean>;
-  showCrawler: boolean;
-  setShowCrawler: React.Dispatch<React.SetStateAction<boolean>>;
-}
+import React from "react";
 
 export interface UrlFieldProps {
   id: string;
@@ -27,4 +20,12 @@ export interface UrlFieldProps {
 export interface CrawlPreviewProps {
   results: WebsiteCrawlResult | null;
   show: boolean;
+  source?: 'website' | 'product';
+}
+
+export interface StrategyInfoCardProps {
+  formValues: any;
+  saveStrategyMetadata: (updatedValues: any) => Promise<boolean>;
+  showCrawler: boolean;
+  setShowCrawler: (show: boolean) => void;
 }

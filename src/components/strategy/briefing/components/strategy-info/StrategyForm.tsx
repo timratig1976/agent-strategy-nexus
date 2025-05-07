@@ -17,9 +17,12 @@ interface StrategyFormProps {
   crawlingUrl: string | null;
   handleCrawl: (urlType: 'websiteUrl' | 'productUrl') => Promise<void>;
   crawlProgress: number;
-  previewResults: WebsiteCrawlResult | null;
-  showPreview: boolean;
-  setShowPreview: (show: boolean) => void;
+  websitePreviewResults: WebsiteCrawlResult | null;
+  productPreviewResults: WebsiteCrawlResult | null;
+  showWebsitePreview: boolean;
+  showProductPreview: boolean;
+  setShowWebsitePreview: (show: boolean) => void;
+  setShowProductPreview: (show: boolean) => void;
 }
 
 const StrategyForm: React.FC<StrategyFormProps> = ({
@@ -30,9 +33,12 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
   crawlingUrl,
   handleCrawl,
   crawlProgress,
-  previewResults,
-  showPreview,
-  setShowPreview
+  websitePreviewResults,
+  productPreviewResults,
+  showWebsitePreview,
+  showProductPreview,
+  setShowWebsitePreview,
+  setShowProductPreview
 }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -56,9 +62,9 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
         onCrawl={() => handleCrawl('websiteUrl')}
         isCrawling={crawlingUrl === 'websiteUrl'}
         crawlProgress={crawlProgress}
-        showPreview={showPreview}
-        setShowPreview={setShowPreview}
-        previewResults={previewResults}
+        showPreview={showWebsitePreview}
+        setShowPreview={setShowWebsitePreview}
+        previewResults={websitePreviewResults}
         crawlingUrl={crawlingUrl}
       />
       
@@ -83,9 +89,9 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
         onCrawl={() => handleCrawl('productUrl')}
         isCrawling={crawlingUrl === 'productUrl'}
         crawlProgress={crawlProgress}
-        showPreview={false}
-        setShowPreview={() => {}}
-        previewResults={null}
+        showPreview={showProductPreview}
+        setShowPreview={setShowProductPreview}
+        previewResults={productPreviewResults}
         crawlingUrl={crawlingUrl}
       />
       
