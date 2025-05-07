@@ -6,7 +6,7 @@ interface BriefingProgressBarProps {
   progress: number;
 }
 
-const BriefingProgressBar: React.FC<BriefingProgressBarProps> = ({ progress }) => {
+export const BriefingProgressBar: React.FC<BriefingProgressBarProps> = ({ progress }) => {
   return (
     <div className="mb-6">
       <div className="flex justify-between mb-2">
