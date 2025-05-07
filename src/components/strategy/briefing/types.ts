@@ -12,3 +12,10 @@ export interface WebsiteCrawlerWrapperProps {
   crawlResults?: WebsiteCrawlResult;
   setCrawlResults: (results?: WebsiteCrawlResult) => void;
 }
+
+export interface BriefingResultCardProps {
+  latestBriefing: AgentResult | null;
+  isGenerating: boolean;
+  generateBriefing: () => Promise<void>;
+  saveAgentResult: (result: AgentResult) => Promise<boolean>;
+}

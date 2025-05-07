@@ -29,14 +29,17 @@ export const useBriefingGenerator = (strategyId: string) => {
       }
 
       if (data) {
-        // Map the data from snake_case to camelCase
+        // Map the data from snake_case to camelCase and ensure metadata is properly typed
         const formattedResults: AgentResult[] = data.map(result => ({
           id: result.id,
           agentId: result.agent_id,
           strategyId: result.strategy_id,
           content: result.content,
           createdAt: result.created_at,
-          metadata: result.metadata || {}
+          // Ensure metadata is treated as a record by providing a default empty object
+          metadata: (typeof result.metadata === 'object' && result.metadata !== null) 
+            ? result.metadata as Record<string, any>
+            : {} // Default to empty object if metadata is not an object or null
         }));
 
         setBriefingHistory(formattedResults);
