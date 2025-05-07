@@ -27,11 +27,11 @@ declare global {
         upsert_strategy_metadata: {
           Args: {
             strategy_id_param: string;
-            company_name_param: string;
-            website_url_param: string;
-            product_description_param: string;
-            product_url_param: string;
-            additional_info_param: string;
+            company_name_param: string | null;
+            website_url_param: string | null;
+            product_description_param: string | null;
+            product_url_param: string | null;
+            additional_info_param: string | null;
           };
           Returns: void;
         };
