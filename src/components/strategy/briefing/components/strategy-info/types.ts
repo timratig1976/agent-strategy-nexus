@@ -1,6 +1,7 @@
 
 import { WebsiteCrawlResult } from "@/components/marketing/modules/website-crawler/types";
 import React from "react";
+import { CrawlUrlType } from "./hooks/useCrawlUrl";
 
 export interface UrlFieldProps {
   id: string;
@@ -28,4 +29,20 @@ export interface StrategyInfoCardProps {
   saveStrategyMetadata: (updatedValues: any) => Promise<boolean>;
   showCrawler: boolean;
   setShowCrawler: (show: boolean) => void;
+}
+
+export interface StrategyFormProps {
+  localFormValues: any;
+  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleSubmit: (e: React.FormEvent) => void;
+  isSaving: boolean;
+  crawlingUrl: string | null;
+  handleCrawl: (urlType: CrawlUrlType) => Promise<void>;
+  crawlProgress: number;
+  websitePreviewResults: WebsiteCrawlResult | null;
+  productPreviewResults: WebsiteCrawlResult | null;
+  showWebsitePreview: boolean;
+  showProductPreview: boolean;
+  setShowWebsitePreview: (show: boolean) => void;
+  setShowProductPreview: (show: boolean) => void;
 }

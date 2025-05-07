@@ -5,25 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Save } from "lucide-react";
-import { StrategyFormValues } from "@/components/strategy-form";
-import { WebsiteCrawlResult } from "@/components/marketing/modules/website-crawler/types";
+import { StrategyFormProps } from "./types";
 import UrlField from "./UrlField";
-
-interface StrategyFormProps {
-  localFormValues: StrategyFormValues & { id?: string };
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  handleSubmit: (e: React.FormEvent) => void;
-  isSaving: boolean;
-  crawlingUrl: string | null;
-  handleCrawl: (urlType: 'websiteUrl' | 'productUrl') => Promise<void>;
-  crawlProgress: number;
-  websitePreviewResults: WebsiteCrawlResult | null;
-  productPreviewResults: WebsiteCrawlResult | null;
-  showWebsitePreview: boolean;
-  showProductPreview: boolean;
-  setShowWebsitePreview: (show: boolean) => void;
-  setShowProductPreview: (show: boolean) => void;
-}
 
 const StrategyForm: React.FC<StrategyFormProps> = ({
   localFormValues,
