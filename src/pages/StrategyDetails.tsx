@@ -65,6 +65,25 @@ const StrategyDetails = () => {
     result.metadata?.is_final === true && (!result.metadata?.type || result.metadata?.type === 'briefing')
   ) || null;
 
+  // Determine which component to render based on the strategy state
+  let contentComponent;
+  if (strategy.state === 'briefing') {
+    contentComponent = (
+      <StrategyBriefing 
+        strategy={strategy} 
+        agentResults={agentResults || []} 
+      />
+    );
+  } else if (strategy.state === 'persona') {
+    contentComponent = (
+      <PersonaDevelopment 
+        strategy={strategy}
+        agentResults={agentResults || []}
+        briefingAgentResult={finalBriefing}
+      />
+    );
+  }
+
   return (
     <>
       <NavBar />
@@ -81,20 +100,7 @@ const StrategyDetails = () => {
           <p className="text-gray-700">{strategy.description}</p>
         </div>
         
-        {strategy.state === 'briefing' && (
-          <StrategyBriefing 
-            strategy={strategy} 
-            agentResults={agentResults || []} 
-          />
-        )}
-        
-        {strategy.state === 'persona' && (
-          <PersonaDevelopment 
-            strategy={strategy}
-            agentResults={agentResults || []}
-            briefingAgentResult={finalBriefing}
-          />
-        )}
+        {contentComponent}
       </div>
     </>
   );

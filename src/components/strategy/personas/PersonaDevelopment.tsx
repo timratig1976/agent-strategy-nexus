@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,9 +37,11 @@ const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({
   // Find the latest persona from the history
   const latestPersona = personaHistory.length > 0 ? personaHistory[0] : null;
 
-  // Handler for going back to the briefing step - fixed to navigate directly to strategy details
+  // Handler for going back to the briefing step
   const handleGoToPreviousStep = () => {
-    // Navigate directly to strategy details page
+    // Updated to navigate directly back to the strategy details page 
+    // without the /tab=personas parameter since the main issue could be
+    // the URL parameter handling
     navigate(`/strategy-details/${strategy.id}`);
   };
   
