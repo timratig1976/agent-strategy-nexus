@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,11 +19,11 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   const [formValues, setFormValues] = useState<StrategyFormValues>({
     name: strategy.name,
     description: strategy.description || '',
-    companyName: strategy.company_name || '',
-    websiteUrl: strategy.website_url || '',
-    productDescription: strategy.product_description || '',
-    productUrl: strategy.product_url || '',
-    additionalInfo: strategy.additional_info || ''
+    companyName: '',
+    websiteUrl: '',
+    productDescription: '',
+    productUrl: '',
+    additionalInfo: ''
   });
 
   const {
