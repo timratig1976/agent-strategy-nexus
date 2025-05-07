@@ -14,10 +14,6 @@ import StrategyOverview from '@/pages/StrategyOverview';
 import CompanySummaryPage from '@/pages/CompanySummaryPage';
 import MarketingHubPage from '@/pages/MarketingHubPage';
 import ModulePage from '@/pages/ModulePage';
-import DashboardPage from "@/pages/crm/DashboardPage";
-import ContactsPage from "@/pages/crm/ContactsPage";
-import ContactDetailsPage from "@/pages/crm/ContactDetailsPage";
-import DealsPage from "@/pages/crm/DealsPage";
 import NotFound from "@/pages/NotFound";
 import AIPromptManagerPage from "@/pages/AIPromptManagerPage";
 import { AuthProvider, useAuth } from "@/context/AuthProvider";
@@ -49,10 +45,6 @@ function App() {
           <Route path="/marketing-hub" element={<MarketingHubPage />} />
           <Route path="/module" element={<ModulePage />} />
           <Route path="/ai-prompts" element={<AIPromptManagerPage />} />
-          <Route path="/crm/dashboard" element={<DashboardPage />} />
-          <Route path="/crm/contacts" element={<ContactsPage />} />
-          <Route path="/crm/contacts/:contactId" element={<ContactDetailsPage />} />
-          <Route path="/crm/deals" element={<DealsPage />} />
         </Route>
         
         <Route path="*" element={<NotFound />} />

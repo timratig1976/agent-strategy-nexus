@@ -39,7 +39,7 @@ const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({
 
   // Handler for going back to the briefing step
   const handleGoToPreviousStep = () => {
-    // Navigate back to strategy details with briefing state
+    // Navigate back to the same strategy details page but with briefing state
     navigate(`/strategy/${strategy.id}?state=briefing`);
   };
   
