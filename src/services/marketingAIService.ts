@@ -28,26 +28,26 @@ export class MarketingAIService {
     try {
       console.log('Sending request to AI service:', { module, action, data });
       
-      const { data: result, error } = await supabase.functions.invoke('marketing-ai', {
+      const response = await supabase.functions.invoke('marketing-ai', {
         body: { module, action, data }
       });
       
-      if (error) {
-        console.error('Error invoking marketing AI function:', error);
+      if (response.error) {
+        console.error('Error invoking marketing AI function:', response.error);
         return { 
-          error: error.message || 'Failed to generate content',
+          error: response.error.message || 'Failed to generate content',
           debugInfo: {
             requestData: { module, action, data },
-            responseData: error
+            responseData: response.error
           }
         };
       }
       
       return { 
-        data: result.result as T,
+        data: response.data.result as T,
         debugInfo: {
           requestData: { module, action, data },
-          responseData: result
+          responseData: response.data
         }
       };
     } catch (error) {
@@ -99,13 +99,17 @@ export class MarketingAIService {
         .from('ai_prompts')
         .select('*')
         .eq('module', module)
-        .single();
+        .maybeSingle();
       
       if (error) {
         if (error.code === 'PGRST116') { // Not found
           return { error: `No prompt found for module: ${module}` };
         }
         throw error;
+      }
+      
+      if (!data) {
+        return { error: `No prompt found for module: ${module}` };
       }
       
       return { 
@@ -132,11 +136,15 @@ export class MarketingAIService {
     prompt: Partial<AIPrompt> & { module: string }
   ): Promise<AIServiceResponse<AIPrompt>> {
     try {
-      const { data: existingPrompt } = await supabase
+      const { data: existingPrompt, error: fetchError } = await supabase
         .from('ai_prompts')
         .select('id')
         .eq('module', prompt.module)
         .maybeSingle();
+      
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        throw fetchError;
+      }
       
       let result;
       

@@ -15,8 +15,31 @@ const AIDebugPanel: React.FC<AIDebugPanelProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // Safely stringify JSON with circular references handling
+  const safeStringify = (obj: any, indent = 2) => {
+    try {
+      // Handle circular references
+      const seen = new WeakSet();
+      return JSON.stringify(
+        obj,
+        (key, value) => {
+          if (typeof value === "object" && value !== null) {
+            if (seen.has(value)) {
+              return "[Circular Reference]";
+            }
+            seen.add(value);
+          }
+          return value;
+        },
+        indent
+      );
+    } catch (error) {
+      return `[Error displaying object: ${error instanceof Error ? error.message : String(error)}]`;
+    }
+  };
+
   return (
-    <Card>
+    <Card className="mt-6">
       <CardHeader className="py-2 flex flex-row items-center justify-between">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         <Button
@@ -35,7 +58,7 @@ const AIDebugPanel: React.FC<AIDebugPanelProps> = ({
         <CardContent>
           <div className="bg-gray-50 p-4 rounded-md overflow-auto max-h-96">
             <pre className="text-xs whitespace-pre-wrap">
-              {JSON.stringify(debugInfo, null, 2)}
+              {safeStringify(debugInfo)}
             </pre>
           </div>
         </CardContent>

@@ -76,7 +76,7 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
       else if (activeSection === "pains") section = "pains";
       else if (activeSection === "gains") section = "gains";
       
-      const { data, error, debugInfo } = await MarketingAIService.generateUspCanvasProfile(
+      const result = await MarketingAIService.generateUspCanvasProfile(
         strategyId,
         briefingContent,
         section,
@@ -84,18 +84,18 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
       );
 
       // Store debug info
-      setAiDebugInfo(debugInfo);
+      setAiDebugInfo(result.debugInfo);
 
-      if (error) {
+      if (result.error) {
         clearInterval(progressInterval);
-        toast.error(`Failed to generate USP Canvas profile: ${error}`);
+        toast.error(`Failed to generate USP Canvas profile: ${result.error}`);
         setProgress(0);
         setIsGenerating(false);
         return;
       }
 
-      if (data) {
-        setAiResult(data);
+      if (result.data) {
+        setAiResult(result.data);
         clearInterval(progressInterval);
         setProgress(100);
         toast.success("USP Canvas profile elements generated successfully");
@@ -252,11 +252,11 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
                   title="Customer Jobs"
                   colorClass="bg-blue-50"
                   titleColorClass="text-blue-800"
-                  items={aiResult.jobs?.map(job => ({
+                  items={(aiResult.jobs || []).map(job => ({
                     content: job.content,
                     level: job.priority,
                     levelLabel: "Priority"
-                  })) || []}
+                  }))}
                   onAdd={() => handleAddJobs(aiResult.jobs || [])}
                 />
                 
@@ -265,11 +265,11 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
                   title="Customer Pains"
                   colorClass="bg-red-50"
                   titleColorClass="text-red-800"
-                  items={aiResult.pains?.map(pain => ({
+                  items={(aiResult.pains || []).map(pain => ({
                     content: pain.content,
                     level: pain.severity,
                     levelLabel: "Severity"
-                  })) || []}
+                  }))}
                   onAdd={() => handleAddPains(aiResult.pains || [])}
                 />
                 
@@ -278,18 +278,18 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
                   title="Customer Gains"
                   colorClass="bg-green-50"
                   titleColorClass="text-green-800"
-                  items={aiResult.gains?.map(gain => ({
+                  items={(aiResult.gains || []).map(gain => ({
                     content: gain.content,
                     level: gain.importance,
                     levelLabel: "Importance"
-                  })) || []}
+                  }))}
                   onAdd={() => handleAddGains(aiResult.gains || [])}
                 />
               </div>
               
-              {(aiResult.jobs?.length || 0) + 
+              {((aiResult.jobs?.length || 0) + 
                (aiResult.pains?.length || 0) + 
-               (aiResult.gains?.length || 0) > 0 && (
+               (aiResult.gains?.length || 0)) > 0 && (
                 <div className="flex justify-end">
                   <Button onClick={handleAddAll}>
                     <PlusCircle className="h-4 w-4 mr-2" />
