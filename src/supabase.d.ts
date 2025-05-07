@@ -24,5 +24,25 @@ declare module "@supabase/supabase-js" {
       status: number;
       statusText: string;
     }>;
+
+    // Add a special RPC function for JSONB operations
+    rpc(
+      fn: 'jsonb_set_key_to_value',
+      params: { 
+        json_data: any, 
+        key_name: string, 
+        new_value: string
+      },
+      options?: {
+        count?: null | 'exact' | 'planned' | 'estimated',
+        head?: boolean
+      }
+    ): Promise<{
+      data: any;
+      error: Error | null;
+      count: number | null;
+      status: number;
+      statusText: string;
+    }>;
   }
 }

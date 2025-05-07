@@ -17,6 +17,33 @@ export const useAgentResultSaver = () => {
         throw new Error("Content is empty");
       }
       
+      // If this is a final version, update all previous final versions to not be final
+      if (metadata.is_final === true) {
+        console.log("Saving as final. Updating previous final versions...");
+        
+        // First, find the type of result we're saving (briefing, persona, etc.)
+        const resultType = metadata.type || 'briefing';
+        
+        // Remove 'final' status from all previous results of the same type
+        const { error: updateError } = await supabase
+          .from('agent_results')
+          .update({ 
+            metadata: supabase.rpc('jsonb_set_key_to_value', { 
+              json_data: supabase.raw('metadata::jsonb'),
+              key_name: 'is_final', 
+              new_value: 'false' 
+            })
+          })
+          .eq('strategy_id', strategyId)
+          .eq('metadata->is_final', 'true')
+          .eq('metadata->type', resultType);
+        
+        if (updateError) {
+          console.error("Error updating previous final results:", updateError);
+        }
+      }
+      
+      // Now insert the new record
       const newRecord = {
         agent_id: null,
         strategy_id: strategyId,

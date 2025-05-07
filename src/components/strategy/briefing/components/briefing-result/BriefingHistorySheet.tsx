@@ -4,17 +4,15 @@ import { AgentResult } from "@/types/marketing";
 import { Button } from "@/components/ui/button";
 import { History } from "lucide-react";
 import { 
-  Sheet, 
   SheetContent, 
   SheetHeader, 
-  SheetTitle, 
-  SheetTrigger 
+  SheetTitle
 } from "@/components/ui/sheet";
 
 interface BriefingHistorySheetProps {
   briefingHistory: AgentResult[];
   loadHistoricalVersion: (briefing: AgentResult) => void;
-  onSelect?: (content: string) => void; // Added onSelect as an optional prop
+  onSelect?: (content: string) => void;
 }
 
 const BriefingHistorySheet: React.FC<BriefingHistorySheetProps> = ({
@@ -43,22 +41,49 @@ const BriefingHistorySheet: React.FC<BriefingHistorySheetProps> = ({
     }
   };
 
+  // Find the final version in the history
+  const finalVersion = briefingHistory.find(briefing => briefing.metadata?.is_final === true);
+
   return (
     <SheetContent>
       <SheetHeader>
         <SheetTitle>Briefing History</SheetTitle>
       </SheetHeader>
       <div className="py-4 space-y-4">
-        {briefingHistory.map((briefing, index) => (
+        {/* Display the final version at the top if it exists */}
+        {finalVersion && (
+          <div className="border-2 border-green-500 rounded-md p-3 bg-green-50">
+            <div className="flex justify-between items-center mb-2">
+              <div className="text-sm font-medium flex items-center">
+                Final Version
+                <span className="ml-2 text-xs bg-green-500 text-white px-2 py-0.5 rounded-full">
+                  Final
+                </span>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {finalVersion.createdAt && formatDate(finalVersion.createdAt)}
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground line-clamp-2">
+              {finalVersion.content.substring(0, 100)}...
+            </p>
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="mt-2 bg-green-500 hover:bg-green-600"
+              onClick={() => handleLoadVersion(finalVersion)}
+            >
+              Load Final Version
+            </Button>
+          </div>
+        )}
+        
+        {/* Display other versions */}
+        {briefingHistory.filter(b => !b.metadata?.is_final).map((briefing, index) => (
           <div key={briefing.id} className="border rounded-md p-3">
             <div className="flex justify-between items-center mb-2">
               <div className="text-sm font-medium">
                 Version {(briefingHistory.length - index)}
-                {briefing.metadata?.is_final && (
-                  <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
-                    Final
-                  </span>
-                )}
               </div>
               <div className="text-xs text-muted-foreground">
                 {briefing.createdAt && formatDate(briefing.createdAt)}

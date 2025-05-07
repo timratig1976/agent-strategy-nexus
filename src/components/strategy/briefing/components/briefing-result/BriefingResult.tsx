@@ -1,8 +1,8 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet } from "@/components/ui/sheet";
 import { History, Sparkles } from "lucide-react";
 import { BriefingResultProps } from "../../types";
 import BriefingContentEditor from "./BriefingContentEditor";
@@ -31,20 +31,27 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
   const [enhancementText, setEnhancementText] = useState("");
   const [showPromptMonitor, setShowPromptMonitor] = useState(aiDebugInfo !== null && aiDebugInfo !== undefined);
   const [enhancerExpanded, setEnhancerExpanded] = useState(false);
+  const [hasFinalVersion, setHasFinalVersion] = useState(false);
 
   // Effect to update edited content when latest briefing changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (latestBriefing?.content) {
       setEditedContent(latestBriefing.content);
     }
   }, [latestBriefing]);
 
   // Effect to show prompt monitor if aiDebugInfo becomes available
-  React.useEffect(() => {
+  useEffect(() => {
     if (aiDebugInfo !== null && aiDebugInfo !== undefined) {
       setShowPromptMonitor(true);
     }
   }, [aiDebugInfo]);
+
+  // Check if there's a final version in the history
+  useEffect(() => {
+    const finalVersion = briefingHistory.find(item => item.metadata?.is_final === true);
+    setHasFinalVersion(!!finalVersion);
+  }, [briefingHistory]);
 
   const handleGenerateBriefing = () => {
     generateBriefing(enhancementText);
@@ -57,15 +64,20 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
       await saveAgentResult(editedContent, isFinal);
       
       toast.success(isFinal 
-        ? "Final briefing saved successfully" 
-        : "Briefing saved successfully");
+        ? "Final version saved successfully" 
+        : "Draft saved successfully");
+      
+      // Update the local state to reflect the new final status
+      if (isFinal) {
+        setHasFinalVersion(true);
+      }
       
       if (onBriefingSaved) {
         onBriefingSaved(isFinal);
       }
     } catch (error) {
       console.error("Error saving briefing:", error);
-      toast.error("Failed to save briefing");
+      toast.error("Failed to save");
     }
   };
 
@@ -85,11 +97,11 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
             {isGenerating ? "Generating..." : generateButtonText}
           </Button>
           <Sheet>
-            <SheetTrigger asChild>
+            <Sheet.Trigger asChild>
               <Button variant="outline" size="sm" className="flex gap-1">
                 <History className="h-4 w-4" /> History
               </Button>
-            </SheetTrigger>
+            </Sheet.Trigger>
             <BriefingHistorySheet
               briefingHistory={briefingHistory}
               loadHistoricalVersion={(briefing) => setEditedContent(briefing.content)}
@@ -149,7 +161,7 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
         </Button>
         <Button 
           onClick={() => handleSaveBriefing(true)} 
-          disabled={isGenerating || !editedContent.trim()} 
+          disabled={isGenerating || !editedContent.trim()}
           className="flex-1"
         >
           {saveFinalButtonText}
