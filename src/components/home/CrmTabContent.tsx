@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { LayoutDashboard } from "lucide-react";
@@ -10,15 +10,27 @@ interface CrmTabContentProps {
   isAuthenticated: boolean;
 }
 
-// This component is now empty since we've removed CRM functionality
 const CrmTabContent = ({ dbStatus, isAuthenticated }: CrmTabContentProps) => {
   const navigate = useNavigate();
   
   return (
     <div className="text-center p-8">
-      <p className="text-muted-foreground">
-        CRM functionality has been removed.
-      </p>
+      <Card>
+        <CardHeader>
+          <CardTitle>CRM Functionality</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground mb-6">
+            CRM functionality has been removed from this application.
+          </p>
+          {isAuthenticated && (
+            <Button onClick={() => navigate('/dashboard')} className="flex items-center gap-2">
+              <LayoutDashboard className="h-4 w-4" />
+              Go to Marketing Dashboard
+            </Button>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,10 +36,10 @@ const PersonaDevelopment: React.FC<PersonaDevelopmentProps> = ({
   // Find the latest persona from the history
   const latestPersona = personaHistory.length > 0 ? personaHistory[0] : null;
 
-  // Handler for going back to the briefing step
+  // Handler for going back to the briefing step - fixed to navigate directly to strategy details
   const handleGoToPreviousStep = () => {
-    // Navigate back to the same strategy details page but with briefing state
-    navigate(`/strategy/${strategy.id}?state=briefing`);
+    // Navigate directly to strategy details page
+    navigate(`/strategy-details/${strategy.id}`);
   };
   
   // Function to generate AI persona with progress updates

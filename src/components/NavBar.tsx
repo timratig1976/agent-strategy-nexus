@@ -18,26 +18,13 @@ export default function NavBar() {
   // Get the current route for active link highlighting
   const currentRoute = location.pathname;
   
-  // Determine if we're in the CRM section
-  const isInCrm = currentRoute.startsWith("/crm");
-
-  // Define navigation items based on current app section
-  const marketingNavItems = [
+  // Define navigation items
+  const navItems = [
     { name: "Dashboard", href: "/dashboard" },
     { name: "Strategies", href: "/create-strategy" },
     { name: "Company", href: "/company-summary" },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
-
-  const crmNavItems = [
-    { name: "Dashboard", href: "/crm/dashboard" },
-    { name: "Contacts", href: "/crm/contacts" },
-    { name: "Deals", href: "/crm/deals" },
-    { name: "Settings", href: "/settings", icon: Settings },
-  ];
-  
-  // Select the appropriate nav items
-  const navItems = isInCrm ? crmNavItems : marketingNavItems;
 
   const mobileNavigation = (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -49,7 +36,7 @@ export default function NavBar() {
       <SheetContent side="left" className="w-[240px] sm:w-[300px]">
         <div className="flex flex-col h-full">
           <div className="flex justify-between items-center pb-4 border-b">
-            <span className="font-semibold">{isInCrm ? "CRM" : "Marketing"}</span>
+            <span className="font-semibold">Marketing</span>
             <Button size="icon" variant="ghost" onClick={() => setOpen(false)}>
               <X className="h-4 w-4" />
             </Button>
@@ -98,7 +85,7 @@ export default function NavBar() {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="font-semibold text-lg mr-6">
-            {isInCrm ? "CRM Hub" : "Marketing Hub"}
+            Marketing Hub
           </Link>
 
           {!isMobile && (
