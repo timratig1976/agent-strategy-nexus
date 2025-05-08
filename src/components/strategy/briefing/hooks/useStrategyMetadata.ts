@@ -9,12 +9,12 @@ export const useStrategyMetadata = (strategyId: string) => {
   const [formValues, setFormValues] = useState<StrategyFormValues & { id: string }>({
     id: strategyId,
     name: "",
-    description: "",
     companyName: "",
     websiteUrl: "",
     productDescription: "",
     productUrl: "",
-    additionalInfo: ""
+    additionalInfo: "",
+    language: "english"
   });
 
   // Fetch strategy metadata on component mount
@@ -29,13 +29,12 @@ export const useStrategyMetadata = (strategyId: string) => {
       // First check if the strategy has direct properties we can use
       const { data: strategyData, error: strategyError } = await supabase
         .from('strategies')
-        .select('name, description, company_name, website_url, product_description, product_url, additional_info')
+        .select('name, company_name, website_url, product_description, product_url, additional_info')
         .eq('id', strategyId)
         .single();
         
       // Get strategy data values first
       let name = "";
-      let description = "";
       let companyName = '';
       let websiteUrl = '';
       let productDescription = '';
@@ -46,7 +45,6 @@ export const useStrategyMetadata = (strategyId: string) => {
       if (!strategyError && strategyData) {
         console.log("Found strategy data in strategies table:", strategyData);
         name = strategyData.name || '';
-        description = strategyData.description || '';
         companyName = strategyData.company_name || '';
         websiteUrl = strategyData.website_url || '';
         productDescription = strategyData.product_description || '';
@@ -81,7 +79,6 @@ export const useStrategyMetadata = (strategyId: string) => {
       console.log("Setting final form values:", {
         id: strategyId,
         name,
-        description,
         companyName,
         websiteUrl,
         productDescription,
@@ -93,12 +90,12 @@ export const useStrategyMetadata = (strategyId: string) => {
       setFormValues({
         id: strategyId,
         name,
-        description,
         companyName,
         websiteUrl,
         productDescription,
         productUrl,
-        additionalInfo
+        additionalInfo,
+        language: "english" // Default language
       });
       
     } catch (error) {

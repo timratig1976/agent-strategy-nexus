@@ -44,21 +44,24 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({ strategyId, onUploa
           
           // Upload the file to Supabase Storage
           const filePath = `${strategyId}/${Date.now()}-${fileName}`;
+          
+          // Upload with progress tracking
           const { error: uploadError, data } = await supabase.storage
             .from('strategy_documents')
             .upload(filePath, file, {
-              onUploadProgress: (progress) => {
-                const progressPercentage = Math.round((progress.loaded / progress.total) * 100);
-                setUploadState(prev => ({
-                  ...prev,
-                  progress: { ...prev.progress, [fileName]: progressPercentage }
-                }));
-              },
+              cacheControl: '3600',
+              upsert: false
             });
           
           if (uploadError) {
             throw new Error(`Error uploading ${fileName}: ${uploadError.message}`);
           }
+          
+          // Manual progress update since onUploadProgress is not available
+          setUploadState(prev => ({
+            ...prev,
+            progress: { ...prev.progress, [fileName]: 100 }
+          }));
           
           // Update the database with the file metadata
           await onUploadComplete(filePath, fileName, file.type, file.size);

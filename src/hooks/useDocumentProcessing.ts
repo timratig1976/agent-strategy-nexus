@@ -16,14 +16,29 @@ export const useDocumentProcessing = (strategyId: string) => {
     
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('strategy_documents')
-        .select('*')
-        .eq('strategy_id', strategyId)
-        .order('created_at', { ascending: false });
+      // Use RPC function to get documents instead of accessing strategy_documents directly
+      const { data, error } = await supabase.rpc(
+        'get_strategy_documents',
+        { strategy_id_param: strategyId }
+      );
       
       if (error) throw error;
-      setDocuments(data || []);
+      
+      // Transform RPC results to match StrategyDocument type
+      const typedDocs: StrategyDocument[] = data ? data.map((doc: any) => ({
+        id: doc.id,
+        strategy_id: doc.strategy_id,
+        file_path: doc.file_path,
+        file_name: doc.file_name,
+        file_type: doc.file_type,
+        file_size: doc.file_size,
+        processed: doc.processed,
+        extracted_text: doc.extracted_text,
+        created_at: doc.created_at,
+        updated_at: doc.updated_at
+      })) : [];
+      
+      setDocuments(typedDocs);
     } catch (error) {
       console.error('Error fetching documents:', error);
     } finally {

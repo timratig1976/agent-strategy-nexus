@@ -22,14 +22,29 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({ strategyId }) => {
   const fetchDocuments = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('strategy_documents')
-        .select('*')
-        .eq('strategy_id', strategyId)
-        .order('created_at', { ascending: false });
+      // Fix: Using raw query instead of strategy_documents table reference
+      const { data, error } = await supabase.rpc(
+        'get_strategy_documents',
+        { strategy_id_param: strategyId }
+      );
       
       if (error) throw error;
-      setDocuments(data || []);
+      
+      // Transform the data to match StrategyDocument type
+      const typedDocs: StrategyDocument[] = data ? data.map((doc: any) => ({
+        id: doc.id,
+        strategy_id: doc.strategy_id,
+        file_path: doc.file_path,
+        file_name: doc.file_name,
+        file_type: doc.file_type,
+        file_size: doc.file_size,
+        processed: doc.processed,
+        extracted_text: doc.extracted_text,
+        created_at: doc.created_at,
+        updated_at: doc.updated_at
+      })) : [];
+      
+      setDocuments(typedDocs);
     } catch (error) {
       console.error('Error fetching documents:', error);
       toast({
@@ -75,16 +90,17 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({ strategyId }) => {
     fileSize: number
   ) => {
     try {
-      const { error } = await supabase
-        .from('strategy_documents')
-        .insert({
-          strategy_id: strategyId,
-          file_path: filePath,
-          file_name: fileName,
-          file_type: fileType,
-          file_size: fileSize,
-          processed: false
-        });
+      // Fix: Using raw query instead of strategy_documents table reference
+      const { error } = await supabase.rpc(
+        'insert_strategy_document',
+        {
+          strategy_id_param: strategyId,
+          file_path_param: filePath,
+          file_name_param: fileName,
+          file_type_param: fileType,
+          file_size_param: fileSize
+        }
+      );
       
       if (error) throw error;
       
@@ -110,11 +126,11 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({ strategyId }) => {
       
       if (storageError) throw storageError;
       
-      // Delete from database
-      const { error: dbError } = await supabase
-        .from('strategy_documents')
-        .delete()
-        .eq('id', documentId);
+      // Delete from database using RPC
+      const { error: dbError } = await supabase.rpc(
+        'delete_strategy_document',
+        { document_id_param: documentId }
+      );
       
       if (dbError) throw dbError;
       
