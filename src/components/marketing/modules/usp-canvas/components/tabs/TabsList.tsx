@@ -1,53 +1,98 @@
-
 import React from "react";
 import { TabsList as ShadcnTabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface TabsListProps {
   activeTab: string;
+  children?: React.ReactNode;
 }
 
-const TabsList: React.FC<TabsListProps> = ({ activeTab }) => {
+const TabsList: React.FC<TabsListProps> = ({ activeTab, children }) => {
   return (
     <ShadcnTabsList className="w-full">
-      <TabsTrigger 
-        value="canvas" 
-        className="relative"
-      >
-        Canvas
-        {activeTab === "canvas" && (
-          <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
-        )}
-      </TabsTrigger>
-      
-      <TabsTrigger 
-        value="overview" 
-        className="relative"
-      >
-        Overview
-        {activeTab === "overview" && (
-          <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
-        )}
-      </TabsTrigger>
-      
-      <TabsTrigger 
-        value="ai-generator" 
-        className="relative"
-      >
-        AI Generator
-        {activeTab === "ai-generator" && (
-          <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
-        )}
-      </TabsTrigger>
-      
-      <TabsTrigger 
-        value="history" 
-        className="relative"
-      >
-        History
-        {activeTab === "history" && (
-          <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
-        )}
-      </TabsTrigger>
+      {children ? (
+        React.Children.map(children, (child) => {
+          if (!React.isValidElement(child)) return null;
+          
+          // Handle both direct TabsTrigger and TabsTrigger inside TooltipTrigger
+          const isTrigger = child.type === TabsTrigger;
+          const isTooltipWithTrigger = child.props?.children?.type === TabsTrigger;
+          
+          if (isTrigger) {
+            // Direct TabsTrigger element
+            return React.cloneElement(child, {
+              className: `relative ${child.props.className || ''}`,
+              children: (
+                <>
+                  {child.props.children}
+                  {activeTab === child.props.value && (
+                    <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
+                  )}
+                </>
+              )
+            });
+          } else if (isTooltipWithTrigger) {
+            // Handle TooltipTrigger containing TabsTrigger
+            return React.cloneElement(child, {
+              children: React.cloneElement(child.props.children, {
+                className: `relative ${child.props.children.props.className || ''}`,
+                children: (
+                  <>
+                    {child.props.children.props.children}
+                    {activeTab === child.props.children.props.value && (
+                      <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
+                    )}
+                  </>
+                )
+              })
+            });
+          }
+          
+          // Return other children unchanged
+          return child;
+        })
+      ) : (
+        <>
+          <TabsTrigger 
+            value="canvas" 
+            className="relative"
+          >
+            Canvas
+            {activeTab === "canvas" && (
+              <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
+            )}
+          </TabsTrigger>
+          
+          <TabsTrigger 
+            value="overview" 
+            className="relative"
+          >
+            Overview
+            {activeTab === "overview" && (
+              <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
+            )}
+          </TabsTrigger>
+          
+          <TabsTrigger 
+            value="ai-generator" 
+            className="relative"
+          >
+            AI Generator
+            {activeTab === "ai-generator" && (
+              <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
+            )}
+          </TabsTrigger>
+          
+          <TabsTrigger 
+            value="history" 
+            className="relative"
+          >
+            History
+            {activeTab === "history" && (
+              <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
+            )}
+          </TabsTrigger>
+        </>
+      )}
     </ShadcnTabsList>
   );
 };

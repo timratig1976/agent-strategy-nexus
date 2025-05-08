@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -35,18 +35,27 @@ const RelatedItemForm = ({
   // This ref will be used to focus the input
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Effect to focus the input on mount
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
   // Function to handle submit and maintain focus
   const handleSubmit = () => {
-    handleAddItem();
-    // Focus back on the input after adding
-    setTimeout(() => {
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    }, 0);
+    if (newItemContent.trim()) {
+      handleAddItem();
+      // Focus back on the input after adding
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 0);
+    }
   };
 
-  // Handle keyboard event to maintain focus
+  // Handle keyboard event to submit on Enter
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && newItemContent.trim()) {
       e.preventDefault();
@@ -64,6 +73,7 @@ const RelatedItemForm = ({
           placeholder={`Add a new ${customerItemType}...`}
           className="w-full"
           onKeyDown={handleKeyDown}
+          autoFocus
         />
       </div>
       

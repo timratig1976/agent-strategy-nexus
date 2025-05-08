@@ -27,6 +27,13 @@ const AddItemForm = ({
   placeholder,
   ratingLabel
 }: AddItemFormProps) => {
+  // Effect to focus the input on mount
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [inputRef]);
+
   // Handle submission while maintaining focus
   const handleSubmit = () => {
     if (value.trim()) {
@@ -49,6 +56,7 @@ const AddItemForm = ({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
+            autoFocus
             onKeyDown={(e) => {
               if (e.key === 'Enter' && value.trim()) {
                 e.preventDefault();

@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import ProductServices from "./ProductServices";
 import PainRelievers from "./PainRelievers";
 import GainCreators from "./GainCreators";
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/tooltip";
 import { HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import TabsList from "./components/tabs/TabsList";
 
 interface ValueMapCanvasProps {
   canvas: UspCanvas;
@@ -80,24 +81,16 @@ const ValueMapCanvas = ({
         defaultValue="services" 
         className="mt-6"
       >
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList activeTab={activeTab}>
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger asChild>
-                <TabsTrigger 
-                  value="services" 
-                  className="relative"
-                >
-                  Products & Services
-                  {servicesCount > 0 && (
-                    <span className="ml-2 px-1.5 py-0.5 rounded-full bg-blue-100 text-xs text-blue-800">
-                      {servicesCount}
-                    </span>
-                  )}
-                  {activeTab === "services" && (
-                    <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
-                  )}
-                </TabsTrigger>
+              <TooltipTrigger value="services">
+                Products & Services
+                {servicesCount > 0 && (
+                  <span className="ml-2 px-1.5 py-0.5 rounded-full bg-blue-100 text-xs text-blue-800">
+                    {servicesCount}
+                  </span>
+                )}
               </TooltipTrigger>
               <TooltipContent side="top">
                 <p className="text-sm">Define what your company offers to help customers complete their jobs</p>
@@ -107,21 +100,13 @@ const ValueMapCanvas = ({
           
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger asChild>
-                <TabsTrigger 
-                  value="relievers" 
-                  className="relative"
-                >
-                  Pain Relievers
-                  {relieversCount > 0 && (
-                    <span className="ml-2 px-1.5 py-0.5 rounded-full bg-red-100 text-xs text-red-800">
-                      {relieversCount}
-                    </span>
-                  )}
-                  {activeTab === "relievers" && (
-                    <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
-                  )}
-                </TabsTrigger>
+              <TooltipTrigger value="relievers">
+                Pain Relievers
+                {relieversCount > 0 && (
+                  <span className="ml-2 px-1.5 py-0.5 rounded-full bg-red-100 text-xs text-red-800">
+                    {relieversCount}
+                  </span>
+                )}
               </TooltipTrigger>
               <TooltipContent side="top">
                 <p className="text-sm">How your offerings solve customer problems</p>
@@ -131,21 +116,13 @@ const ValueMapCanvas = ({
           
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger asChild>
-                <TabsTrigger 
-                  value="creators" 
-                  className="relative"
-                >
-                  Gain Creators
-                  {creatorsCount > 0 && (
-                    <span className="ml-2 px-1.5 py-0.5 rounded-full bg-green-100 text-xs text-green-800">
-                      {creatorsCount}
-                    </span>
-                  )}
-                  {activeTab === "creators" && (
-                    <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
-                  )}
-                </TabsTrigger>
+              <TooltipTrigger value="creators">
+                Gain Creators
+                {creatorsCount > 0 && (
+                  <span className="ml-2 px-1.5 py-0.5 rounded-full bg-green-100 text-xs text-green-800">
+                    {creatorsCount}
+                  </span>
+                )}
               </TooltipTrigger>
               <TooltipContent side="top">
                 <p className="text-sm">How your offerings create additional value for customers</p>
