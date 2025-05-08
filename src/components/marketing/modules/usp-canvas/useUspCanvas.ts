@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { UspCanvas, CustomerJob, CustomerPain, CustomerGain } from './types';
 import { useCustomerProfile, useValueMap, useCanvasManager } from './hooks';
@@ -29,6 +28,7 @@ export const useUspCanvas = (strategyId?: string) => {
     canvas.gainCreators
   );
   
+  // Fix: Use strategyId instead of passing it twice
   const canvasManager = useCanvasManager(initialCanvas, strategyId);
   
   // Load saved canvas data when the component mounts
