@@ -4,7 +4,7 @@ import { OutputLanguage } from "@/services/ai/types";
 import { Badge } from "@/components/ui/badge";
 import { ModulePromptSettings } from "./ai-prompt/ModulePromptSettings";
 import { moduleLabels } from "./ai-prompt/config";
-import { InfoCircledIcon } from "@radix-ui/react-icons";
+import { InfoIcon } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -52,7 +52,7 @@ export const AIPromptSettingsTab: React.FC<AIPromptSettingsTabProps> = ({
         
         <Alert className="bg-muted/50">
           <div className="flex gap-2 items-start">
-            <InfoCircledIcon className="h-5 w-5 mt-0.5 text-blue-500" />
+            <InfoIcon className="h-5 w-5 mt-0.5 text-blue-500" />
             <AlertDescription className="text-sm">
               {safeLanguage === 'english' 
                 ? "The language selection controls the output language for AI responses. System prompts work best in English, and you can include language instructions in your user prompts." 

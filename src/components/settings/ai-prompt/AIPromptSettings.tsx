@@ -6,7 +6,7 @@ import { OutputLanguage } from "@/services/ai/types";
 import { usePromptData } from "./usePromptData";
 import { PromptForm } from "./PromptForm";
 import { LoadingState } from "./LoadingState";
-import { InfoCircledIcon } from "@radix-ui/react-icons";
+import { InfoIcon } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -60,7 +60,7 @@ const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <InfoCircledIcon className="h-4 w-4 text-muted-foreground cursor-help" />
+                  <InfoIcon className="h-4 w-4 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent className="max-w-[300px] text-xs">
                   <p>
