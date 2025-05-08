@@ -1,3 +1,4 @@
+
 import React from "react";
 import { TabsList as ShadcnTabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -18,8 +19,8 @@ const TabsList: React.FC<TabsListProps> = ({ activeTab, children }) => {
           const isTooltipWithTrigger = child.props?.children?.type === TabsTrigger;
           
           if (isTrigger) {
-            // Direct TabsTrigger element
-            return React.cloneElement(child, {
+            // Direct TabsTrigger element - properly type the props
+            return React.cloneElement(child as React.ReactElement<any>, {
               className: `relative ${child.props.className || ''}`,
               children: (
                 <>
@@ -31,14 +32,15 @@ const TabsList: React.FC<TabsListProps> = ({ activeTab, children }) => {
               )
             });
           } else if (isTooltipWithTrigger) {
-            // Handle TooltipTrigger containing TabsTrigger
-            return React.cloneElement(child, {
-              children: React.cloneElement(child.props.children, {
-                className: `relative ${child.props.children.props.className || ''}`,
+            // Handle TooltipTrigger containing TabsTrigger - properly type the props
+            const tooltipChild = child.props.children;
+            return React.cloneElement(child as React.ReactElement<any>, {
+              children: React.cloneElement(tooltipChild as React.ReactElement<any>, {
+                className: `relative ${tooltipChild.props.className || ''}`,
                 children: (
                   <>
-                    {child.props.children.props.children}
-                    {activeTab === child.props.children.props.value && (
+                    {tooltipChild.props.children}
+                    {activeTab === tooltipChild.props.value && (
                       <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
                     )}
                   </>
