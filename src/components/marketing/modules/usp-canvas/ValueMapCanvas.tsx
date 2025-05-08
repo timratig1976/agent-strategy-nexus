@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProductServices from "./ProductServices";
 import PainRelievers from "./PainRelievers";
@@ -41,9 +41,6 @@ const ValueMapCanvas = ({
   deleteGainCreator,
   formPosition = 'bottom'
 }: ValueMapCanvasProps) => {
-  // Track active tab
-  const [activeTab, setActiveTab] = useState<string>("services");
-  
   // Calculate counts for each section
   const servicesCount = canvas.productServices.length;
   const relieversCount = canvas.painRelievers.length;
