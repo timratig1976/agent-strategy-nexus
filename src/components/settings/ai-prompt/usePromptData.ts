@@ -1,82 +1,80 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { OutputLanguage } from "@/services/ai/types";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthProvider";
 
 export const usePromptData = (module: string) => {
-  const [systemPrompt, setSystemPrompt] = useState("");
-  const [userPrompt, setUserPrompt] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [systemPrompt, setSystemPrompt] = useState<string>("");
+  const [userPrompt, setUserPrompt] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const { toast } = useToast();
+  const { user } = useAuth();
 
-  // Make sure we have a valid module
-  const safeModule = module || '';
+  useEffect(() => {
+    const fetchPromptData = async () => {
+      if (!module) return;
 
-  const fetchPromptData = async () => {
-    if (!safeModule) {
-      console.warn("No module specified, skipping fetch");
-      setIsLoading(false);
-      return;
-    }
-    
-    setIsLoading(true);
-    try {
-      console.log(`Fetching prompt data for module: ${safeModule}`);
-      
-      const { data, error } = await supabase
-        .from("ai_prompts")
-        .select("system_prompt, user_prompt")
-        .eq("module", safeModule)
-        .maybeSingle();
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from("ai_prompts")
+          .select("system_prompt, user_prompt")
+          .eq("module", module)
+          .single();
 
-      if (error) {
-        console.error("Error fetching prompt data:", error);
-        toast.error("Failed to load prompt data");
-      } else if (data) {
-        setSystemPrompt(data.system_prompt || "");
-        setUserPrompt(data.user_prompt || "");
-      } else {
-        // If no data found, initialize with empty prompts
-        setSystemPrompt("");
-        setUserPrompt("");
-        toast.info("No prompt found. Create a new one.");
+        if (error) {
+          console.error("Error fetching prompt data:", error);
+          if (error.code !== 'PGRST116') { // Not found error
+            throw error;
+          }
+          
+          // If not found, use empty strings
+          setSystemPrompt("");
+          setUserPrompt("");
+          return;
+        }
+
+        setSystemPrompt(data?.system_prompt || "");
+        setUserPrompt(data?.user_prompt || "");
+      } catch (error: any) {
+        console.error("Error:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load prompt data: " + error.message,
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("Failed to load prompt data");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
 
-  const handleSave = async (outputLanguage: OutputLanguage = 'english') => {
-    if (!systemPrompt.trim() || !userPrompt.trim()) {
-      toast.error("Both system and user prompts are required");
-      return;
-    }
+    fetchPromptData();
+  }, [module, toast]);
 
-    if (!safeModule) {
-      toast.error("Invalid module name");
+  const handleSave = async (outputLanguage: string = 'english') => {
+    if (!module) {
+      toast({
+        title: "Error",
+        description: "No module specified",
+        variant: "destructive",
+      });
       return;
     }
 
     setIsSaving(true);
     try {
       // Check if the prompt already exists
-      const { data: existingPrompt, error: checkError } = await supabase
+      const { data: existingData } = await supabase
         .from("ai_prompts")
         .select("id")
-        .eq("module", safeModule)
-        .maybeSingle();
-      
+        .eq("module", module)
+        .single();
+
       let result;
       
-      if (checkError && checkError.code !== 'PGRST116') {
-        throw checkError;
-      }
-
-      if (existingPrompt) {
+      if (existingData) {
         // Update existing prompt
         result = await supabase
           .from("ai_prompts")
@@ -85,51 +83,45 @@ export const usePromptData = (module: string) => {
             user_prompt: userPrompt,
             updated_at: new Date().toISOString(),
           })
-          .eq("module", safeModule);
+          .eq("module", module);
       } else {
         // Insert new prompt
         result = await supabase
           .from("ai_prompts")
           .insert({
-            module: safeModule,
+            module,
             system_prompt: systemPrompt,
             user_prompt: userPrompt,
-            updated_at: new Date().toISOString(),
           });
       }
 
-      if (result.error) throw result.error;
-      
-      const successMessage = outputLanguage === 'english' 
-        ? "AI prompt updated successfully" 
-        : "AI-Prompt erfolgreich aktualisiert";
-        
-      toast.success(successMessage);
-    } catch (error) {
+      if (result.error) {
+        throw result.error;
+      }
+
+      toast({
+        title: "Success",
+        description: "Prompt saved successfully",
+      });
+    } catch (error: any) {
       console.error("Error saving prompt:", error);
-      
-      const errorMessage = outputLanguage === 'english' 
-        ? "Failed to update AI prompt" 
-        : "Fehler beim Aktualisieren des AI-Prompts";
-        
-      toast.error(errorMessage);
+      toast({
+        title: "Error",
+        description: "Failed to save prompt: " + error.message,
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }
   };
 
-  useEffect(() => {
-    fetchPromptData();
-  }, [safeModule]);
-
   return {
-    systemPrompt, 
+    systemPrompt,
     setSystemPrompt,
-    userPrompt, 
+    userPrompt,
     setUserPrompt,
     isLoading,
     isSaving,
     handleSave,
-    fetchPromptData
   };
 };

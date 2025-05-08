@@ -67,7 +67,6 @@ const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
             setUserPrompt={setUserPrompt}
             handleSave={() => handleSave('english')}
             isSaving={isSaving}
-            outputLanguage="english"
           />
         </CardContent>
       )}
