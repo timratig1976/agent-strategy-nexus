@@ -1,18 +1,33 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { AIPrompt, AIServiceResponse } from "./types";
+import { AIPrompt, AIServiceResponse, FormatOptions } from "./types";
 
 export class MarketingAIService {
   static async generateContent<T>(
     module: string, 
     action: 'generate' | 'edit', 
-    data: any
+    data: any,
+    formatOptions?: FormatOptions
   ): Promise<AIServiceResponse<T>> {
     try {
-      console.log('Sending request to AI service:', { module, action, data });
+      console.log('Sending request to AI service:', { module, action, data, formatOptions });
+      
+      // Wenn die deutsche Sprache ausgewählt ist, verwende die entsprechenden Module
+      const effectiveModule = formatOptions?.outputLanguage === 'deutsch' 
+        ? `${module}_de` 
+        : module;
+      
+      console.log(`Using module: ${effectiveModule} based on language: ${formatOptions?.outputLanguage || 'default (English)'}`);
       
       const response = await supabase.functions.invoke('marketing-ai', {
-        body: { module, action, data }
+        body: { 
+          module: effectiveModule, 
+          action, 
+          data: {
+            ...data,
+            formatOptions: formatOptions || data.formatOptions
+          }
+        }
       });
       
       if (response.error) {
@@ -20,7 +35,7 @@ export class MarketingAIService {
         return { 
           error: response.error.message || 'Failed to generate content',
           debugInfo: {
-            requestData: { module, action, data },
+            requestData: { module: effectiveModule, action, data },
             responseData: response.error
           }
         };
@@ -29,7 +44,7 @@ export class MarketingAIService {
       return { 
         data: response.data.result as T,
         debugInfo: {
-          requestData: { module, action, data },
+          requestData: { module: effectiveModule, action, data },
           responseData: response.data
         }
       };

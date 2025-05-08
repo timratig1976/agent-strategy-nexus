@@ -56,7 +56,7 @@ serve(async (req) => {
     }
     
     // For strict format, modify system prompt to request JSON
-    if (useStrictFormat && module === 'usp_canvas_profile') {
+    if (useStrictFormat && (module === 'usp_canvas_profile' || module === 'usp_canvas_profile_de')) {
       systemPrompt += "\n\nYou MUST respond with a valid JSON object containing arrays of jobs, pains, and gains. Each item should have 'content' and either 'priority', 'severity', or 'importance' properties. Do not include any explanatory text outside the JSON. Example format: {\"jobs\":[{\"content\":\"Job description\",\"priority\":\"high\"}], \"pains\":[{\"content\":\"Pain description\",\"severity\":\"medium\"}], \"gains\":[{\"content\":\"Gain description\",\"importance\":\"low\"}]}";
     }
     
@@ -78,19 +78,22 @@ serve(async (req) => {
     const enhancementIncluded = !!(data.enhancementText && data.enhancementText.trim());
     if (enhancementIncluded) {
       console.log("Enhancement text provided:", data.enhancementText);
-      userPrompt += `\n\nAdditional instructions for customizing output: ${data.enhancementText.trim()}`;
+      
+      if (outputLanguage === 'deutsch') {
+        userPrompt += `\n\nZusätzliche Anweisungen zur Anpassung der Ausgabe: ${data.enhancementText.trim()}`;
+      } else {
+        userPrompt += `\n\nAdditional instructions for customizing output: ${data.enhancementText.trim()}`;
+      }
     }
 
-    // Add language preference
-    if (outputLanguage === 'deutsch') {
-      userPrompt += "\n\nPlease respond in German.";
-    } else {
-      userPrompt += "\n\nPlease respond in English.";
-    }
+    // Add language preference (nicht mehr nötig, ist jetzt in den Prompts selbst integriert)
+    // Wir verwenden jetzt die sprachspezifischen Module (*_de)
 
     // Add strict format instruction to user prompt as well for emphasis
-    if (useStrictFormat) {
-      if (module === 'usp_canvas_profile') {
+    if (useStrictFormat && (module === 'usp_canvas_profile' || module === 'usp_canvas_profile_de')) {
+      if (outputLanguage === 'deutsch') {
+        userPrompt += "\n\nWICHTIG: Antworte mit einem gültigen JSON-Objekt, das Arrays von jobs, pains und gains enthält. Jedes Element sollte 'content' und entweder 'priority', 'severity' oder 'importance' als Eigenschaften haben. Füge keine Erklärung oder zusätzlichen Text außerhalb der JSON-Struktur hinzu.";
+      } else {
         userPrompt += "\n\nIMPORTANT: Respond with a valid JSON object containing arrays of jobs, pains, and gains. Each item should have 'content' and either 'priority', 'severity', or 'importance' properties. Do not include any explanation or additional text outside the JSON structure.";
       }
     }
@@ -130,7 +133,7 @@ serve(async (req) => {
     const content = result.choices[0].message.content;
     
     // Try parsing as JSON if strict format was requested
-    if (useStrictFormat && module === 'usp_canvas_profile') {
+    if (useStrictFormat && (module === 'usp_canvas_profile' || module === 'usp_canvas_profile_de')) {
       try {
         const jsonData = JSON.parse(content);
         console.log("Successfully parsed JSON response:", JSON.stringify(jsonData));

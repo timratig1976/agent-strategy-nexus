@@ -60,5 +60,12 @@ export interface UspCanvasGainCreator {
   relatedGainIds?: string[];
 }
 
+export type OutputLanguage = 'deutsch' | 'english';
+
+export interface FormatOptions {
+  strictFormat?: boolean;
+  outputLanguage?: OutputLanguage;
+}
+
 // Re-export the StrategyMetadata type for convenience
 export type { StrategyMetadata };

@@ -1,12 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { AIServiceResponse, UspCanvasAIResult } from "./types";
+import { AIServiceResponse, FormatOptions, UspCanvasAIResult } from "./types";
 import { MarketingAIService } from "./marketingAIService";
-
-interface FormatOptions {
-  strictFormat?: boolean;
-  outputLanguage?: 'deutsch' | 'english';
-}
 
 export class UspCanvasService {
   /**
@@ -32,10 +26,17 @@ export class UspCanvasService {
     try {
       console.log('Invoking Supabase function: marketing-ai');
       const startTime = Date.now();
+
+      // Wenn die deutsche Sprache ausgewählt ist, verwende das deutsche Modul
+      const effectiveModule = formatOptions?.outputLanguage === 'deutsch' 
+        ? 'usp_canvas_profile_de' 
+        : 'usp_canvas_profile';
+      
+      console.log(`Using module: ${effectiveModule} based on language: ${formatOptions?.outputLanguage || 'default (English)'}`);
       
       const { data, error } = await supabase.functions.invoke('marketing-ai', {
         body: { 
-          module: 'usp_canvas_profile', 
+          module: effectiveModule, 
           action: 'generate', 
           data: {
             strategyId,
@@ -361,6 +362,7 @@ export class UspCanvasService {
     personaContent?: string,
     formatOptions?: FormatOptions
   ): Promise<AIServiceResponse<UspCanvasAIResult>> {
+    // Übergebe formatOptions an die generateContent-Methode
     return MarketingAIService.generateContent<UspCanvasAIResult>(
       'usp_canvas_value_map',
       'generate',
@@ -370,9 +372,9 @@ export class UspCanvasService {
         customerProfile,
         section,
         enhancementText,
-        personaContent,
-        formatOptions
-      }
+        personaContent
+      },
+      formatOptions
     );
   }
 }
