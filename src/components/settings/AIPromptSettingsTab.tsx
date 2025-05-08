@@ -26,17 +26,8 @@ export const AIPromptSettingsTab: React.FC<AIPromptSettingsTabProps> = ({
   // Ensure the language is valid or default to English
   const safeLanguage: OutputLanguage = (language === "deutsch") ? "deutsch" : "english";
   
-  // Get all module keys from our configuration
-  const moduleKeys = Object.keys(moduleLabels || {});
-
-  if (!moduleKeys.length) {
-    console.warn("No modules found in configuration");
-    return (
-      <div className="p-4 text-center">
-        No modules configured for AI prompt settings
-      </div>
-    );
-  }
+  // Get all module keys from our configuration and ensure it's not undefined
+  const moduleKeys = moduleLabels ? Object.keys(moduleLabels) : [];
 
   return (
     <div className="space-y-6">
@@ -62,13 +53,21 @@ export const AIPromptSettingsTab: React.FC<AIPromptSettingsTabProps> = ({
         </Alert>
       </div>
       
-      {moduleKeys.map((moduleKey) => (
-        <ModulePromptSettings
-          key={moduleKey}
-          module={moduleKey}
-          language={safeLanguage}
-        />
-      ))}
+      {moduleKeys.length === 0 ? (
+        <div className="p-4 text-center text-muted-foreground">
+          {safeLanguage === 'english' 
+            ? 'No modules configured for AI prompt settings' 
+            : 'Keine Module für KI-Prompt-Einstellungen konfiguriert'}
+        </div>
+      ) : (
+        moduleKeys.map((moduleKey) => (
+          <ModulePromptSettings
+            key={moduleKey}
+            module={moduleKey}
+            language={safeLanguage}
+          />
+        ))
+      )}
     </div>
   );
 };

@@ -14,7 +14,7 @@ export const ModulePromptSettings: React.FC<ModulePromptSettingsProps> = ({
   language 
 }) => {
   // Check if module exists in our configuration
-  if (!module || !moduleLabels[module]) {
+  if (!module || !moduleLabels || !moduleLabels[module]) {
     console.warn(`No configuration found for module "${module}"`);
     return null;
   }
@@ -25,8 +25,8 @@ export const ModulePromptSettings: React.FC<ModulePromptSettingsProps> = ({
   return (
     <AIPromptSettings
       module={module}
-      title={moduleLabels[module].title[safeLanguage]}
-      description={moduleLabels[module].description[safeLanguage]}
+      title={moduleLabels[module]?.title?.[safeLanguage] || module}
+      description={moduleLabels[module]?.description?.[safeLanguage] || ''}
     />
   );
 };
