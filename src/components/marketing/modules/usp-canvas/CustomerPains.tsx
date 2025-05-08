@@ -1,18 +1,12 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { CustomerPain } from './types';
-import { Trash2, Plus, GripVertical, CheckSquare, Square, User, Bot, HelpCircle, Filter } from "lucide-react";
+import EmptyState from './components/EmptyState';
+import ItemCard from './components/ItemCard';
+import AddItemForm from './components/AddItemForm';
+import ItemListControls from './components/ItemListControls';
+import SelectedItemsNotification from './components/SelectedItemsNotification';
+import SectionHeader from './components/SectionHeader';
 
 interface CustomerPainsProps {
   pains: CustomerPain[];
@@ -108,216 +102,83 @@ const CustomerPains = ({ pains, onAdd, onUpdate, onDelete, onReorder, formPositi
   const filteredPains = aiOnlyFilter ? pains.filter(pain => pain.isAIGenerated) : pains;
   const aiGeneratedCount = pains.filter(pain => pain.isAIGenerated).length;
 
-  // Compact form to add new pains
-  const AddPainForm = () => (
-    <div className="p-4 border rounded-md space-y-4 mb-4">
-      <div className="flex flex-wrap items-end gap-2">
-        <div className="flex-1 min-w-[200px]">
-          <Input 
-            ref={newPainInputRef}
-            value={newPainContent}
-            onChange={(e) => setNewPainContent(e.target.value)}
-            placeholder="Add a new customer pain..."
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && newPainContent.trim()) {
-                handleAddPain();
-                e.preventDefault();
-              }
-            }}
-          />
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <RadioGroup 
-            value={newPainSeverity} 
-            onValueChange={(value) => setNewPainSeverity(value as 'low' | 'medium' | 'high')}
-            className="flex space-x-2"
-          >
-            <div className="flex items-center space-x-1">
-              <RadioGroupItem value="low" id="new-pain-low" />
-              <Label htmlFor="new-pain-low" className="text-xs">Low</Label>
-            </div>
-            <div className="flex items-center space-x-1">
-              <RadioGroupItem value="medium" id="new-pain-medium" />
-              <Label htmlFor="new-pain-medium" className="text-xs">Medium</Label>
-            </div>
-            <div className="flex items-center space-x-1">
-              <RadioGroupItem value="high" id="new-pain-high" />
-              <Label htmlFor="new-pain-high" className="text-xs">High</Label>
-            </div>
-          </RadioGroup>
-        </div>
-        
-        <Button 
-          onClick={handleAddPain}
-          disabled={!newPainContent.trim()}
-          size="sm"
-        >
-          <Plus className="h-4 w-4 mr-1" /> Add
-        </Button>
-      </div>
-    </div>
-  );
-
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-base font-medium">Customer Pains</h3>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <HelpCircle className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-sm">
-              <div className="space-y-2">
-                <p className="font-medium">What are Customer Pains?</p>
-                <p className="text-sm">
-                  Customer pains describe anything that annoys your customers before, during, and after trying to get a job done. 
-                  This includes undesired outcomes, problems, and obstacles that prevent customers from getting a job done.
-                </p>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
+      <SectionHeader 
+        title="Customer Pains"
+        tooltipTitle="What are Customer Pains?"
+        tooltipContent="Customer pains describe anything that annoys your customers before, during, and after trying to get a job done. This includes undesired outcomes, problems, and obstacles that prevent customers from getting a job done."
+      />
 
-      {formPosition === 'top' && <AddPainForm />}
-
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setAiOnlyFilter(!aiOnlyFilter)}
-            className={`flex items-center gap-1 text-xs ${aiOnlyFilter ? 'bg-primary/10' : ''}`}
-          >
-            <Filter className="h-3 w-3" />
-            AI Only
-          </Button>
-          
-          {aiGeneratedCount > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDeleteAIGenerated}
-              className="flex items-center gap-1 text-xs text-red-500"
-            >
-              <Trash2 className="h-3 w-3" />
-              Clear AI ({aiGeneratedCount})
-            </Button>
-          )}
-        </div>
-        
-        {pains.length > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleSelectMode}
-            className="text-xs"
-          >
-            {isSelectMode ? 'Cancel' : 'Select'}
-          </Button>
-        )}
-      </div>
-
-      {isSelectMode && selectedPains.length > 0 && (
-        <div className="flex items-center justify-between p-2 bg-slate-100 rounded-md">
-          <span className="text-sm">{selectedPains.length} pains selected</span>
-          <Button 
-            variant="destructive"
-            size="sm"
-            onClick={handleDeleteSelected}
-          >
-            Delete Selected
-          </Button>
-        </div>
+      {formPosition === 'top' && (
+        <AddItemForm 
+          value={newPainContent}
+          onChange={setNewPainContent}
+          onAdd={handleAddPain}
+          rating={newPainSeverity}
+          onRatingChange={setNewPainSeverity}
+          inputRef={newPainInputRef}
+          placeholder="Add a new customer pain..."
+          ratingLabel="pain"
+        />
       )}
 
+      <ItemListControls 
+        aiOnlyFilter={aiOnlyFilter}
+        setAiOnlyFilter={setAiOnlyFilter}
+        aiGeneratedCount={aiGeneratedCount}
+        handleDeleteAIGenerated={handleDeleteAIGenerated}
+        isSelectMode={isSelectMode}
+        toggleSelectMode={toggleSelectMode}
+        hasItems={pains.length > 0}
+      />
+
+      <SelectedItemsNotification 
+        selectedCount={selectedPains.length}
+        handleDeleteSelected={handleDeleteSelected}
+        itemLabel="pains"
+      />
+
       {filteredPains.length === 0 ? (
-        <div className="text-center p-4 border border-dashed rounded-md">
-          <p className="text-muted-foreground">
-            {aiOnlyFilter 
-              ? "No AI-generated pains found. Generate some using the AI Generator tab." 
-              : "No pains added yet. Add your first customer pain above."
-            }
-          </p>
-        </div>
+        <EmptyState aiOnlyFilter={aiOnlyFilter} itemType="pains" />
       ) : (
         <div className="space-y-2">
           {filteredPains.map((pain) => (
-            <div 
-              key={pain.id} 
-              className={`p-3 bg-white border rounded-md ${
-                isSelectMode && selectedPains.includes(pain.id) ? 'border-primary bg-primary/5' : ''
-              } ${draggedItem === pain.id ? 'opacity-50' : 'opacity-100'}`}
-              draggable={onReorder !== undefined}
+            <ItemCard 
+              key={pain.id}
+              id={pain.id}
+              content={pain.content}
+              rating={pain.severity}
+              ratingLabel="severity"
+              isAIGenerated={pain.isAIGenerated}
+              isSelected={selectedPains.includes(pain.id)}
+              isSelectMode={isSelectMode}
+              isDragged={draggedItem === pain.id}
+              isDraggable={onReorder !== undefined}
+              onContentChange={(value) => onUpdate(pain.id, value, pain.severity)}
+              onToggleSelect={() => toggleSelectPain(pain.id)}
+              onDelete={() => onDelete(pain.id)}
               onDragStart={(e) => handleDragStart(e, pain.id)}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, pain.id)}
-            >
-              <div className="flex items-center space-x-2">
-                {onReorder && (
-                  <div className="cursor-grab">
-                    <GripVertical className="h-5 w-5 text-gray-400" />
-                  </div>
-                )}
-                
-                {isSelectMode ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="p-0 h-6 w-6"
-                    onClick={() => toggleSelectPain(pain.id)}
-                  >
-                    {selectedPains.includes(pain.id) ? (
-                      <CheckSquare className="h-5 w-5 text-primary" />
-                    ) : (
-                      <Square className="h-5 w-5" />
-                    )}
-                  </Button>
-                ) : null}
-                
-                <Badge 
-                  variant={pain.severity === 'high' ? 'destructive' : 
-                          pain.severity === 'medium' ? 'warning' : 'success'}
-                  className="w-16 flex justify-center"
-                >
-                  {pain.severity.charAt(0).toUpperCase() + pain.severity.slice(1)}
-                </Badge>
-                
-                <div className="flex-1">
-                  <Input 
-                    value={pain.content}
-                    onChange={(e) => onUpdate(pain.id, e.target.value, pain.severity)}
-                    placeholder="What frustrates or annoys your customer?"
-                  />
-                </div>
-                
-                {pain.isAIGenerated ? (
-                  <Bot className="h-5 w-5 text-blue-500 mr-1" />
-                ) : (
-                  <User className="h-5 w-5 text-gray-500 mr-1" />
-                )}
-                
-                {!isSelectMode && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => onDelete(pain.id)}
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50 h-9 w-9 p-0"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
+              placeholderText="What frustrates or annoys your customer?"
+            />
           ))}
         </div>
       )}
 
-      {formPosition === 'bottom' && <AddPainForm />}
+      {formPosition === 'bottom' && (
+        <AddItemForm 
+          value={newPainContent}
+          onChange={setNewPainContent}
+          onAdd={handleAddPain}
+          rating={newPainSeverity}
+          onRatingChange={setNewPainSeverity}
+          inputRef={newPainInputRef}
+          placeholder="Add a new customer pain..."
+          ratingLabel="pain"
+        />
+      )}
     </div>
   );
 };
