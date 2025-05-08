@@ -12,16 +12,10 @@ export class MarketingAIService {
     try {
       console.log('Sending request to AI service:', { module, action, data, formatOptions });
       
-      // Wenn die deutsche Sprache ausgewählt ist, verwende die entsprechenden Module
-      const effectiveModule = formatOptions?.outputLanguage === 'deutsch' 
-        ? `${module}_de` 
-        : module;
-      
-      console.log(`Using module: ${effectiveModule} based on language: ${formatOptions?.outputLanguage || 'default (English)'}`);
-      
+      // We no longer use separate _de modules, just pass the output language as a parameter
       const response = await supabase.functions.invoke('marketing-ai', {
         body: { 
-          module: effectiveModule, 
+          module, 
           action, 
           data: {
             ...data,
@@ -35,7 +29,7 @@ export class MarketingAIService {
         return { 
           error: response.error.message || 'Failed to generate content',
           debugInfo: {
-            requestData: { module: effectiveModule, action, data },
+            requestData: { module, action, data },
             responseData: response.error
           }
         };
@@ -44,7 +38,7 @@ export class MarketingAIService {
       return { 
         data: response.data.result as T,
         debugInfo: {
-          requestData: { module: effectiveModule, action, data },
+          requestData: { module, action, data },
           responseData: response.data
         }
       };

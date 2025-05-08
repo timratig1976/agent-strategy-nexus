@@ -1,9 +1,18 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { OutputLanguage } from "@/services/ai/types";
 import { Badge } from "@/components/ui/badge";
 import { ModulePromptSettings } from "./ai-prompt/ModulePromptSettings";
 import { moduleLabels } from "./ai-prompt/config";
+import { InfoCircledIcon } from "@radix-ui/react-icons";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { LanguageSelector } from "@/components/ui/language-selector";
 
 interface AIPromptSettingsTabProps {
   language: OutputLanguage;
@@ -31,13 +40,26 @@ export const AIPromptSettingsTab: React.FC<AIPromptSettingsTabProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-semibold">
-          {safeLanguage === 'english' ? 'AI Prompt Settings' : 'KI-Prompt Einstellungen'}
-        </h2>
-        <Badge variant={safeLanguage === 'english' ? 'default' : 'secondary'}>
-          {safeLanguage === 'english' ? 'English Mode' : 'Deutscher Modus'}
-        </Badge>
+      <div className="flex flex-col space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-semibold">
+            {safeLanguage === 'english' ? 'AI Prompt Settings' : 'KI-Prompt Einstellungen'}
+          </h2>
+          <div>
+            <LanguageSelector value={safeLanguage} onChange={onLanguageChange} />
+          </div>
+        </div>
+        
+        <Alert className="bg-muted/50">
+          <div className="flex gap-2 items-start">
+            <InfoCircledIcon className="h-5 w-5 mt-0.5 text-blue-500" />
+            <AlertDescription className="text-sm">
+              {safeLanguage === 'english' 
+                ? "The language selection controls the output language for AI responses. System prompts work best in English, and you can include language instructions in your user prompts." 
+                : "Die Sprachauswahl steuert die Ausgabesprache für KI-Antworten. System-Prompts funktionieren am besten auf Englisch. Sie können Sprachanweisungen in Ihren Benutzer-Prompts einfügen."}
+            </AlertDescription>
+          </div>
+        </Alert>
       </div>
       
       {moduleKeys.map((moduleKey) => (

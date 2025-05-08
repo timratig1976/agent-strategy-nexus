@@ -25,9 +25,10 @@ const languages = [
 interface LanguageSelectorProps {
   value: OutputLanguage;
   onChange: (value: OutputLanguage) => void;
+  disabled?: boolean;
 }
 
-export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
+export function LanguageSelector({ value, onChange, disabled = false }: LanguageSelectorProps) {
   const [open, setOpen] = React.useState(false);
   
   // Make sure we have a valid value, defaulting to "english"
@@ -44,6 +45,7 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
             role="combobox"
             aria-expanded={open}
             className="w-[180px] justify-between"
+            disabled={disabled}
           >
             <div className="flex items-center gap-2">
               <GlobeIcon className="h-4 w-4" />
