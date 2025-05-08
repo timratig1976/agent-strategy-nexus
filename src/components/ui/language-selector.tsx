@@ -29,6 +29,11 @@ interface LanguageSelectorProps {
 
 export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
   const [open, setOpen] = React.useState(false);
+  
+  // Make sure we have a valid value, defaulting to "english"
+  const safeValue = value && languages.some(lang => lang.value === value) 
+    ? value 
+    : "english";
 
   return (
     <div className="flex items-center space-x-2">
@@ -42,13 +47,13 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
           >
             <div className="flex items-center gap-2">
               <GlobeIcon className="h-4 w-4" />
-              {value ? languages.find((language) => language.value === value)?.label : "Sprache wählen"}
+              {languages.find((language) => language.value === safeValue)?.label || "Select language"}
             </div>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[180px] p-0">
           <Command>
-            <CommandEmpty>Keine Sprache gefunden</CommandEmpty>
+            <CommandEmpty>No language found</CommandEmpty>
             <CommandGroup>
               {languages.map((language) => (
                 <CommandItem
@@ -62,7 +67,7 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      value === language.value ? "opacity-100" : "opacity-0"
+                      safeValue === language.value ? "opacity-100" : "opacity-0"
                     )}
                   />
                   {language.label}

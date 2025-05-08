@@ -18,6 +18,7 @@ const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
   title,
   description
 }) => {
+  // Default to 'english' to prevent undefined
   const [language, setLanguage] = React.useState<OutputLanguage>('english');
   
   const {
@@ -30,20 +31,30 @@ const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
     handleSave
   } = usePromptData(module, language);
 
+  // Ensure we have valid language
+  const safeLanguage: OutputLanguage = language === 'deutsch' ? 'deutsch' : 'english';
+
+  const handleLanguageChange = (newLanguage: OutputLanguage) => {
+    // Only update if it's a valid language
+    if (newLanguage === 'english' || newLanguage === 'deutsch') {
+      setLanguage(newLanguage);
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between">
         <div>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
+          <CardTitle>{title || 'AI Prompt Settings'}</CardTitle>
+          <CardDescription>{description || 'Configure AI prompts'}</CardDescription>
         </div>
         <div className="flex flex-col items-end gap-2">
           <div className="text-sm font-medium text-secondary-foreground">
-            {language === 'english' 
+            {safeLanguage === 'english' 
               ? 'Editing English Prompt' 
               : 'Bearbeite Deutschen Prompt'}
           </div>
-          <LanguageSelector value={language} onChange={setLanguage} />
+          <LanguageSelector value={safeLanguage} onChange={handleLanguageChange} />
         </div>
       </CardHeader>
       
@@ -58,7 +69,7 @@ const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
             setUserPrompt={setUserPrompt}
             handleSave={handleSave}
             isSaving={isSaving}
-            language={language}
+            language={safeLanguage}
           />
         </CardContent>
       )}

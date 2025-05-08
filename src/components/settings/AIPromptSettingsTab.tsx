@@ -14,6 +14,9 @@ export const AIPromptSettingsTab: React.FC<AIPromptSettingsTabProps> = ({
   language, 
   onLanguageChange 
 }) => {
+  // Ensure the language is valid or default to English
+  const safeLanguage: OutputLanguage = (language === "deutsch") ? "deutsch" : "english";
+  
   // Get all module keys from our configuration
   const moduleKeys = Object.keys(moduleLabels);
 
@@ -21,10 +24,10 @@ export const AIPromptSettingsTab: React.FC<AIPromptSettingsTabProps> = ({
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold">
-          {language === 'english' ? 'AI Prompt Settings' : 'KI-Prompt Einstellungen'}
+          {safeLanguage === 'english' ? 'AI Prompt Settings' : 'KI-Prompt Einstellungen'}
         </h2>
-        <Badge variant={language === 'english' ? 'default' : 'secondary'}>
-          {language === 'english' ? 'English Mode' : 'Deutscher Modus'}
+        <Badge variant={safeLanguage === 'english' ? 'default' : 'secondary'}>
+          {safeLanguage === 'english' ? 'English Mode' : 'Deutscher Modus'}
         </Badge>
       </div>
       
@@ -32,7 +35,7 @@ export const AIPromptSettingsTab: React.FC<AIPromptSettingsTabProps> = ({
         <ModulePromptSettings
           key={moduleKey}
           module={moduleKey}
-          language={language}
+          language={safeLanguage}
         />
       ))}
     </div>
