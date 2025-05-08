@@ -46,6 +46,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ items, onAddSingleItem })
   
   return (
     <div className="space-y-2">
+      {/* Display all items, not just the first 5 */}
       {items.map((item, index) => {
         // Skip items without content
         if (!item || !item.content) return null;

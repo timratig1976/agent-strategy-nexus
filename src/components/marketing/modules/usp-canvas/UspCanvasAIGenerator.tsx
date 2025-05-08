@@ -155,22 +155,22 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
         />
       )}
       
-      {!isGenerating && hasResults && (
-        <div>
-          <ResultTabs 
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            storedAIResult={storedAIResult}
-            handleAddJobs={handleAddJobs}
-            handleAddPains={handleAddPains}
-            handleAddGains={handleAddGains}
-            handleAddSingleJob={handleAddSingleJob}
-            handleAddSinglePain={handleAddSinglePain}
-            handleAddSingleGain={handleAddSingleGain}
-            formatContent={formatContent}
-          />
-        </div>
-      )}
+      {/* Show results in columns instead of tabs */}
+      <div>
+        <ResultTabs 
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          storedAIResult={storedAIResult}
+          handleAddJobs={handleAddJobs}
+          handleAddPains={handleAddPains}
+          handleAddGains={handleAddGains}
+          handleAddSingleJob={handleAddSingleJob}
+          handleAddSinglePain={handleAddSinglePain}
+          handleAddSingleGain={handleAddSingleGain}
+          formatContent={formatContent}
+          isGenerating={isGenerating}
+        />
+      </div>
 
       {showDebug && debugInfo && (
         <>

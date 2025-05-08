@@ -3,9 +3,6 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Info, Loader2, RefreshCcw, Bug } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -27,14 +24,13 @@ const GeneratorForm: React.FC<FormProps> = ({
   showDebug
 }) => {
   const [enhancementText, setEnhancementText] = useState<string>('');
-  const [strictFormat, setStrictFormat] = useState<boolean>(true);
-  const [outputLanguage, setOutputLanguage] = useState<string>('english');
   
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    // Use default format options
     const formatOptions = {
-      strictFormat,
-      outputLanguage
+      strictFormat: true,
+      outputLanguage: 'english'
     };
     await generateResult(enhancementText, formatOptions);
   };
@@ -51,49 +47,14 @@ const GeneratorForm: React.FC<FormProps> = ({
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="enhancementText" className="mb-1 block">
-              Custom Instructions (Optional)
-            </Label>
             <Textarea
               id="enhancementText"
-              placeholder="Add specific requirements, industry focus, or other directions for the AI..."
+              placeholder="Add specific requirements, industry focus, or other directions for the AI... (Optional)"
               className="h-24"
               value={enhancementText}
               onChange={(e) => setEnhancementText(e.target.value)}
               disabled={isGenerating}
             />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="strictFormat" className="block mb-1">Format Enforcement</Label>
-                <span className="text-xs text-muted-foreground">Enable for better structure detection</span>
-              </div>
-              <Switch
-                id="strictFormat"
-                checked={strictFormat}
-                onCheckedChange={setStrictFormat}
-                disabled={isGenerating}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="outputLanguage" className="block mb-1">Output Language</Label>
-              <Select
-                value={outputLanguage}
-                onValueChange={setOutputLanguage}
-                disabled={isGenerating}
-              >
-                <SelectTrigger id="outputLanguage">
-                  <SelectValue placeholder="Select language" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="english">English</SelectItem>
-                  <SelectItem value="deutsch">German</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
           
           {error && (
@@ -121,7 +82,7 @@ const GeneratorForm: React.FC<FormProps> = ({
                 type="button" 
                 variant="outline"
                 disabled={isGenerating}
-                onClick={() => generateResult(enhancementText, { strictFormat, outputLanguage })}
+                onClick={() => generateResult(enhancementText)}
               >
                 <RefreshCcw className="h-4 w-4 mr-2" />
                 Regenerate

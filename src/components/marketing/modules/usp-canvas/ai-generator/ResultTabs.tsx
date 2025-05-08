@@ -1,10 +1,11 @@
 
 import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { StoredAIResult } from '../types';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 
 interface ResultTabsProps {
   activeTab: string;
@@ -17,11 +18,10 @@ interface ResultTabsProps {
   handleAddSinglePain: (pain: any) => void;
   handleAddSingleGain: (gain: any) => void;
   formatContent: (items: any[] | undefined, onAddSingleItem?: (item: any) => void) => React.ReactNode;
+  isGenerating?: boolean;
 }
 
 const ResultTabs: React.FC<ResultTabsProps> = ({
-  activeTab,
-  setActiveTab,
   storedAIResult,
   handleAddJobs,
   handleAddPains,
@@ -30,91 +30,127 @@ const ResultTabs: React.FC<ResultTabsProps> = ({
   handleAddSinglePain,
   handleAddSingleGain,
   formatContent,
+  isGenerating = false,
 }) => {
-  // Get counts for badge display
+  // Get counts for display
   const jobCount = storedAIResult.jobs?.length || 0;
   const painCount = storedAIResult.pains?.length || 0;
   const gainCount = storedAIResult.gains?.length || 0;
   
-  return (
-    <Card>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="border-b px-6 py-2">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="jobs" className="relative">
-              Customer Jobs
-              {jobCount > 0 && (
-                <span className="ml-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
-                  {jobCount}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="pains" className="relative">
-              Pains
-              {painCount > 0 && (
-                <span className="ml-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
-                  {painCount}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="gains" className="relative">
-              Gains
-              {gainCount > 0 && (
-                <span className="ml-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
-                  {gainCount}
-                </span>
-              )}
-            </TabsTrigger>
-          </TabsList>
+  // Function to render column items
+  const renderColumnItems = (items: any[] | undefined, onAddSingle: (item: any) => void, title: string, count: number) => {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-base font-medium">{title}</h3>
+          {count > 0 && (
+            <Badge variant="outline" className="ml-2">
+              {count}
+            </Badge>
+          )}
         </div>
         
-        <CardContent className="pt-6">
-          <TabsContent value="jobs" className="mt-0 space-y-4">
-            {formatContent(storedAIResult.jobs, handleAddSingleJob)}
-          </TabsContent>
-          <TabsContent value="pains" className="mt-0 space-y-4">
-            {formatContent(storedAIResult.pains, handleAddSinglePain)}
-          </TabsContent>
-          <TabsContent value="gains" className="mt-0 space-y-4">
-            {formatContent(storedAIResult.gains, handleAddSingleGain)}
-          </TabsContent>
-        </CardContent>
+        <div className="overflow-y-auto flex-grow">
+          {formatContent(items, onAddSingle)}
+        </div>
         
-        <CardFooter className="border-t px-6 py-3">
-          {activeTab === "jobs" && storedAIResult.jobs && storedAIResult.jobs.length > 0 && (
+        {items && items.length > 0 && (
+          <Button 
+            onClick={() => onAddSingle(items[0])}
+            variant="outline"
+            className="mt-3 w-full"
+            size="sm"
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add All to Canvas
+          </Button>
+        )}
+      </div>
+    );
+  };
+  
+  return (
+    <Card>
+      {isGenerating && (
+        <div className="p-4 border-b">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-sm font-medium">Generating results...</span>
+            <span className="text-xs text-muted-foreground">(This may take 15-30 seconds)</span>
+          </div>
+          <Progress value={isGenerating ? 75 : 100} className="h-1.5" />
+        </div>
+      )}
+      
+      <CardContent className="pt-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Customer Jobs Column */}
+          <div className="border rounded-md p-4">
+            {renderColumnItems(
+              storedAIResult.jobs,
+              handleAddSingleJob,
+              "Customer Jobs",
+              jobCount
+            )}
+          </div>
+          
+          {/* Customer Pains Column */}
+          <div className="border rounded-md p-4">
+            {renderColumnItems(
+              storedAIResult.pains,
+              handleAddSinglePain,
+              "Customer Pains",
+              painCount
+            )}
+          </div>
+          
+          {/* Customer Gains Column */}
+          <div className="border rounded-md p-4">
+            {renderColumnItems(
+              storedAIResult.gains,
+              handleAddSingleGain,
+              "Customer Gains",
+              gainCount
+            )}
+          </div>
+        </div>
+      </CardContent>
+      
+      <CardFooter className="border-t px-6 py-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+          {storedAIResult.jobs && storedAIResult.jobs.length > 0 && (
             <Button 
               onClick={handleAddJobs}
               variant="outline"
-              className="ml-auto"
+              className="w-full"
             >
               <PlusCircle className="mr-2 h-4 w-4" />
-              Add All Jobs to Canvas
+              Add All Jobs
             </Button>
           )}
           
-          {activeTab === "pains" && storedAIResult.pains && storedAIResult.pains.length > 0 && (
+          {storedAIResult.pains && storedAIResult.pains.length > 0 && (
             <Button 
               onClick={handleAddPains}
               variant="outline"
-              className="ml-auto"
+              className="w-full"
             >
               <PlusCircle className="mr-2 h-4 w-4" />
-              Add All Pains to Canvas
+              Add All Pains
             </Button>
           )}
           
-          {activeTab === "gains" && storedAIResult.gains && storedAIResult.gains.length > 0 && (
+          {storedAIResult.gains && storedAIResult.gains.length > 0 && (
             <Button 
               onClick={handleAddGains}
               variant="outline"
-              className="ml-auto"
+              className="w-full"
             >
               <PlusCircle className="mr-2 h-4 w-4" />
-              Add All Gains to Canvas
+              Add All Gains
             </Button>
           )}
-        </CardFooter>
-      </Tabs>
+        </div>
+      </CardFooter>
     </Card>
   );
 };
