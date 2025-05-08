@@ -33,13 +33,25 @@ const UspCanvasHeader: React.FC<UspCanvasHeaderProps> = ({
           Back to Personas
         </Button>
         
-        <Button 
-          onClick={onSaveFinal}
-          className="flex items-center gap-2"
-        >
-          Save Final Version
-          <ArrowRight className="h-4 w-4" />
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={onSaveFinal}
+            className="flex items-center gap-2"
+          >
+            Save Final Version
+          </Button>
+          
+          {onNavigateNext && (
+            <Button 
+              onClick={onNavigateNext}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              Next
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
