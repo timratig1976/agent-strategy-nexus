@@ -22,7 +22,7 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
   strategyId,
   briefingContent,
   personaContent,
-  storedAIResult = {},
+  storedAIResult = { jobs: [], pains: [], gains: [] },
   onAddJobs,
   onAddPains,
   onAddGains,
