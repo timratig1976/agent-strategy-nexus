@@ -12,10 +12,13 @@ import StrategyNotFound from "@/components/strategy/StrategyNotFound";
 import StrategyBriefing from "@/components/strategy/briefing";
 import { PersonaDevelopment } from "@/components/strategy/personas";
 import PainGainsModule from "@/components/strategy/pain-gains";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 // Import custom hooks and utilities
 import useStrategyData from "@/hooks/useStrategyData";
 import { getStateLabel, getStateColor } from "@/utils/strategyUtils";
+import { supabase } from "@/integrations/supabase/client";
 
 const StrategyDetails = () => {
   // Extract the id parameter from the URL
@@ -47,6 +50,46 @@ const StrategyDetails = () => {
       refetch();
     }
   }, [id, refetch]);
+  
+  // Handler for going back from funnel to pain_gains (USP Canvas)
+  const handleGoToPreviousStep = async (currentState: string) => {
+    if (!id) return;
+    
+    try {
+      let previousState = 'briefing'; // Default
+      
+      // Determine the previous state based on the current state
+      if (currentState === 'funnel') {
+        previousState = 'pain_gains';
+      } else if (currentState === 'pain_gains') {
+        previousState = 'persona';
+      } else if (currentState === 'persona') {
+        previousState = 'briefing';
+      }
+      
+      console.log(`Going back from ${currentState} to ${previousState}`);
+      
+      // Update the strategy state
+      const { error } = await supabase
+        .from('strategies')
+        .update({ state: previousState })
+        .eq('id', id)
+        .select();
+      
+      if (error) {
+        console.error("Error updating strategy state:", error);
+        toast.error(`Failed to go back to ${previousState} stage`);
+        return;
+      }
+      
+      toast.success(`Returned to ${getStateLabel(previousState)} stage`);
+      refetch(); // Refresh the data
+      
+    } catch (err) {
+      console.error("Failed to go back to previous step:", err);
+      toast.error("Failed to navigate back");
+    }
+  };
   
   // If there's no ID, show a loading state until the redirect happens
   if (!id) {
@@ -109,6 +152,52 @@ const StrategyDetails = () => {
         briefingAgentResult={finalBriefing}
         personaAgentResult={finalPersona}
       />
+    );
+  } else if (strategy.state === 'funnel') {
+    // Add a simple Funnel stage UI with back navigation
+    contentComponent = (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold">Funnel Strategy</h2>
+          <Button 
+            variant="outline" 
+            onClick={() => handleGoToPreviousStep('funnel')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to USP Canvas
+          </Button>
+        </div>
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+          <h3 className="text-lg font-medium text-blue-800">Funnel Strategy Development</h3>
+          <p className="text-blue-700 mt-2">
+            This is where you'll develop your marketing funnel strategy based on your USP canvas and personas.
+          </p>
+        </div>
+      </div>
+    );
+  } else if (strategy.state === 'ads') {
+    // Add a simple Ads stage UI with back navigation
+    contentComponent = (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold">Ad Campaign Strategy</h2>
+          <Button 
+            variant="outline" 
+            onClick={() => handleGoToPreviousStep('ads')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Funnel Strategy
+          </Button>
+        </div>
+        <div className="p-4 bg-purple-50 border border-purple-200 rounded-md">
+          <h3 className="text-lg font-medium text-purple-800">Ad Campaign Development</h3>
+          <p className="text-purple-700 mt-2">
+            This is where you'll develop your ad campaigns based on your marketing funnel strategy.
+          </p>
+        </div>
+      </div>
     );
   }
 

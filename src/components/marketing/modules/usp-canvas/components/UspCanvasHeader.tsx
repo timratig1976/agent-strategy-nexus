@@ -8,13 +8,17 @@ interface UspCanvasHeaderProps {
   onNavigateNext?: () => void;
   onSaveFinal: () => void;
   isFinalSaved?: boolean;
+  prevStageLabel?: string;
+  nextStageLabel?: string;
 }
 
 const UspCanvasHeader: React.FC<UspCanvasHeaderProps> = ({ 
   onNavigateBack, 
   onNavigateNext, 
   onSaveFinal,
-  isFinalSaved = false
+  isFinalSaved = false,
+  prevStageLabel = "Back to Personas",
+  nextStageLabel = "Next"
 }) => {
   return (
     <div className="flex flex-col mb-4 gap-2">
@@ -25,17 +29,18 @@ const UspCanvasHeader: React.FC<UspCanvasHeaderProps> = ({
       
       {/* Navigation buttons */}
       <div className="flex justify-between items-center mt-2">
-        <Button 
-          variant="outline" 
-          onClick={onNavigateBack}
-          disabled={!onNavigateBack}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Personas
-        </Button>
+        {onNavigateBack && (
+          <Button 
+            variant="outline" 
+            onClick={onNavigateBack}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {prevStageLabel}
+          </Button>
+        )}
         
-        <div className="flex gap-2">
+        <div className="flex gap-2 ml-auto">
           <Button 
             onClick={onSaveFinal}
             className="flex items-center gap-2"
@@ -51,7 +56,7 @@ const UspCanvasHeader: React.FC<UspCanvasHeaderProps> = ({
               disabled={!isFinalSaved}
               className="flex items-center gap-2"
             >
-              Next
+              {nextStageLabel}
               <ArrowRight className="h-4 w-4" />
             </Button>
           )}

@@ -71,7 +71,6 @@ const PainGainsModule: React.FC<PainGainsModuleProps> = ({
   // Handler for going to the next step (funnel)
   const handleGoToNextStep = async () => {
     // We only allow navigation to the next step when a final USP Canvas is saved
-    // This check is now handled inside the UspCanvasModule
     try {
       console.log("Going to funnel step for strategy:", strategy.id);
       
@@ -124,6 +123,8 @@ const PainGainsModule: React.FC<PainGainsModuleProps> = ({
       personaContent={personaAgentResult?.content || ""}
       onNavigateBack={handleGoToPreviousStep}
       onNavigateNext={handleGoToNextStep}
+      prevStageLabel="Back to Persona Stage"
+      nextStageLabel="Continue to Funnel Stage"
     />
   );
 };

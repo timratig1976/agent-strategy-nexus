@@ -12,6 +12,8 @@ interface UspCanvasModuleProps {
   personaContent?: string;
   onNavigateBack?: () => void;
   onNavigateNext?: () => void;
+  prevStageLabel?: string;
+  nextStageLabel?: string;
 }
 
 const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({ 
@@ -19,7 +21,9 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
   briefingContent,
   personaContent,
   onNavigateBack,
-  onNavigateNext
+  onNavigateNext,
+  prevStageLabel,
+  nextStageLabel
 }) => {
   // Store AI results between tab switches
   const [storedAIResult, setStoredAIResult] = useState<StoredAIResult>({ jobs: [], pains: [], gains: [] });
@@ -218,6 +222,8 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
         onNavigateNext={hasFinalVersion ? onNavigateNext : undefined}
         onSaveFinal={handleSaveFinal}
         isFinalSaved={hasFinalVersion}
+        prevStageLabel={prevStageLabel}
+        nextStageLabel={nextStageLabel}
       />
 
       <UspCanvasModuleTabs 
