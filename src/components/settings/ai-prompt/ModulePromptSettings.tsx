@@ -1,17 +1,14 @@
 
 import React from "react";
 import { AIPromptSettings } from "@/components/settings";
-import { OutputLanguage } from "@/services/ai/types";
 import { moduleLabels } from "./config";
 
 interface ModulePromptSettingsProps {
   module: string;
-  language: OutputLanguage;
 }
 
 export const ModulePromptSettings: React.FC<ModulePromptSettingsProps> = ({ 
-  module, 
-  language 
+  module 
 }) => {
   // Check if module exists in our configuration
   if (!module || !moduleLabels || !moduleLabels[module]) {
@@ -19,14 +16,11 @@ export const ModulePromptSettings: React.FC<ModulePromptSettingsProps> = ({
     return null;
   }
   
-  // Ensure the language exists or default to English
-  const safeLanguage: OutputLanguage = (language === "deutsch") ? "deutsch" : "english";
-  
   return (
     <AIPromptSettings
       module={module}
-      title={moduleLabels[module]?.title?.[safeLanguage] || module}
-      description={moduleLabels[module]?.description?.[safeLanguage] || ''}
+      title={moduleLabels[module]?.title?.english || module}
+      description={moduleLabels[module]?.description?.english || ''}
     />
   );
 };

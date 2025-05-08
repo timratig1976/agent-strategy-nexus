@@ -11,8 +11,6 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { AIPromptSettingsTab, CompanyProfileTab } from "@/components/settings";
-import { LanguageSelector } from "@/components/ui/language-selector";
-import { OutputLanguage } from "@/services/ai/types";
 
 type CompanySettings = {
   name: string;
@@ -24,8 +22,6 @@ const Settings = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  // Ensure we always have a valid language
-  const [language, setLanguage] = useState<OutputLanguage>('english');
   const [companySettings, setCompanySettings] = useState<CompanySettings>({
     name: "",
     website: "",
@@ -60,10 +56,8 @@ const Settings = () => {
       } catch (error) {
         console.error("Error fetching company settings:", error);
         toast({
-          title: language === 'english' ? "Error" : "Fehler",
-          description: language === 'english' 
-            ? "Failed to load company settings" 
-            : "Fehler beim Laden der Unternehmenseinstellungen",
+          title: "Error",
+          description: "Failed to load company settings",
           variant: "destructive",
         });
       } finally {
@@ -72,15 +66,7 @@ const Settings = () => {
     };
 
     fetchCompanySettings();
-  }, [user, toast, language]);
-
-  // Handle language change at page level and pass down to children
-  const handleLanguageChange = (newLanguage: OutputLanguage) => {
-    // Only set valid languages
-    if (newLanguage === 'english' || newLanguage === 'deutsch') {
-      setLanguage(newLanguage);
-    }
-  };
+  }, [user, toast]);
 
   return (
     <>
@@ -88,18 +74,17 @@ const Settings = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">
-            {language === 'english' ? "Settings" : "Einstellungen"}
+            Settings
           </h1>
-          <LanguageSelector value={language} onChange={handleLanguageChange} />
         </div>
         
         <Tabs defaultValue="company">
           <TabsList className="mb-4">
             <TabsTrigger value="company">
-              {language === 'english' ? "Company Profile" : "Unternehmensprofil"}
+              Company Profile
             </TabsTrigger>
             <TabsTrigger value="ai-prompts">
-              {language === 'english' ? "AI Prompt Settings" : "KI-Prompt Einstellungen"}
+              AI Prompt Settings
             </TabsTrigger>
           </TabsList>
           
@@ -111,7 +96,7 @@ const Settings = () => {
           </TabsContent>
           
           <TabsContent value="ai-prompts">
-            <AIPromptSettingsTab language={language} onLanguageChange={handleLanguageChange} />
+            <AIPromptSettingsTab />
           </TabsContent>
         </Tabs>
       </div>

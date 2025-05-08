@@ -1,8 +1,6 @@
 
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LanguageSelector } from "@/components/ui/language-selector";
-import { OutputLanguage } from "@/services/ai/types";
 import { usePromptData } from "./usePromptData";
 import { PromptForm } from "./PromptForm";
 import { LoadingState } from "./LoadingState";
@@ -25,9 +23,6 @@ const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
   title,
   description
 }) => {
-  // Default to 'english' to prevent undefined
-  const [outputLanguage, setOutputLanguage] = React.useState<OutputLanguage>('english');
-  
   const {
     systemPrompt,
     setSystemPrompt,
@@ -38,13 +33,6 @@ const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
     handleSave
   } = usePromptData(module || '');
   
-  const handleLanguageChange = (newLanguage: OutputLanguage) => {
-    // Only update if it's a valid language
-    if (newLanguage === 'english' || newLanguage === 'deutsch') {
-      setOutputLanguage(newLanguage);
-    }
-  };
-
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between">
@@ -52,27 +40,19 @@ const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
           <CardTitle>{title || 'AI Prompt Settings'}</CardTitle>
           <CardDescription>{description || 'Configure AI prompts'}</CardDescription>
         </div>
-        <div className="flex flex-col items-end gap-2">
-          <div className="text-sm font-medium text-secondary-foreground flex items-center gap-1">
-            {outputLanguage === 'english' 
-              ? 'Output Language: English' 
-              : 'Ausgabesprache: Deutsch'}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <InfoIcon className="h-4 w-4 text-muted-foreground cursor-help" />
-                </TooltipTrigger>
-                <TooltipContent className="max-w-[300px] text-xs">
-                  <p>
-                    {outputLanguage === 'english' 
-                      ? "This controls the language used in the AI's response, not the prompt itself. Add language instructions in your user prompt if needed."
-                      : "Dies steuert die Sprache in der Antwort der KI, nicht des Prompts selbst. Fügen Sie Sprachanweisungen in Ihrem Benutzer-Prompt hinzu, wenn nötig."}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <LanguageSelector value={outputLanguage} onChange={handleLanguageChange} />
+        <div className="flex items-center gap-1">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <InfoIcon className="h-4 w-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-[300px] text-xs">
+                <p>
+                  System prompts work best in English. Add language instructions in your user prompt if needed.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </CardHeader>
       
@@ -85,9 +65,9 @@ const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
             userPrompt={userPrompt || ''}
             setSystemPrompt={setSystemPrompt}
             setUserPrompt={setUserPrompt}
-            handleSave={() => handleSave(outputLanguage)}
+            handleSave={() => handleSave('english')}
             isSaving={isSaving}
-            outputLanguage={outputLanguage}
+            outputLanguage="english"
           />
         </CardContent>
       )}
