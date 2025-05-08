@@ -12,8 +12,8 @@ import StrategyNotFound from "@/components/strategy/StrategyNotFound";
 import StrategyBriefing from "@/components/strategy/briefing";
 import { PersonaDevelopment } from "@/components/strategy/personas";
 import PainGainsModule from "@/components/strategy/pain-gains";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import FunnelStrategyModule from "@/components/strategy/funnel";
+import AdCampaignModule from "@/components/strategy/ads";
 
 // Import custom hooks and utilities
 import useStrategyData from "@/hooks/useStrategyData";
@@ -52,7 +52,7 @@ const StrategyDetails = () => {
     }
   }, [id, refetch]);
   
-  // Handler for going back from funnel to pain_gains (USP Canvas)
+  // Handler for going back to previous step
   const handleGoToPreviousStep = async (currentState: string) => {
     if (!id) return;
     
@@ -66,6 +66,8 @@ const StrategyDetails = () => {
         previousState = 'persona';
       } else if (currentState === 'persona') {
         previousState = 'briefing';
+      } else if (currentState === 'ads') {
+        previousState = 'funnel';
       }
       
       console.log(`Going back from ${currentState} to ${previousState}`);
@@ -155,50 +157,18 @@ const StrategyDetails = () => {
       />
     );
   } else if (strategy.state === 'funnel') {
-    // Add a simple Funnel stage UI with back navigation
     contentComponent = (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Funnel Strategy</h2>
-          <Button 
-            variant="outline" 
-            onClick={() => handleGoToPreviousStep('funnel')}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to USP Canvas
-          </Button>
-        </div>
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
-          <h3 className="text-lg font-medium text-blue-800">Funnel Strategy Development</h3>
-          <p className="text-blue-700 mt-2">
-            This is where you'll develop your marketing funnel strategy based on your USP canvas and personas.
-          </p>
-        </div>
-      </div>
+      <FunnelStrategyModule
+        strategy={strategy}
+        onNavigateBack={() => handleGoToPreviousStep('funnel')}
+      />
     );
   } else if (strategy.state === 'ads') {
-    // Add a simple Ads stage UI with back navigation
     contentComponent = (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Ad Campaign Strategy</h2>
-          <Button 
-            variant="outline" 
-            onClick={() => handleGoToPreviousStep('ads')}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Funnel Strategy
-          </Button>
-        </div>
-        <div className="p-4 bg-purple-50 border border-purple-200 rounded-md">
-          <h3 className="text-lg font-medium text-purple-800">Ad Campaign Development</h3>
-          <p className="text-purple-700 mt-2">
-            This is where you'll develop your ad campaigns based on your marketing funnel strategy.
-          </p>
-        </div>
-      </div>
+      <AdCampaignModule
+        strategy={strategy}
+        onNavigateBack={() => handleGoToPreviousStep('ads')}
+      />
     );
   }
 
