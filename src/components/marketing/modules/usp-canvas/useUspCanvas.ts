@@ -1,7 +1,10 @@
 
-import { useState, useEffect } from 'react';
-import { UspCanvas, CustomerJob, CustomerPain, CustomerGain } from './types';
+import { useState } from 'react';
+import { UspCanvas } from './types';
 import { useCustomerProfile, useValueMap, useCanvasManager } from './hooks';
+import { useCanvasStorage } from './hooks/useCanvasStorage';
+import { useAIContentHandler } from './hooks/useAIContentHandler';
+import { useRelationshipHandler } from './hooks/useRelationshipHandler';
 import { toast } from 'sonner';
 
 const initialCanvas: UspCanvas = {
@@ -15,70 +18,78 @@ const initialCanvas: UspCanvas = {
 
 export const useUspCanvas = (strategyId?: string) => {
   const [canvas, setCanvas] = useState<UspCanvas>(initialCanvas);
-  const [canvasSaveHistory, setCanvasSaveHistory] = useState<Array<{timestamp: number, data: UspCanvas}>>([]);
   
+  // Use the customer profile hook for jobs, pains, and gains
   const customerProfile = useCustomerProfile(
     canvas.customerJobs,
     canvas.customerPains,
     canvas.customerGains
   );
   
+  // Use the value map hook for products, relievers, and creators
   const valueMap = useValueMap(
     canvas.productServices,
     canvas.painRelievers,
     canvas.gainCreators
   );
   
-  // Fix: Only pass initialCanvas as the useCanvasManager hook only expects one argument
+  // Use the canvas manager for general canvas operations
   const canvasManager = useCanvasManager(initialCanvas);
   
-  // Load saved canvas data when the component mounts
-  useEffect(() => {
-    if (strategyId) {
-      // Load canvas data from storage/API
-      // This would be implemented with Supabase later
-      const savedData = localStorage.getItem(`usp_canvas_${strategyId}`);
-      if (savedData) {
-        try {
-          const parsedData = JSON.parse(savedData);
-          setCanvas(parsedData.canvas || initialCanvas);
-          setCanvasSaveHistory(parsedData.history || []);
-        } catch (error) {
-          console.error("Error loading saved canvas data:", error);
-        }
-      }
-    }
-  }, [strategyId]);
+  // Use the storage hook for saving and loading
+  const storage = useCanvasStorage(strategyId);
   
-  // Function to apply AI-generated results to the canvas
-  const applyAIGeneratedContent = (
-    aiJobs?: CustomerJob[],
-    aiPains?: CustomerPain[],
-    aiGains?: CustomerGain[]
-  ) => {
-    // Apply jobs if provided
-    if (aiJobs && aiJobs.length > 0) {
-      aiJobs.forEach(job => {
-        customerProfile.addCustomerJob(job.content, job.priority, true);
-      });
-      toast.success(`Added ${aiJobs.length} AI-generated jobs`);
+  // Use the AI content handler hook
+  const aiContentHandler = useAIContentHandler(
+    customerProfile.addCustomerJob,
+    customerProfile.addCustomerPain,
+    customerProfile.addCustomerGain
+  );
+  
+  // Use the relationship handler hook
+  const relationshipHandler = useRelationshipHandler(
+    valueMap.productServices,
+    valueMap.painRelievers,
+    valueMap.gainCreators,
+    valueMap.updateProductService,
+    valueMap.updatePainReliever,
+    valueMap.updateGainCreator
+  );
+  
+  // Create enhanced delete functions that update relationships
+  const deleteCustomerJob = (id: string) => {
+    customerProfile.deleteCustomerJob(id);
+    relationshipHandler.handleCustomerJobDeletion(id);
+  };
+  
+  const deleteCustomerPain = (id: string) => {
+    customerProfile.deleteCustomerPain(id);
+    relationshipHandler.handleCustomerPainDeletion(id);
+  };
+  
+  const deleteCustomerGain = (id: string) => {
+    customerProfile.deleteCustomerGain(id);
+    relationshipHandler.handleCustomerGainDeletion(id);
+  };
+
+  // Reset canvas functionality
+  const resetCanvas = () => {
+    if (window.confirm("Are you sure you want to reset the canvas? All your work will be lost.")) {
+      setCanvas(initialCanvas);
+      canvasManager.resetCanvas();
+      toast.success("Canvas reset successfully");
     }
-    
-    // Apply pains if provided
-    if (aiPains && aiPains.length > 0) {
-      aiPains.forEach(pain => {
-        customerProfile.addCustomerPain(pain.content, pain.severity, true);
-      });
-      toast.success(`Added ${aiPains.length} AI-generated pains`);
-    }
-    
-    // Apply gains if provided
-    if (aiGains && aiGains.length > 0) {
-      aiGains.forEach(gain => {
-        customerProfile.addCustomerGain(gain.content, gain.importance, true);
-      });
-      toast.success(`Added ${aiGains.length} AI-generated gains`);
-    }
+  };
+  
+  // Save canvas wrapper that uses the current canvas state
+  const saveCanvas = () => {
+    const result = storage.saveCanvas(updatedCanvas);
+    return result;
+  };
+  
+  // Save final version wrapper that uses the current canvas state
+  const saveFinalVersion = () => {
+    return storage.saveFinalVersion(updatedCanvas);
   };
   
   // Synchronize the state from sub-hooks with the main canvas state
@@ -91,158 +102,18 @@ export const useUspCanvas = (strategyId?: string) => {
     gainCreators: valueMap.gainCreators
   };
   
-  // Update related items when deleting a customer job
-  const deleteCustomerJob = (id: string) => {
-    customerProfile.deleteCustomerJob(id);
-    valueMap.productServices.forEach(service => {
-      if (service.relatedJobIds.includes(id)) {
-        valueMap.updateProductService(
-          service.id, 
-          service.content, 
-          service.relatedJobIds.filter(jobId => jobId !== id)
-        );
-      }
-    });
-  };
-  
-  // Update related items when deleting a customer pain
-  const deleteCustomerPain = (id: string) => {
-    customerProfile.deleteCustomerPain(id);
-    valueMap.painRelievers.forEach(reliever => {
-      if (reliever.relatedPainIds.includes(id)) {
-        valueMap.updatePainReliever(
-          reliever.id,
-          reliever.content,
-          reliever.relatedPainIds.filter(painId => painId !== id)
-        );
-      }
-    });
-  };
-  
-  // Update related items when deleting a customer gain
-  const deleteCustomerGain = (id: string) => {
-    customerProfile.deleteCustomerGain(id);
-    valueMap.gainCreators.forEach(creator => {
-      if (creator.relatedGainIds.includes(id)) {
-        valueMap.updateGainCreator(
-          creator.id,
-          creator.content,
-          creator.relatedGainIds.filter(gainId => gainId !== id)
-        );
-      }
-    });
-  };
-
-  // Reordering functions for the customer profile elements
-  const reorderCustomerJobs = (reorderedJobs: CustomerJob[]) => {
-    customerProfile.reorderCustomerJobs(reorderedJobs);
-  };
-
-  const reorderCustomerPains = (reorderedPains: CustomerPain[]) => {
-    customerProfile.reorderCustomerPains(reorderedPains);
-  };
-
-  const reorderCustomerGains = (reorderedGains: CustomerGain[]) => {
-    customerProfile.reorderCustomerGains(reorderedGains);
-  };
-
-  // Reset canvas functionality
-  const resetCanvas = () => {
-    if (window.confirm("Are you sure you want to reset the canvas? All your work will be lost.")) {
-      setCanvas(initialCanvas);
-      canvasManager.resetCanvas();
-      toast.success("Canvas reset successfully");
-    }
-  };
-  
-  // Save progress to localStorage or database
-  const saveProgress = (key: string, data: any) => {
-    if (!strategyId) return;
-    
-    try {
-      const storageKey = `usp_canvas_${strategyId}_${key}`;
-      localStorage.setItem(storageKey, JSON.stringify({
-        data,
-        timestamp: Date.now()
-      }));
-    } catch (error) {
-      console.error(`Error saving ${key}:`, error);
-    }
-  };
-  
-  // Save final version
-  const saveFinalVersion = () => {
-    if (!strategyId) return;
-    
-    try {
-      // Add current state to history
-      const newHistory = [...canvasSaveHistory, {
-        timestamp: Date.now(),
-        data: updatedCanvas
-      }];
-      
-      // Save to localStorage
-      localStorage.setItem(`usp_canvas_${strategyId}`, JSON.stringify({
-        canvas: updatedCanvas,
-        history: newHistory,
-        isFinal: true
-      }));
-      
-      setCanvasSaveHistory(newHistory);
-      toast.success("Final version saved successfully");
-      
-      // In the future, save to Supabase as well
-    } catch (error) {
-      console.error("Error saving final version:", error);
-      toast.error("Failed to save final version");
-    }
-  };
-  
-  // Save canvas
-  const saveCanvas = () => {
-    if (!strategyId) return;
-    
-    try {
-      // Add current state to history
-      const newHistory = [...canvasSaveHistory, {
-        timestamp: Date.now(),
-        data: updatedCanvas
-      }];
-      
-      // Save to localStorage
-      localStorage.setItem(`usp_canvas_${strategyId}`, JSON.stringify({
-        canvas: updatedCanvas,
-        history: newHistory
-      }));
-      
-      setCanvasSaveHistory(newHistory);
-      toast.success("Canvas saved successfully");
-      
-      // In the future, save to Supabase as well
-    } catch (error) {
-      console.error("Error saving canvas:", error);
-      toast.error("Failed to save canvas");
-    }
-    
-    return true;
-  };
-  
   return {
     canvas: updatedCanvas,
     ...customerProfile,
     ...valueMap,
     ...canvasManager,
+    ...storage,
     deleteCustomerJob,
     deleteCustomerPain,
     deleteCustomerGain,
-    reorderCustomerJobs,
-    reorderCustomerPains,
-    reorderCustomerGains,
     resetCanvas,
-    saveProgress,
     saveCanvas,
-    canvasSaveHistory,
     saveFinalVersion,
-    applyAIGeneratedContent  // New function to apply AI results
+    applyAIGeneratedContent: aiContentHandler.applyAIGeneratedContent
   };
 };
