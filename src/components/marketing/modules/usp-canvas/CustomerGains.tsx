@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { CustomerGain } from './types';
-import CustomerItemList from './components/CustomerItemList';
+import CustomerItemList from './components/customer-item-list';
 
 interface CustomerGainsProps {
   gains: CustomerGain[];
