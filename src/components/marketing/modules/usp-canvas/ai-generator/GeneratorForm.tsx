@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Loader2, AlertCircle, Sparkles } from 'lucide-react';
+import { Loader2, AlertCircle, Sparkles, Bug } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Tooltip,
@@ -16,21 +16,46 @@ interface GeneratorFormProps {
   error: string | null;
   generateResult: () => Promise<void>;
   hasResults: boolean;
+  showDebug?: boolean;
+  onToggleDebug?: () => void;
 }
 
 const GeneratorForm: React.FC<GeneratorFormProps> = ({
   isGenerating,
   error,
   generateResult,
-  hasResults
+  hasResults,
+  showDebug = false,
+  onToggleDebug
 }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          AI-Powered Value Proposition Canvas Generator
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            <CardTitle>AI-Powered Value Proposition Canvas Generator</CardTitle>
+          </div>
+          {onToggleDebug && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onToggleDebug}
+                    className={showDebug ? "bg-muted" : ""}
+                  >
+                    <Bug className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{showDebug ? "Hide" : "Show"} debug information</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
         <CardDescription>
           Generate customer jobs, pains, and gains automatically based on your marketing brief 
           and persona information.

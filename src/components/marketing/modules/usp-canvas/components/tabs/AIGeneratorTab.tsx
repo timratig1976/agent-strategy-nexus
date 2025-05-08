@@ -39,6 +39,9 @@ const AIGeneratorTab: React.FC<AIGeneratorTabProps> = ({
     );
   }
 
+  console.log('AIGeneratorTab: Rendering with briefingContent length:', briefingContent?.length || 0);
+  console.log('AIGeneratorTab: Stored AI result:', storedAIResult);
+
   return (
     <UspCanvasAIGenerator
       strategyId={strategyId}

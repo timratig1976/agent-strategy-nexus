@@ -23,6 +23,9 @@ export class UspCanvasService {
     });
     
     try {
+      console.log('Invoking Supabase function: marketing-ai');
+      const startTime = Date.now();
+      
       const { data, error } = await supabase.functions.invoke('marketing-ai', {
         body: { 
           module: 'usp_canvas_profile', 
@@ -30,19 +33,51 @@ export class UspCanvasService {
           data: {
             strategyId,
             briefingContent,
-            section,
+            section: section || 'all',
             enhancementText,
             personaContent
           }
         }
       });
       
+      const endTime = Date.now();
+      console.log(`Supabase function response received in ${endTime - startTime}ms`);
+      
       if (error) {
         console.error('Supabase function error:', error);
-        throw new Error(error.message || 'Failed to generate USP Canvas profile');
+        return {
+          error: error.message || 'Failed to generate USP Canvas profile',
+          debugInfo: {
+            error,
+            requestData: { 
+              strategyId,
+              briefingContentLength: briefingContent?.length || 0,
+              personaContentLength: personaContent?.length || 0,
+              section,
+              enhancementText 
+            }
+          }
+        };
       }
       
-      console.log('USP Canvas profile generation result:', data);
+      if (!data || !data.result) {
+        console.error('Invalid response format from marketing-ai function:', data);
+        return {
+          error: 'Invalid response from AI service',
+          debugInfo: {
+            response: data,
+            requestData: { 
+              strategyId,
+              briefingContentLength: briefingContent?.length || 0,
+              personaContentLength: personaContent?.length || 0,
+              section,
+              enhancementText 
+            }
+          }
+        };
+      }
+      
+      console.log('USP Canvas profile generation result:', data.result);
       
       return {
         data: data.result as UspCanvasAIResult,
@@ -54,7 +89,8 @@ export class UspCanvasService {
             section,
             enhancementText 
           },
-          responseData: data
+          responseData: data,
+          timestamp: new Date().toISOString()
         }
       };
     } catch (error) {
@@ -71,7 +107,8 @@ export class UspCanvasService {
             section,
             enhancementText 
           },
-          responseData: error
+          error,
+          timestamp: new Date().toISOString()
         }
       };
     }

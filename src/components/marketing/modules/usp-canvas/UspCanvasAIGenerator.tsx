@@ -7,6 +7,7 @@ import ResultDisplay from './ai-generator/ResultDisplay';
 import { useAIGenerator } from './ai-generator/useAIGenerator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import AIDebugPanel from '@/components/shared/AIDebugPanel';
 
 interface UspCanvasAIGeneratorProps {
   strategyId: string;
@@ -29,12 +30,15 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
   onAddGains,
   onResultsGenerated
 }) => {
+  const [showDebug, setShowDebug] = useState(false);
   const { 
     isGenerating, 
     error, 
+    debugInfo,
     activeTab, 
     setActiveTab, 
-    generateResult 
+    generateResult,
+    generationHistory
   } = useAIGenerator(strategyId, briefingContent, personaContent, onResultsGenerated);
   
   // Format content for display
@@ -58,20 +62,28 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
   // Create wrapper functions to handle passing the stored results to the handlers
   const handleAddJobs = () => {
     if (storedAIResult?.jobs && storedAIResult.jobs.length > 0) {
+      console.log('Adding jobs to canvas:', storedAIResult.jobs);
       onAddJobs(storedAIResult.jobs);
     }
   };
 
   const handleAddPains = () => {
     if (storedAIResult?.pains && storedAIResult.pains.length > 0) {
+      console.log('Adding pains to canvas:', storedAIResult.pains);
       onAddPains(storedAIResult.pains);
     }
   };
 
   const handleAddGains = () => {
     if (storedAIResult?.gains && storedAIResult.gains.length > 0) {
+      console.log('Adding gains to canvas:', storedAIResult.gains);
       onAddGains(storedAIResult.gains);
     }
+  };
+
+  // Toggle debug panel
+  const toggleDebugPanel = () => {
+    setShowDebug(prev => !prev);
   };
 
   // Check if we have briefing content
@@ -95,6 +107,8 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
         error={error}
         generateResult={generateResult}
         hasResults={!!hasResults}
+        onToggleDebug={toggleDebugPanel}
+        showDebug={showDebug}
       />
       
       {!isGenerating && hasResults && (
@@ -109,6 +123,20 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
             formatContent={formatContent}
           />
         </div>
+      )}
+
+      {showDebug && debugInfo && (
+        <AIDebugPanel 
+          debugInfo={debugInfo} 
+          title="USP Canvas AI Generator Debug Information"
+        />
+      )}
+      
+      {generationHistory && generationHistory.length > 0 && showDebug && (
+        <AIDebugPanel 
+          debugInfo={generationHistory} 
+          title="Generation History"
+        />
       )}
     </div>
   );
