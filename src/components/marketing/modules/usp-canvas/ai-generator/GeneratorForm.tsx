@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Loader2, AlertCircle, Sparkles, Bug, ChevronDown, ChevronUp, InfoCircle } from 'lucide-react';
+import { Loader2, AlertCircle, Sparkles, Bug, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -49,7 +49,7 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <InfoCircle className="h-4 w-4" />
+                  <Info className="h-4 w-4" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80">
