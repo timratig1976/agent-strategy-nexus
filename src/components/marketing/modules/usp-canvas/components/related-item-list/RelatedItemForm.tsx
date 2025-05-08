@@ -18,6 +18,7 @@ interface RelatedItemFormProps {
   customerItemRatingLabel: string;
   handleAddItem: () => void;
   getRating: (item: RelatedCustomerItem) => 'low' | 'medium' | 'high' | undefined;
+  itemPlaceholder: string;
 }
 
 const RelatedItemForm = ({
@@ -30,7 +31,8 @@ const RelatedItemForm = ({
   customerItemRatingType,
   customerItemRatingLabel,
   handleAddItem,
-  getRating
+  getRating,
+  itemPlaceholder
 }: RelatedItemFormProps) => {
   // This ref will be used to focus the input
   const inputRef = useRef<HTMLInputElement>(null);
@@ -87,7 +89,7 @@ const RelatedItemForm = ({
                 ref={inputRef}
                 value={newItemContent}
                 onChange={(e) => setNewItemContent(e.target.value)}
-                placeholder={`Add a new ${customerItemType}...`}
+                placeholder={itemPlaceholder}
                 className="w-full"
                 onKeyDown={handleKeyDown}
                 autoFocus

@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-// Fix the import - remove the non-existent Empty component
 import { Badge } from "@/components/ui/badge";
 import RelatedItemCard from './related-item-list/RelatedItemCard';
 import RelatedItemForm from './related-item-list/RelatedItemForm';
@@ -81,6 +80,7 @@ const RelatedItemList = ({
       customerItemRatingLabel={customerItemRatingLabel}
       handleAddItem={handleAddItem}
       getRating={getRating}
+      itemPlaceholder={itemPlaceholder}
     />
   );
   
