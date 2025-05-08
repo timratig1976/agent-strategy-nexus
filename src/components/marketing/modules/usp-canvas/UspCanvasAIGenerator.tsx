@@ -1,26 +1,19 @@
 
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
-import { StoredAIResult, CustomerJob, CustomerPain, CustomerGain } from './types';
-import { ArrowDown, Loader2, AlertCircle, Check, Plus } from 'lucide-react';
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { StoredAIResult } from './types';
+import GeneratorForm from './ai-generator/GeneratorForm';
+import ResultTabs from './ai-generator/ResultTabs';
+import ResultDisplay from './ai-generator/ResultDisplay';
+import { useAIGenerator } from './ai-generator/useAIGenerator';
 
 interface UspCanvasAIGeneratorProps {
   strategyId: string;
   briefingContent: string;
   personaContent?: string;
   storedAIResult?: StoredAIResult;
-  onAddJobs: (jobs: CustomerJob[]) => void;
-  onAddPains: (pains: CustomerPain[]) => void;
-  onAddGains: (gains: CustomerGain[]) => void;
+  onAddJobs: (jobs: any[]) => void;
+  onAddPains: (pains: any[]) => void;
+  onAddGains: (gains: any[]) => void;
   onResultsGenerated: (results: StoredAIResult, debugInfo?: any) => void;
 }
 
@@ -34,128 +27,17 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
   onAddGains,
   onResultsGenerated
 }) => {
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<string>("jobs");
-
-  const generateResult = async () => {
-    setIsGenerating(true);
-    setError(null);
-
-    try {
-      // Call your Supabase Edge Function or other API 
-      const response = await fetch('/api/marketing-ai', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          module: 'usp_canvas_profile',
-          action: 'generate',
-          strategyId,
-          briefingContent,
-          personaContent,
-          section: 'all'
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      // Store the parsed result for use across tabs
-      let parsedData: StoredAIResult = { jobs: [], pains: [], gains: [] };
-      
-      try {
-        // Try to parse the result if it's a string
-        if (data.result && typeof data.result === 'string') {
-          parsedData = JSON.parse(data.result);
-        } else if (data.result) {
-          // If it's already an object, use it directly
-          parsedData = data.result;
-        }
-        
-        // Create empty arrays for any missing sections
-        const normalizedData: StoredAIResult = {
-          jobs: Array.isArray(parsedData.jobs) ? parsedData.jobs : [],
-          pains: Array.isArray(parsedData.pains) ? parsedData.pains : [],
-          gains: Array.isArray(parsedData.gains) ? parsedData.gains : []
-        };
-        
-        // Debug information
-        const debugData = {
-          raw: data.raw,
-          parsed: normalizedData,
-          timestamp: new Date().toISOString()
-        };
-        
-        setDebugInfo(debugData);
-        
-        // Store result and notify parent component
-        onResultsGenerated(normalizedData, debugData);
-      } catch (parseError) {
-        console.error("Error parsing result:", parseError);
-        throw new Error("Failed to parse AI results");
-      }
-    } catch (err: any) {
-      console.error("Error generating canvas data:", err);
-      setError(err.message || "Failed to generate canvas data. Please try again.");
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handleAddJobs = () => {
-    if (storedAIResult.jobs && storedAIResult.jobs.length > 0) {
-      onAddJobs(storedAIResult.jobs);
-    }
-  };
-
-  const handleAddPains = () => {
-    if (storedAIResult.pains && storedAIResult.pains.length > 0) {
-      onAddPains(storedAIResult.pains);
-    }
-  };
-
-  const handleAddGains = () => {
-    if (storedAIResult.gains && storedAIResult.gains.length > 0) {
-      onAddGains(storedAIResult.gains);
-    }
-  };
+  const { 
+    isGenerating, 
+    error, 
+    activeTab, 
+    setActiveTab, 
+    generateResult 
+  } = useAIGenerator(strategyId, briefingContent, personaContent, onResultsGenerated);
   
   // Format content for display
   const formatContent = (items: any[] | undefined) => {
-    if (!items || items.length === 0) return "No data available";
-    
-    return (
-      <div className="space-y-4">
-        {items.map((item, index) => (
-          <div key={index} className="p-3 border rounded-md">
-            <div className="flex gap-2 items-start">
-              <div className={`px-2 py-1 text-xs rounded-full ${
-                item.priority === 'high' || item.severity === 'high' || item.importance === 'high' 
-                  ? 'bg-red-100 text-red-800' 
-                  : item.priority === 'medium' || item.severity === 'medium' || item.importance === 'medium'
-                  ? 'bg-yellow-100 text-yellow-800'
-                  : 'bg-green-100 text-green-800'
-              }`}>
-                {item.priority || item.severity || item.importance || 'medium'}
-              </div>
-              <div className="flex-1">
-                {item.content}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
+    return <ResultDisplay items={items} />;
   };
   
   const hasResults = storedAIResult && (
@@ -166,236 +48,24 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
 
   return (
     <div className="space-y-8">
-      <div className="bg-slate-50 p-6 rounded-lg">
-        <h3 className="text-lg font-medium mb-4">AI-Powered Value Proposition Canvas Generator</h3>
-        <p className="mb-6">
-          Generate customer jobs, pains, and gains automatically based on your marketing brief 
-          and persona information. Then select which elements to add to your canvas.
-        </p>
-        
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        
-        <div className="flex items-center justify-center">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  onClick={generateResult} 
-                  disabled={isGenerating}
-                  className="flex items-center"
-                  size="lg"
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Generating Canvas Data...
-                    </>
-                  ) : (
-                    <>
-                      Generate Canvas Data
-                    </>
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="text-sm">
-                  Analyze your marketing brief and personas to automatically generate customer profile elements
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-        
-        {!isGenerating && hasResults && (
-          <div className="mt-6 flex justify-center">
-            <ArrowDown className="animate-bounce h-6 w-6 text-primary" />
-          </div>
-        )}
-      </div>
+      <GeneratorForm 
+        isGenerating={isGenerating}
+        error={error}
+        generateResult={generateResult}
+        hasResults={!!hasResults}
+      />
       
       {!isGenerating && hasResults && (
         <div className="mt-8">
-          <Tabs 
-            value={activeTab} 
-            onValueChange={setActiveTab} 
-            defaultValue="jobs"
-          >
-            <TabsList className="grid w-full grid-cols-3 mb-6">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <TabsTrigger 
-                      value="jobs" 
-                      className={`relative ${activeTab === "jobs" ? "font-medium" : ""}`}
-                    >
-                      Customer Jobs
-                      {storedAIResult.jobs && storedAIResult.jobs.length > 0 && (
-                        <span className="ml-2 px-1.5 py-0.5 rounded-full bg-blue-100 text-xs text-blue-800">
-                          {storedAIResult.jobs.length}
-                        </span>
-                      )}
-                      {activeTab === "jobs" && (
-                        <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
-                      )}
-                    </TabsTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    <p className="text-sm">Tasks customers are trying to complete</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <TabsTrigger 
-                      value="pains" 
-                      className={`relative ${activeTab === "pains" ? "font-medium" : ""}`}
-                    >
-                      Customer Pains
-                      {storedAIResult.pains && storedAIResult.pains.length > 0 && (
-                        <span className="ml-2 px-1.5 py-0.5 rounded-full bg-red-100 text-xs text-red-800">
-                          {storedAIResult.pains.length}
-                        </span>
-                      )}
-                      {activeTab === "pains" && (
-                        <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
-                      )}
-                    </TabsTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    <p className="text-sm">Frustrations, problems, and obstacles customers face</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <TabsTrigger 
-                      value="gains" 
-                      className={`relative ${activeTab === "gains" ? "font-medium" : ""}`}
-                    >
-                      Customer Gains
-                      {storedAIResult.gains && storedAIResult.gains.length > 0 && (
-                        <span className="ml-2 px-1.5 py-0.5 rounded-full bg-green-100 text-xs text-green-800">
-                          {storedAIResult.gains.length}
-                        </span>
-                      )}
-                      {activeTab === "gains" && (
-                        <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
-                      )}
-                    </TabsTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    <p className="text-sm">Benefits and outcomes customers want to achieve</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </TabsList>
-            
-            <TabsContent value="jobs">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex justify-between items-center">
-                    <span>Generated Customer Jobs</span>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            onClick={handleAddJobs} 
-                            disabled={!storedAIResult.jobs || storedAIResult.jobs.length === 0}
-                            className="flex items-center"
-                          >
-                            <Plus className="h-4 w-4 mr-1" /> Add All to Canvas
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="top">
-                          <p className="text-sm">Add all generated jobs to your customer profile</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </CardTitle>
-                  <CardDescription>
-                    The tasks your customers are trying to complete or problems they're trying to solve.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {formatContent(storedAIResult.jobs)}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="pains">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex justify-between items-center">
-                    <span>Generated Customer Pains</span>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            onClick={handleAddPains} 
-                            disabled={!storedAIResult.pains || storedAIResult.pains.length === 0}
-                            className="flex items-center"
-                          >
-                            <Plus className="h-4 w-4 mr-1" /> Add All to Canvas
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="top">
-                          <p className="text-sm">Add all generated pains to your customer profile</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </CardTitle>
-                  <CardDescription>
-                    The negative experiences, risks, and obstacles customers face.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {formatContent(storedAIResult.pains)}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="gains">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex justify-between items-center">
-                    <span>Generated Customer Gains</span>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            onClick={handleAddGains} 
-                            disabled={!storedAIResult.gains || storedAIResult.gains.length === 0}
-                            className="flex items-center"
-                          >
-                            <Plus className="h-4 w-4 mr-1" /> Add All to Canvas
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="top">
-                          <p className="text-sm">Add all generated gains to your customer profile</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </CardTitle>
-                  <CardDescription>
-                    The benefits and positive outcomes your customers expect or would be surprised by.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {formatContent(storedAIResult.gains)}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+          <ResultTabs 
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            storedAIResult={storedAIResult}
+            handleAddJobs={onAddJobs}
+            handleAddPains={onAddPains}
+            handleAddGains={onAddGains}
+            formatContent={formatContent}
+          />
         </div>
       )}
     </div>

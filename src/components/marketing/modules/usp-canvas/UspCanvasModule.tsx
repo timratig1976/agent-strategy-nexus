@@ -1,15 +1,10 @@
 
 import React, { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import UspCanvasOverview from "./UspCanvasOverview";
-import CustomerProfileCanvas from "./CustomerProfileCanvas";
-import ValueMapCanvas from "./ValueMapCanvas";
-import { useUspCanvas } from "./useUspCanvas";
-import UspCanvasAIGenerator from "./UspCanvasAIGenerator";
-import { StoredAIResult } from "./types";
-import { ArrowLeft, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+import { useUspCanvas } from "./useUspCanvas";
+import { StoredAIResult } from "./types";
+import UspCanvasHeader from "./components/UspCanvasHeader";
+import UspCanvasModuleTabs from "./components/UspCanvasModuleTabs";
 
 interface UspCanvasModuleProps {
   strategyId: string;
@@ -27,7 +22,7 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
   onNavigateNext
 }) => {
   // Store AI results between tab switches
-  const [storedAIResult, setStoredAIResult] = useState<StoredAIResult>({});
+  const [storedAIResult, setStoredAIResult] = useState<StoredAIResult>({ jobs: [], pains: [], gains: [] });
   // Track IDs of already added items to prevent duplicates
   const [addedJobIds, setAddedJobIds] = useState<Set<string>>(new Set());
   const [addedPainIds, setAddedPainIds] = useState<Set<string>>(new Set());
@@ -66,11 +61,6 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     saveFinalVersion,
     applyAIGeneratedContent
   } = useUspCanvas(strategyId);
-
-  // Handle saving AI results when switching tabs
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-  };
 
   // Handle adding AI-generated elements with duplicate prevention
   const handleAddAIJobs = (jobs) => {
@@ -207,154 +197,50 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
 
   return (
     <div className="w-full">
-      <div className="flex flex-col mb-4 gap-2">
-        <h2 className="text-2xl font-bold">Unique Selling Proposition Canvas</h2>
-        <p className="text-muted-foreground">
-          Define your value proposition by mapping customer jobs, pains, and gains to your products and services.
-        </p>
-        
-        {/* Navigation buttons */}
-        <div className="flex justify-between items-center mt-2">
-          <Button 
-            variant="outline" 
-            onClick={onNavigateBack}
-            disabled={!onNavigateBack}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Personas
-          </Button>
-          
-          <Button 
-            onClick={handleSaveFinal}
-            className="flex items-center gap-2"
-          >
-            Save Final Version
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      <UspCanvasHeader 
+        onNavigateBack={onNavigateBack} 
+        onNavigateNext={onNavigateNext}
+        onSaveFinal={handleSaveFinal}
+      />
 
-      <Tabs defaultValue="canvas" className="mt-8" onValueChange={handleTabChange}>
-        <TabsList className="w-full">
-          <TabsTrigger value="canvas">Canvas</TabsTrigger>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="ai-generator">AI Generator</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="canvas" className="mt-6 space-y-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <CustomerProfileCanvas 
-                canvas={canvas}
-                addCustomerJob={addCustomerJob}
-                updateCustomerJob={updateCustomerJob}
-                deleteCustomerJob={deleteCustomerJob}
-                reorderCustomerJobs={reorderCustomerJobs}
-                addCustomerPain={addCustomerPain}
-                updateCustomerPain={updateCustomerPain}
-                deleteCustomerPain={deleteCustomerPain}
-                reorderCustomerPains={reorderCustomerPains}
-                addCustomerGain={addCustomerGain}
-                updateCustomerGain={updateCustomerGain}
-                deleteCustomerGain={deleteCustomerGain}
-                reorderCustomerGains={reorderCustomerGains}
-                formPosition="top"
-              />
-            </div>
-            
-            <div className="space-y-6">
-              <ValueMapCanvas 
-                canvas={canvas}
-                addProductService={addProductService}
-                updateProductService={updateProductService}
-                deleteProductService={deleteProductService}
-                addPainReliever={addPainReliever}
-                updatePainReliever={updatePainReliever}
-                deletePainReliever={deletePainReliever}
-                addGainCreator={addGainCreator}
-                updateGainCreator={updateGainCreator}
-                deleteGainCreator={deleteGainCreator}
-                formPosition="top"
-              />
-            </div>
-          </div>
-          
-          <div className="flex justify-end space-x-3 py-4">
-            <Button 
-              variant="outline" 
-              onClick={() => resetCanvas()}
-            >
-              Reset Canvas
-            </Button>
-            
-            <Button 
-              onClick={() => saveCanvas()}
-              disabled={isSaved}
-            >
-              {isSaved ? 'Saved' : 'Save Canvas'}
-            </Button>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="overview" className="mt-6">
-          <UspCanvasOverview 
-            canvas={canvas} 
-            briefingContent={briefingContent}
-            personaContent={personaContent}
-          />
-        </TabsContent>
-
-        <TabsContent value="ai-generator" className="mt-6">
-          <UspCanvasAIGenerator
-            strategyId={strategyId}
-            briefingContent={briefingContent}
-            personaContent={personaContent}
-            onAddJobs={handleAddAIJobs}
-            onAddPains={handleAddAIPains}
-            onAddGains={handleAddAIGains}
-            storedAIResult={storedAIResult}
-            onResultsGenerated={handleAIResultsGenerated}
-          />
-        </TabsContent>
-        
-        <TabsContent value="history" className="mt-6">
-          <div className="space-y-6">
-            <h3 className="text-xl font-medium">Canvas History</h3>
-            <p className="text-muted-foreground">
-              View previous versions of your canvas and restore them if needed.
-            </p>
-            
-            <div className="space-y-4">
-              {canvasSaveHistory && canvasSaveHistory.length > 0 ? (
-                canvasSaveHistory.map((historyItem, index) => (
-                  <div key={index} className="border rounded-lg p-4 flex justify-between items-center">
-                    <div>
-                      <p className="font-medium">Version {canvasSaveHistory.length - index}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(historyItem.timestamp).toLocaleString()}
-                      </p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        // Implement restore functionality later
-                        toast.info("Version restored");
-                      }}
-                    >
-                      Restore
-                    </Button>
-                  </div>
-                ))
-              ) : (
-                <p>No history available yet. Save your canvas to create history entries.</p>
-              )}
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+      <UspCanvasModuleTabs 
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        canvas={canvas}
+        addCustomerJob={addCustomerJob}
+        updateCustomerJob={updateCustomerJob}
+        deleteCustomerJob={deleteCustomerJob}
+        reorderCustomerJobs={reorderCustomerJobs}
+        addCustomerPain={addCustomerPain}
+        updateCustomerPain={updateCustomerPain}
+        deleteCustomerPain={deleteCustomerPain}
+        reorderCustomerPains={reorderCustomerPains}
+        addCustomerGain={addCustomerGain}
+        updateCustomerGain={updateCustomerGain}
+        deleteCustomerGain={deleteCustomerGain}
+        reorderCustomerGains={reorderCustomerGains}
+        addProductService={addProductService}
+        updateProductService={updateProductService}
+        deleteProductService={deleteProductService}
+        addPainReliever={addPainReliever}
+        updatePainReliever={updatePainReliever}
+        deletePainReliever={deletePainReliever}
+        addGainCreator={addGainCreator}
+        updateGainCreator={updateGainCreator}
+        deleteGainCreator={deleteGainCreator}
+        strategyId={strategyId}
+        briefingContent={briefingContent}
+        personaContent={personaContent}
+        saveCanvas={saveCanvas}
+        resetCanvas={resetCanvas}
+        isSaved={isSaved}
+        handleAddAIJobs={handleAddAIJobs}
+        handleAddAIPains={handleAddAIPains}
+        handleAddAIGains={handleAddAIGains}
+        storedAIResult={storedAIResult}
+        handleAIResultsGenerated={handleAIResultsGenerated}
+        canvasSaveHistory={canvasSaveHistory}
+      />
     </div>
   );
 };
