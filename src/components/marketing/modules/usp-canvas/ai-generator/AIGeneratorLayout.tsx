@@ -3,6 +3,7 @@ import React from 'react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { StoredAIResult } from "../types";
+import { toast } from 'sonner';
 import GeneratorForm from './GeneratorForm';
 import ResultsSection from './ResultsSection';
 import DebugSection from './DebugSection';
@@ -89,21 +90,18 @@ const AIGeneratorLayout: React.FC<AIGeneratorLayoutProps> = ({
   const handleAddSingleJob = (job: any) => {
     console.log('Adding single job to canvas:', job);
     onAddJobs([job]);
-    import { toast } from 'sonner';
     toast.success(`Added "${job.content.substring(0, 30)}..." to jobs`);
   };
 
   const handleAddSinglePain = (pain: any) => {
     console.log('Adding single pain to canvas:', pain);
     onAddPains([pain]);
-    import { toast } from 'sonner';
     toast.success(`Added "${pain.content.substring(0, 30)}..." to pains`);
   };
 
   const handleAddSingleGain = (gain: any) => {
     console.log('Adding single gain to canvas:', gain);
     onAddGains([gain]);
-    import { toast } from 'sonner';
     toast.success(`Added "${gain.content.substring(0, 30)}..." to gains`);
   };
 
