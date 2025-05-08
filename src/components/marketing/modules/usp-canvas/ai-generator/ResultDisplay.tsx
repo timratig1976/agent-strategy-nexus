@@ -1,5 +1,7 @@
 
 import React from 'react';
+import { PlusCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ResultDisplayProps {
   items: any[] | undefined;
@@ -7,10 +9,10 @@ interface ResultDisplayProps {
 }
 
 const ResultDisplay: React.FC<ResultDisplayProps> = ({ items, onAddSingleItem }) => {
-  if (!items || items.length === 0) return <p>No data available</p>;
+  if (!items || items.length === 0) return <p className="text-sm text-muted-foreground">No data available</p>;
   
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {items.map((item, index) => {
         // Skip items without content
         if (!item || !item.content) return null;
@@ -20,9 +22,9 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ items, onAddSingleItem })
         const validLevel = ['high', 'medium', 'low'].includes(level) ? level : 'medium';
         
         return (
-          <div key={index} className="p-3 border rounded-md">
+          <div key={index} className="p-2 border rounded-md group relative">
             <div className="flex gap-2 items-start">
-              <div className={`px-2 py-1 text-xs rounded-full ${
+              <div className={`px-1.5 py-0.5 text-xs rounded-full ${
                 validLevel === 'high' 
                   ? 'bg-red-100 text-red-800' 
                   : validLevel === 'medium'
@@ -31,17 +33,20 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ items, onAddSingleItem })
               }`}>
                 {validLevel}
               </div>
-              <div className="flex-1">
+              <div className="flex-1 text-sm">
                 {item.content}
               </div>
               {onAddSingleItem && (
-                <button 
-                  onClick={() => onAddSingleItem(item)} 
-                  className="ml-2 p-1 text-xs bg-primary/10 hover:bg-primary/20 rounded text-primary"
+                <Button
+                  variant="ghost" 
+                  size="sm"
+                  className="h-6 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => onAddSingleItem(item)}
                   title="Add this item to canvas"
                 >
-                  Add
-                </button>
+                  <PlusCircle className="h-3.5 w-3.5 mr-1" />
+                  <span className="text-xs">Add</span>
+                </Button>
               )}
             </div>
           </div>

@@ -46,8 +46,8 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
   const formatContent = (items: any[] | undefined, onAddSingleItem?: (item: any) => void) => {
     if (!items || items.length === 0) {
       return (
-        <div className="p-4 text-center bg-muted/20 rounded-md">
-          <p className="text-muted-foreground">No items generated yet</p>
+        <div className="p-3 text-center bg-muted/20 rounded-md">
+          <p className="text-muted-foreground text-sm">No items generated yet</p>
         </div>
       );
     }
@@ -121,7 +121,7 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <GeneratorForm 
         isGenerating={isGenerating}
         error={error}
@@ -132,7 +132,7 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
       />
       
       {!isGenerating && hasResults && (
-        <div className="mt-8">
+        <div>
           <ResultTabs 
             activeTab={activeTab}
             setActiveTab={setActiveTab}
