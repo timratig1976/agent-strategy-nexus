@@ -77,7 +77,7 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
   // Check if we have briefing content
   if (!briefingContent) {
     return (
-      <Alert variant="warning" className="mb-6">
+      <Alert className="mb-6">
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Missing Information</AlertTitle>
         <AlertDescription>
