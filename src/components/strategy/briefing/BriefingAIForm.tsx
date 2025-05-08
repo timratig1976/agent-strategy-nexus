@@ -43,7 +43,12 @@ const BriefingAIForm: React.FC<BriefingAIFormProps> = ({ strategyId, formData, o
       }
       
       if (response.data) {
-        onComplete(response.data.content || response.data.rawOutput);
+        // Safely access content or rawOutput
+        const resultContent = response.data && typeof response.data === 'object' 
+          ? ((response.data as any).content || (response.data as any).rawOutput || '')
+          : '';
+        
+        onComplete(resultContent);
         toast.success(outputLanguage === 'deutsch' ? 
           "Briefing erfolgreich generiert!" : 
           "Briefing successfully generated!");

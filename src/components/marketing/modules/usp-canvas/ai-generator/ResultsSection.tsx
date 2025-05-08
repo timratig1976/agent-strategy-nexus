@@ -1,50 +1,76 @@
 
 import React from 'react';
-import ResultTabs from './ResultTabs';
 import { StoredAIResult } from '../types';
+import AIResultsPanel from './AIResultsPanel';
+import AIResultsItem from './AIResultsItem';
 
 interface ResultsSectionProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   storedAIResult: StoredAIResult;
-  handleAddJobs: () => void;
-  handleAddPains: () => void;
-  handleAddGains: () => void;
-  handleAddSingleJob: (job: any) => void;
-  handleAddSinglePain: (pain: any) => void;
-  handleAddSingleGain: (gain: any) => void;
-  formatContent: (items: any[] | undefined, onAddSingleItem?: (item: any) => void) => React.ReactNode;
+  handleAddJobs: (jobs: any[]) => void;
+  handleAddPains: (pains: any[]) => void;
+  handleAddGains: (gains: any[]) => void;
   isGenerating: boolean;
 }
 
 const ResultsSection: React.FC<ResultsSectionProps> = ({
   activeTab,
-  setActiveTab,
   storedAIResult,
   handleAddJobs,
   handleAddPains,
   handleAddGains,
-  handleAddSingleJob,
-  handleAddSinglePain,
-  handleAddSingleGain,
-  formatContent,
   isGenerating
 }) => {
   return (
-    <div>
-      <ResultTabs 
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        storedAIResult={storedAIResult}
-        handleAddJobs={handleAddJobs}
-        handleAddPains={handleAddPains}
-        handleAddGains={handleAddGains}
-        handleAddSingleJob={handleAddSingleJob}
-        handleAddSinglePain={handleAddSinglePain}
-        handleAddSingleGain={handleAddSingleGain}
-        formatContent={formatContent}
-        isGenerating={isGenerating}
-      />
+    <div className="mt-8">
+      {activeTab === 'jobs' && (
+        <AIResultsPanel
+          title="Kundenaufgaben"
+          items={storedAIResult.jobs}
+          onAddItems={handleAddJobs}
+          renderItem={(item, index) => (
+            <AIResultsItem
+              key={index}
+              item={item}
+              ratingProperty="priority"
+              ratingLabel="Priorität"
+            />
+          )}
+        />
+      )}
+
+      {activeTab === 'pains' && (
+        <AIResultsPanel
+          title="Kundenprobleme"
+          items={storedAIResult.pains}
+          onAddItems={handleAddPains}
+          renderItem={(item, index) => (
+            <AIResultsItem
+              key={index}
+              item={item}
+              ratingProperty="severity"
+              ratingLabel="Schwere"
+            />
+          )}
+        />
+      )}
+
+      {activeTab === 'gains' && (
+        <AIResultsPanel
+          title="Kundenvorteile"
+          items={storedAIResult.gains}
+          onAddItems={handleAddGains}
+          renderItem={(item, index) => (
+            <AIResultsItem
+              key={index}
+              item={item}
+              ratingProperty="importance"
+              ratingLabel="Wichtigkeit"
+            />
+          )}
+        />
+      )}
     </div>
   );
 };

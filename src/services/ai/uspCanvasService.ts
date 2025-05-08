@@ -279,6 +279,7 @@ export class UspCanvasService {
    * Helper method to parse structured items from the given format
    */
   private static parseStructuredItems(rawText: string, type: 'jobs' | 'pains' | 'gains', ratingType: 'priority' | 'severity' | 'importance'): Array<any> {
+    
     const items = [];
     const sectionTitle = type === 'jobs' ? 'Customer Jobs' : 
                          type === 'pains' ? 'Customer Pains' : 

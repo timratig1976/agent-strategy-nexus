@@ -48,7 +48,12 @@ const PersonaAIForm: React.FC<PersonaAIFormProps> = ({ strategyId, briefingConte
       }
       
       if (response.data) {
-        onComplete(response.data.content || response.data.rawOutput);
+        // Safely access content or rawOutput
+        const resultContent = response.data && typeof response.data === 'object' 
+          ? ((response.data as any).content || (response.data as any).rawOutput || '')
+          : '';
+          
+        onComplete(resultContent);
         toast.success(outputLanguage === 'deutsch' ? 
           "Personas erfolgreich generiert!" : 
           "Personas successfully generated!");
