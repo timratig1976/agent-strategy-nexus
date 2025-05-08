@@ -32,7 +32,27 @@ const RelatedItemForm = ({
   handleAddItem,
   getRating
 }: RelatedItemFormProps) => {
+  // This ref will be used to focus the input
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Function to handle submit and maintain focus
+  const handleSubmit = () => {
+    handleAddItem();
+    // Focus back on the input after adding
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 0);
+  };
+
+  // Handle keyboard event to maintain focus
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && newItemContent.trim()) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
 
   return (
     <div className="p-4 border rounded-md space-y-4 mb-4">
@@ -43,6 +63,7 @@ const RelatedItemForm = ({
           onChange={(e) => setNewItemContent(e.target.value)}
           placeholder={`Add a new ${customerItemType}...`}
           className="w-full"
+          onKeyDown={handleKeyDown}
         />
       </div>
       
@@ -78,7 +99,7 @@ const RelatedItemForm = ({
       
       <div className="text-center">
         <Button 
-          onClick={handleAddItem}
+          onClick={handleSubmit}
           disabled={!newItemContent.trim()}
           className="mx-auto"
         >

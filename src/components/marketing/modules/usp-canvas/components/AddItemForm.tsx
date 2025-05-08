@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -27,6 +27,19 @@ const AddItemForm = ({
   placeholder,
   ratingLabel
 }: AddItemFormProps) => {
+  // Handle submission while maintaining focus
+  const handleSubmit = () => {
+    if (value.trim()) {
+      onAdd();
+      // Focus back on the input after adding
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 0);
+    }
+  };
+
   return (
     <div className="p-4 border rounded-md space-y-4 mb-4">
       <div className="flex flex-wrap items-center gap-2 justify-center">
@@ -38,8 +51,8 @@ const AddItemForm = ({
             placeholder={placeholder}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && value.trim()) {
-                onAdd();
                 e.preventDefault();
+                handleSubmit();
               }
             }}
           />
@@ -67,7 +80,7 @@ const AddItemForm = ({
         </div>
         
         <Button 
-          onClick={onAdd}
+          onClick={handleSubmit}
           disabled={!value.trim()}
           size="sm"
         >

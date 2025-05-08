@@ -86,7 +86,7 @@ const ValueMapCanvas = ({
               <TooltipTrigger asChild>
                 <TabsTrigger 
                   value="services" 
-                  className={`relative ${activeTab === "services" ? "font-medium" : ""}`}
+                  className="relative"
                 >
                   Products & Services
                   {servicesCount > 0 && (
@@ -110,7 +110,7 @@ const ValueMapCanvas = ({
               <TooltipTrigger asChild>
                 <TabsTrigger 
                   value="relievers" 
-                  className={`relative ${activeTab === "relievers" ? "font-medium" : ""}`}
+                  className="relative"
                 >
                   Pain Relievers
                   {relieversCount > 0 && (
@@ -134,7 +134,7 @@ const ValueMapCanvas = ({
               <TooltipTrigger asChild>
                 <TabsTrigger 
                   value="creators" 
-                  className={`relative ${activeTab === "creators" ? "font-medium" : ""}`}
+                  className="relative"
                 >
                   Gain Creators
                   {creatorsCount > 0 && (
