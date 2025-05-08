@@ -21,6 +21,7 @@ const PainRelievers = ({ relievers, pains, onAdd, onUpdate, onDelete, formPositi
   const [newRelieverPainIds, setNewRelieverPainIds] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
+  const [activeEditId, setActiveEditId] = useState<string | null>(null);
 
   // Initialize edit values when relievers change
   useEffect(() => {
@@ -43,6 +44,7 @@ const PainRelievers = ({ relievers, pains, onAdd, onUpdate, onDelete, formPositi
     if (reliever && editValues[relieverId] !== reliever.content) {
       onUpdate(relieverId, editValues[relieverId], reliever.relatedPainIds);
     }
+    setActiveEditId(null);
   };
 
   const handleAddReliever = () => {
@@ -96,10 +98,10 @@ const PainRelievers = ({ relievers, pains, onAdd, onUpdate, onDelete, formPositi
       
       <div>
         <Label className="text-sm font-medium mb-2 block">Related Customer Pains:</Label>
-        <div className="space-y-2 ml-2 flex flex-col items-center">
+        <div className="space-y-2 flex flex-col items-center">
           {pains.length > 0 ? (
             pains.map((pain) => (
-              <div key={pain.id} className="flex items-center space-x-2 w-full justify-center">
+              <div key={pain.id} className="flex items-center space-x-2 w-full">
                 <Checkbox 
                   id={`new-reliever-pain-${pain.id}`} 
                   checked={newRelieverPainIds.includes(pain.id)}
@@ -119,7 +121,7 @@ const PainRelievers = ({ relievers, pains, onAdd, onUpdate, onDelete, formPositi
               </div>
             ))
           ) : (
-            <p className="text-muted-foreground text-center">No customer pains available</p>
+            <p className="text-muted-foreground text-center w-full">No customer pains available</p>
           )}
         </div>
       </div>
@@ -163,6 +165,7 @@ const PainRelievers = ({ relievers, pains, onAdd, onUpdate, onDelete, formPositi
                   <Input 
                     value={editValues[reliever.id] !== undefined ? editValues[reliever.id] : reliever.content}
                     onChange={(e) => handleInputChange(reliever.id, e.target.value)}
+                    onFocus={() => setActiveEditId(reliever.id)}
                     onBlur={() => handleInputBlur(reliever.id)}
                     placeholder="How do you relieve customer pains?"
                   />
@@ -179,9 +182,9 @@ const PainRelievers = ({ relievers, pains, onAdd, onUpdate, onDelete, formPositi
               
               <div className="mt-3">
                 <Label className="text-sm font-medium mb-2 block">Related Customer Pains:</Label>
-                <div className="space-y-2 ml-2 flex flex-col items-center">
+                <div className="space-y-2 flex flex-col items-center">
                   {pains.map((pain) => (
-                    <div key={pain.id} className="flex items-center space-x-2 w-full justify-center">
+                    <div key={pain.id} className="flex items-center space-x-2 w-full">
                       <Checkbox 
                         id={`reliever-${reliever.id}-pain-${pain.id}`} 
                         checked={reliever.relatedPainIds.includes(pain.id)}

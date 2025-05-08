@@ -21,6 +21,7 @@ const ProductServices = ({ services, jobs, onAdd, onUpdate, onDelete, formPositi
   const [newServiceJobIds, setNewServiceJobIds] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
+  const [activeEditId, setActiveEditId] = useState<string | null>(null);
 
   // Initialize edit values when services change
   useEffect(() => {
@@ -43,6 +44,7 @@ const ProductServices = ({ services, jobs, onAdd, onUpdate, onDelete, formPositi
     if (service && editValues[serviceId] !== service.content) {
       onUpdate(serviceId, editValues[serviceId], service.relatedJobIds);
     }
+    setActiveEditId(null);
   };
 
   const handleAddService = () => {
@@ -96,10 +98,10 @@ const ProductServices = ({ services, jobs, onAdd, onUpdate, onDelete, formPositi
       
       <div>
         <Label className="text-sm font-medium mb-2 block">Related Customer Jobs:</Label>
-        <div className="space-y-2 ml-2 flex flex-col items-center">
+        <div className="space-y-2 flex flex-col items-center">
           {jobs.length > 0 ? (
             jobs.map((job) => (
-              <div key={job.id} className="flex items-center space-x-2 w-full justify-center">
+              <div key={job.id} className="flex items-center space-x-2 w-full">
                 <Checkbox 
                   id={`new-service-job-${job.id}`} 
                   checked={newServiceJobIds.includes(job.id)}
@@ -119,7 +121,7 @@ const ProductServices = ({ services, jobs, onAdd, onUpdate, onDelete, formPositi
               </div>
             ))
           ) : (
-            <p className="text-muted-foreground text-center">No customer jobs available</p>
+            <p className="text-muted-foreground text-center w-full">No customer jobs available</p>
           )}
         </div>
       </div>
@@ -163,6 +165,7 @@ const ProductServices = ({ services, jobs, onAdd, onUpdate, onDelete, formPositi
                   <Input 
                     value={editValues[service.id] !== undefined ? editValues[service.id] : service.content}
                     onChange={(e) => handleInputChange(service.id, e.target.value)}
+                    onFocus={() => setActiveEditId(service.id)}
                     onBlur={() => handleInputBlur(service.id)}
                     placeholder="What product or service do you offer?"
                   />
@@ -179,9 +182,9 @@ const ProductServices = ({ services, jobs, onAdd, onUpdate, onDelete, formPositi
               
               <div className="mt-3">
                 <Label className="text-sm font-medium mb-2 block">Related Customer Jobs:</Label>
-                <div className="space-y-2 ml-2 flex flex-col items-center">
+                <div className="space-y-2 flex flex-col items-center">
                   {jobs.map((job) => (
-                    <div key={job.id} className="flex items-center space-x-2 w-full justify-center">
+                    <div key={job.id} className="flex items-center space-x-2 w-full">
                       <Checkbox 
                         id={`service-${service.id}-job-${job.id}`} 
                         checked={service.relatedJobIds.includes(job.id)}

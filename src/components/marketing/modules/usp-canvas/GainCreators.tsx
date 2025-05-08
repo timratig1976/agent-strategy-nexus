@@ -21,6 +21,7 @@ const GainCreators = ({ creators, gains, onAdd, onUpdate, onDelete, formPosition
   const [newCreatorGainIds, setNewCreatorGainIds] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
+  const [activeEditId, setActiveEditId] = useState<string | null>(null);
 
   // Initialize edit values when creators change
   useEffect(() => {
@@ -43,6 +44,7 @@ const GainCreators = ({ creators, gains, onAdd, onUpdate, onDelete, formPosition
     if (creator && editValues[creatorId] !== creator.content) {
       onUpdate(creatorId, editValues[creatorId], creator.relatedGainIds);
     }
+    setActiveEditId(null);
   };
 
   const handleAddCreator = () => {
@@ -96,10 +98,10 @@ const GainCreators = ({ creators, gains, onAdd, onUpdate, onDelete, formPosition
       
       <div>
         <Label className="text-sm font-medium mb-2 block">Related Customer Gains:</Label>
-        <div className="space-y-2 ml-2 flex flex-col items-center">
+        <div className="space-y-2 flex flex-col items-center">
           {gains.length > 0 ? (
             gains.map((gain) => (
-              <div key={gain.id} className="flex items-center space-x-2 w-full justify-center">
+              <div key={gain.id} className="flex items-center space-x-2 w-full">
                 <Checkbox 
                   id={`new-creator-gain-${gain.id}`} 
                   checked={newCreatorGainIds.includes(gain.id)}
@@ -119,7 +121,7 @@ const GainCreators = ({ creators, gains, onAdd, onUpdate, onDelete, formPosition
               </div>
             ))
           ) : (
-            <p className="text-muted-foreground text-center">No customer gains available</p>
+            <p className="text-muted-foreground text-center w-full">No customer gains available</p>
           )}
         </div>
       </div>
@@ -163,6 +165,7 @@ const GainCreators = ({ creators, gains, onAdd, onUpdate, onDelete, formPosition
                   <Input 
                     value={editValues[creator.id] !== undefined ? editValues[creator.id] : creator.content}
                     onChange={(e) => handleInputChange(creator.id, e.target.value)}
+                    onFocus={() => setActiveEditId(creator.id)}
                     onBlur={() => handleInputBlur(creator.id)}
                     placeholder="How do you create customer gains?"
                   />
@@ -179,9 +182,9 @@ const GainCreators = ({ creators, gains, onAdd, onUpdate, onDelete, formPosition
               
               <div className="mt-3">
                 <Label className="text-sm font-medium mb-2 block">Related Customer Gains:</Label>
-                <div className="space-y-2 ml-2 flex flex-col items-center">
+                <div className="space-y-2 flex flex-col items-center">
                   {gains.map((gain) => (
-                    <div key={gain.id} className="flex items-center space-x-2 w-full justify-center">
+                    <div key={gain.id} className="flex items-center space-x-2 w-full">
                       <Checkbox 
                         id={`creator-${creator.id}-gain-${gain.id}`} 
                         checked={creator.relatedGainIds.includes(gain.id)}

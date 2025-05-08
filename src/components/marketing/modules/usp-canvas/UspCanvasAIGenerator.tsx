@@ -64,19 +64,39 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
       }
 
       // Store the parsed result for use across tabs
-      const parsedData = data.result ? JSON.parse(data.result) : {};
+      let parsedData = {};
       
-      // Debug information
-      const debugData = {
-        raw: data.raw,
-        parsed: parsedData,
-        timestamp: new Date().toISOString()
-      };
-      
-      setDebugInfo(debugData);
-      
-      // Store result and notify parent component
-      onResultsGenerated(parsedData, debugData);
+      try {
+        // Try to parse the result if it's a string
+        if (data.result && typeof data.result === 'string') {
+          parsedData = JSON.parse(data.result);
+        } else if (data.result) {
+          // If it's already an object, use it directly
+          parsedData = data.result;
+        }
+        
+        // Create empty arrays for any missing sections
+        const normalizedData = {
+          jobs: Array.isArray(parsedData.jobs) ? parsedData.jobs : [],
+          pains: Array.isArray(parsedData.pains) ? parsedData.pains : [],
+          gains: Array.isArray(parsedData.gains) ? parsedData.gains : []
+        };
+        
+        // Debug information
+        const debugData = {
+          raw: data.raw,
+          parsed: normalizedData,
+          timestamp: new Date().toISOString()
+        };
+        
+        setDebugInfo(debugData);
+        
+        // Store result and notify parent component
+        onResultsGenerated(normalizedData, debugData);
+      } catch (parseError) {
+        console.error("Error parsing result:", parseError);
+        throw new Error("Failed to parse AI results");
+      }
     } catch (err) {
       console.error("Error generating canvas data:", err);
       setError(err.message || "Failed to generate canvas data. Please try again.");
@@ -185,9 +205,30 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
         <div className="mt-8">
           <Tabs defaultValue="jobs">
             <TabsList className="grid w-full grid-cols-3 mb-6">
-              <TabsTrigger value="jobs">Customer Jobs</TabsTrigger>
-              <TabsTrigger value="pains">Customer Pains</TabsTrigger>
-              <TabsTrigger value="gains">Customer Gains</TabsTrigger>
+              <TabsTrigger value="jobs" className="relative">
+                Customer Jobs
+                {storedAIResult.jobs && storedAIResult.jobs.length > 0 && (
+                  <span className="ml-2 px-1.5 py-0.5 rounded-full bg-blue-100 text-xs text-blue-800">
+                    {storedAIResult.jobs.length}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="pains" className="relative">
+                Customer Pains
+                {storedAIResult.pains && storedAIResult.pains.length > 0 && (
+                  <span className="ml-2 px-1.5 py-0.5 rounded-full bg-red-100 text-xs text-red-800">
+                    {storedAIResult.pains.length}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="gains" className="relative">
+                Customer Gains
+                {storedAIResult.gains && storedAIResult.gains.length > 0 && (
+                  <span className="ml-2 px-1.5 py-0.5 rounded-full bg-green-100 text-xs text-green-800">
+                    {storedAIResult.gains.length}
+                  </span>
+                )}
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="jobs">
@@ -195,7 +236,11 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
                 <CardHeader>
                   <CardTitle className="flex justify-between items-center">
                     <span>Generated Customer Jobs</span>
-                    <Button onClick={handleAddJobs} disabled={!storedAIResult.jobs || storedAIResult.jobs.length === 0}>
+                    <Button 
+                      onClick={handleAddJobs} 
+                      disabled={!storedAIResult.jobs || storedAIResult.jobs.length === 0}
+                      className="flex items-center"
+                    >
                       <Plus className="h-4 w-4 mr-1" /> Add All to Canvas
                     </Button>
                   </CardTitle>
@@ -214,7 +259,11 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
                 <CardHeader>
                   <CardTitle className="flex justify-between items-center">
                     <span>Generated Customer Pains</span>
-                    <Button onClick={handleAddPains} disabled={!storedAIResult.pains || storedAIResult.pains.length === 0}>
+                    <Button 
+                      onClick={handleAddPains} 
+                      disabled={!storedAIResult.pains || storedAIResult.pains.length === 0}
+                      className="flex items-center"
+                    >
                       <Plus className="h-4 w-4 mr-1" /> Add All to Canvas
                     </Button>
                   </CardTitle>
@@ -233,7 +282,11 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
                 <CardHeader>
                   <CardTitle className="flex justify-between items-center">
                     <span>Generated Customer Gains</span>
-                    <Button onClick={handleAddGains} disabled={!storedAIResult.gains || storedAIResult.gains.length === 0}>
+                    <Button 
+                      onClick={handleAddGains} 
+                      disabled={!storedAIResult.gains || storedAIResult.gains.length === 0}
+                      className="flex items-center"
+                    >
                       <Plus className="h-4 w-4 mr-1" /> Add All to Canvas
                     </Button>
                   </CardTitle>
