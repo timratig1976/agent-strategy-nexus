@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Save } from "lucide-react";
+import { LanguageSelector } from "@/components/ui/language-selector";
+import { OutputLanguage } from "@/services/ai/types";
 
 interface AIPromptSettingsProps {
   module: string;
@@ -22,6 +24,7 @@ export const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
   const [userPrompt, setUserPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [language, setLanguage] = useState<OutputLanguage>('english');
 
   useEffect(() => {
     fetchPromptData();
@@ -38,14 +41,14 @@ export const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
 
       if (error) {
         console.error("Error fetching prompt data:", error);
-        toast.error("Failed to load prompt data");
+        toast.error(language === 'english' ? "Failed to load prompt data" : "Fehler beim Laden der Prompt-Daten");
       } else if (data) {
         setSystemPrompt(data.system_prompt || "");
         setUserPrompt(data.user_prompt || "");
       }
     } catch (error) {
       console.error("Error:", error);
-      toast.error("Failed to load prompt data");
+      toast.error(language === 'english' ? "Failed to load prompt data" : "Fehler beim Laden der Prompt-Daten");
     } finally {
       setIsLoading(false);
     }
@@ -53,7 +56,9 @@ export const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
 
   const handleSave = async () => {
     if (!systemPrompt.trim() || !userPrompt.trim()) {
-      toast.error("Both system and user prompts are required");
+      toast.error(language === 'english' 
+        ? "Both system and user prompts are required" 
+        : "Sowohl System- als auch Benutzer-Prompts sind erforderlich");
       return;
     }
 
@@ -69,10 +74,14 @@ export const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
         .eq("module", module);
 
       if (error) throw error;
-      toast.success("AI prompt updated successfully");
+      toast.success(language === 'english' 
+        ? "AI prompt updated successfully" 
+        : "AI-Prompt erfolgreich aktualisiert");
     } catch (error) {
       console.error("Error saving prompt:", error);
-      toast.error("Failed to update AI prompt");
+      toast.error(language === 'english' 
+        ? "Failed to update AI prompt" 
+        : "Fehler beim Aktualisieren des AI-Prompts");
     } finally {
       setIsSaving(false);
     }
@@ -94,36 +103,51 @@ export const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+      <CardHeader className="flex flex-row items-start justify-between">
+        <div>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </div>
+        <LanguageSelector value={language} onChange={setLanguage} />
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <h3 className="text-sm font-medium">System Prompt</h3>
+          <h3 className="text-sm font-medium">
+            {language === 'english' ? 'System Prompt' : 'System Prompt'}
+          </h3>
           <Textarea
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.target.value)}
             rows={6}
-            placeholder="Instructions for the AI system"
+            placeholder={language === 'english' 
+              ? "Instructions for the AI system" 
+              : "Anweisungen für das KI-System"}
             className="font-mono text-sm"
           />
           <p className="text-xs text-muted-foreground">
-            This defines how the AI behaves when generating content. It sets the tone, expertise, and approach.
+            {language === 'english' 
+              ? "This defines how the AI behaves when generating content. It sets the tone, expertise, and approach."
+              : "Dies definiert, wie sich die KI bei der Generierung von Inhalten verhält. Es legt Tonfall, Expertise und Ansatz fest."}
           </p>
         </div>
 
         <div className="space-y-2">
-          <h3 className="text-sm font-medium">User Prompt Template</h3>
+          <h3 className="text-sm font-medium">
+            {language === 'english' ? 'User Prompt Template' : 'Benutzer-Prompt Vorlage'}
+          </h3>
           <Textarea
             value={userPrompt}
             onChange={(e) => setUserPrompt(e.target.value)}
             rows={6}
-            placeholder="Template for the user prompt with variables"
+            placeholder={language === 'english' 
+              ? "Template for the user prompt with variables" 
+              : "Vorlage für den Benutzer-Prompt mit Variablen"}
             className="font-mono text-sm"
           />
           <p className="text-xs text-muted-foreground">
-            This is the template for what will be sent to the AI. Use &#123;&#123;variables&#125;&#125; for dynamic content.
+            {language === 'english' 
+              ? "This is the template for what will be sent to the AI. Use {{variables}} for dynamic content."
+              : "Dies ist die Vorlage für das, was an die KI gesendet wird. Verwenden Sie {{Variablen}} für dynamische Inhalte."}
           </p>
         </div>
 
@@ -136,12 +160,12 @@ export const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
             {isSaving ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Saving...</span>
+                <span>{language === 'english' ? 'Saving...' : 'Speichern...'}</span>
               </>
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                <span>Save Prompt</span>
+                <span>{language === 'english' ? 'Save Prompt' : 'Prompt speichern'}</span>
               </>
             )}
           </Button>

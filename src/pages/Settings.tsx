@@ -11,6 +11,8 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { AIPromptSettingsTab, CompanyProfileTab } from "@/components/settings";
+import { LanguageSelector } from "@/components/ui/language-selector";
+import { OutputLanguage } from "@/services/ai/types";
 
 type CompanySettings = {
   name: string;
@@ -22,6 +24,7 @@ const Settings = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [language, setLanguage] = useState<OutputLanguage>('english');
   const [companySettings, setCompanySettings] = useState<CompanySettings>({
     name: "",
     website: "",
@@ -56,8 +59,10 @@ const Settings = () => {
       } catch (error) {
         console.error("Error fetching company settings:", error);
         toast({
-          title: "Error",
-          description: "Failed to load company settings",
+          title: language === 'english' ? "Error" : "Fehler",
+          description: language === 'english' 
+            ? "Failed to load company settings" 
+            : "Fehler beim Laden der Unternehmenseinstellungen",
           variant: "destructive",
         });
       } finally {
@@ -72,12 +77,21 @@ const Settings = () => {
     <>
       <NavBar />
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Settings</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">
+            {language === 'english' ? "Settings" : "Einstellungen"}
+          </h1>
+          <LanguageSelector value={language} onChange={setLanguage} />
+        </div>
         
         <Tabs defaultValue="company">
           <TabsList className="mb-4">
-            <TabsTrigger value="company">Company Profile</TabsTrigger>
-            <TabsTrigger value="ai-prompts">AI Prompt Settings</TabsTrigger>
+            <TabsTrigger value="company">
+              {language === 'english' ? "Company Profile" : "Unternehmensprofil"}
+            </TabsTrigger>
+            <TabsTrigger value="ai-prompts">
+              {language === 'english' ? "AI Prompt Settings" : "KI-Prompt Einstellungen"}
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="company">
