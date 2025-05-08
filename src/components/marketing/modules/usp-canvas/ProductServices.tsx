@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,12 +19,50 @@ interface ProductServicesProps {
 const ProductServices = ({ services, jobs, onAdd, onUpdate, onDelete, formPosition = 'bottom' }: ProductServicesProps) => {
   const [newServiceContent, setNewServiceContent] = useState('');
   const [newServiceJobIds, setNewServiceJobIds] = useState<string[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Fix focus issues by maintaining focus on input element
+  useEffect(() => {
+    const focusTimeout = setTimeout(() => {
+      if (inputRef.current) {
+        const savedSelection = window.getSelection()?.getRangeAt(0);
+        const savedSelectionStart = savedSelection?.startOffset;
+        const savedSelectionEnd = savedSelection?.endOffset;
+        
+        inputRef.current.focus();
+        
+        if (savedSelectionStart !== undefined && savedSelectionEnd !== undefined) {
+          try {
+            const range = document.createRange();
+            range.setStart(inputRef.current, savedSelectionStart);
+            range.setEnd(inputRef.current, savedSelectionEnd);
+            const selection = window.getSelection();
+            if (selection) {
+              selection.removeAllRanges();
+              selection.addRange(range);
+            }
+          } catch (e) {
+            // Silently fail if selection can't be restored
+          }
+        }
+      }
+    }, 0);
+    
+    return () => clearTimeout(focusTimeout);
+  }, [newServiceContent]);
 
   const handleAddService = () => {
     if (newServiceContent.trim()) {
       onAdd(newServiceContent.trim(), newServiceJobIds);
       setNewServiceContent('');
       setNewServiceJobIds([]);
+      
+      // Focus back on the input after adding
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 0);
     }
   };
 
@@ -54,42 +92,49 @@ const ProductServices = ({ services, jobs, onAdd, onUpdate, onDelete, formPositi
     <div className="p-4 border rounded-md space-y-4 mb-4">
       <div className="flex-1">
         <Input 
+          ref={inputRef}
           value={newServiceContent}
           onChange={(e) => setNewServiceContent(e.target.value)}
           placeholder="Add a new product or service..."
+          className="w-full"
         />
       </div>
       
       <div>
         <Label className="text-sm font-medium mb-2 block">Related Customer Jobs:</Label>
-        <div className="space-y-2 ml-2">
-          {jobs.map((job) => (
-            <div key={job.id} className="flex items-center space-x-2">
-              <Checkbox 
-                id={`new-service-job-${job.id}`} 
-                checked={newServiceJobIds.includes(job.id)}
-                onCheckedChange={() => toggleJobSelection(job.id)}
-              />
-              <Label 
-                htmlFor={`new-service-job-${job.id}`}
-                className="text-sm"
-              >
-                {job.content}
-                {job.priority === 'high' && (
-                  <span className="ml-2 text-xs px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded-full">
-                    High Priority
-                  </span>
-                )}
-              </Label>
-            </div>
-          ))}
+        <div className="space-y-2 ml-2 flex flex-col items-center">
+          {jobs.length > 0 ? (
+            jobs.map((job) => (
+              <div key={job.id} className="flex items-center space-x-2 w-full justify-center">
+                <Checkbox 
+                  id={`new-service-job-${job.id}`} 
+                  checked={newServiceJobIds.includes(job.id)}
+                  onCheckedChange={() => toggleJobSelection(job.id)}
+                />
+                <Label 
+                  htmlFor={`new-service-job-${job.id}`}
+                  className="text-sm flex-1"
+                >
+                  {job.content}
+                  {job.priority === 'high' && (
+                    <span className="ml-2 text-xs px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded-full">
+                      High Priority
+                    </span>
+                  )}
+                </Label>
+              </div>
+            ))
+          ) : (
+            <p className="text-muted-foreground text-center">No customer jobs available</p>
+          )}
         </div>
       </div>
       
-      <div className="text-right">
+      <div className="text-center">
         <Button 
           onClick={handleAddService}
           disabled={!newServiceContent.trim()}
+          className="mx-auto"
         >
           <Plus className="h-4 w-4 mr-1" /> Add Product/Service
         </Button>
@@ -139,9 +184,9 @@ const ProductServices = ({ services, jobs, onAdd, onUpdate, onDelete, formPositi
               
               <div className="mt-3">
                 <Label className="text-sm font-medium mb-2 block">Related Customer Jobs:</Label>
-                <div className="space-y-2 ml-2">
+                <div className="space-y-2 ml-2 flex flex-col items-center">
                   {jobs.map((job) => (
-                    <div key={job.id} className="flex items-center space-x-2">
+                    <div key={job.id} className="flex items-center space-x-2 w-full justify-center">
                       <Checkbox 
                         id={`service-${service.id}-job-${job.id}`} 
                         checked={service.relatedJobIds.includes(job.id)}
@@ -149,7 +194,7 @@ const ProductServices = ({ services, jobs, onAdd, onUpdate, onDelete, formPositi
                       />
                       <Label 
                         htmlFor={`service-${service.id}-job-${job.id}`}
-                        className="text-sm"
+                        className="text-sm flex-1"
                       >
                         {job.content}
                         {job.priority === 'high' && (

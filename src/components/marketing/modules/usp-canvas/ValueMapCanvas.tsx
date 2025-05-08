@@ -67,9 +67,38 @@ const ValueMapCanvas = ({
 
       <Tabs defaultValue="products" className="mt-6">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="products">Products & Services</TabsTrigger>
-          <TabsTrigger value="pain-relievers">Pain Relievers</TabsTrigger>
-          <TabsTrigger value="gain-creators">Gain Creators</TabsTrigger>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <TabsTrigger value="products">Products & Services</TabsTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-sm max-w-xs">Define what your business offers to help customers complete their jobs</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <TabsTrigger value="pain-relievers">Pain Relievers</TabsTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-sm max-w-xs">Describe how your products and services alleviate customer pains</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <TabsTrigger value="gain-creators">Gain Creators</TabsTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-sm max-w-xs">Explain how your offerings create customer gains and benefits</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </TabsList>
         
         <TabsContent value="products" className="mt-4 p-4 bg-slate-50 rounded-md">

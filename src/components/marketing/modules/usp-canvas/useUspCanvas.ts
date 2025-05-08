@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { UspCanvas, CustomerJob, CustomerPain, CustomerGain } from './types';
 import { useCustomerProfile, useValueMap, useCanvasManager } from './hooks';
@@ -48,6 +49,37 @@ export const useUspCanvas = (strategyId?: string) => {
       }
     }
   }, [strategyId]);
+  
+  // Function to apply AI-generated results to the canvas
+  const applyAIGeneratedContent = (
+    aiJobs?: CustomerJob[],
+    aiPains?: CustomerPain[],
+    aiGains?: CustomerGain[]
+  ) => {
+    // Apply jobs if provided
+    if (aiJobs && aiJobs.length > 0) {
+      aiJobs.forEach(job => {
+        customerProfile.addCustomerJob(job.content, job.priority, true);
+      });
+      toast.success(`Added ${aiJobs.length} AI-generated jobs`);
+    }
+    
+    // Apply pains if provided
+    if (aiPains && aiPains.length > 0) {
+      aiPains.forEach(pain => {
+        customerProfile.addCustomerPain(pain.content, pain.severity, true);
+      });
+      toast.success(`Added ${aiPains.length} AI-generated pains`);
+    }
+    
+    // Apply gains if provided
+    if (aiGains && aiGains.length > 0) {
+      aiGains.forEach(gain => {
+        customerProfile.addCustomerGain(gain.content, gain.importance, true);
+      });
+      toast.success(`Added ${aiGains.length} AI-generated gains`);
+    }
+  };
   
   // Synchronize the state from sub-hooks with the main canvas state
   const updatedCanvas: UspCanvas = {
@@ -157,6 +189,7 @@ export const useUspCanvas = (strategyId?: string) => {
       }));
       
       setCanvasSaveHistory(newHistory);
+      toast.success("Final version saved successfully");
       
       // In the future, save to Supabase as well
     } catch (error) {
@@ -209,6 +242,7 @@ export const useUspCanvas = (strategyId?: string) => {
     saveProgress,
     saveCanvas,
     canvasSaveHistory,
-    saveFinalVersion
+    saveFinalVersion,
+    applyAIGeneratedContent  // New function to apply AI results
   };
 };
