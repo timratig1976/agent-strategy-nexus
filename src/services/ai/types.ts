@@ -1,5 +1,5 @@
 
-import { StrategyMetadata } from "@/integrations/supabase/client";
+import type { StrategyMetadata } from "@/integrations/supabase/client";
 
 export interface AIServiceResponse<T> {
   data?: T;
@@ -60,4 +60,4 @@ export interface UspCanvasGainCreator {
 }
 
 // Re-export the StrategyMetadata type for convenience
-export { StrategyMetadata };
+export type { StrategyMetadata };
