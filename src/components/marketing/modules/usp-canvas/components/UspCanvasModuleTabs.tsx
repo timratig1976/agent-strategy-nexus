@@ -1,13 +1,10 @@
 
 import React from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import UspCanvasOverview from "../UspCanvasOverview";
-import CustomerProfileCanvas from "../CustomerProfileCanvas";
-import ValueMapCanvas from "../ValueMapCanvas";
-import UspCanvasAIGenerator from "../UspCanvasAIGenerator";
-import { Button } from "@/components/ui/button";
 import { StoredAIResult } from "../types";
 import { toast } from "sonner";
+import { CanvasTab, AIGeneratorTab, HistoryTab, TabsList } from "./tabs";
 
 interface UspCanvasModuleTabsProps {
   activeTab: string;
@@ -92,66 +89,36 @@ const UspCanvasModuleTabs: React.FC<UspCanvasModuleTabsProps> = ({
 
   return (
     <Tabs defaultValue="canvas" className="mt-8" onValueChange={handleTabChange}>
-      <TabsList className="w-full">
-        <TabsTrigger value="canvas">Canvas</TabsTrigger>
-        <TabsTrigger value="overview">Overview</TabsTrigger>
-        <TabsTrigger value="ai-generator">AI Generator</TabsTrigger>
-        <TabsTrigger value="history">History</TabsTrigger>
-      </TabsList>
+      <TabsList activeTab={activeTab} />
       
       <TabsContent value="canvas" className="mt-6 space-y-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="space-y-6">
-            <CustomerProfileCanvas 
-              canvas={canvas}
-              addCustomerJob={addCustomerJob}
-              updateCustomerJob={updateCustomerJob}
-              deleteCustomerJob={deleteCustomerJob}
-              reorderCustomerJobs={reorderCustomerJobs}
-              addCustomerPain={addCustomerPain}
-              updateCustomerPain={updateCustomerPain}
-              deleteCustomerPain={deleteCustomerPain}
-              reorderCustomerPains={reorderCustomerPains}
-              addCustomerGain={addCustomerGain}
-              updateCustomerGain={updateCustomerGain}
-              deleteCustomerGain={deleteCustomerGain}
-              reorderCustomerGains={reorderCustomerGains}
-              formPosition="top"
-            />
-          </div>
-          
-          <div className="space-y-6">
-            <ValueMapCanvas 
-              canvas={canvas}
-              addProductService={addProductService}
-              updateProductService={updateProductService}
-              deleteProductService={deleteProductService}
-              addPainReliever={addPainReliever}
-              updatePainReliever={updatePainReliever}
-              deletePainReliever={deletePainReliever}
-              addGainCreator={addGainCreator}
-              updateGainCreator={updateGainCreator}
-              deleteGainCreator={deleteGainCreator}
-              formPosition="top"
-            />
-          </div>
-        </div>
-        
-        <div className="flex justify-end space-x-3 py-4">
-          <Button 
-            variant="outline" 
-            onClick={resetCanvas}
-          >
-            Reset Canvas
-          </Button>
-          
-          <Button 
-            onClick={saveCanvas}
-            disabled={isSaved}
-          >
-            {isSaved ? 'Saved' : 'Save Canvas'}
-          </Button>
-        </div>
+        <CanvasTab 
+          canvas={canvas}
+          addCustomerJob={addCustomerJob}
+          updateCustomerJob={updateCustomerJob}
+          deleteCustomerJob={deleteCustomerJob}
+          reorderCustomerJobs={reorderCustomerJobs}
+          addCustomerPain={addCustomerPain}
+          updateCustomerPain={updateCustomerPain}
+          deleteCustomerPain={deleteCustomerPain}
+          reorderCustomerPains={reorderCustomerPains}
+          addCustomerGain={addCustomerGain}
+          updateCustomerGain={updateCustomerGain}
+          deleteCustomerGain={deleteCustomerGain}
+          reorderCustomerGains={reorderCustomerGains}
+          addProductService={addProductService}
+          updateProductService={updateProductService}
+          deleteProductService={deleteProductService}
+          addPainReliever={addPainReliever}
+          updatePainReliever={updatePainReliever}
+          deletePainReliever={deletePainReliever}
+          addGainCreator={addGainCreator}
+          updateGainCreator={updateGainCreator}
+          deleteGainCreator={deleteGainCreator}
+          saveCanvas={saveCanvas}
+          resetCanvas={resetCanvas}
+          isSaved={isSaved}
+        />
       </TabsContent>
 
       <TabsContent value="overview" className="mt-6">
@@ -163,52 +130,20 @@ const UspCanvasModuleTabs: React.FC<UspCanvasModuleTabsProps> = ({
       </TabsContent>
 
       <TabsContent value="ai-generator" className="mt-6">
-        <UspCanvasAIGenerator
+        <AIGeneratorTab
           strategyId={strategyId}
           briefingContent={briefingContent}
           personaContent={personaContent}
-          onAddJobs={handleAddAIJobs}
-          onAddPains={handleAddAIPains}
-          onAddGains={handleAddAIGains}
+          handleAddAIJobs={handleAddAIJobs}
+          handleAddAIPains={handleAddAIPains}
+          handleAddAIGains={handleAddAIGains}
           storedAIResult={storedAIResult}
-          onResultsGenerated={handleAIResultsGenerated}
+          handleAIResultsGenerated={handleAIResultsGenerated}
         />
       </TabsContent>
       
       <TabsContent value="history" className="mt-6">
-        <div className="space-y-6">
-          <h3 className="text-xl font-medium">Canvas History</h3>
-          <p className="text-muted-foreground">
-            View previous versions of your canvas and restore them if needed.
-          </p>
-          
-          <div className="space-y-4">
-            {canvasSaveHistory && canvasSaveHistory.length > 0 ? (
-              canvasSaveHistory.map((historyItem, index) => (
-                <div key={index} className="border rounded-lg p-4 flex justify-between items-center">
-                  <div>
-                    <p className="font-medium">Version {canvasSaveHistory.length - index}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(historyItem.timestamp).toLocaleString()}
-                    </p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      // Implement restore functionality later
-                      toast.info("Version restored");
-                    }}
-                  >
-                    Restore
-                  </Button>
-                </div>
-              ))
-            ) : (
-              <p>No history available yet. Save your canvas to create history entries.</p>
-            )}
-          </div>
-        </div>
+        <HistoryTab canvasSaveHistory={canvasSaveHistory} />
       </TabsContent>
     </Tabs>
   );
