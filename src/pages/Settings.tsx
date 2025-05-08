@@ -73,6 +73,11 @@ const Settings = () => {
     fetchCompanySettings();
   }, [user, toast]);
 
+  // Handle language change at page level and pass down to children
+  const handleLanguageChange = (newLanguage: OutputLanguage) => {
+    setLanguage(newLanguage);
+  };
+
   return (
     <>
       <NavBar />
@@ -81,7 +86,7 @@ const Settings = () => {
           <h1 className="text-3xl font-bold">
             {language === 'english' ? "Settings" : "Einstellungen"}
           </h1>
-          <LanguageSelector value={language} onChange={setLanguage} />
+          <LanguageSelector value={language} onChange={handleLanguageChange} />
         </div>
         
         <Tabs defaultValue="company">
@@ -102,7 +107,7 @@ const Settings = () => {
           </TabsContent>
           
           <TabsContent value="ai-prompts">
-            <AIPromptSettingsTab />
+            <AIPromptSettingsTab language={language} onLanguageChange={handleLanguageChange} />
           </TabsContent>
         </Tabs>
       </div>
@@ -111,3 +116,4 @@ const Settings = () => {
 };
 
 export default Settings;
+

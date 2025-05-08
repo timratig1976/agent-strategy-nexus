@@ -1,12 +1,17 @@
 
 import React, { useState } from "react";
 import { AIPromptSettings } from "@/components/settings";
-import { LanguageSelector } from "@/components/ui/language-selector";
 import { OutputLanguage } from "@/services/ai/types";
 
-export const AIPromptSettingsTab: React.FC = () => {
-  const [language, setLanguage] = useState<OutputLanguage>('english');
-  
+interface AIPromptSettingsTabProps {
+  language: OutputLanguage;
+  onLanguageChange: (language: OutputLanguage) => void;
+}
+
+export const AIPromptSettingsTab: React.FC<AIPromptSettingsTabProps> = ({ 
+  language, 
+  onLanguageChange 
+}) => {
   // Module titles and descriptions in both languages
   const moduleLabels = {
     briefing: {
@@ -63,10 +68,6 @@ export const AIPromptSettingsTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end mb-4">
-        <LanguageSelector value={language} onChange={setLanguage} />
-      </div>
-      
       <AIPromptSettings
         module="briefing"
         title={moduleLabels.briefing.title[language]}
@@ -101,3 +102,4 @@ export const AIPromptSettingsTab: React.FC = () => {
 };
 
 export default AIPromptSettingsTab;
+

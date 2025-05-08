@@ -28,16 +28,23 @@ export const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
 
   useEffect(() => {
     fetchPromptData();
-  }, [module]);
+  }, [module, language]);
 
   const fetchPromptData = async () => {
     setIsLoading(true);
     try {
+      // Use the module name with _de suffix for German language
+      const moduleWithLanguage = language === 'deutsch' 
+        ? `${module}_de` 
+        : module;
+      
+      console.log(`Fetching prompt data for module: ${moduleWithLanguage}`);
+      
       const { data, error } = await supabase
         .from("ai_prompts")
         .select("system_prompt, user_prompt")
-        .eq("module", module)
-        .single();
+        .eq("module", moduleWithLanguage)
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching prompt data:", error);
@@ -45,6 +52,13 @@ export const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
       } else if (data) {
         setSystemPrompt(data.system_prompt || "");
         setUserPrompt(data.user_prompt || "");
+      } else {
+        // If no data found for German version, notify the user
+        if (language === 'deutsch') {
+          toast.info("Kein deutscher Prompt gefunden. Erstelle einen neuen.");
+          setSystemPrompt("");
+          setUserPrompt("");
+        }
       }
     } catch (error) {
       console.error("Error:", error);
@@ -62,18 +76,50 @@ export const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
       return;
     }
 
+    // Use the module name with _de suffix for German language
+    const moduleWithLanguage = language === 'deutsch'
+      ? `${module}_de`
+      : module;
+
     setIsSaving(true);
     try {
-      const { error } = await supabase
+      // Check if the prompt already exists
+      const { data: existingPrompt, error: checkError } = await supabase
         .from("ai_prompts")
-        .update({
-          system_prompt: systemPrompt,
-          user_prompt: userPrompt,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("module", module);
+        .select("id")
+        .eq("module", moduleWithLanguage)
+        .maybeSingle();
+      
+      let result;
+      
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
 
-      if (error) throw error;
+      if (existingPrompt) {
+        // Update existing prompt
+        result = await supabase
+          .from("ai_prompts")
+          .update({
+            system_prompt: systemPrompt,
+            user_prompt: userPrompt,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("module", moduleWithLanguage);
+      } else {
+        // Insert new prompt
+        result = await supabase
+          .from("ai_prompts")
+          .insert({
+            module: moduleWithLanguage,
+            system_prompt: systemPrompt,
+            user_prompt: userPrompt,
+            updated_at: new Date().toISOString(),
+          });
+      }
+
+      if (result.error) throw result.error;
+      
       toast.success(language === 'english' 
         ? "AI prompt updated successfully" 
         : "AI-Prompt erfolgreich aktualisiert");
@@ -108,7 +154,14 @@ export const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
           <CardTitle>{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
         </div>
-        <LanguageSelector value={language} onChange={setLanguage} />
+        <div className="flex flex-col items-end gap-2">
+          <div className="text-sm font-medium text-secondary-foreground">
+            {language === 'english' 
+              ? 'Editing English Prompt' 
+              : 'Bearbeite Deutschen Prompt'}
+          </div>
+          <LanguageSelector value={language} onChange={setLanguage} />
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
@@ -165,7 +218,11 @@ export const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                <span>{language === 'english' ? 'Save Prompt' : 'Prompt speichern'}</span>
+                <span>
+                  {language === 'english' 
+                    ? 'Save English Prompt' 
+                    : 'Deutschen Prompt speichern'}
+                </span>
               </>
             )}
           </Button>
@@ -176,3 +233,4 @@ export const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
 };
 
 export default AIPromptSettings;
+
