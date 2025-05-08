@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { AIServiceResponse, StrategyMetadata } from "./types";
 
@@ -127,3 +128,4 @@ export class RPCService {
     }
   }
 }
+
