@@ -19,6 +19,7 @@ import { ArrowLeft } from "lucide-react";
 import useStrategyData from "@/hooks/useStrategyData";
 import { getStateLabel, getStateColor } from "@/utils/strategyUtils";
 import { supabase } from "@/integrations/supabase/client";
+import { StrategyState } from "@/types/marketing";
 
 const StrategyDetails = () => {
   // Extract the id parameter from the URL
@@ -56,7 +57,7 @@ const StrategyDetails = () => {
     if (!id) return;
     
     try {
-      let previousState = 'briefing'; // Default
+      let previousState: StrategyState = 'briefing'; // Default
       
       // Determine the previous state based on the current state
       if (currentState === 'funnel') {
