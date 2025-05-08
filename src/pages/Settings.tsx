@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/components/ui/use-toast";
@@ -302,6 +303,19 @@ const Settings = () => {
                 module="content_strategy"
                 title="Content Strategy Prompts"
                 description="Customize how the AI develops content strategies"
+              />
+              
+              {/* New USP Canvas Prompts */}
+              <AIPromptSettings
+                module="usp_canvas_profile"
+                title="USP Canvas Profile Prompts"
+                description="Customize how the AI generates customer profile elements (jobs, pains, gains)"
+              />
+              
+              <AIPromptSettings
+                module="usp_canvas_value_map"
+                title="USP Canvas Value Map Prompts"
+                description="Customize how the AI generates value map elements (products, pain relievers, gain creators)"
               />
             </div>
           </TabsContent>
