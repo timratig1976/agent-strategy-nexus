@@ -5,6 +5,7 @@ import ProductServices from "./ProductServices";
 import PainRelievers from "./PainRelievers";
 import GainCreators from "./GainCreators";
 import { UspCanvas, ProductService, PainReliever, GainCreator } from "./types";
+import SectionHeader from "./components/SectionHeader";
 
 interface ValueMapCanvasProps {
   canvas: UspCanvas;

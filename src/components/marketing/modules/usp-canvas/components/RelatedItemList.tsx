@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Empty } from '@/components/ui/empty';
+// Fix the import - remove the non-existent Empty component
 import { Badge } from "@/components/ui/badge";
 import RelatedItemCard from './related-item-list/RelatedItemCard';
 import RelatedItemForm from './related-item-list/RelatedItemForm';
@@ -93,13 +93,22 @@ const RelatedItemList = ({
           {items.map(item => (
             <RelatedItemCard
               key={item.id}
-              item={item}
+              itemId={item.id}
+              content={item.content}
+              relatedItemIds={item.relatedItemIds}
               customerItems={customerItems}
               customerItemType={customerItemType}
-              textColor={textColor}
-              bgColor={bgColor}
-              onUpdate={(content, relatedItemIds) => onUpdate(item.id, content, relatedItemIds)}
+              customerItemRatingType={customerItemRatingType}
+              customerItemRatingLabel={customerItemRatingLabel}
+              editValues={{}}
+              activeEditId={null}
+              handleInputChange={() => {}}
+              setActiveEditId={() => {}}
+              handleInputBlur={() => {}}
+              toggleItemSelection={() => {}}
               onDelete={() => onDelete(item.id)}
+              getRating={getRating}
+              itemPlaceholder={itemPlaceholder}
             />
           ))}
         </div>
