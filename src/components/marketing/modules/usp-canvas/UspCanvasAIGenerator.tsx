@@ -9,6 +9,7 @@ import { useAIGenerator } from './ai-generator/useAIGenerator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import AIDebugPanel from '@/components/shared/AIDebugPanel';
+import AIResponseValidator from '@/components/shared/AIResponseValidator';
 
 interface UspCanvasAIGeneratorProps {
   strategyId: string;
@@ -122,6 +123,14 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
     );
   }
 
+  // Prepare validation results for the validator component
+  const validationResults = debugInfo?.validationResults ? {
+    jobsComplete: debugInfo.validationResults.jobsComplete,
+    painsComplete: debugInfo.validationResults.painsComplete,
+    gainsComplete: debugInfo.validationResults.gainsComplete,
+    isComplete: debugInfo.validationResults.isComplete
+  } : undefined;
+
   return (
     <div className="space-y-4">
       <GeneratorForm 
@@ -132,6 +141,19 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
         onToggleDebug={toggleDebugPanel}
         showDebug={showDebug}
       />
+      
+      {!isGenerating && parseResults && (
+        <AIResponseValidator 
+          validationResults={validationResults}
+          parsingResults={{
+            jobsFound: parseResults.jobsFound,
+            painsFound: parseResults.painsFound, 
+            gainsFound: parseResults.gainsFound,
+            rawText: parseResults.rawText,
+            extractedItems: parseResults.extractedItems
+          }}
+        />
+      )}
       
       {!isGenerating && hasResults && (
         <div>
@@ -157,7 +179,7 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
             title="USP Canvas AI Generator Debug Information"
           />
           
-          {parseResults && (
+          {parseResults && !validationResults && (
             <div className="bg-muted/20 p-4 rounded-lg border mt-4">
               <h3 className="font-medium mb-2">Data Extraction Results</h3>
               <div className="grid grid-cols-3 gap-4">

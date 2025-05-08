@@ -13,6 +13,8 @@ interface ValidatorProps {
     jobsFound?: number;
     painsFound?: number;
     gainsFound?: number;
+    rawText?: string;
+    extractedItems?: any;
   };
 }
 
@@ -28,6 +30,12 @@ const AIResponseValidator: React.FC<ValidatorProps> = ({ validationResults, pars
   const SuccessIcon = () => <CheckCircle2 className="h-4 w-4 text-green-600" />;
   const ErrorIcon = () => <XCircle className="h-4 w-4 text-red-600" />;
   const WarningIcon = () => <AlertCircle className="h-4 w-4 text-amber-500" />;
+  
+  // Format level label from the data
+  const formatLevelLabel = (level: string | undefined): string => {
+    if (!level) return 'Not specified';
+    return level.charAt(0).toUpperCase() + level.slice(1);
+  };
   
   return (
     <div className="bg-muted/20 p-4 rounded-lg border">
@@ -79,6 +87,80 @@ const AIResponseValidator: React.FC<ValidatorProps> = ({ validationResults, pars
             </>
           )}
         </div>
+        
+        {parsingResults?.extractedItems && (
+          <details className="mt-3 pt-3 border-t">
+            <summary className="cursor-pointer text-sm font-medium hover:text-primary">
+              Show extracted items
+            </summary>
+            <div className="mt-2 space-y-3">
+              {parsingResults.extractedItems.jobs && parsingResults.extractedItems.jobs.length > 0 && (
+                <div className="space-y-1">
+                  <h4 className="text-xs font-semibold">Jobs</h4>
+                  <ul className="text-xs space-y-1">
+                    {parsingResults.extractedItems.jobs.map((job: any, index: number) => (
+                      <li key={index} className="p-1 border border-muted rounded">
+                        <div className="flex justify-between">
+                          <span>{job.content}</span>
+                          <span className="text-muted-foreground">
+                            Priority: {formatLevelLabel(job.priority)}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {parsingResults.extractedItems.pains && parsingResults.extractedItems.pains.length > 0 && (
+                <div className="space-y-1">
+                  <h4 className="text-xs font-semibold">Pains</h4>
+                  <ul className="text-xs space-y-1">
+                    {parsingResults.extractedItems.pains.map((pain: any, index: number) => (
+                      <li key={index} className="p-1 border border-muted rounded">
+                        <div className="flex justify-between">
+                          <span>{pain.content}</span>
+                          <span className="text-muted-foreground">
+                            Severity: {formatLevelLabel(pain.severity)}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {parsingResults.extractedItems.gains && parsingResults.extractedItems.gains.length > 0 && (
+                <div className="space-y-1">
+                  <h4 className="text-xs font-semibold">Gains</h4>
+                  <ul className="text-xs space-y-1">
+                    {parsingResults.extractedItems.gains.map((gain: any, index: number) => (
+                      <li key={index} className="p-1 border border-muted rounded">
+                        <div className="flex justify-between">
+                          <span>{gain.content}</span>
+                          <span className="text-muted-foreground">
+                            Importance: {formatLevelLabel(gain.importance)}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </details>
+        )}
+        
+        {parsingResults?.rawText && (
+          <details className="mt-3 pt-3 border-t">
+            <summary className="cursor-pointer text-sm font-medium hover:text-primary">
+              Show raw AI response
+            </summary>
+            <div className="mt-2 p-2 bg-muted/40 rounded max-h-[300px] overflow-auto">
+              <pre className="text-xs whitespace-pre-wrap">{parsingResults.rawText}</pre>
+            </div>
+          </details>
+        )}
       </div>
     </div>
   );

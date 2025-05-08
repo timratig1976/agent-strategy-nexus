@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
@@ -39,6 +40,11 @@ serve(async (req) => {
       console.log("Error fetching prompt:", promptError);
     }
     
+    // Check for strict format option
+    const useStrictFormat = data.formatOptions?.strictFormat === true;
+    const outputLanguage = data.formatOptions?.outputLanguage || 'english';
+    console.log("Format options:", { useStrictFormat, outputLanguage });
+    
     // Construct system prompt based on custom prompt or fallback to default
     let systemPrompt = "";
     if (promptData && promptData.system_prompt) {
@@ -49,6 +55,11 @@ serve(async (req) => {
       console.log("Using default system prompt");
     }
     
+    // For strict format, modify system prompt to request JSON
+    if (useStrictFormat && module === 'usp_canvas_profile') {
+      systemPrompt += "\n\nYou MUST respond with a valid JSON object containing arrays of jobs, pains, and gains. Each item should have 'content' and either 'priority', 'severity', or 'importance' properties. Do not include any explanatory text outside the JSON. Example format: {\"jobs\":[{\"content\":\"Job description\",\"priority\":\"high\"}], \"pains\":[{\"content\":\"Pain description\",\"severity\":\"medium\"}], \"gains\":[{\"content\":\"Gain description\",\"importance\":\"low\"}]}";
+    }
+    
     // Create appropriate user prompt based on custom template or fallback to default
     let userPrompt = "";
     if (promptData && promptData.user_prompt) {
@@ -56,7 +67,7 @@ serve(async (req) => {
       userPrompt = replacePlaceholders(promptData.user_prompt, data);
       console.log("Using custom user prompt template from database (after replacement)");
     } else {
-      userPrompt = constructUserPrompt(module, action, data);
+      userPrompt = constructUserPrompt(module, action, data, useStrictFormat);
       console.log("Using default user prompt");
     }
     
@@ -69,6 +80,20 @@ serve(async (req) => {
       console.log("Enhancement text provided:", data.enhancementText);
       userPrompt += `\n\nAdditional instructions for customizing output: ${data.enhancementText.trim()}`;
     }
+
+    // Add language preference
+    if (outputLanguage === 'deutsch') {
+      userPrompt += "\n\nPlease respond in German.";
+    } else {
+      userPrompt += "\n\nPlease respond in English.";
+    }
+
+    // Add strict format instruction to user prompt as well for emphasis
+    if (useStrictFormat) {
+      if (module === 'usp_canvas_profile') {
+        userPrompt += "\n\nIMPORTANT: Respond with a valid JSON object containing arrays of jobs, pains, and gains. Each item should have 'content' and either 'priority', 'severity', or 'importance' properties. Do not include any explanation or additional text outside the JSON structure.";
+      }
+    }
     
     // Make OpenAI API call
     console.log("Calling OpenAI API...");
@@ -79,7 +104,7 @@ serve(async (req) => {
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      temperature: 0.7,
+      temperature: useStrictFormat ? 0.3 : 0.7, // Lower temperature for stricter format
     };
     
     console.log("OpenAI request:", JSON.stringify(openaiRequest));
@@ -104,9 +129,47 @@ serve(async (req) => {
     
     const content = result.choices[0].message.content;
     
+    // Try parsing as JSON if strict format was requested
+    if (useStrictFormat && module === 'usp_canvas_profile') {
+      try {
+        const jsonData = JSON.parse(content);
+        console.log("Successfully parsed JSON response:", JSON.stringify(jsonData));
+        
+        // Store the raw response as well for debugging
+        if (jsonData) {
+          jsonData.rawOutput = content;
+        }
+        
+        return new Response(JSON.stringify({ 
+          result: jsonData,
+          debug: {
+            prompt: {
+              system: systemPrompt,
+              user: userPrompt
+            },
+            response: result,
+            enhancementIncluded,
+            model,
+            formatOptions: data.formatOptions
+          }
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (jsonError) {
+        console.error("Failed to parse JSON from response:", jsonError);
+        console.log("Falling back to regular parsing for:", content);
+        // Fall back to regular parsing if JSON parsing fails
+      }
+    }
+    
     // Parse the result based on module and action
     const parsedResult = parseAIResult(module, action, content);
     console.log("Parsed result:", JSON.stringify(parsedResult));
+    
+    // For debugging, include the raw output
+    if (parsedResult) {
+      parsedResult.rawOutput = content;
+    }
 
     return new Response(JSON.stringify({ 
       result: parsedResult,
@@ -117,7 +180,8 @@ serve(async (req) => {
         },
         response: result,
         enhancementIncluded,
-        model
+        model,
+        formatOptions: data.formatOptions
       }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -212,7 +276,7 @@ function getSystemPrompt(module: string, action: string): string {
   return modulePrompts[module]?.[action] || basePrompt;
 }
 
-function constructUserPrompt(module: string, action: string, data: any): string {
+function constructUserPrompt(module: string, action: string, data: any, useStrictFormat = false): string {
   switch (module) {
     case 'briefing':
       return `I need to create a marketing strategy briefing for:
@@ -287,21 +351,43 @@ function constructUserPrompt(module: string, action: string, data: any): string 
         prompt += `Consider the following target persona when creating the customer profile:\n\n${data.personaContent}\n\n`;
       }
       
-      prompt += `${profileSection === 'all' ? 'Please provide all three components of the customer profile:' : `Please focus only on the "${profileSection}" section of the customer profile:`}\n\n`;
-      
-      if (profileSection === 'all' || profileSection === 'jobs') {
-        prompt += `1. Customer Jobs: What are the functional, social, and emotional jobs your customer is trying to get done? Include key tasks they're trying to complete, problems they're trying to solve, or needs they're trying to satisfy. For each job, clearly indicate its priority (high, medium, or low) by using the format "Job description (Priority: high|medium|low)".\n\n`;
+      if (useStrictFormat) {
+        prompt += `Please provide a complete customer profile in the following JSON format:
+        
+{
+  "jobs": [
+    {"content": "Job description", "priority": "high|medium|low"},
+    ...
+  ],
+  "pains": [
+    {"content": "Pain description", "severity": "high|medium|low"},
+    ...
+  ],
+  "gains": [
+    {"content": "Gain description", "importance": "high|medium|low"},
+    ...
+  ]
+}
+
+Ensure each item has a 'content' field with a descriptive text and the appropriate priority/severity/importance level. Do not include any additional text, explanations or markdown formatting outside the JSON structure.
+`;
+      } else {
+        prompt += `${profileSection === 'all' ? 'Please provide all three components of the customer profile:' : `Please focus only on the "${profileSection}" section of the customer profile:`}\n\n`;
+        
+        if (profileSection === 'all' || profileSection === 'jobs') {
+          prompt += `1. Customer Jobs: What are the functional, social, and emotional jobs your customer is trying to get done? Include key tasks they're trying to complete, problems they're trying to solve, or needs they're trying to satisfy. For each job, list it in this format: "Job description (Priority: high|medium|low)"\n\n`;
+        }
+        
+        if (profileSection === 'all' || profileSection === 'pains') {
+          prompt += `2. Customer Pains: What are the negative outcomes, risks, obstacles, or bad experiences your customer encounters when trying to complete their jobs? For each pain, list it in this format: "Pain description (Severity: high|medium|low)"\n\n`;
+        }
+        
+        if (profileSection === 'all' || profileSection === 'gains') {
+          prompt += `3. Customer Gains: What benefits and positive outcomes does your customer expect, desire, or would be surprised by? For each gain, list it in this format: "Gain description (Importance: high|medium|low)"\n\n`;
+        }
+        
+        prompt += `Format your response without subheadings (like "Functional Jobs", "Social Jobs" etc.) - just provide direct bullet points for each job, pain, and gain. Avoid nesting items in subcategories. Make each item specific, concrete and actionable.`;
       }
-      
-      if (profileSection === 'all' || profileSection === 'pains') {
-        prompt += `2. Customer Pains: What are the negative outcomes, risks, obstacles, or bad experiences your customer encounters when trying to complete their jobs? For each pain, clearly indicate its severity (high, medium, or low) by using the format "Pain description (Severity: high|medium|low)".\n\n`;
-      }
-      
-      if (profileSection === 'all' || profileSection === 'gains') {
-        prompt += `3. Customer Gains: What benefits and positive outcomes does your customer expect, desire, or would be surprised by? For each gain, clearly indicate its importance (high, medium, or low) by using the format "Gain description (Importance: high|medium|low)".\n\n`;
-      }
-      
-      prompt += `Format your response in a structured way, with clearly labeled sections for each component and using bullet points for individual items. Make sure to clearly indicate the priority/severity/importance level for each item.`;
       return prompt;
     
     case 'usp_canvas_value_map':
@@ -339,6 +425,15 @@ function constructUserPrompt(module: string, action: string, data: any): string 
 
 function parseAIResult(module: string, action: string, result: string): any {
   try {
+    // First try to parse as JSON if the result looks like JSON
+    if (result.trim().startsWith('{') && result.trim().endsWith('}')) {
+      try {
+        return JSON.parse(result);
+      } catch (e) {
+        console.log("Result looks like JSON but failed to parse:", e);
+      }
+    }
+    
     // For content strategy parsing
     if (module === 'contentStrategy' && action === 'generate') {
       // Extract the content pillar data from the free-text response
@@ -485,107 +580,126 @@ function parseAIResult(module: string, action: string, result: string): any {
         jobs?: Array<{content: string, priority: 'low' | 'medium' | 'high'}>,
         pains?: Array<{content: string, severity: 'low' | 'medium' | 'high'}>,
         gains?: Array<{content: string, importance: 'low' | 'medium' | 'high'}>
-      } = {};
+      } = { jobs: [], pains: [], gains: [] };
+
+      // Improved regex patterns that handle bullet point items with priorities in multiple formats
+      // This improved version targets the most common formats AI generates and handle various prefixes/suffixes
       
-      // Extract customer jobs with improved regex pattern
-      const jobsSection = result.match(/(?:customer jobs|jobs)[\s\S]*?((?:[-•*\d].*(?:\n|$))+)/i);
+      // First look for any Jobs section (Customer Jobs/Jobs/etc)
+      const jobsSection = result.match(/(?:customer jobs|jobs)[:\s]*(?:\n|$)([\s\S]*?)(?:(?:customer pains|pains|customer gains|gains)[:\s]*(?:\n|$)|$)/i);
       
       if (jobsSection && jobsSection[1]) {
-        uspCanvasResult.jobs = [];
-        const jobLines = jobsSection[1].split('\n').filter(line => line.trim());
+        // Extract bullet point items from the section
+        const jobBullets = jobsSection[1].match(/(?:^|\n)[ \t]*(?:[-•*]|\d+\.)[ \t]*(.*?)(?=\n[ \t]*(?:[-•*]|\d+\.)|$)/gs);
         
-        for (const line of jobLines) {
-          // Skip section headers or empty lines
-          if (!line.match(/^[-•*\d]/) || line.trim().length < 3) continue;
-          
-          const trimmedLine = line.replace(/^[-•*\d\.\s]+/, '').trim();
-          
-          // Extract priority from line
-          let priority: 'low' | 'medium' | 'high' = 'medium';
-          if (/high priority|priority:\s*high|\(priority:\s*high\)|high\s*\)|\(high\)/i.test(trimmedLine)) {
-            priority = 'high';
-          } else if (/low priority|priority:\s*low|\(priority:\s*low\)|low\s*\)|\(low\)/i.test(trimmedLine)) {
-            priority = 'low';
-          }
-          
-          // Clean up content by removing priority indicators
-          let content = trimmedLine
-            .replace(/\(priority:\s*(high|medium|low)\)/i, '')
-            .replace(/(high|medium|low)\s*priority/i, '')
-            .replace(/priority:\s*(high|medium|low)/i, '')
-            .trim();
+        if (jobBullets) {
+          jobBullets.forEach(bullet => {
+            const trimmedBullet = bullet.trim();
+            // Skip empty lines or section headers
+            if (trimmedBullet.length < 3 || /^#|^§|functional|social|emotional/i.test(trimmedBullet)) return;
             
-          if (content) {
-            uspCanvasResult.jobs.push({ content, priority });
-          }
+            // Extract content and priority
+            let content = trimmedBullet.replace(/^[-•*]|\d+\./, '').trim();
+            let priority = 'medium'; // Default priority
+            
+            // Check for various priority formats
+            if (/\((?:priority:?[ \t]*)?high\)/i.test(content) || /high[ \t]*priority/i.test(content) || /priority:?[ \t]*high/i.test(content) || /\(high\)/i.test(content)) {
+              priority = 'high';
+            } else if (/\((?:priority:?[ \t]*)?low\)/i.test(content) || /low[ \t]*priority/i.test(content) || /priority:?[ \t]*low/i.test(content) || /\(low\)/i.test(content)) {
+              priority = 'low';
+            }
+            
+            // Clean up content by removing priority indicators
+            content = content
+              .replace(/\((?:priority:?[ \t]*)?(?:high|medium|low)\)/i, '')
+              .replace(/(?:high|medium|low)[ \t]*priority/i, '')
+              .replace(/priority:?[ \t]*(?:high|medium|low)/i, '')
+              .replace(/^\*\*/g, '')
+              .replace(/\*\*$/g, '')
+              .trim();
+            
+            if (content) {
+              uspCanvasResult.jobs!.push({ content, priority: priority as 'low' | 'medium' | 'high' });
+            }
+          });
         }
       }
       
-      // Extract customer pains with improved regex pattern
-      const painsSection = result.match(/(?:customer pains|pains)[\s\S]*?((?:[-•*\d].*(?:\n|$))+)/i);
+      // Repeat similar pattern for pains
+      const painsSection = result.match(/(?:customer pains|pains)[:\s]*(?:\n|$)([\s\S]*?)(?:(?:customer gains|gains)[:\s]*(?:\n|$)|$)/i);
       
       if (painsSection && painsSection[1]) {
-        uspCanvasResult.pains = [];
-        const painLines = painsSection[1].split('\n').filter(line => line.trim());
+        const painBullets = painsSection[1].match(/(?:^|\n)[ \t]*(?:[-•*]|\d+\.)[ \t]*(.*?)(?=\n[ \t]*(?:[-•*]|\d+\.)|$)/gs);
         
-        for (const line of painLines) {
-          // Skip section headers or empty lines
-          if (!line.match(/^[-•*\d]/) || line.trim().length < 3) continue;
-          
-          const trimmedLine = line.replace(/^[-•*\d\.\s]+/, '').trim();
-          
-          // Extract severity from line
-          let severity: 'low' | 'medium' | 'high' = 'medium';
-          if (/high severity|severity:\s*high|\(severity:\s*high\)|high\s*\)|\(high\)/i.test(trimmedLine)) {
-            severity = 'high';
-          } else if (/low severity|severity:\s*low|\(severity:\s*low\)|low\s*\)|\(low\)/i.test(trimmedLine)) {
-            severity = 'low';
-          }
-          
-          // Clean up content by removing severity indicators
-          let content = trimmedLine
-            .replace(/\(severity:\s*(high|medium|low)\)/i, '')
-            .replace(/(high|medium|low)\s*severity/i, '')
-            .replace(/severity:\s*(high|medium|low)/i, '')
-            .trim();
+        if (painBullets) {
+          painBullets.forEach(bullet => {
+            const trimmedBullet = bullet.trim();
+            // Skip empty lines or section headers
+            if (trimmedBullet.length < 3 || /^#|^§|high severity|medium severity|low severity/i.test(trimmedBullet)) return;
             
-          if (content) {
-            uspCanvasResult.pains.push({ content, severity });
-          }
+            // Extract content and severity
+            let content = trimmedBullet.replace(/^[-•*]|\d+\./, '').trim();
+            let severity = 'medium'; // Default severity
+            
+            // Check for various severity formats
+            if (/\((?:severity:?[ \t]*)?high\)/i.test(content) || /high[ \t]*severity/i.test(content) || /severity:?[ \t]*high/i.test(content) || /\(high\)/i.test(content)) {
+              severity = 'high';
+            } else if (/\((?:severity:?[ \t]*)?low\)/i.test(content) || /low[ \t]*severity/i.test(content) || /severity:?[ \t]*low/i.test(content) || /\(low\)/i.test(content)) {
+              severity = 'low';
+            }
+            
+            // Clean up content by removing severity indicators
+            content = content
+              .replace(/\((?:severity:?[ \t]*)?(?:high|medium|low)\)/i, '')
+              .replace(/(?:high|medium|low)[ \t]*severity/i, '')
+              .replace(/severity:?[ \t]*(?:high|medium|low)/i, '')
+              .replace(/^\*\*/g, '')
+              .replace(/\*\*$/g, '')
+              .trim();
+            
+            if (content) {
+              uspCanvasResult.pains!.push({ content, severity: severity as 'low' | 'medium' | 'high' });
+            }
+          });
         }
       }
       
-      // Extract customer gains with improved regex pattern
-      const gainsSection = result.match(/(?:customer gains|gains)[\s\S]*?((?:[-•*\d].*(?:\n|$))+)/i);
+      // And similar for gains
+      const gainsSection = result.match(/(?:customer gains|gains)[:\s]*(?:\n|$)([\s\S]*?)(?:(?:---)|$)/i);
       
       if (gainsSection && gainsSection[1]) {
-        uspCanvasResult.gains = [];
-        const gainLines = gainsSection[1].split('\n').filter(line => line.trim());
+        const gainBullets = gainsSection[1].match(/(?:^|\n)[ \t]*(?:[-•*]|\d+\.)[ \t]*(.*?)(?=\n[ \t]*(?:[-•*]|\d+\.)|$)/gs);
         
-        for (const line of gainLines) {
-          // Skip section headers or empty lines
-          if (!line.match(/^[-•*\d]/) || line.trim().length < 3) continue;
-          
-          const trimmedLine = line.replace(/^[-•*\d\.\s]+/, '').trim();
-          
-          // Extract importance from line
-          let importance: 'low' | 'medium' | 'high' = 'medium';
-          if (/high importance|importance:\s*high|\(importance:\s*high\)|high\s*\)|\(high\)/i.test(trimmedLine)) {
-            importance = 'high';
-          } else if (/low importance|importance:\s*low|\(importance:\s*low\)|low\s*\)|\(low\)/i.test(trimmedLine)) {
-            importance = 'low';
-          }
-          
-          // Clean up content by removing importance indicators
-          let content = trimmedLine
-            .replace(/\(importance:\s*(high|medium|low)\)/i, '')
-            .replace(/(high|medium|low)\s*importance/i, '')
-            .replace(/importance:\s*(high|medium|low)/i, '')
-            .trim();
+        if (gainBullets) {
+          gainBullets.forEach(bullet => {
+            const trimmedBullet = bullet.trim();
+            // Skip empty lines or section headers
+            if (trimmedBullet.length < 3 || /^#|^§|high importance|medium importance|low importance/i.test(trimmedBullet)) return;
             
-          if (content) {
-            uspCanvasResult.gains.push({ content, importance });
-          }
+            // Extract content and importance
+            let content = trimmedBullet.replace(/^[-•*]|\d+\./, '').trim();
+            let importance = 'medium'; // Default importance
+            
+            // Check for various importance formats
+            if (/\((?:importance:?[ \t]*)?high\)/i.test(content) || /high[ \t]*importance/i.test(content) || /importance:?[ \t]*high/i.test(content) || /\(high\)/i.test(content)) {
+              importance = 'high';
+            } else if (/\((?:importance:?[ \t]*)?low\)/i.test(content) || /low[ \t]*importance/i.test(content) || /importance:?[ \t]*low/i.test(content) || /\(low\)/i.test(content)) {
+              importance = 'low';
+            }
+            
+            // Clean up content by removing importance indicators
+            content = content
+              .replace(/\((?:importance:?[ \t]*)?(?:high|medium|low)\)/i, '')
+              .replace(/(?:high|medium|low)[ \t]*importance/i, '')
+              .replace(/importance:?[ \t]*(?:high|medium|low)/i, '')
+              .replace(/^\*\*/g, '')
+              .replace(/\*\*$/g, '')
+              .trim();
+            
+            if (content) {
+              uspCanvasResult.gains!.push({ content, importance: importance as 'low' | 'medium' | 'high' });
+            }
+          });
         }
       }
       
