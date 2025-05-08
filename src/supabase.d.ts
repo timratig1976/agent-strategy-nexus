@@ -1,5 +1,6 @@
 
 import { SupabaseClient } from "@supabase/supabase-js";
+import { StrategyMetadata, StrategyDocument } from "@/integrations/supabase/client";
 
 declare module "@supabase/supabase-js" {
   interface SupabaseClient<Database = any> {
@@ -19,45 +20,6 @@ declare module "@supabase/supabase-js" {
       }
     ): Promise<{
       data: Returns;
-      error: Error | null;
-      count: number | null;
-      status: number;
-      statusText: string;
-    }>;
-
-    // Add a special RPC function for JSONB operations
-    rpc(
-      fn: 'jsonb_set_key_to_value',
-      params: { 
-        json_data: any, 
-        key_name: string, 
-        new_value: string
-      },
-      options?: {
-        count?: null | 'exact' | 'planned' | 'estimated',
-        head?: boolean
-      }
-    ): Promise<{
-      data: any;
-      error: Error | null;
-      count: number | null;
-      status: number;
-      statusText: string;
-    }>;
-    
-    // Add our custom RPC function for updating agent results final status
-    rpc(
-      fn: 'update_agent_results_final_status',
-      params: { 
-        strategy_id_param: string, 
-        result_type_param: string
-      },
-      options?: {
-        count?: null | 'exact' | 'planned' | 'estimated',
-        head?: boolean
-      }
-    ): Promise<{
-      data: any;
       error: Error | null;
       count: number | null;
       status: number;

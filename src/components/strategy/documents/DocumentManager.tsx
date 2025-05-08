@@ -22,7 +22,7 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({ strategyId }) => {
   const fetchDocuments = async () => {
     try {
       setLoading(true);
-      // Fix: Using raw query instead of strategy_documents table reference
+      // Use RPC function to get strategy documents
       const { data, error } = await supabase.rpc(
         'get_strategy_documents',
         { strategy_id_param: strategyId }
@@ -31,18 +31,7 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({ strategyId }) => {
       if (error) throw error;
       
       // Transform the data to match StrategyDocument type
-      const typedDocs: StrategyDocument[] = data ? data.map((doc: any) => ({
-        id: doc.id,
-        strategy_id: doc.strategy_id,
-        file_path: doc.file_path,
-        file_name: doc.file_name,
-        file_type: doc.file_type,
-        file_size: doc.file_size,
-        processed: doc.processed,
-        extracted_text: doc.extracted_text,
-        created_at: doc.created_at,
-        updated_at: doc.updated_at
-      })) : [];
+      const typedDocs: StrategyDocument[] = data || [];
       
       setDocuments(typedDocs);
     } catch (error) {
@@ -90,7 +79,7 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({ strategyId }) => {
     fileSize: number
   ) => {
     try {
-      // Fix: Using raw query instead of strategy_documents table reference
+      // Use RPC function to insert document metadata
       const { error } = await supabase.rpc(
         'insert_strategy_document',
         {

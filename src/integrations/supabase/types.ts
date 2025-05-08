@@ -905,6 +905,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_strategy_document: {
+        Args: { document_id_param: string }
+        Returns: boolean
+      }
+      get_strategy_documents: {
+        Args: { strategy_id_param: string }
+        Returns: {
+          id: string
+          strategy_id: string
+          file_path: string
+          file_name: string
+          file_type: string
+          file_size: number
+          processed: boolean
+          extracted_text: string
+          created_at: string
+          updated_at: string
+        }[]
+      }
       get_strategy_metadata: {
         Args: { strategy_id_param: string }
         Returns: {
@@ -918,6 +937,16 @@ export type Database = {
           created_at: string
           updated_at: string
         }[]
+      }
+      insert_strategy_document: {
+        Args: {
+          strategy_id_param: string
+          file_path_param: string
+          file_name_param: string
+          file_type_param: string
+          file_size_param: number
+        }
+        Returns: string
       }
       update_agent_results_final_status: {
         Args: { strategy_id_param: string; result_type_param: string }

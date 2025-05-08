@@ -16,7 +16,7 @@ export const useDocumentProcessing = (strategyId: string) => {
     
     try {
       setLoading(true);
-      // Use RPC function to get documents instead of accessing strategy_documents directly
+      // Use RPC function to get documents
       const { data, error } = await supabase.rpc(
         'get_strategy_documents',
         { strategy_id_param: strategyId }
@@ -24,21 +24,8 @@ export const useDocumentProcessing = (strategyId: string) => {
       
       if (error) throw error;
       
-      // Transform RPC results to match StrategyDocument type
-      const typedDocs: StrategyDocument[] = data ? data.map((doc: any) => ({
-        id: doc.id,
-        strategy_id: doc.strategy_id,
-        file_path: doc.file_path,
-        file_name: doc.file_name,
-        file_type: doc.file_type,
-        file_size: doc.file_size,
-        processed: doc.processed,
-        extracted_text: doc.extracted_text,
-        created_at: doc.created_at,
-        updated_at: doc.updated_at
-      })) : [];
-      
-      setDocuments(typedDocs);
+      // Set the documents directly as the RPC function returns the correct type
+      setDocuments(data || []);
     } catch (error) {
       console.error('Error fetching documents:', error);
     } finally {

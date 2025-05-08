@@ -15,6 +15,19 @@ export interface StrategyMetadata {
   updated_at: string;
 }
 
+export interface StrategyDocument {
+  id: string;
+  strategy_id: string;
+  file_path: string;
+  file_name: string;
+  file_type: string;
+  file_size: number;
+  processed: boolean;
+  extracted_text: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 // Extend the Database interface to include our RPC functions with proper types
 declare global {
   interface Database {
@@ -41,6 +54,24 @@ declare global {
             result_type_param: string;
           };
           Returns: void;
+        };
+        get_strategy_documents: {
+          Args: { strategy_id_param: string };
+          Returns: StrategyDocument[];
+        };
+        insert_strategy_document: {
+          Args: {
+            strategy_id_param: string;
+            file_path_param: string;
+            file_name_param: string;
+            file_type_param: string;
+            file_size_param: number;
+          };
+          Returns: string; // UUID of the created document
+        };
+        delete_strategy_document: {
+          Args: { document_id_param: string };
+          Returns: boolean;
         };
       };
     };
