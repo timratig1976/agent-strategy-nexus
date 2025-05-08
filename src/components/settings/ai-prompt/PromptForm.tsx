@@ -63,7 +63,7 @@ export const PromptForm: React.FC<PromptFormProps> = ({
           className="font-mono text-sm"
         />
         <p className="text-xs text-muted-foreground">
-          This is the template for what will be sent to the AI. Use {{variables}} for dynamic content.
+          This is the template for what will be sent to the AI. Use {"{{variables}}"} for dynamic content.
         </p>
         
         <Accordion type="single" collapsible className="w-full mt-4">
