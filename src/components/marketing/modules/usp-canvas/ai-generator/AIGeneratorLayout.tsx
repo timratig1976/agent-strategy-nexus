@@ -8,6 +8,8 @@ import GeneratorForm from './GeneratorForm';
 import ResultsSection from './ResultsSection';
 import DebugSection from './DebugSection';
 import AIResponseValidator from '@/components/shared/AIResponseValidator';
+import { useAIGenerator } from './useAIGenerator';
+import ResultDisplay from './ResultDisplay';
 
 interface AIGeneratorLayoutProps {
   strategyId: string;
@@ -30,7 +32,7 @@ const AIGeneratorLayout: React.FC<AIGeneratorLayoutProps> = ({
   onAddGains,
   onResultsGenerated
 }) => {
-  // Import and use the useAIGenerator hook
+  // Use the useAIGenerator hook
   const { 
     isGenerating, 
     error, 
@@ -183,9 +185,5 @@ const AIGeneratorLayout: React.FC<AIGeneratorLayoutProps> = ({
     </div>
   );
 };
-
-// Import at the end to avoid circular dependencies
-import { useAIGenerator } from './useAIGenerator';
-import ResultDisplay from './ResultDisplay';
 
 export default AIGeneratorLayout;
