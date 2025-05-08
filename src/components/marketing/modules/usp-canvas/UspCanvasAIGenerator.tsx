@@ -15,7 +15,7 @@ interface UspCanvasAIGeneratorProps {
   onAddJobs: (jobs: CustomerJob[]) => void;
   onAddPains: (pains: CustomerPain[]) => void;
   onAddGains: (gains: CustomerGain[]) => void;
-  onResultsGenerated: (results: any, debugInfo?: any) => void;
+  onResultsGenerated: (results: StoredAIResult, debugInfo?: any) => void;
 }
 
 const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
@@ -64,7 +64,7 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
       }
 
       // Store the parsed result for use across tabs
-      let parsedData = {};
+      let parsedData: StoredAIResult = { jobs: [], pains: [], gains: [] };
       
       try {
         // Try to parse the result if it's a string
@@ -76,7 +76,7 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
         }
         
         // Create empty arrays for any missing sections
-        const normalizedData = {
+        const normalizedData: StoredAIResult = {
           jobs: Array.isArray(parsedData.jobs) ? parsedData.jobs : [],
           pains: Array.isArray(parsedData.pains) ? parsedData.pains : [],
           gains: Array.isArray(parsedData.gains) ? parsedData.gains : []
@@ -124,7 +124,7 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
   };
   
   // Format content for display
-  const formatContent = (items) => {
+  const formatContent = (items: any[] | undefined) => {
     if (!items || items.length === 0) return "No data available";
     
     return (
