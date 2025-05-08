@@ -51,7 +51,7 @@ export const useAIGenerator = (
     }
   }, [strategyId, onResultsGenerated]);
 
-  const generateResult = async (): Promise<void> => {
+  const generateResult = async (enhancementText?: string): Promise<void> => {
     setIsGenerating(true);
     setError(null);
     console.log('Starting USP Canvas AI generation...');
@@ -60,7 +60,8 @@ export const useAIGenerator = (
       console.log('Generating USP Canvas profile with:', { 
         strategyId, 
         briefingContentLength: briefingContent?.length || 0,
-        personaContentLength: personaContent?.length || 0
+        personaContentLength: personaContent?.length || 0,
+        enhancementTextProvided: !!enhancementText
       });
       
       // Use the UspCanvasService to generate the profile
@@ -68,7 +69,7 @@ export const useAIGenerator = (
         strategyId,
         briefingContent,
         'all', // Generate all sections
-        undefined, // No enhancement text
+        enhancementText, // Pass the enhancement text to the AI service
         personaContent
       );
       
@@ -124,7 +125,8 @@ export const useAIGenerator = (
         requestData: {
           strategyId,
           briefingContentLength: briefingContent?.length || 0,
-          personaContentLength: personaContent?.length || 0
+          personaContentLength: personaContent?.length || 0,
+          enhancementText
         },
         responseRaw: response.data,
         responseDebug: response.debugInfo,

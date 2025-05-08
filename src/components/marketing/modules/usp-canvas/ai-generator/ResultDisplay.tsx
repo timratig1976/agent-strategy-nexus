@@ -3,9 +3,10 @@ import React from 'react';
 
 interface ResultDisplayProps {
   items: any[] | undefined;
+  onAddSingleItem?: (item: any) => void;
 }
 
-const ResultDisplay: React.FC<ResultDisplayProps> = ({ items }) => {
+const ResultDisplay: React.FC<ResultDisplayProps> = ({ items, onAddSingleItem }) => {
   if (!items || items.length === 0) return <p>No data available</p>;
   
   return (
@@ -33,6 +34,15 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ items }) => {
               <div className="flex-1">
                 {item.content}
               </div>
+              {onAddSingleItem && (
+                <button 
+                  onClick={() => onAddSingleItem(item)} 
+                  className="ml-2 p-1 text-xs bg-primary/10 hover:bg-primary/20 rounded text-primary"
+                  title="Add this item to canvas"
+                >
+                  Add
+                </button>
+              )}
             </div>
           </div>
         );

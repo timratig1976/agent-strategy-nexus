@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Loader2, AlertCircle, Sparkles, Bug } from 'lucide-react';
+import { Loader2, AlertCircle, Sparkles, Bug, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
   TooltipContent,
@@ -14,7 +15,7 @@ import {
 interface GeneratorFormProps {
   isGenerating: boolean;
   error: string | null;
-  generateResult: () => Promise<void>;
+  generateResult: (enhancementText?: string) => Promise<void>;
   hasResults: boolean;
   showDebug?: boolean;
   onToggleDebug?: () => void;
@@ -28,6 +29,13 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
   showDebug = false,
   onToggleDebug
 }) => {
+  const [enhancementText, setEnhancementText] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const handleGenerate = () => {
+    generateResult(enhancementText);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -78,13 +86,38 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
             <li>You can review and add the generated elements to your canvas</li>
           </ol>
         </div>
+
+        <Button 
+          type="button" 
+          variant="ghost" 
+          className="flex items-center justify-between w-full"
+          onClick={() => setShowAdvanced(!showAdvanced)}
+        >
+          <span>Advanced Options</span>
+          {showAdvanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </Button>
+
+        {showAdvanced && (
+          <div className="space-y-2">
+            <label htmlFor="enhancement-text" className="text-sm font-medium">
+              Additional Prompt Information
+            </label>
+            <Textarea
+              id="enhancement-text"
+              placeholder="Add specific instructions or information to improve the AI generation (e.g., 'Focus more on technical aspects' or 'Include sustainability concerns')"
+              value={enhancementText}
+              onChange={(e) => setEnhancementText(e.target.value)}
+              className="min-h-[80px]"
+            />
+          </div>
+        )}
       </CardContent>
       <CardFooter className="flex justify-center">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button 
-                onClick={generateResult} 
+                onClick={handleGenerate} 
                 disabled={isGenerating}
                 className="flex items-center gap-2"
                 size="lg"

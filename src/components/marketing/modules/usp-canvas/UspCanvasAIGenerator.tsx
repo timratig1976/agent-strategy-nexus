@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 import { StoredAIResult } from './types';
 import GeneratorForm from './ai-generator/GeneratorForm';
 import ResultTabs from './ai-generator/ResultTabs';
@@ -42,7 +43,7 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
   } = useAIGenerator(strategyId, briefingContent, personaContent, onResultsGenerated);
   
   // Format content for display
-  const formatContent = (items: any[] | undefined) => {
+  const formatContent = (items: any[] | undefined, onAddSingleItem?: (item: any) => void) => {
     if (!items || items.length === 0) {
       return (
         <div className="p-4 text-center bg-muted/20 rounded-md">
@@ -50,7 +51,7 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
         </div>
       );
     }
-    return <ResultDisplay items={items} />;
+    return <ResultDisplay items={items} onAddSingleItem={onAddSingleItem} />;
   };
   
   const hasResults = storedAIResult && (
@@ -79,6 +80,25 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
       console.log('Adding gains to canvas:', storedAIResult.gains);
       onAddGains(storedAIResult.gains);
     }
+  };
+
+  // Single item handlers
+  const handleAddSingleJob = (job: any) => {
+    console.log('Adding single job to canvas:', job);
+    onAddJobs([job]);
+    toast.success(`Added "${job.content.substring(0, 30)}..." to jobs`);
+  };
+
+  const handleAddSinglePain = (pain: any) => {
+    console.log('Adding single pain to canvas:', pain);
+    onAddPains([pain]);
+    toast.success(`Added "${pain.content.substring(0, 30)}..." to pains`);
+  };
+
+  const handleAddSingleGain = (gain: any) => {
+    console.log('Adding single gain to canvas:', gain);
+    onAddGains([gain]);
+    toast.success(`Added "${gain.content.substring(0, 30)}..." to gains`);
   };
 
   // Toggle debug panel
@@ -120,6 +140,9 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
             handleAddJobs={handleAddJobs}
             handleAddPains={handleAddPains}
             handleAddGains={handleAddGains}
+            handleAddSingleJob={handleAddSingleJob}
+            handleAddSinglePain={handleAddSinglePain}
+            handleAddSingleGain={handleAddSingleGain}
             formatContent={formatContent}
           />
         </div>
