@@ -13,7 +13,7 @@ export const useAIGenerator = (
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<string>("jobs");
 
-  const generateResult = async () => {
+  const generateResult = async (): Promise<void> => {
     setIsGenerating(true);
     setError(null);
 
@@ -76,8 +76,6 @@ export const useAIGenerator = (
         if (onResultsGenerated) {
           onResultsGenerated(normalizedData, debugData);
         }
-        
-        return normalizedData;
       } catch (parseError) {
         console.error("Error parsing result:", parseError);
         throw new Error("Failed to parse AI results");
@@ -85,7 +83,6 @@ export const useAIGenerator = (
     } catch (err: any) {
       console.error("Error generating canvas data:", err);
       setError(err.message || "Failed to generate canvas data. Please try again.");
-      return null;
     } finally {
       setIsGenerating(false);
     }

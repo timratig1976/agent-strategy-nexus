@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UspCanvasOverview from "../UspCanvasOverview";
@@ -6,6 +7,7 @@ import ValueMapCanvas from "../ValueMapCanvas";
 import UspCanvasAIGenerator from "../UspCanvasAIGenerator";
 import { Button } from "@/components/ui/button";
 import { StoredAIResult } from "../types";
+import { toast } from "sonner";
 
 interface UspCanvasModuleTabsProps {
   activeTab: string;

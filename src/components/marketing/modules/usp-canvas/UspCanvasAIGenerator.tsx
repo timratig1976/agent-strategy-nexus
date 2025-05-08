@@ -46,6 +46,25 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
     (storedAIResult.gains && storedAIResult.gains.length > 0)
   );
 
+  // Create wrapper functions to handle passing the stored results to the handlers
+  const handleAddJobs = () => {
+    if (storedAIResult?.jobs) {
+      onAddJobs(storedAIResult.jobs);
+    }
+  };
+
+  const handleAddPains = () => {
+    if (storedAIResult?.pains) {
+      onAddPains(storedAIResult.pains);
+    }
+  };
+
+  const handleAddGains = () => {
+    if (storedAIResult?.gains) {
+      onAddGains(storedAIResult.gains);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <GeneratorForm 
@@ -61,9 +80,9 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             storedAIResult={storedAIResult}
-            handleAddJobs={onAddJobs}
-            handleAddPains={onAddPains}
-            handleAddGains={onAddGains}
+            handleAddJobs={handleAddJobs}
+            handleAddPains={handleAddPains}
+            handleAddGains={handleAddGains}
             formatContent={formatContent}
           />
         </div>
