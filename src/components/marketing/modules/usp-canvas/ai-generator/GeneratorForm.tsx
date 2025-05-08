@@ -12,11 +12,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface GeneratorFormProps {
   isGenerating: boolean;
   error: string | null;
-  generateResult: (enhancementText?: string) => Promise<void>;
+  generateResult: (enhancementText?: string, formatOptions?: any) => Promise<void>;
   hasResults: boolean;
   showDebug?: boolean;
   onToggleDebug?: () => void;
@@ -32,9 +34,15 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
 }) => {
   const [enhancementText, setEnhancementText] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [strictFormat, setStrictFormat] = useState(true);
+  const [outputLanguage, setOutputLanguage] = useState<'deutsch' | 'english'>('english');
 
   const handleGenerate = () => {
-    generateResult(enhancementText);
+    const formatOptions = {
+      strictFormat,
+      outputLanguage
+    };
+    generateResult(enhancementText, formatOptions);
   };
 
   return (
@@ -109,17 +117,52 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
         </Button>
 
         {showAdvanced && (
-          <div className="space-y-1">
-            <label htmlFor="enhancement-text" className="text-xs font-medium">
-              Additional Prompt Information
-            </label>
-            <Textarea
-              id="enhancement-text"
-              placeholder="Add specific instructions or focus areas for the AI generation"
-              value={enhancementText}
-              onChange={(e) => setEnhancementText(e.target.value)}
-              className="min-h-[60px] text-sm"
-            />
+          <div className="space-y-3 p-3 border rounded-md">
+            <div className="space-y-1">
+              <label htmlFor="enhancement-text" className="text-xs font-medium">
+                Additional Prompt Information
+              </label>
+              <Textarea
+                id="enhancement-text"
+                placeholder="Add specific instructions or focus areas for the AI generation"
+                value={enhancementText}
+                onChange={(e) => setEnhancementText(e.target.value)}
+                className="min-h-[60px] text-sm"
+              />
+            </div>
+            
+            <div className="flex items-center space-x-2 pt-2">
+              <Switch 
+                id="strict-format" 
+                checked={strictFormat}
+                onCheckedChange={setStrictFormat}
+              />
+              <Label htmlFor="strict-format">Use strict JSON format (recommended)</Label>
+            </div>
+            
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Output Language</label>
+              <div className="flex space-x-2">
+                <Button 
+                  type="button" 
+                  size="sm"
+                  variant={outputLanguage === 'english' ? 'default' : 'outline'}
+                  onClick={() => setOutputLanguage('english')}
+                  className="text-xs"
+                >
+                  English
+                </Button>
+                <Button 
+                  type="button" 
+                  size="sm"
+                  variant={outputLanguage === 'deutsch' ? 'default' : 'outline'}
+                  onClick={() => setOutputLanguage('deutsch')}
+                  className="text-xs"
+                >
+                  Deutsch
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </CardContent>

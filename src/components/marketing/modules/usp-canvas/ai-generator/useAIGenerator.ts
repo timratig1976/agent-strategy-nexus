@@ -3,6 +3,11 @@ import { useState, useEffect } from 'react';
 import { StoredAIResult } from '../types';
 import { UspCanvasService, AIServiceResponse, UspCanvasAIResult } from '@/services/ai';
 
+interface FormatOptions {
+  strictFormat?: boolean;
+  outputLanguage?: 'deutsch' | 'english';
+}
+
 export const useAIGenerator = (
   strategyId: string,
   briefingContent: string,
@@ -14,6 +19,8 @@ export const useAIGenerator = (
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<string>("jobs");
   const [generationHistory, setGenerationHistory] = useState<{timestamp: number, result: StoredAIResult}[]>([]);
+  const [rawResponse, setRawResponse] = useState<any>(null);
+  const [parseResults, setParseResults] = useState<any>(null);
 
   // Load previously stored AI results from localStorage
   useEffect(() => {
@@ -51,17 +58,20 @@ export const useAIGenerator = (
     }
   }, [strategyId, onResultsGenerated]);
 
-  const generateResult = async (enhancementText?: string): Promise<void> => {
+  const generateResult = async (enhancementText?: string, formatOptions: FormatOptions = {}): Promise<void> => {
     setIsGenerating(true);
     setError(null);
-    console.log('Starting USP Canvas AI generation...');
+    setRawResponse(null);
+    setParseResults(null);
+    console.log('Starting USP Canvas AI generation with format options:', formatOptions);
 
     try {
       console.log('Generating USP Canvas profile with:', { 
         strategyId, 
         briefingContentLength: briefingContent?.length || 0,
         personaContentLength: personaContent?.length || 0,
-        enhancementTextProvided: !!enhancementText
+        enhancementTextProvided: !!enhancementText,
+        formatOptions
       });
       
       // Use the UspCanvasService to generate the profile
@@ -70,10 +80,12 @@ export const useAIGenerator = (
         briefingContent,
         'all', // Generate all sections
         enhancementText, // Pass the enhancement text to the AI service
-        personaContent
+        personaContent,
+        formatOptions // Pass the format options to the AI service
       );
       
       console.log('AI service response received:', response);
+      setRawResponse(response);
       
       if (response.error) {
         console.error('Error from UspCanvasService:', response.error);
@@ -86,6 +98,17 @@ export const useAIGenerator = (
       }
       
       console.log('AI generation successful, raw data:', response.data);
+      
+      // Store parse results for debugging
+      const parsingResults = {
+        jobsFound: Array.isArray(response.data.jobs) ? response.data.jobs.length : 0,
+        painsFound: Array.isArray(response.data.pains) ? response.data.pains.length : 0,
+        gainsFound: Array.isArray(response.data.gains) ? response.data.gains.length : 0,
+        rawJobs: response.data.jobs,
+        rawPains: response.data.pains,
+        rawGains: response.data.gains
+      };
+      setParseResults(parsingResults);
       
       // Normalize the response data with additional validation
       const normalizedData: StoredAIResult = {
@@ -119,6 +142,14 @@ export const useAIGenerator = (
       
       console.log('Normalized data:', normalizedData);
       
+      // Validate data completeness
+      const validationResults = {
+        jobsComplete: normalizedData.jobs.length > 0,
+        painsComplete: normalizedData.pains.length > 0,
+        gainsComplete: normalizedData.gains.length > 0,
+        isComplete: normalizedData.jobs.length > 0 && normalizedData.pains.length > 0 && normalizedData.gains.length > 0
+      };
+      
       // Store debug information
       const debugData = {
         timestamp: new Date().toISOString(),
@@ -126,10 +157,13 @@ export const useAIGenerator = (
           strategyId,
           briefingContentLength: briefingContent?.length || 0,
           personaContentLength: personaContent?.length || 0,
-          enhancementText
+          enhancementText,
+          formatOptions
         },
         responseRaw: response.data,
         responseDebug: response.debugInfo,
+        parsingResults,
+        validationResults,
         normalizedData
       };
       
@@ -184,6 +218,8 @@ export const useAIGenerator = (
     activeTab,
     setActiveTab,
     generateResult,
-    generationHistory
+    generationHistory,
+    rawResponse,
+    parseResults
   };
 };

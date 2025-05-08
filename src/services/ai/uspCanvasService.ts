@@ -3,6 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { AIServiceResponse, UspCanvasAIResult } from "./types";
 import { MarketingAIService } from "./marketingAIService";
 
+interface FormatOptions {
+  strictFormat?: boolean;
+  outputLanguage?: 'deutsch' | 'english';
+}
+
 export class UspCanvasService {
   /**
    * Generate USP Canvas Profile elements (Jobs, Pains, Gains)
@@ -12,14 +17,16 @@ export class UspCanvasService {
     briefingContent: string,
     section?: 'jobs' | 'pains' | 'gains' | 'all',
     enhancementText?: string,
-    personaContent?: string
+    personaContent?: string,
+    formatOptions?: FormatOptions
   ): Promise<AIServiceResponse<UspCanvasAIResult>> {
     console.log('UspCanvasService.generateUspCanvasProfile called with:', {
       strategyId,
       section,
       briefingContentLength: briefingContent?.length || 0,
       personaContentLength: personaContent?.length || 0,
-      enhancementText: enhancementText ? 'provided' : 'not provided'
+      enhancementText: enhancementText ? 'provided' : 'not provided',
+      formatOptions
     });
     
     try {
@@ -35,7 +42,8 @@ export class UspCanvasService {
             briefingContent,
             section: section || 'all',
             enhancementText,
-            personaContent
+            personaContent,
+            formatOptions
           }
         }
       });
@@ -53,7 +61,8 @@ export class UspCanvasService {
               briefingContentLength: briefingContent?.length || 0,
               personaContentLength: personaContent?.length || 0,
               section,
-              enhancementText 
+              enhancementText,
+              formatOptions
             },
             responseData: { errorDetails: error }
           }
@@ -70,7 +79,8 @@ export class UspCanvasService {
               briefingContentLength: briefingContent?.length || 0,
               personaContentLength: personaContent?.length || 0,
               section,
-              enhancementText 
+              enhancementText,
+              formatOptions
             },
             responseData: data
           }
@@ -87,7 +97,8 @@ export class UspCanvasService {
             briefingContentLength: briefingContent?.length || 0,
             personaContentLength: personaContent?.length || 0,
             section,
-            enhancementText 
+            enhancementText,
+            formatOptions
           },
           responseData: {
             result: data,
@@ -108,7 +119,8 @@ export class UspCanvasService {
             briefingContentLength: briefingContent?.length || 0,
             personaContentLength: personaContent?.length || 0,
             section,
-            enhancementText 
+            enhancementText,
+            formatOptions
           },
           responseData: { errorMessage: String(error) }
         }
@@ -125,7 +137,8 @@ export class UspCanvasService {
     customerProfile: any,
     section?: 'products' | 'painRelievers' | 'gainCreators' | 'all',
     enhancementText?: string,
-    personaContent?: string
+    personaContent?: string,
+    formatOptions?: FormatOptions
   ): Promise<AIServiceResponse<UspCanvasAIResult>> {
     return MarketingAIService.generateContent<UspCanvasAIResult>(
       'usp_canvas_value_map',
@@ -136,7 +149,8 @@ export class UspCanvasService {
         customerProfile,
         section,
         enhancementText,
-        personaContent
+        personaContent,
+        formatOptions
       }
     );
   }

@@ -39,7 +39,9 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
     activeTab, 
     setActiveTab, 
     generateResult,
-    generationHistory
+    generationHistory,
+    rawResponse,
+    parseResults
   } = useAIGenerator(strategyId, briefingContent, personaContent, onResultsGenerated);
   
   // Format content for display
@@ -149,10 +151,53 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
       )}
 
       {showDebug && debugInfo && (
-        <AIDebugPanel 
-          debugInfo={debugInfo} 
-          title="USP Canvas AI Generator Debug Information"
-        />
+        <>
+          <AIDebugPanel 
+            debugInfo={debugInfo} 
+            title="USP Canvas AI Generator Debug Information"
+          />
+          
+          {parseResults && (
+            <div className="bg-muted/20 p-4 rounded-lg border mt-4">
+              <h3 className="font-medium mb-2">Data Extraction Results</h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <div className="flex justify-between">
+                    <span>Jobs found:</span>
+                    <span className={parseResults.jobsFound > 0 ? "text-green-600" : "text-red-600"}>
+                      {parseResults.jobsFound}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex justify-between">
+                    <span>Pains found:</span>
+                    <span className={parseResults.painsFound > 0 ? "text-green-600" : "text-red-600"}>
+                      {parseResults.painsFound}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex justify-between">
+                    <span>Gains found:</span>
+                    <span className={parseResults.gainsFound > 0 ? "text-green-600" : "text-red-600"}>
+                      {parseResults.gainsFound}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {rawResponse && (
+            <div className="bg-muted/20 p-4 rounded-lg border mt-4">
+              <h3 className="font-medium mb-2">Raw AI Response</h3>
+              <div className="bg-gray-900 text-gray-200 p-3 rounded overflow-auto max-h-64 text-xs">
+                <pre>{JSON.stringify(rawResponse.data, null, 2)}</pre>
+              </div>
+            </div>
+          )}
+        </>
       )}
       
       {generationHistory && generationHistory.length > 0 && showDebug && (
