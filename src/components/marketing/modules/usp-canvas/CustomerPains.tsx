@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CustomerPain } from './types';
 import CustomerItemList from './components/customer-item-list';

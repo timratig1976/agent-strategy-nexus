@@ -6,7 +6,7 @@ import { RatingValue } from '../types';
 interface CustomerItemProps {
   id: string;
   content: string;
-  rating: RatingValue; // Changed from string to RatingValue
+  rating: RatingValue;
   isAIGenerated?: boolean;
   isSelected: boolean;
   isSelectMode: boolean;
@@ -42,7 +42,7 @@ const CustomerItem: React.FC<CustomerItemProps> = ({
       id={id}
       content={content}
       rating={rating}
-      ratingLabel="priority" // Changed from rating to a fixed value
+      ratingLabel="priority"
       isAIGenerated={isAIGenerated}
       isSelected={isSelected}
       isSelectMode={isSelectMode}

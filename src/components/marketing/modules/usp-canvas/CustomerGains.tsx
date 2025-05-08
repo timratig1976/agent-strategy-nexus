@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CustomerGain } from './types';
 import CustomerItemList from './components/customer-item-list';
