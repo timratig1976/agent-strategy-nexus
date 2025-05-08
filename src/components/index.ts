@@ -7,6 +7,7 @@ import CrmTabContent from "./home/CrmTabContent";
 import StrategyCards from "./home/marketing/StrategyCards";
 import QuickAccessTools from "./home/marketing/QuickAccessTools";
 import { DashboardHeader, StrategyCard, StrategyList, StrategySkeleton } from "./dashboard";
+import { AIPromptSettings } from "./settings";
 
 export {
   NavBar,
@@ -19,5 +20,6 @@ export {
   DashboardHeader,
   StrategyCard,
   StrategyList,
-  StrategySkeleton
+  StrategySkeleton,
+  AIPromptSettings
 };

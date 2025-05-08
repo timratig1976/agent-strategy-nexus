@@ -150,3 +150,5 @@ export const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
     </Card>
   );
 };
+
+export default AIPromptSettings;

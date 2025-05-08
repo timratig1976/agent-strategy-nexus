@@ -1,6 +1,6 @@
 
 import React from "react";
-import { AIPromptSettings } from "@/components/strategy/briefing/components";
+import { AIPromptSettings } from "@/components/settings";
 
 export const AIPromptSettingsTab: React.FC = () => {
   return (
