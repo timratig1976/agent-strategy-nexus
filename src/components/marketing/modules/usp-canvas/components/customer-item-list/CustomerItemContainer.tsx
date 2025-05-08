@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { CustomerItemProps } from './types';
-import ItemCard from '../ItemCard';
+import { CustomerItem, EmptyItemsPlaceholder } from './components';
 
 interface CustomerItemContainerProps {
   items: CustomerItemProps[];
@@ -39,17 +39,15 @@ const CustomerItemContainer = ({
   return (
     <div className="space-y-2">
       {items.map((item) => (
-        <ItemCard 
+        <CustomerItem 
           key={item.id}
           id={item.id}
           content={item.content}
           rating={item.rating}
-          ratingLabel={ratingType}
           isAIGenerated={item.isAIGenerated}
           isSelected={selectedItems.includes(item.id)}
           isSelectMode={isSelectMode}
           isDragged={draggedItem === item.id}
-          isDraggable={true}
           onContentChange={(value) => onContentChange(item.id, value)}
           onToggleSelect={() => onToggleSelect(item.id)}
           onDelete={() => onDelete(item.id)}
