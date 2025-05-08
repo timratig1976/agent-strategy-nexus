@@ -17,8 +17,8 @@ import AdCampaignModule from "@/components/strategy/ads";
 
 // Import custom hooks and utilities
 import useStrategyData from "@/hooks/useStrategyData";
+import useStrategyNavigation from "@/hooks/useStrategyNavigation";
 import { getStateLabel, getStateColor } from "@/utils/strategyUtils";
-import { supabase } from "@/integrations/supabase/client";
 import { StrategyState } from "@/types/marketing";
 
 const StrategyDetails = () => {
@@ -44,6 +44,14 @@ const StrategyDetails = () => {
     refetch 
   } = useStrategyData({ id });
 
+  // Use the custom navigation hook
+  const { 
+    navigateToPreviousStep
+  } = useStrategyNavigation({
+    strategyId: id,
+    onRefetch: refetch
+  });
+  
   // Refresh the data when the component mounts or when the URL changes
   useEffect(() => {
     if (id) {
@@ -51,48 +59,6 @@ const StrategyDetails = () => {
       refetch();
     }
   }, [id, refetch]);
-  
-  // Handler for going back to previous step
-  const handleGoToPreviousStep = async (currentState: string) => {
-    if (!id) return;
-    
-    try {
-      let previousState: StrategyState = 'briefing'; // Default
-      
-      // Determine the previous state based on the current state
-      if (currentState === 'funnel') {
-        previousState = 'pain_gains';
-      } else if (currentState === 'pain_gains') {
-        previousState = 'persona';
-      } else if (currentState === 'persona') {
-        previousState = 'briefing';
-      } else if (currentState === 'ads') {
-        previousState = 'funnel';
-      }
-      
-      console.log(`Going back from ${currentState} to ${previousState}`);
-      
-      // Update the strategy state
-      const { error } = await supabase
-        .from('strategies')
-        .update({ state: previousState })
-        .eq('id', id)
-        .select();
-      
-      if (error) {
-        console.error("Error updating strategy state:", error);
-        toast.error(`Failed to go back to ${previousState} stage`);
-        return;
-      }
-      
-      toast.success(`Returned to ${getStateLabel(previousState)} stage`);
-      refetch(); // Refresh the data
-      
-    } catch (err) {
-      console.error("Failed to go back to previous step:", err);
-      toast.error("Failed to navigate back");
-    }
-  };
   
   // If there's no ID, show a loading state until the redirect happens
   if (!id) {
@@ -160,14 +126,14 @@ const StrategyDetails = () => {
     contentComponent = (
       <FunnelStrategyModule
         strategy={strategy}
-        onNavigateBack={() => handleGoToPreviousStep('funnel')}
+        onNavigateBack={() => navigateToPreviousStep('funnel')}
       />
     );
   } else if (strategy.state === 'ads') {
     contentComponent = (
       <AdCampaignModule
         strategy={strategy}
-        onNavigateBack={() => handleGoToPreviousStep('ads')}
+        onNavigateBack={() => navigateToPreviousStep('ads')}
       />
     );
   }
