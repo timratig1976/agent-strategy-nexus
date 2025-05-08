@@ -1,208 +1,149 @@
 
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Loader2, AlertCircle, Sparkles, Bug, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Info, Loader2, RefreshCcw, Bug } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
-interface GeneratorFormProps {
+interface FormProps {
   isGenerating: boolean;
   error: string | null;
   generateResult: (enhancementText?: string, formatOptions?: any) => Promise<void>;
   hasResults: boolean;
-  showDebug?: boolean;
-  onToggleDebug?: () => void;
+  onToggleDebug: () => void;
+  showDebug: boolean;
 }
 
-const GeneratorForm: React.FC<GeneratorFormProps> = ({
-  isGenerating,
-  error,
+const GeneratorForm: React.FC<FormProps> = ({ 
+  isGenerating, 
+  error, 
   generateResult,
   hasResults,
-  showDebug = false,
-  onToggleDebug
+  onToggleDebug,
+  showDebug
 }) => {
-  const [enhancementText, setEnhancementText] = useState('');
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [strictFormat, setStrictFormat] = useState(true);
-  const [outputLanguage, setOutputLanguage] = useState<'deutsch' | 'english'>('english');
-
-  const handleGenerate = () => {
+  const [enhancementText, setEnhancementText] = useState<string>('');
+  const [strictFormat, setStrictFormat] = useState<boolean>(true);
+  const [outputLanguage, setOutputLanguage] = useState<string>('english');
+  
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     const formatOptions = {
       strictFormat,
       outputLanguage
     };
-    generateResult(enhancementText, formatOptions);
+    await generateResult(enhancementText, formatOptions);
   };
-
+  
   return (
-    <Card className="mb-4">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            <CardTitle>AI-Powered Value Proposition Canvas Generator</CardTitle>
-          </div>
-          <div className="flex items-center gap-1">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Info className="h-4 w-4" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80">
-                <div className="space-y-2">
-                  <h4 className="font-medium">How it works</h4>
-                  <ol className="list-decimal list-inside space-y-1 text-sm">
-                    <li>We analyze your marketing brief and persona information</li>
-                    <li>Our AI generates customer jobs, pains, and gains</li>
-                    <li>You can review and add the generated elements to your canvas</li>
-                  </ol>
-                </div>
-              </PopoverContent>
-            </Popover>
-            
-            {onToggleDebug && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={onToggleDebug}
-                      className={`h-8 w-8 ${showDebug ? "bg-muted" : ""}`}
-                    >
-                      <Bug className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{showDebug ? "Hide" : "Show"} debug information</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-          </div>
-        </div>
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-xl">AI Value Proposition Generator</CardTitle>
         <CardDescription>
-          Generate customer jobs, pains, and gains automatically from your marketing brief.
+          Generate customer jobs, pains, and gains based on your marketing briefing and target audience.
         </CardDescription>
       </CardHeader>
-      <CardContent className="pt-0 pb-2 space-y-2">
-        {error && (
-          <Alert variant="destructive" className="py-2">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        
-        <Button 
-          type="button" 
-          variant="ghost" 
-          className="flex items-center justify-between w-full py-1 h-auto"
-          onClick={() => setShowAdvanced(!showAdvanced)}
-        >
-          <span className="text-sm">Advanced Options</span>
-          {showAdvanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </Button>
-
-        {showAdvanced && (
-          <div className="space-y-3 p-3 border rounded-md">
-            <div className="space-y-1">
-              <label htmlFor="enhancement-text" className="text-xs font-medium">
-                Additional Prompt Information
-              </label>
-              <Textarea
-                id="enhancement-text"
-                placeholder="Add specific instructions or focus areas for the AI generation"
-                value={enhancementText}
-                onChange={(e) => setEnhancementText(e.target.value)}
-                className="min-h-[60px] text-sm"
-              />
-            </div>
-            
-            <div className="flex items-center space-x-2 pt-2">
-              <Switch 
-                id="strict-format" 
+      
+      <form onSubmit={handleSubmit}>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="enhancementText" className="mb-1 block">
+              Custom Instructions (Optional)
+            </Label>
+            <Textarea
+              id="enhancementText"
+              placeholder="Add specific requirements, industry focus, or other directions for the AI..."
+              className="h-24"
+              value={enhancementText}
+              onChange={(e) => setEnhancementText(e.target.value)}
+              disabled={isGenerating}
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="strictFormat" className="block mb-1">Format Enforcement</Label>
+                <span className="text-xs text-muted-foreground">Enable for better structure detection</span>
+              </div>
+              <Switch
+                id="strictFormat"
                 checked={strictFormat}
                 onCheckedChange={setStrictFormat}
+                disabled={isGenerating}
               />
-              <Label htmlFor="strict-format">Use strict JSON format (recommended)</Label>
             </div>
             
-            <div className="space-y-1">
-              <label className="text-xs font-medium">Output Language</label>
-              <div className="flex space-x-2">
-                <Button 
-                  type="button" 
-                  size="sm"
-                  variant={outputLanguage === 'english' ? 'default' : 'outline'}
-                  onClick={() => setOutputLanguage('english')}
-                  className="text-xs"
-                >
-                  English
-                </Button>
-                <Button 
-                  type="button" 
-                  size="sm"
-                  variant={outputLanguage === 'deutsch' ? 'default' : 'outline'}
-                  onClick={() => setOutputLanguage('deutsch')}
-                  className="text-xs"
-                >
-                  Deutsch
-                </Button>
-              </div>
+            <div>
+              <Label htmlFor="outputLanguage" className="block mb-1">Output Language</Label>
+              <Select
+                value={outputLanguage}
+                onValueChange={setOutputLanguage}
+                disabled={isGenerating}
+              >
+                <SelectTrigger id="outputLanguage">
+                  <SelectValue placeholder="Select language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="english">English</SelectItem>
+                  <SelectItem value="deutsch">German</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
-        )}
-      </CardContent>
-      <CardFooter className="py-2 flex justify-center">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                onClick={handleGenerate} 
+          
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+        
+        <CardFooter className="flex justify-between items-center">
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="sm"
+            onClick={onToggleDebug}
+            className="flex items-center gap-1"
+          >
+            <Bug className="h-4 w-4 mr-1" />
+            {showDebug ? "Hide Debug" : "Debug"}
+          </Button>
+          
+          <div className="flex gap-2">
+            {hasResults && (
+              <Button
+                type="button" 
+                variant="outline"
                 disabled={isGenerating}
-                className="flex items-center gap-2"
+                onClick={() => generateResult(enhancementText, { strictFormat, outputLanguage })}
               >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : hasResults ? (
-                  <>
-                    <Sparkles className="h-4 w-4" />
-                    Regenerate Canvas Data
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4" />
-                    Generate Canvas Data
-                  </>
-                )}
+                <RefreshCcw className="h-4 w-4 mr-2" />
+                Regenerate
               </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p className="text-sm">
-                {hasResults 
-                  ? "Generate fresh canvas elements based on your briefing" 
-                  : "Create customer jobs, pains, and gains based on your marketing brief"}
-              </p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </CardFooter>
+            )}
+            
+            <Button type="submit" disabled={isGenerating}>
+              {isGenerating ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Info className="h-4 w-4 mr-2" />
+                  Generate Value Proposition
+                </>
+              )}
+            </Button>
+          </div>
+        </CardFooter>
+      </form>
     </Card>
   );
 };

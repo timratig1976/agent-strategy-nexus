@@ -1,9 +1,10 @@
 
 import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { PlusCircle } from 'lucide-react';
 import { StoredAIResult } from '../types';
-import { Badge } from "@/components/ui/badge";
 
 interface ResultTabsProps {
   activeTab: string;
@@ -28,140 +29,93 @@ const ResultTabs: React.FC<ResultTabsProps> = ({
   handleAddSingleJob,
   handleAddSinglePain,
   handleAddSingleGain,
-  formatContent
+  formatContent,
 }) => {
-  const jobsCount = storedAIResult?.jobs?.length || 0;
-  const painsCount = storedAIResult?.pains?.length || 0;
-  const gainsCount = storedAIResult?.gains?.length || 0;
-
-  // Grid layout for 3-column display when all types have content
-  const allHaveContent = jobsCount > 0 && painsCount > 0 && gainsCount > 0;
-
+  // Get counts for badge display
+  const jobCount = storedAIResult.jobs?.length || 0;
+  const painCount = storedAIResult.pains?.length || 0;
+  const gainCount = storedAIResult.gains?.length || 0;
+  
   return (
-    <div className="border rounded-lg p-4">
-      <h3 className="text-lg font-semibold mb-4">AI Generated Canvas Elements</h3>
-      
-      {allHaveContent ? (
-        // 3-column layout when all types have content
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Jobs Column */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center mb-3">
-              <h4 className="font-medium flex items-center">
-                Customer Jobs 
-                <Badge className="ml-2 bg-blue-500">{jobsCount}</Badge>
-              </h4>
-              {jobsCount > 0 && (
-                <Button size="sm" onClick={handleAddJobs} className="text-xs h-7 px-2">
-                  Add All
-                </Button>
-              )}
-            </div>
-            {formatContent(storedAIResult.jobs, handleAddSingleJob)}
-          </div>
-          
-          {/* Pains Column */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center mb-3">
-              <h4 className="font-medium flex items-center">
-                Customer Pains
-                <Badge className="ml-2 bg-red-500">{painsCount}</Badge>
-              </h4>
-              {painsCount > 0 && (
-                <Button size="sm" onClick={handleAddPains} className="text-xs h-7 px-2">
-                  Add All
-                </Button>
-              )}
-            </div>
-            {formatContent(storedAIResult.pains, handleAddSinglePain)}
-          </div>
-          
-          {/* Gains Column */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center mb-3">
-              <h4 className="font-medium flex items-center">
-                Customer Gains
-                <Badge className="ml-2 bg-green-500">{gainsCount}</Badge>
-              </h4>
-              {gainsCount > 0 && (
-                <Button size="sm" onClick={handleAddGains} className="text-xs h-7 px-2">
-                  Add All
-                </Button>
-              )}
-            </div>
-            {formatContent(storedAIResult.gains, handleAddSingleGain)}
-          </div>
-        </div>
-      ) : (
-        // Tabs layout for smaller screens or when not all types have content
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-3 mb-4">
+    <Card>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="border-b px-6 py-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="jobs" className="relative">
               Customer Jobs
-              {jobsCount > 0 && (
-                <Badge className="absolute top-0 right-1 transform translate-x-1/2 -translate-y-1/2 bg-blue-500">
-                  {jobsCount}
-                </Badge>
+              {jobCount > 0 && (
+                <span className="ml-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+                  {jobCount}
+                </span>
               )}
             </TabsTrigger>
-            
             <TabsTrigger value="pains" className="relative">
-              Customer Pains
-              {painsCount > 0 && (
-                <Badge className="absolute top-0 right-1 transform translate-x-1/2 -translate-y-1/2 bg-red-500">
-                  {painsCount}
-                </Badge>
+              Pains
+              {painCount > 0 && (
+                <span className="ml-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+                  {painCount}
+                </span>
               )}
             </TabsTrigger>
-            
             <TabsTrigger value="gains" className="relative">
-              Customer Gains
-              {gainsCount > 0 && (
-                <Badge className="absolute top-0 right-1 transform translate-x-1/2 -translate-y-1/2 bg-green-500">
-                  {gainsCount}
-                </Badge>
+              Gains
+              {gainCount > 0 && (
+                <span className="ml-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+                  {gainCount}
+                </span>
               )}
             </TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="jobs" className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h4 className="font-medium">Jobs ({jobsCount})</h4>
-              {jobsCount > 0 && (
-                <Button size="sm" onClick={handleAddJobs}>
-                  Add All Jobs to Canvas
-                </Button>
-              )}
-            </div>
+        </div>
+        
+        <CardContent className="pt-6">
+          <TabsContent value="jobs" className="mt-0 space-y-4">
             {formatContent(storedAIResult.jobs, handleAddSingleJob)}
           </TabsContent>
-          
-          <TabsContent value="pains" className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h4 className="font-medium">Pains ({painsCount})</h4>
-              {painsCount > 0 && (
-                <Button size="sm" onClick={handleAddPains}>
-                  Add All Pains to Canvas
-                </Button>
-              )}
-            </div>
+          <TabsContent value="pains" className="mt-0 space-y-4">
             {formatContent(storedAIResult.pains, handleAddSinglePain)}
           </TabsContent>
-          
-          <TabsContent value="gains" className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h4 className="font-medium">Gains ({gainsCount})</h4>
-              {gainsCount > 0 && (
-                <Button size="sm" onClick={handleAddGains}>
-                  Add All Gains to Canvas
-                </Button>
-              )}
-            </div>
+          <TabsContent value="gains" className="mt-0 space-y-4">
             {formatContent(storedAIResult.gains, handleAddSingleGain)}
           </TabsContent>
-        </Tabs>
-      )}
-    </div>
+        </CardContent>
+        
+        <CardFooter className="border-t px-6 py-3">
+          {activeTab === "jobs" && storedAIResult.jobs && storedAIResult.jobs.length > 0 && (
+            <Button 
+              onClick={handleAddJobs}
+              variant="outline"
+              className="ml-auto"
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add All Jobs to Canvas
+            </Button>
+          )}
+          
+          {activeTab === "pains" && storedAIResult.pains && storedAIResult.pains.length > 0 && (
+            <Button 
+              onClick={handleAddPains}
+              variant="outline"
+              className="ml-auto"
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add All Pains to Canvas
+            </Button>
+          )}
+          
+          {activeTab === "gains" && storedAIResult.gains && storedAIResult.gains.length > 0 && (
+            <Button 
+              onClick={handleAddGains}
+              variant="outline"
+              className="ml-auto"
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add All Gains to Canvas
+            </Button>
+          )}
+        </CardFooter>
+      </Tabs>
+    </Card>
   );
 };
 
