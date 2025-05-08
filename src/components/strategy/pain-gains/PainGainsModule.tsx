@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Strategy, AgentResult } from "@/types/marketing";
@@ -20,6 +21,23 @@ const PainGainsModule: React.FC<PainGainsModuleProps> = ({
   personaAgentResult
 }) => {
   const navigate = useNavigate();
+  const [canProceed, setCanProceed] = useState<boolean>(false);
+  
+  // Check if there's a final USP Canvas saved to determine if we can proceed
+  useEffect(() => {
+    // In a real implementation, you would check if there's a final USP Canvas
+    // For now, we rely on the UspCanvasModule to manage this state
+    const checkFinalUspCanvas = async () => {
+      try {
+        // Here you would check if there's a final USP Canvas in the database
+        // For now, we'll rely on local state managed within UspCanvasModule
+      } catch (error) {
+        console.error("Error checking for final USP Canvas:", error);
+      }
+    };
+    
+    checkFinalUspCanvas();
+  }, [strategy.id]);
 
   // Handler for going back to persona development
   const handleGoToPreviousStep = async () => {
@@ -52,6 +70,8 @@ const PainGainsModule: React.FC<PainGainsModuleProps> = ({
   
   // Handler for going to the next step (funnel)
   const handleGoToNextStep = async () => {
+    // We only allow navigation to the next step when a final USP Canvas is saved
+    // This check is now handled inside the UspCanvasModule
     try {
       console.log("Going to funnel step for strategy:", strategy.id);
       

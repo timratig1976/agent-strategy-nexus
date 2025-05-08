@@ -43,6 +43,16 @@ export const useCanvasStorage = (strategyId?: string) => {
     if (!strategyId) return false;
     
     try {
+      // First, check if there's any content to save
+      if (
+        canvas.customerJobs.length === 0 &&
+        canvas.customerPains.length === 0 &&
+        canvas.customerGains.length === 0
+      ) {
+        toast.error("Cannot save final version with empty canvas. Please add content first.");
+        return false;
+      }
+      
       // Add current state to history
       const newHistory = [...canvasSaveHistory, {
         timestamp: Date.now(),

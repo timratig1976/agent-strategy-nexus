@@ -1,6 +1,4 @@
 
-import { ReactNode } from "react";
-
 export interface CustomerJob {
   id: string;
   content: string;
@@ -49,29 +47,15 @@ export interface UspCanvas {
   gainCreators: GainCreator[];
 }
 
-// For handling persona data integration
-export interface PersonaContextData {
-  name?: string;
-  demographics?: string;
-  goals?: string;
-  painPoints?: string;
-  content?: string; // Raw content from the agent result
-  behaviors?: string;
-  preferences?: string;
-}
-
-// For storing AI-generated results between tab switches
-export interface StoredAIResult {
-  jobs?: CustomerJob[];
-  pains?: CustomerPain[];
-  gains?: CustomerGain[];
-  debugInfo?: any;
-}
-
-// For canvas history tracking
 export interface CanvasHistoryEntry {
   timestamp: number;
   data: UspCanvas;
   isFinal?: boolean;
-  version?: number;
+}
+
+export interface StoredAIResult {
+  jobs: any[];
+  pains: any[];
+  gains: any[];
+  debugInfo?: any;
 }

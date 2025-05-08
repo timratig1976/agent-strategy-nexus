@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useUspCanvas } from "./useUspCanvas";
 import { StoredAIResult } from "./types";
@@ -27,6 +27,8 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
   const [addedJobIds, setAddedJobIds] = useState<Set<string>>(new Set());
   const [addedPainIds, setAddedPainIds] = useState<Set<string>>(new Set());
   const [addedGainIds, setAddedGainIds] = useState<Set<string>>(new Set());
+  // Track if final version is saved
+  const [hasFinalVersion, setHasFinalVersion] = useState<boolean>(false);
   
   const { 
     canvas,
@@ -61,6 +63,12 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     saveFinalVersion,
     applyAIGeneratedContent
   } = useUspCanvas(strategyId);
+
+  // Check if we have a final version in the canvas history
+  useEffect(() => {
+    const hasFinal = canvasSaveHistory.some(item => item.isFinal);
+    setHasFinalVersion(hasFinal);
+  }, [canvasSaveHistory]);
 
   // Handle adding AI-generated elements with duplicate prevention
   const handleAddAIJobs = (jobs) => {
@@ -184,14 +192,22 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
   };
   
   const handleSaveFinal = () => {
-    saveFinalVersion();
-    toast.success("Canvas saved as final version!");
+    const success = saveFinalVersion();
+    if (success) {
+      setHasFinalVersion(true);
+      toast.success("Canvas saved as final version!");
+    }
+  };
+
+  // Only allow navigation to next step if a final version is saved
+  const handleNavigateNext = () => {
+    if (!hasFinalVersion) {
+      toast.error("Please save a final version before proceeding to the next step.");
+      return;
+    }
     
-    // Navigate to next stage if provided
     if (onNavigateNext) {
-      setTimeout(() => {
-        onNavigateNext();
-      }, 1000);
+      onNavigateNext();
     }
   };
 
@@ -199,8 +215,9 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     <div className="w-full">
       <UspCanvasHeader 
         onNavigateBack={onNavigateBack} 
-        onNavigateNext={onNavigateNext}
+        onNavigateNext={hasFinalVersion ? onNavigateNext : undefined}
         onSaveFinal={handleSaveFinal}
+        isFinalSaved={hasFinalVersion}
       />
 
       <UspCanvasModuleTabs 

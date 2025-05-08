@@ -7,12 +7,14 @@ interface UspCanvasHeaderProps {
   onNavigateBack?: () => void;
   onNavigateNext?: () => void;
   onSaveFinal: () => void;
+  isFinalSaved?: boolean;
 }
 
 const UspCanvasHeader: React.FC<UspCanvasHeaderProps> = ({ 
   onNavigateBack, 
   onNavigateNext, 
-  onSaveFinal 
+  onSaveFinal,
+  isFinalSaved = false
 }) => {
   return (
     <div className="flex flex-col mb-4 gap-2">
@@ -37,14 +39,16 @@ const UspCanvasHeader: React.FC<UspCanvasHeaderProps> = ({
           <Button 
             onClick={onSaveFinal}
             className="flex items-center gap-2"
+            disabled={isFinalSaved}
           >
-            Save Final Version
+            {isFinalSaved ? 'Final Version Saved' : 'Save Final Version'}
           </Button>
           
           {onNavigateNext && (
             <Button 
               onClick={onNavigateNext}
-              variant="outline"
+              variant={isFinalSaved ? "default" : "outline"}
+              disabled={!isFinalSaved}
               className="flex items-center gap-2"
             >
               Next
