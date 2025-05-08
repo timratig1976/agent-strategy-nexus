@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StoredAIResult } from '../types';
 import { UspCanvasService, AIServiceResponse, UspCanvasAIResult } from '@/services/ai';
 
@@ -14,6 +14,42 @@ export const useAIGenerator = (
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<string>("jobs");
   const [generationHistory, setGenerationHistory] = useState<{timestamp: number, result: StoredAIResult}[]>([]);
+
+  // Load previously stored AI results from localStorage
+  useEffect(() => {
+    if (strategyId) {
+      try {
+        const savedResultsKey = `usp_canvas_${strategyId}_ai_results`;
+        const savedHistoryKey = `usp_canvas_${strategyId}_ai_history`;
+        
+        const savedResults = localStorage.getItem(savedResultsKey);
+        const savedHistory = localStorage.getItem(savedHistoryKey);
+        
+        if (savedResults) {
+          const parsedResults = JSON.parse(savedResults);
+          // Only set debug info if it exists and if we don't already have it
+          if (parsedResults.debugInfo && !debugInfo) {
+            setDebugInfo(parsedResults.debugInfo);
+          }
+          
+          // Notify parent component of existing results
+          if (onResultsGenerated && parsedResults.data) {
+            console.log('Loading saved AI results:', parsedResults.data);
+            onResultsGenerated(parsedResults.data, parsedResults.debugInfo);
+          }
+        }
+        
+        if (savedHistory) {
+          const parsedHistory = JSON.parse(savedHistory);
+          if (Array.isArray(parsedHistory)) {
+            setGenerationHistory(parsedHistory);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading saved AI data:', error);
+      }
+    }
+  }, [strategyId, onResultsGenerated]);
 
   const generateResult = async (): Promise<void> => {
     setIsGenerating(true);
@@ -48,20 +84,39 @@ export const useAIGenerator = (
         throw new Error('No data returned from AI service');
       }
       
-      console.log('AI generation successful:', response.data);
+      console.log('AI generation successful, raw data:', response.data);
       
-      // Normalize the response data
+      // Normalize the response data with additional validation
       const normalizedData: StoredAIResult = {
         jobs: Array.isArray(response.data.jobs) 
-          ? response.data.jobs.filter(job => job.content && !job.content.startsWith('*') && !job.content.startsWith('#')) 
+          ? response.data.jobs
+              .filter(job => job && job.content && typeof job.content === 'string')
+              .map(job => ({ 
+                content: job.content.trim(), 
+                priority: ['high', 'medium', 'low'].includes(job.priority) ? job.priority : 'medium'
+              }))
           : [],
+          
         pains: Array.isArray(response.data.pains) 
-          ? response.data.pains.filter(pain => pain.content && !pain.content.startsWith('*') && !pain.content.startsWith('#')) 
+          ? response.data.pains
+              .filter(pain => pain && pain.content && typeof pain.content === 'string')
+              .map(pain => ({ 
+                content: pain.content.trim(), 
+                severity: ['high', 'medium', 'low'].includes(pain.severity) ? pain.severity : 'medium'
+              }))
           : [],
+          
         gains: Array.isArray(response.data.gains) 
-          ? response.data.gains.filter(gain => gain.content && !gain.content.startsWith('*') && !gain.content.startsWith('#')) 
+          ? response.data.gains
+              .filter(gain => gain && gain.content && typeof gain.content === 'string')
+              .map(gain => ({ 
+                content: gain.content.trim(), 
+                importance: ['high', 'medium', 'low'].includes(gain.importance) ? gain.importance : 'medium'
+              }))
           : []
       };
+      
+      console.log('Normalized data:', normalizedData);
       
       // Store debug information
       const debugData = {
@@ -71,8 +126,8 @@ export const useAIGenerator = (
           briefingContentLength: briefingContent?.length || 0,
           personaContentLength: personaContent?.length || 0
         },
-        responseData: response.data,
-        rawResponse: response.debugInfo,
+        responseRaw: response.data,
+        responseDebug: response.debugInfo,
         normalizedData
       };
       
@@ -84,9 +139,30 @@ export const useAIGenerator = (
         timestamp: Date.now(),
         result: normalizedData
       };
-      setGenerationHistory(prevHistory => [...prevHistory, historyItem]);
       
-      // Store result and notify parent component
+      const updatedHistory = [...generationHistory, historyItem];
+      setGenerationHistory(updatedHistory);
+      
+      // Save results and history to localStorage for persistence
+      if (strategyId) {
+        try {
+          localStorage.setItem(
+            `usp_canvas_${strategyId}_ai_results`, 
+            JSON.stringify({ data: normalizedData, debugInfo: debugData, timestamp: Date.now() })
+          );
+          
+          localStorage.setItem(
+            `usp_canvas_${strategyId}_ai_history`, 
+            JSON.stringify(updatedHistory)
+          );
+          
+          console.log('Saved AI results to localStorage');
+        } catch (err) {
+          console.error('Error saving AI results to localStorage:', err);
+        }
+      }
+      
+      // Notify parent component
       if (onResultsGenerated) {
         console.log('Passing AI results to parent component:', normalizedData);
         onResultsGenerated(normalizedData, debugData);

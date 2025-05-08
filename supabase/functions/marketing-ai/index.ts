@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
@@ -488,113 +487,110 @@ function parseAIResult(module: string, action: string, result: string): any {
         gains?: Array<{content: string, importance: 'low' | 'medium' | 'high'}>
       } = {};
       
-      // Extract customer jobs
-      const jobsRegex = /(?:Customer Jobs|Jobs)[\s\S]*?((?:(?:[-•*]\s*|[0-9]+\.\s*).+(?:\n|$))+)/im;
-      const jobsMatch = result.match(jobsRegex);
+      // Extract customer jobs with improved regex pattern
+      const jobsSection = result.match(/(?:customer jobs|jobs)[\s\S]*?((?:[-•*\d].*(?:\n|$))+)/i);
       
-      if (jobsMatch && jobsMatch[1]) {
-        uspCanvasResult.jobs = jobsMatch[1].split('\n')
-          .filter(line => line.trim().match(/^[-•*]|^\d+\./))
-          .map(line => {
-            const content = line.replace(/^[-•*]|^\d+\./, '').trim();
-            // Check for priority indicators in the content
-            let priority: 'low' | 'medium' | 'high' = 'medium';
+      if (jobsSection && jobsSection[1]) {
+        uspCanvasResult.jobs = [];
+        const jobLines = jobsSection[1].split('\n').filter(line => line.trim());
+        
+        for (const line of jobLines) {
+          // Skip section headers or empty lines
+          if (!line.match(/^[-•*\d]/) || line.trim().length < 3) continue;
+          
+          const trimmedLine = line.replace(/^[-•*\d\.\s]+/, '').trim();
+          
+          // Extract priority from line
+          let priority: 'low' | 'medium' | 'high' = 'medium';
+          if (/high priority|priority:\s*high|\(priority:\s*high\)|high\s*\)|\(high\)/i.test(trimmedLine)) {
+            priority = 'high';
+          } else if (/low priority|priority:\s*low|\(priority:\s*low\)|low\s*\)|\(low\)/i.test(trimmedLine)) {
+            priority = 'low';
+          }
+          
+          // Clean up content by removing priority indicators
+          let content = trimmedLine
+            .replace(/\(priority:\s*(high|medium|low)\)/i, '')
+            .replace(/(high|medium|low)\s*priority/i, '')
+            .replace(/priority:\s*(high|medium|low)/i, '')
+            .trim();
             
-            if (content.toLowerCase().includes('priority: high') || 
-                content.toLowerCase().includes('high priority') ||
-                content.toLowerCase().includes('priority:high')) {
-              priority = 'high';
-            } else if (content.toLowerCase().includes('priority: low') || 
-                      content.toLowerCase().includes('low priority') ||
-                      content.toLowerCase().includes('priority:low')) {
-              priority = 'low';
-            }
-            
-            // Remove any priority text from the content
-            const cleanContent = content
-              .replace(/priority:\s*(high|medium|low)/i, '')
-              .replace(/(high|medium|low)\s*priority/i, '')
-              .replace(/\(.*?\)/g, '') // Remove any parenthetical content
-              .trim();
-              
-            return {
-              content: cleanContent,
-              priority
-            };
-          });
+          if (content) {
+            uspCanvasResult.jobs.push({ content, priority });
+          }
+        }
       }
       
-      // Extract customer pains
-      const painsRegex = /(?:Customer Pains|Pains)[\s\S]*?((?:(?:[-•*]\s*|[0-9]+\.\s*).+(?:\n|$))+)/im;
-      const painsMatch = result.match(painsRegex);
+      // Extract customer pains with improved regex pattern
+      const painsSection = result.match(/(?:customer pains|pains)[\s\S]*?((?:[-•*\d].*(?:\n|$))+)/i);
       
-      if (painsMatch && painsMatch[1]) {
-        uspCanvasResult.pains = painsMatch[1].split('\n')
-          .filter(line => line.trim().match(/^[-•*]|^\d+\./))
-          .map(line => {
-            const content = line.replace(/^[-•*]|^\d+\./, '').trim();
-            // Check for severity indicators in the content
-            let severity: 'low' | 'medium' | 'high' = 'medium';
+      if (painsSection && painsSection[1]) {
+        uspCanvasResult.pains = [];
+        const painLines = painsSection[1].split('\n').filter(line => line.trim());
+        
+        for (const line of painLines) {
+          // Skip section headers or empty lines
+          if (!line.match(/^[-•*\d]/) || line.trim().length < 3) continue;
+          
+          const trimmedLine = line.replace(/^[-•*\d\.\s]+/, '').trim();
+          
+          // Extract severity from line
+          let severity: 'low' | 'medium' | 'high' = 'medium';
+          if (/high severity|severity:\s*high|\(severity:\s*high\)|high\s*\)|\(high\)/i.test(trimmedLine)) {
+            severity = 'high';
+          } else if (/low severity|severity:\s*low|\(severity:\s*low\)|low\s*\)|\(low\)/i.test(trimmedLine)) {
+            severity = 'low';
+          }
+          
+          // Clean up content by removing severity indicators
+          let content = trimmedLine
+            .replace(/\(severity:\s*(high|medium|low)\)/i, '')
+            .replace(/(high|medium|low)\s*severity/i, '')
+            .replace(/severity:\s*(high|medium|low)/i, '')
+            .trim();
             
-            if (content.toLowerCase().includes('severity: high') || 
-                content.toLowerCase().includes('high severity') ||
-                content.toLowerCase().includes('severity:high')) {
-              severity = 'high';
-            } else if (content.toLowerCase().includes('severity: low') || 
-                      content.toLowerCase().includes('low severity') ||
-                      content.toLowerCase().includes('severity:low')) {
-              severity = 'low';
-            }
-            
-            // Remove any severity text from the content
-            const cleanContent = content
-              .replace(/severity:\s*(high|medium|low)/i, '')
-              .replace(/(high|medium|low)\s*severity/i, '')
-              .replace(/\(.*?\)/g, '') // Remove any parenthetical content
-              .trim();
-              
-            return {
-              content: cleanContent,
-              severity
-            };
-          });
+          if (content) {
+            uspCanvasResult.pains.push({ content, severity });
+          }
+        }
       }
       
-      // Extract customer gains
-      const gainsRegex = /(?:Customer Gains|Gains)[\s\S]*?((?:(?:[-•*]\s*|[0-9]+\.\s*).+(?:\n|$))+)/im;
-      const gainsMatch = result.match(gainsRegex);
+      // Extract customer gains with improved regex pattern
+      const gainsSection = result.match(/(?:customer gains|gains)[\s\S]*?((?:[-•*\d].*(?:\n|$))+)/i);
       
-      if (gainsMatch && gainsMatch[1]) {
-        uspCanvasResult.gains = gainsMatch[1].split('\n')
-          .filter(line => line.trim().match(/^[-•*]|^\d+\./))
-          .map(line => {
-            const content = line.replace(/^[-•*]|^\d+\./, '').trim();
-            // Check for importance indicators in the content
-            let importance: 'low' | 'medium' | 'high' = 'medium';
+      if (gainsSection && gainsSection[1]) {
+        uspCanvasResult.gains = [];
+        const gainLines = gainsSection[1].split('\n').filter(line => line.trim());
+        
+        for (const line of gainLines) {
+          // Skip section headers or empty lines
+          if (!line.match(/^[-•*\d]/) || line.trim().length < 3) continue;
+          
+          const trimmedLine = line.replace(/^[-•*\d\.\s]+/, '').trim();
+          
+          // Extract importance from line
+          let importance: 'low' | 'medium' | 'high' = 'medium';
+          if (/high importance|importance:\s*high|\(importance:\s*high\)|high\s*\)|\(high\)/i.test(trimmedLine)) {
+            importance = 'high';
+          } else if (/low importance|importance:\s*low|\(importance:\s*low\)|low\s*\)|\(low\)/i.test(trimmedLine)) {
+            importance = 'low';
+          }
+          
+          // Clean up content by removing importance indicators
+          let content = trimmedLine
+            .replace(/\(importance:\s*(high|medium|low)\)/i, '')
+            .replace(/(high|medium|low)\s*importance/i, '')
+            .replace(/importance:\s*(high|medium|low)/i, '')
+            .trim();
             
-            if (content.toLowerCase().includes('importance: high') || 
-                content.toLowerCase().includes('high importance') ||
-                content.toLowerCase().includes('importance:high')) {
-              importance = 'high';
-            } else if (content.toLowerCase().includes('importance: low') || 
-                      content.toLowerCase().includes('low importance') ||
-                      content.toLowerCase().includes('importance:low')) {
-              importance = 'low';
-            }
-            
-            // Remove any importance text from the content
-            const cleanContent = content
-              .replace(/importance:\s*(high|medium|low)/i, '')
-              .replace(/(high|medium|low)\s*importance/i, '')
-              .replace(/\(.*?\)/g, '') // Remove any parenthetical content
-              .trim();
-              
-            return {
-              content: cleanContent,
-              importance
-            };
-          });
+          if (content) {
+            uspCanvasResult.gains.push({ content, importance });
+          }
+        }
       }
+      
+      // Log the parsed result for debugging
+      console.log("Parsed USP Canvas Profile result:", JSON.stringify(uspCanvasResult));
       
       return uspCanvasResult;
     }

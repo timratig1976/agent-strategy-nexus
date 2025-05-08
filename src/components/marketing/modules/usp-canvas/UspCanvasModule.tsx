@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useUspCanvas } from "./useUspCanvas";
@@ -68,13 +67,33 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     applyAIGeneratedContent
   } = useUspCanvas(strategyId);
 
+  // Load stored AI results on component mount
+  useEffect(() => {
+    if (strategyId) {
+      try {
+        const savedResultsKey = `usp_canvas_${strategyId}_ai_results`;
+        const savedResults = localStorage.getItem(savedResultsKey);
+        
+        if (savedResults) {
+          const parsedResults = JSON.parse(savedResults);
+          if (parsedResults.data) {
+            console.log('Loading stored AI results on module mount:', parsedResults.data);
+            setStoredAIResult(parsedResults.data);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading saved AI results on mount:', error);
+      }
+    }
+  }, [strategyId]);
+
   // Check if we have a final version in the canvas history
   useEffect(() => {
     const hasFinal = canvasSaveHistory.some(item => item.isFinal);
     setHasFinalVersion(hasFinal);
   }, [canvasSaveHistory]);
 
-  // Handle adding AI-generated elements with duplicate prevention
+  // Handle adding AI-generated elements with duplicate prevention and better uniqueness checking
   const handleAddAIJobs = (jobs) => {
     if (!jobs || jobs.length === 0) {
       toast.info("No jobs to add");
@@ -83,13 +102,16 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     
     const newAddedIds = new Set(addedJobIds);
     const uniqueJobs = jobs.filter(job => {
-      // Skip header-like items
-      if (job.content.startsWith('*') || job.content.startsWith('#')) {
+      // Skip invalid items
+      if (!job || !job.content || typeof job.content !== 'string') {
         return false;
       }
       
+      const content = job.content.trim();
+      if (!content) return false;
+      
       // Create a unique identifier based on content and priority
-      const idKey = `${job.content}-${job.priority}`;
+      const idKey = `${content}-${job.priority}`;
       // Check if this combination already exists
       const isDuplicate = newAddedIds.has(idKey);
       if (!isDuplicate) {
@@ -105,12 +127,13 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
       uniqueJobs.forEach(job => {
         addCustomerJob(job.content, job.priority || 'medium', true);
       });
-      toast.success(`${uniqueJobs.length} jobs added to canvas`);
+      toast.success(`Added ${uniqueJobs.length} jobs to canvas`);
     } else {
       toast.info("All jobs have already been added");
     }
   };
 
+  // Similar improvements for pains and gains handlers
   const handleAddAIPains = (pains) => {
     if (!pains || pains.length === 0) {
       toast.info("No pains to add");
@@ -119,12 +142,15 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     
     const newAddedIds = new Set(addedPainIds);
     const uniquePains = pains.filter(pain => {
-      // Skip header-like items
-      if (pain.content.startsWith('*') || pain.content.startsWith('#')) {
+      // Skip invalid items
+      if (!pain || !pain.content || typeof pain.content !== 'string') {
         return false;
       }
       
-      const idKey = `${pain.content}-${pain.severity}`;
+      const content = pain.content.trim();
+      if (!content) return false;
+      
+      const idKey = `${content}-${pain.severity}`;
       const isDuplicate = newAddedIds.has(idKey);
       if (!isDuplicate) {
         newAddedIds.add(idKey);
@@ -139,7 +165,7 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
       uniquePains.forEach(pain => {
         addCustomerPain(pain.content, pain.severity || 'medium', true);
       });
-      toast.success(`${uniquePains.length} pains added to canvas`);
+      toast.success(`Added ${uniquePains.length} pains to canvas`);
     } else {
       toast.info("All pains have already been added");
     }
@@ -153,12 +179,15 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     
     const newAddedIds = new Set(addedGainIds);
     const uniqueGains = gains.filter(gain => {
-      // Skip header-like items
-      if (gain.content.startsWith('*') || gain.content.startsWith('#')) {
+      // Skip invalid items
+      if (!gain || !gain.content || typeof gain.content !== 'string') {
         return false;
       }
       
-      const idKey = `${gain.content}-${gain.importance}`;
+      const content = gain.content.trim();
+      if (!content) return false;
+      
+      const idKey = `${content}-${gain.importance}`;
       const isDuplicate = newAddedIds.has(idKey);
       if (!isDuplicate) {
         newAddedIds.add(idKey);
@@ -173,26 +202,41 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
       uniqueGains.forEach(gain => {
         addCustomerGain(gain.content, gain.importance || 'medium', true);
       });
-      toast.success(`${uniqueGains.length} gains added to canvas`);
+      toast.success(`Added ${uniqueGains.length} gains to canvas`);
     } else {
       toast.info("All gains have already been added");
     }
   };
 
-  // Handle storing AI results
+  // Handle storing AI results with more robust error handling
   const handleAIResultsGenerated = (result, debugInfo) => {
-    // Filter out header-like items before storing
-    const filteredResult = {
-      jobs: result?.jobs?.filter(job => !job.content.startsWith('*') && !job.content.startsWith('#')) || [],
-      pains: result?.pains?.filter(pain => !pain.content.startsWith('*') && !pain.content.startsWith('#')) || [],
-      gains: result?.gains?.filter(gain => !gain.content.startsWith('*') && !gain.content.startsWith('#')) || [],
-      debugInfo
+    console.log('AI results generated callback received:', result);
+    
+    // Validate result structure before storing
+    if (!result) {
+      console.error('Empty result received in handleAIResultsGenerated');
+      return;
+    }
+    
+    // Ensure all arrays exist
+    const validatedResult: StoredAIResult = {
+      jobs: Array.isArray(result.jobs) ? result.jobs : [],
+      pains: Array.isArray(result.pains) ? result.pains : [],
+      gains: Array.isArray(result.gains) ? result.gains : []
     };
     
-    setStoredAIResult(filteredResult);
+    // Store the validated result
+    setStoredAIResult(validatedResult);
     
-    // Save to the database for persistence
-    saveProgress('ai_results', filteredResult);
+    // Save to localStorage for persistence
+    try {
+      localStorage.setItem(
+        `usp_canvas_${strategyId}_ai_results`, 
+        JSON.stringify({ data: validatedResult, debugInfo, timestamp: Date.now() })
+      );
+    } catch (err) {
+      console.error('Error saving AI results in handleAIResultsGenerated:', err);
+    }
   };
   
   const handleSaveFinal = () => {
