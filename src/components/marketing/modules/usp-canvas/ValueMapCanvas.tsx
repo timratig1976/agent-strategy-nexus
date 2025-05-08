@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsTrigger } from "@/components/ui/tabs";
 import ProductServices from "./ProductServices";
 import PainRelievers from "./PainRelievers";
 import GainCreators from "./GainCreators";
@@ -13,8 +13,6 @@ import {
 } from "@/components/ui/tooltip";
 import { HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import TabsList from "./components/tabs/TabsList";
-import { TabsTrigger } from "@/components/ui/tabs";
 
 interface ValueMapCanvasProps {
   canvas: UspCanvas;
@@ -76,67 +74,33 @@ const ValueMapCanvas = ({
         </TooltipProvider>
       </div>
 
-      <Tabs 
-        value={activeTab} 
-        onValueChange={setActiveTab} 
-        defaultValue="services" 
-        className="mt-6"
-      >
-        <TabsList activeTab={activeTab}>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <TabsTrigger value="services">
-                  Products & Services
-                  {servicesCount > 0 && (
-                    <span className="ml-2 px-1.5 py-0.5 rounded-full bg-blue-100 text-xs text-blue-800">
-                      {servicesCount}
-                    </span>
-                  )}
-                </TabsTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                <p className="text-sm">Define what your company offers to help customers complete their jobs</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <TabsTrigger value="relievers">
-                  Pain Relievers
-                  {relieversCount > 0 && (
-                    <span className="ml-2 px-1.5 py-0.5 rounded-full bg-red-100 text-xs text-red-800">
-                      {relieversCount}
-                    </span>
-                  )}
-                </TabsTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                <p className="text-sm">How your offerings solve customer problems</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <TabsTrigger value="creators">
-                  Gain Creators
-                  {creatorsCount > 0 && (
-                    <span className="ml-2 px-1.5 py-0.5 rounded-full bg-green-100 text-xs text-green-800">
-                      {creatorsCount}
-                    </span>
-                  )}
-                </TabsTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                <p className="text-sm">How your offerings create additional value for customers</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="services" className="mt-6">
+        <div className="grid w-full grid-cols-3">
+          <TabsTrigger value="services" className="relative">
+            Products & Services
+            {servicesCount > 0 && (
+              <span className="ml-2 px-1.5 py-0.5 rounded-full bg-blue-100 text-xs text-blue-800">
+                {servicesCount}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="relievers" className="relative">
+            Pain Relievers
+            {relieversCount > 0 && (
+              <span className="ml-2 px-1.5 py-0.5 rounded-full bg-red-100 text-xs text-red-800">
+                {relieversCount}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="creators" className="relative">
+            Gain Creators
+            {creatorsCount > 0 && (
+              <span className="ml-2 px-1.5 py-0.5 rounded-full bg-green-100 text-xs text-green-800">
+                {creatorsCount}
+              </span>
+            )}
+          </TabsTrigger>
+        </div>
         
         <TabsContent value="services" className="mt-4 p-4 bg-slate-50 rounded-md">
           <ProductServices 
