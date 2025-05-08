@@ -197,7 +197,7 @@ export class UspCanvasService {
         if (result.pains.length === 0) {
           const lines = painsSection.split('\n').filter(line => line.trim().length > 0);
           for (const line of lines) {
-            if (line.startsWith('**') && line.includes('Severity'):') {
+            if (line.startsWith('**') && line.includes('Severity')) {
               const match = line.match(/\*\*(.*?)\s*\((High|Medium|Low)\s*Severity\)\:\*\*\s*(.*)/i);
               if (match) {
                 const content = match[1].trim();
@@ -214,7 +214,7 @@ export class UspCanvasService {
       }
 
       // Find the customer gains section
-      const gainsMatch = rawText.match(/### 3\.\s*Customer Gains[\s\S]*?(?=---|\n\s*$/i);
+      const gainsMatch = rawText.match(/### 3\.\s*Customer Gains[\s\S]*?(?=---|\n\s*$)/i);
       if (gainsMatch) {
         const gainsSection = gainsMatch[0];
         const gainMatches = gainsSection.matchAll(/\*\*(.*?)\s*\((High|Medium|Low)\s*Importance\)\:\*\*\s*(.*?)(?=\n\n|\n\*\*|$)/gi);
@@ -229,7 +229,7 @@ export class UspCanvasService {
         if (result.gains.length === 0) {
           const lines = gainsSection.split('\n').filter(line => line.trim().length > 0);
           for (const line of lines) {
-            if (line.startsWith('**') && line.includes('Importance'):') {
+            if (line.startsWith('**') && line.includes('Importance')) {
               const match = line.match(/\*\*(.*?)\s*\((High|Medium|Low)\s*Importance\)\:\*\*\s*(.*)/i);
               if (match) {
                 const content = match[1].trim();
