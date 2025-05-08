@@ -31,7 +31,8 @@ const StrategyForm = () => {
       websiteUrl: "",
       productDescription: "",
       productUrl: "",
-      additionalInfo: ""
+      additionalInfo: "",
+      language: "english"
     }
   });
 
@@ -57,7 +58,8 @@ const StrategyForm = () => {
           product_url: values.productUrl || "",
           additional_info: values.additionalInfo || "",
           status: 'in_progress',
-          state: 'briefing' as StrategyState
+          state: 'briefing' as StrategyState,
+          language: values.language
         })
         .select()
         .single();

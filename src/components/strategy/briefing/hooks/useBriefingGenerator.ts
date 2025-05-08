@@ -33,6 +33,21 @@ export const useBriefingGenerator = (strategyId: string) => {
       console.log("Generating briefing for strategy ID:", strategyId, "with values:", formValues);
       console.log("Enhancement text:", enhancementText);
       
+      // Get strategy information including language
+      const { data: strategyData, error: strategyError } = await supabase
+        .from('strategies')
+        .select('language')
+        .eq('id', strategyId)
+        .single();
+      
+      if (strategyError) {
+        console.error("Error fetching strategy language:", strategyError);
+        // Continue with default language if there's an error
+      }
+      
+      const language = strategyData?.language || 'english';
+      console.log("Using language for AI generation:", language);
+      
       // Simulate progress updates
       const progressInterval = setInterval(() => {
         setProgress(prev => {
@@ -51,7 +66,8 @@ export const useBriefingGenerator = (strategyId: string) => {
         {
           strategyId: strategyId,
           formData: formValues,
-          enhancementText: enhancementText || '' // Ensure enhancement text is included
+          enhancementText: enhancementText || '',
+          outputLanguage: language as 'english' | 'deutsch'
         }
       );
       
@@ -80,7 +96,8 @@ export const useBriefingGenerator = (strategyId: string) => {
         metadata: {
           version: nextVersion,
           generated_at: currentTime,
-          enhanced_with: enhancementText || undefined
+          enhanced_with: enhancementText || undefined,
+          language: language
         }
       };
 

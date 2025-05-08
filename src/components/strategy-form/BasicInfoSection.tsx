@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { strategyFormSchema } from "./strategyFormSchema";
+import LanguageSelector from "./LanguageSelector";
 
 type StrategyFormValues = z.infer<typeof strategyFormSchema>;
 
@@ -47,6 +48,8 @@ const BasicInfoSection = ({ form }: BasicInfoSectionProps) => {
           </FormItem>
         )}
       />
+
+      <LanguageSelector form={form} />
     </>
   );
 };

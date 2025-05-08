@@ -8,7 +8,8 @@ export const strategyFormSchema = z.object({
   websiteUrl: z.string().url({ message: "Please enter a valid URL" }).optional().or(z.literal("")),
   productDescription: z.string().optional(),
   productUrl: z.string().url({ message: "Please enter a valid URL" }).optional().or(z.literal("")),
-  additionalInfo: z.string().optional()
+  additionalInfo: z.string().optional(),
+  language: z.enum(["english", "deutsch"]).default("english")
 });
 
 export type StrategyFormValues = z.infer<typeof strategyFormSchema>;

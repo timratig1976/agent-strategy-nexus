@@ -6,5 +6,6 @@ export { default as CompanySection } from './CompanySection';
 export { default as ProductSection } from './ProductSection';
 export { default as AdditionalInfoSection } from './AdditionalInfoSection';
 export { default as StrategyFormActions } from './StrategyFormActions';
+export { default as LanguageSelector } from './LanguageSelector';
 export { strategyFormSchema } from './strategyFormSchema';
 export type { StrategyFormValues } from './strategyFormSchema';
