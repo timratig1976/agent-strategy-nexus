@@ -26,7 +26,6 @@ const StrategyForm = () => {
     resolver: zodResolver(strategyFormSchema),
     defaultValues: {
       name: "",
-      description: "",
       companyName: "",
       websiteUrl: "",
       productDescription: "",
@@ -50,7 +49,6 @@ const StrategyForm = () => {
         .from('strategies')
         .insert({
           name: values.name,
-          description: values.description || "",
           user_id: user.id,
           company_name: values.companyName,
           website_url: values.websiteUrl || "",

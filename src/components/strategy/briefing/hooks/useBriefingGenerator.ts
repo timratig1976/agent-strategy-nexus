@@ -6,6 +6,7 @@ import { StrategyFormValues } from "@/components/strategy-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useBriefingHistory } from "./useBriefingHistory";
 import { useAgentResultSaver } from "./useAgentResultSaver";
+import { useDocumentProcessing } from "@/hooks/useDocumentProcessing";
 
 export const useBriefingGenerator = (strategyId: string) => {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -19,6 +20,9 @@ export const useBriefingGenerator = (strategyId: string) => {
   } = useBriefingHistory(strategyId);
   
   const { saveAgentResult } = useAgentResultSaver();
+  
+  // Use the document processing hook to get document content
+  const { getDocumentContentForAI } = useDocumentProcessing(strategyId);
 
   // Function to generate AI briefing with progress updates
   const generateBriefing = async (
@@ -48,6 +52,10 @@ export const useBriefingGenerator = (strategyId: string) => {
       const language = strategyData?.language || 'english';
       console.log("Using language for AI generation:", language);
       
+      // Get document content for AI
+      const documentContent = await getDocumentContentForAI();
+      console.log("Document content available:", !!documentContent);
+      
       // Simulate progress updates
       const progressInterval = setInterval(() => {
         setProgress(prev => {
@@ -67,6 +75,7 @@ export const useBriefingGenerator = (strategyId: string) => {
           strategyId: strategyId,
           formData: formValues,
           enhancementText: enhancementText || '',
+          documentContent: documentContent || '',  // Include document content
           outputLanguage: language as 'english' | 'deutsch'
         }
       );
@@ -90,67 +99,41 @@ export const useBriefingGenerator = (strategyId: string) => {
       
       // Create the agent result to save to the database with null agent_id
       const newResult = {
-        agent_id: null, // Use null instead of a UUID or string
+        agent_id: null, // Use null instead of hard-coded IDs
         strategy_id: strategyId,
         content: aiResponse?.rawOutput || "",
         metadata: {
+          type: "briefing",
+          is_final: false,
           version: nextVersion,
-          generated_at: currentTime,
-          enhanced_with: enhancementText || undefined,
-          language: language
+          generated_at: currentTime
         }
       };
-
-      console.log("Saving new briefing result to database:", newResult);
       
-      // Save the generated briefing to the database
-      const { data: savedResult, error } = await supabase
-        .from('agent_results')
-        .insert(newResult)
-        .select()
-        .single();
-
-      clearInterval(progressInterval);
-      setProgress(100);
+      // Save the result to the database
+      const savedResult = await saveAgentResult(strategyId, newResult.content, newResult.metadata);
       
-      if (error) {
-        console.error("Error saving new briefing:", error);
-        throw error;
-      }
-      
+      // Update local state with the new result
       if (savedResult) {
-        // Format the saved result to match our AgentResult type
-        const formattedResult = {
-          id: savedResult.id,
-          agentId: savedResult.agent_id,
-          strategyId: savedResult.strategy_id,
-          content: savedResult.content,
-          createdAt: savedResult.created_at,
-          metadata: (typeof savedResult.metadata === 'object' && savedResult.metadata !== null) 
-            ? savedResult.metadata as Record<string, any>
-            : {}
-        };
-        
-        // Update local state
-        setBriefingHistory(prev => [formattedResult, ...prev]);
-        console.log("Updated briefing history:", [formattedResult, ...briefingHistory]);
+        setBriefingHistory(prev => [savedResult, ...prev]);
       }
       
-      toast.success("AI Briefing generated successfully");
-    } catch (error: any) {
+      setProgress(100);
+      toast.success("Briefing generated successfully");
+      
+    } catch (error) {
       console.error("Error generating briefing:", error);
-      toast.error("Failed to generate AI briefing");
-      setProgress(0);
+      toast.error("Failed to generate briefing: " + 
+        (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setIsGenerating(false);
     }
   };
-  
+
   return {
     isGenerating,
     progress,
     generateBriefing,
-    saveAgentResult,
     briefingHistory,
     setBriefingHistory,
     aiDebugInfo

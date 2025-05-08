@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StrategyInfoCardProps } from "./types";
 import StrategyForm from "./StrategyForm";
 import { useCrawlUrl } from "./hooks/useCrawlUrl";
+import DocumentManager from "../../../documents/DocumentManager"; // Import DocumentManager component
 
 const StrategyInfoCard: React.FC<StrategyInfoCardProps> = ({
   formValues,
@@ -55,7 +56,7 @@ const StrategyInfoCard: React.FC<StrategyInfoCardProps> = ({
       <CardHeader>
         <CardTitle>Strategy Information</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-6">
         <StrategyForm
           localFormValues={localFormValues}
           handleInputChange={handleInputChange}
@@ -71,6 +72,11 @@ const StrategyInfoCard: React.FC<StrategyInfoCardProps> = ({
           setShowWebsitePreview={setShowWebsitePreview}
           setShowProductPreview={setShowProductPreview}
         />
+        
+        {/* Add DocumentManager component if we have a strategy ID */}
+        {formValues.id && (
+          <DocumentManager strategyId={formValues.id} />
+        )}
       </CardContent>
     </Card>
   );
