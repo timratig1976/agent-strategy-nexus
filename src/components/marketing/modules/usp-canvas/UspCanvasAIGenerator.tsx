@@ -5,6 +5,8 @@ import GeneratorForm from './ai-generator/GeneratorForm';
 import ResultTabs from './ai-generator/ResultTabs';
 import ResultDisplay from './ai-generator/ResultDisplay';
 import { useAIGenerator } from './ai-generator/useAIGenerator';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 interface UspCanvasAIGeneratorProps {
   strategyId: string;
@@ -37,6 +39,13 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
   
   // Format content for display
   const formatContent = (items: any[] | undefined) => {
+    if (!items || items.length === 0) {
+      return (
+        <div className="p-4 text-center bg-muted/20 rounded-md">
+          <p className="text-muted-foreground">No items generated yet</p>
+        </div>
+      );
+    }
     return <ResultDisplay items={items} />;
   };
   
@@ -48,22 +57,36 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
 
   // Create wrapper functions to handle passing the stored results to the handlers
   const handleAddJobs = () => {
-    if (storedAIResult?.jobs) {
+    if (storedAIResult?.jobs && storedAIResult.jobs.length > 0) {
       onAddJobs(storedAIResult.jobs);
     }
   };
 
   const handleAddPains = () => {
-    if (storedAIResult?.pains) {
+    if (storedAIResult?.pains && storedAIResult.pains.length > 0) {
       onAddPains(storedAIResult.pains);
     }
   };
 
   const handleAddGains = () => {
-    if (storedAIResult?.gains) {
+    if (storedAIResult?.gains && storedAIResult.gains.length > 0) {
       onAddGains(storedAIResult.gains);
     }
   };
+
+  // Check if we have briefing content
+  if (!briefingContent) {
+    return (
+      <Alert variant="warning" className="mb-6">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Missing Information</AlertTitle>
+        <AlertDescription>
+          A marketing briefing is required to generate USP Canvas elements. 
+          Please complete the briefing stage first.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <div className="space-y-8">

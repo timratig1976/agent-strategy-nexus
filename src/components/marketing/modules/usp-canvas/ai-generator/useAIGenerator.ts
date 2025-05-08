@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { StoredAIResult } from '../types';
+import { UspCanvasService, AIServiceResponse, UspCanvasAIResult } from '@/services/ai';
 
 export const useAIGenerator = (
   strategyId: string,
@@ -18,67 +19,51 @@ export const useAIGenerator = (
     setError(null);
 
     try {
-      // Call your Supabase Edge Function or other API 
-      const response = await fetch('/api/marketing-ai', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          module: 'usp_canvas_profile',
-          action: 'generate',
-          strategyId,
-          briefingContent,
-          personaContent,
-          section: 'all'
-        }),
+      console.log('Generating USP Canvas profile with:', { 
+        strategyId, 
+        briefingContent: briefingContent.substring(0, 100) + '...',
+        personaContent: personaContent ? personaContent.substring(0, 100) + '...' : undefined
       });
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
+      
+      // Use the UspCanvasService to generate the profile
+      const response: AIServiceResponse<UspCanvasAIResult> = await UspCanvasService.generateUspCanvasProfile(
+        strategyId,
+        briefingContent,
+        'all', // Generate all sections
+        undefined, // No enhancement text
+        personaContent
+      );
+      
+      if (response.error) {
+        console.error('Error from UspCanvasService:', response.error);
+        throw new Error(response.error);
       }
 
-      const data = await response.json();
-      
-      if (data.error) {
-        throw new Error(data.error);
+      if (!response.data) {
+        throw new Error('No data returned from AI service');
       }
-
-      // Store the parsed result for use across tabs
-      let parsedData: StoredAIResult = { jobs: [], pains: [], gains: [] };
       
-      try {
-        // Try to parse the result if it's a string
-        if (data.result && typeof data.result === 'string') {
-          parsedData = JSON.parse(data.result);
-        } else if (data.result) {
-          // If it's already an object, use it directly
-          parsedData = data.result;
-        }
-        
-        // Create empty arrays for any missing sections
-        const normalizedData: StoredAIResult = {
-          jobs: Array.isArray(parsedData.jobs) ? parsedData.jobs : [],
-          pains: Array.isArray(parsedData.pains) ? parsedData.pains : [],
-          gains: Array.isArray(parsedData.gains) ? parsedData.gains : []
-        };
-        
-        // Debug information
-        const debugData = {
-          raw: data.raw,
-          parsed: normalizedData,
-          timestamp: new Date().toISOString()
-        };
-        
-        setDebugInfo(debugData);
-        
-        // Store result and notify parent component
-        if (onResultsGenerated) {
-          onResultsGenerated(normalizedData, debugData);
-        }
-      } catch (parseError) {
-        console.error("Error parsing result:", parseError);
-        throw new Error("Failed to parse AI results");
+      console.log('AI generation successful:', response.data);
+      
+      // Normalize the response data
+      const normalizedData: StoredAIResult = {
+        jobs: Array.isArray(response.data.jobs) ? response.data.jobs : [],
+        pains: Array.isArray(response.data.pains) ? response.data.pains : [],
+        gains: Array.isArray(response.data.gains) ? response.data.gains : []
+      };
+      
+      // Store debug information
+      const debugData = {
+        raw: response.debugInfo,
+        parsed: normalizedData,
+        timestamp: new Date().toISOString()
+      };
+      
+      setDebugInfo(debugData);
+      
+      // Store result and notify parent component
+      if (onResultsGenerated) {
+        onResultsGenerated(normalizedData, debugData);
       }
     } catch (err: any) {
       console.error("Error generating canvas data:", err);

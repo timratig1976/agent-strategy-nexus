@@ -2,7 +2,8 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Loader2, AlertCircle, ArrowDown } from 'lucide-react';
+import { Loader2, AlertCircle, Sparkles } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Tooltip,
   TooltipContent,
@@ -24,38 +25,58 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
   hasResults
 }) => {
   return (
-    <div className="bg-slate-50 p-6 rounded-lg">
-      <h3 className="text-lg font-medium mb-4">AI-Powered Value Proposition Canvas Generator</h3>
-      <p className="mb-6">
-        Generate customer jobs, pains, and gains automatically based on your marketing brief 
-        and persona information. Then select which elements to add to your canvas.
-      </p>
-      
-      {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      
-      <div className="flex items-center justify-center">
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-primary" />
+          AI-Powered Value Proposition Canvas Generator
+        </CardTitle>
+        <CardDescription>
+          Generate customer jobs, pains, and gains automatically based on your marketing brief 
+          and persona information.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        
+        <div className="bg-muted/20 p-4 rounded-md">
+          <h4 className="font-medium mb-2">How it works</h4>
+          <ol className="list-decimal list-inside space-y-1 text-sm">
+            <li>We analyze your marketing brief and persona information</li>
+            <li>Our AI generates customer jobs, pains, and gains</li>
+            <li>You can review and add the generated elements to your canvas</li>
+          </ol>
+        </div>
+      </CardContent>
+      <CardFooter className="flex justify-center">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button 
                 onClick={generateResult} 
                 disabled={isGenerating}
-                className="flex items-center"
+                className="flex items-center gap-2"
                 size="lg"
               >
                 {isGenerating ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Loader2 className="h-5 w-5 animate-spin" />
                     Generating Canvas Data...
+                  </>
+                ) : hasResults ? (
+                  <>
+                    <Sparkles className="h-5 w-5" />
+                    Regenerate Canvas Data
                   </>
                 ) : (
                   <>
+                    <Sparkles className="h-5 w-5" />
                     Generate Canvas Data
                   </>
                 )}
@@ -63,19 +84,15 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
             </TooltipTrigger>
             <TooltipContent>
               <p className="text-sm">
-                Analyze your marketing brief and personas to automatically generate customer profile elements
+                {hasResults 
+                  ? "Generate fresh canvas elements based on your briefing" 
+                  : "Create customer jobs, pains, and gains based on your marketing brief"}
               </p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-      </div>
-      
-      {!isGenerating && hasResults && (
-        <div className="mt-6 flex justify-center">
-          <ArrowDown className="animate-bounce h-6 w-6 text-primary" />
-        </div>
-      )}
-    </div>
+      </CardFooter>
+    </Card>
   );
 };
 

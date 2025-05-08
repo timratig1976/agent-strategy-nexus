@@ -1,16 +1,9 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { StoredAIResult } from '../types';
 import { Button } from "@/components/ui/button";
-import { Plus } from 'lucide-react';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { StoredAIResult } from '../types';
+import { Badge } from "@/components/ui/badge";
 
 interface ResultTabsProps {
   activeTab: string;
@@ -31,182 +24,81 @@ const ResultTabs: React.FC<ResultTabsProps> = ({
   handleAddGains,
   formatContent
 }) => {
+  const jobsCount = storedAIResult?.jobs?.length || 0;
+  const painsCount = storedAIResult?.pains?.length || 0;
+  const gainsCount = storedAIResult?.gains?.length || 0;
+
   return (
-    <Tabs 
-      value={activeTab} 
-      onValueChange={setActiveTab} 
-      defaultValue="jobs"
-    >
-      <TabsList className="grid w-full grid-cols-3 mb-6">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <TabsTrigger 
-                value="jobs" 
-                className={`relative ${activeTab === "jobs" ? "font-medium" : ""}`}
-              >
-                Customer Jobs
-                {storedAIResult.jobs && storedAIResult.jobs.length > 0 && (
-                  <span className="ml-2 px-1.5 py-0.5 rounded-full bg-blue-100 text-xs text-blue-800">
-                    {storedAIResult.jobs.length}
-                  </span>
-                )}
-                {activeTab === "jobs" && (
-                  <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
-                )}
-              </TabsTrigger>
-            </TooltipTrigger>
-            <TooltipContent side="top">
-              <p className="text-sm">Tasks customers are trying to complete</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+    <div className="border rounded-lg p-4">
+      <h3 className="text-lg font-semibold mb-4">AI Generated Canvas Elements</h3>
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-3 mb-4">
+          <TabsTrigger value="jobs" className="relative">
+            Customer Jobs
+            {jobsCount > 0 && (
+              <Badge className="absolute top-0 right-1 transform translate-x-1/2 -translate-y-1/2 bg-blue-500">
+                {jobsCount}
+              </Badge>
+            )}
+          </TabsTrigger>
+          
+          <TabsTrigger value="pains" className="relative">
+            Customer Pains
+            {painsCount > 0 && (
+              <Badge className="absolute top-0 right-1 transform translate-x-1/2 -translate-y-1/2 bg-red-500">
+                {painsCount}
+              </Badge>
+            )}
+          </TabsTrigger>
+          
+          <TabsTrigger value="gains" className="relative">
+            Customer Gains
+            {gainsCount > 0 && (
+              <Badge className="absolute top-0 right-1 transform translate-x-1/2 -translate-y-1/2 bg-green-500">
+                {gainsCount}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
         
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <TabsTrigger 
-                value="pains" 
-                className={`relative ${activeTab === "pains" ? "font-medium" : ""}`}
-              >
-                Customer Pains
-                {storedAIResult.pains && storedAIResult.pains.length > 0 && (
-                  <span className="ml-2 px-1.5 py-0.5 rounded-full bg-red-100 text-xs text-red-800">
-                    {storedAIResult.pains.length}
-                  </span>
-                )}
-                {activeTab === "pains" && (
-                  <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
-                )}
-              </TabsTrigger>
-            </TooltipTrigger>
-            <TooltipContent side="top">
-              <p className="text-sm">Frustrations, problems, and obstacles customers face</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <TabsContent value="jobs" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h4 className="font-medium">Jobs ({jobsCount})</h4>
+            {jobsCount > 0 && (
+              <Button size="sm" onClick={handleAddJobs}>
+                Add All Jobs to Canvas
+              </Button>
+            )}
+          </div>
+          {formatContent(storedAIResult.jobs)}
+        </TabsContent>
         
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <TabsTrigger 
-                value="gains" 
-                className={`relative ${activeTab === "gains" ? "font-medium" : ""}`}
-              >
-                Customer Gains
-                {storedAIResult.gains && storedAIResult.gains.length > 0 && (
-                  <span className="ml-2 px-1.5 py-0.5 rounded-full bg-green-100 text-xs text-green-800">
-                    {storedAIResult.gains.length}
-                  </span>
-                )}
-                {activeTab === "gains" && (
-                  <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
-                )}
-              </TabsTrigger>
-            </TooltipTrigger>
-            <TooltipContent side="top">
-              <p className="text-sm">Benefits and outcomes customers want to achieve</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </TabsList>
-      
-      <TabsContent value="jobs">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex justify-between items-center">
-              <span>Generated Customer Jobs</span>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      onClick={handleAddJobs} 
-                      disabled={!storedAIResult.jobs || storedAIResult.jobs.length === 0}
-                      className="flex items-center"
-                    >
-                      <Plus className="h-4 w-4 mr-1" /> Add All to Canvas
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    <p className="text-sm">Add all generated jobs to your customer profile</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </CardTitle>
-            <CardDescription>
-              The tasks your customers are trying to complete or problems they're trying to solve.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {formatContent(storedAIResult.jobs)}
-          </CardContent>
-        </Card>
-      </TabsContent>
-      
-      <TabsContent value="pains">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex justify-between items-center">
-              <span>Generated Customer Pains</span>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      onClick={handleAddPains} 
-                      disabled={!storedAIResult.pains || storedAIResult.pains.length === 0}
-                      className="flex items-center"
-                    >
-                      <Plus className="h-4 w-4 mr-1" /> Add All to Canvas
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    <p className="text-sm">Add all generated pains to your customer profile</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </CardTitle>
-            <CardDescription>
-              The negative experiences, risks, and obstacles customers face.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {formatContent(storedAIResult.pains)}
-          </CardContent>
-        </Card>
-      </TabsContent>
-      
-      <TabsContent value="gains">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex justify-between items-center">
-              <span>Generated Customer Gains</span>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      onClick={handleAddGains} 
-                      disabled={!storedAIResult.gains || storedAIResult.gains.length === 0}
-                      className="flex items-center"
-                    >
-                      <Plus className="h-4 w-4 mr-1" /> Add All to Canvas
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    <p className="text-sm">Add all generated gains to your customer profile</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </CardTitle>
-            <CardDescription>
-              The benefits and positive outcomes your customers expect or would be surprised by.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {formatContent(storedAIResult.gains)}
-          </CardContent>
-        </Card>
-      </TabsContent>
-    </Tabs>
+        <TabsContent value="pains" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h4 className="font-medium">Pains ({painsCount})</h4>
+            {painsCount > 0 && (
+              <Button size="sm" onClick={handleAddPains}>
+                Add All Pains to Canvas
+              </Button>
+            )}
+          </div>
+          {formatContent(storedAIResult.pains)}
+        </TabsContent>
+        
+        <TabsContent value="gains" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h4 className="font-medium">Gains ({gainsCount})</h4>
+            {gainsCount > 0 && (
+              <Button size="sm" onClick={handleAddGains}>
+                Add All Gains to Canvas
+              </Button>
+            )}
+          </div>
+          {formatContent(storedAIResult.gains)}
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 
