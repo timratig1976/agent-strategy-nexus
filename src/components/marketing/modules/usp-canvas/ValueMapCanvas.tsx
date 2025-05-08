@@ -5,6 +5,14 @@ import ProductServices from "./ProductServices";
 import PainRelievers from "./PainRelievers";
 import GainCreators from "./GainCreators";
 import { UspCanvas } from "./types";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { HelpCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ValueMapCanvasProps {
   canvas: UspCanvas;
@@ -35,11 +43,27 @@ const ValueMapCanvas = ({
 }: ValueMapCanvasProps) => {
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">Value Map</h2>
-      <p className="text-muted-foreground mb-6">
-        Define your value proposition by describing how your products and services address 
-        customer jobs, relieve pains, and create gains that matter to your customers.
-      </p>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Value Map</h2>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <HelpCircle className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-sm">
+              <div className="space-y-2">
+                <p className="font-medium">What is the Value Map?</p>
+                <p className="text-sm">
+                  Define your value proposition by describing how your products and services address 
+                  customer jobs, relieve pains, and create gains that matter to your customers.
+                </p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
 
       <Tabs defaultValue="products" className="mt-6">
         <TabsList className="grid w-full grid-cols-3">

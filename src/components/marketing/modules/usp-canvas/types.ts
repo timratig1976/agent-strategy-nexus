@@ -67,3 +67,11 @@ export interface StoredAIResult {
   gains?: CustomerGain[];
   debugInfo?: any;
 }
+
+// For canvas history tracking
+export interface CanvasHistoryEntry {
+  timestamp: number;
+  data: UspCanvas;
+  isFinal?: boolean;
+  version?: number;
+}

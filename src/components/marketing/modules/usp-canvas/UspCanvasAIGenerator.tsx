@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -227,6 +226,159 @@ export const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
     (aiResult.pains && aiResult.pains.length > 0) ||
     (aiResult.gains && aiResult.gains.length > 0)
   );
+
+const parseAIResponse = (content) => {
+  try {
+    // If it's already a parsed object, just return it
+    if (typeof content === 'object') return content;
+    
+    // Try parsing as JSON
+    try {
+      const parsed = JSON.parse(content);
+      return parsed;
+    } catch (e) {
+      // If not valid JSON, use regex parsing
+      console.log("Not valid JSON, using regex parsing", e);
+    }
+    
+    const result = {
+      jobs: [],
+      pains: [],
+      gains: []
+    };
+    
+    // Helper function to extract priority/severity/importance
+    const extractLevel = (line, defaultLevel = 'medium') => {
+      const levelMatches = line.match(/\((Priority|Severity|Importance):\s*(high|medium|low)\)/i);
+      if (levelMatches) {
+        return levelMatches[2].toLowerCase();
+      }
+      
+      // Try alternative formats
+      if (line.includes('high priority') || line.includes('high severity') || 
+          line.includes('high importance') || line.includes('(High)')) {
+        return 'high';
+      } else if (line.includes('medium priority') || line.includes('medium severity') || 
+                line.includes('medium importance') || line.includes('(Medium)')) {
+        return 'medium';
+      } else if (line.includes('low priority') || line.includes('low severity') || 
+                line.includes('low importance') || line.includes('(Low)')) {
+        return 'low';
+      }
+      
+      return defaultLevel;
+    };
+    
+    // Helper function to clean up content text
+    const cleanContent = (line) => {
+      // Remove numbering, bullet points, and level indicators
+      let cleaned = line.replace(/^\d+\.\s*/, '') // Remove numbering like "1. "
+                          .replace(/^[-*]\s*/, '') // Remove bullet points
+                          .replace(/\(Priority:.*?\)/i, '') // Remove priority indicators
+                          .replace(/\(Severity:.*?\)/i, '') // Remove severity indicators
+                          .replace(/\(Importance:.*?\)/i, '') // Remove importance indicators
+                          .replace(/\((High|Medium|Low)\)/i, '') // Remove abbreviated indicators
+                          .replace(/\s{2,}/g, ' ') // Replace multiple spaces with single space
+                          .trim();
+                          
+      // Further cleanup for markdown formatting
+      cleaned = cleaned.replace(/^\*\*|\*\*$/g, ''); // Remove leading/trailing asterisks
+      cleaned = cleaned.replace(/^"|"$/g, ''); // Remove quotes
+      
+      return cleaned;
+    };
+    
+    // Process content based on section patterns
+    const sections = content.split(/####|###|##/);
+    
+    // Process each section
+    sections.forEach(section => {
+      if (!section.trim()) return;
+      
+      const lowerSection = section.toLowerCase();
+      
+      // Process jobs
+      if (lowerSection.includes('customer jobs') || lowerSection.includes('jobs:')) {
+        const lines = section.split('\n').filter(line => 
+          line.trim() && 
+          !line.toLowerCase().includes('customer jobs') && 
+          !line.toLowerCase().includes('jobs:') &&
+          !line.match(/^#+\s/)
+        );
+        
+        lines.forEach(line => {
+          if (line.trim()) {
+            const priority = extractLevel(line);
+            const content = cleanContent(line);
+            
+            // Skip headers and short content
+            if (content.length > 3 && !content.startsWith('*') && !content.endsWith(':')) {
+              result.jobs.push({ 
+                content, 
+                priority
+              });
+            }
+          }
+        });
+      }
+      
+      // Process pains
+      if (lowerSection.includes('customer pains') || lowerSection.includes('pains:')) {
+        const lines = section.split('\n').filter(line => 
+          line.trim() && 
+          !line.toLowerCase().includes('customer pains') && 
+          !line.toLowerCase().includes('pains:') &&
+          !line.match(/^#+\s/)
+        );
+        
+        lines.forEach(line => {
+          if (line.trim()) {
+            const severity = extractLevel(line);
+            const content = cleanContent(line);
+            
+            // Skip headers and short content
+            if (content.length > 3 && !content.startsWith('*') && !content.endsWith(':')) {
+              result.pains.push({ 
+                content, 
+                severity
+              });
+            }
+          }
+        });
+      }
+      
+      // Process gains
+      if (lowerSection.includes('customer gains') || lowerSection.includes('gains:')) {
+        const lines = section.split('\n').filter(line => 
+          line.trim() && 
+          !line.toLowerCase().includes('customer gains') && 
+          !line.toLowerCase().includes('gains:') &&
+          !line.match(/^#+\s/)
+        );
+        
+        lines.forEach(line => {
+          if (line.trim()) {
+            const importance = extractLevel(line);
+            const content = cleanContent(line);
+            
+            // Skip headers and short content
+            if (content.length > 3 && !content.startsWith('*') && !content.endsWith(':')) {
+              result.gains.push({ 
+                content, 
+                importance
+              });
+            }
+          }
+        });
+      }
+    });
+    
+    return result;
+  } catch (error) {
+    console.error('Error parsing AI response:', error);
+    return { jobs: [], pains: [], gains: [] };
+  }
+};
 
   return (
     <div className="space-y-4">

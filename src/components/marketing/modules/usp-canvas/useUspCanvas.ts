@@ -1,7 +1,8 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { UspCanvas, CustomerJob, CustomerPain, CustomerGain } from './types';
 import { useCustomerProfile, useValueMap, useCanvasManager } from './hooks';
+import { toast } from 'sonner';
 
 const initialCanvas: UspCanvas = {
   customerJobs: [],
@@ -12,8 +13,9 @@ const initialCanvas: UspCanvas = {
   gainCreators: []
 };
 
-export const useUspCanvas = () => {
+export const useUspCanvas = (strategyId?: string) => {
   const [canvas, setCanvas] = useState<UspCanvas>(initialCanvas);
+  const [canvasSaveHistory, setCanvasSaveHistory] = useState<Array<{timestamp: number, data: UspCanvas}>>([]);
   
   const customerProfile = useCustomerProfile(
     canvas.customerJobs,
@@ -27,7 +29,25 @@ export const useUspCanvas = () => {
     canvas.gainCreators
   );
   
-  const canvasManager = useCanvasManager(initialCanvas);
+  const canvasManager = useCanvasManager(initialCanvas, strategyId);
+  
+  // Load saved canvas data when the component mounts
+  useEffect(() => {
+    if (strategyId) {
+      // Load canvas data from storage/API
+      // This would be implemented with Supabase later
+      const savedData = localStorage.getItem(`usp_canvas_${strategyId}`);
+      if (savedData) {
+        try {
+          const parsedData = JSON.parse(savedData);
+          setCanvas(parsedData.canvas || initialCanvas);
+          setCanvasSaveHistory(parsedData.history || []);
+        } catch (error) {
+          console.error("Error loading saved canvas data:", error);
+        }
+      }
+    }
+  }, [strategyId]);
   
   // Synchronize the state from sub-hooks with the main canvas state
   const updatedCanvas: UspCanvas = {
@@ -96,8 +116,82 @@ export const useUspCanvas = () => {
 
   // Reset canvas functionality
   const resetCanvas = () => {
-    setCanvas(initialCanvas);
-    canvasManager.resetCanvas();
+    if (window.confirm("Are you sure you want to reset the canvas? All your work will be lost.")) {
+      setCanvas(initialCanvas);
+      canvasManager.resetCanvas();
+      toast.success("Canvas reset successfully");
+    }
+  };
+  
+  // Save progress to localStorage or database
+  const saveProgress = (key: string, data: any) => {
+    if (!strategyId) return;
+    
+    try {
+      const storageKey = `usp_canvas_${strategyId}_${key}`;
+      localStorage.setItem(storageKey, JSON.stringify({
+        data,
+        timestamp: Date.now()
+      }));
+    } catch (error) {
+      console.error(`Error saving ${key}:`, error);
+    }
+  };
+  
+  // Save final version
+  const saveFinalVersion = () => {
+    if (!strategyId) return;
+    
+    try {
+      // Add current state to history
+      const newHistory = [...canvasSaveHistory, {
+        timestamp: Date.now(),
+        data: updatedCanvas
+      }];
+      
+      // Save to localStorage
+      localStorage.setItem(`usp_canvas_${strategyId}`, JSON.stringify({
+        canvas: updatedCanvas,
+        history: newHistory,
+        isFinal: true
+      }));
+      
+      setCanvasSaveHistory(newHistory);
+      
+      // In the future, save to Supabase as well
+    } catch (error) {
+      console.error("Error saving final version:", error);
+      toast.error("Failed to save final version");
+    }
+  };
+  
+  // Save canvas
+  const saveCanvas = () => {
+    if (!strategyId) return;
+    
+    try {
+      // Add current state to history
+      const newHistory = [...canvasSaveHistory, {
+        timestamp: Date.now(),
+        data: updatedCanvas
+      }];
+      
+      // Save to localStorage
+      localStorage.setItem(`usp_canvas_${strategyId}`, JSON.stringify({
+        canvas: updatedCanvas,
+        history: newHistory
+      }));
+      
+      setCanvasSaveHistory(newHistory);
+      toast.success("Canvas saved successfully");
+      
+      // In the future, save to Supabase as well
+    } catch (error) {
+      console.error("Error saving canvas:", error);
+      toast.error("Failed to save canvas");
+    }
+    
+    return true;
   };
   
   return {
@@ -111,6 +205,10 @@ export const useUspCanvas = () => {
     reorderCustomerJobs,
     reorderCustomerPains,
     reorderCustomerGains,
-    resetCanvas
+    resetCanvas,
+    saveProgress,
+    saveCanvas,
+    canvasSaveHistory,
+    saveFinalVersion
   };
 };

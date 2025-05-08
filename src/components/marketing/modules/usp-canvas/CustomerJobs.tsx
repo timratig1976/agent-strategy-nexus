@@ -1,12 +1,18 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { CustomerJob } from './types';
-import { Trash2, Plus, ArrowUpDown, CheckSquare, Square, GripVertical, User, Bot } from "lucide-react";
+import { Trash2, Plus, ArrowUpDown, CheckSquare, Square, GripVertical, User, Bot, HelpCircle, Filter } from "lucide-react";
 
 interface CustomerJobsProps {
   jobs: CustomerJob[];
@@ -24,12 +30,26 @@ const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete, onReorder, formPosition
   const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [draggedItem, setDraggedItem] = useState<null | string>(null);
+  const [aiOnlyFilter, setAiOnlyFilter] = useState<boolean>(false);
+  const newJobInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Maintain focus on the input field when state changes
+    if (formPosition === 'top' && newJobInputRef.current) {
+      newJobInputRef.current.focus();
+    }
+  }, [formPosition]);
 
   const handleAddJob = () => {
     if (newJobContent.trim()) {
       onAdd(newJobContent.trim(), newJobPriority, false);
       setNewJobContent('');
-      setNewJobPriority('medium');
+      // Maintain focus on the input
+      setTimeout(() => {
+        if (newJobInputRef.current) {
+          newJobInputRef.current.focus();
+        }
+      }, 0);
     }
   };
 
@@ -47,6 +67,11 @@ const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete, onReorder, formPosition
     setIsSelectMode(false);
   };
 
+  const handleDeleteAIGenerated = () => {
+    const aiGeneratedJobs = jobs.filter(job => job.isAIGenerated).map(job => job.id);
+    aiGeneratedJobs.forEach(id => onDelete(id));
+  };
+
   const toggleSelectMode = () => {
     setIsSelectMode(!isSelectMode);
     setSelectedJobs([]);
@@ -60,14 +85,17 @@ const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete, onReorder, formPosition
     }
   };
 
-  const sortedJobs = [...jobs].sort((a, b) => {
-    if (sortOrder === 'default') return 0;
-    const priorityA = priorityValue(a.priority);
-    const priorityB = priorityValue(b.priority);
-    return sortOrder === 'priority-high' 
-      ? priorityB - priorityA 
-      : priorityA - priorityB;
-  });
+  let sortedJobs = [...jobs];
+  if (sortOrder === 'priority-high') {
+    sortedJobs = sortedJobs.sort((a, b) => priorityValue(b.priority) - priorityValue(a.priority));
+  } else if (sortOrder === 'priority-low') {
+    sortedJobs = sortedJobs.sort((a, b) => priorityValue(a.priority) - priorityValue(b.priority));
+  }
+
+  // Apply AI filter if selected
+  if (aiOnlyFilter) {
+    sortedJobs = sortedJobs.filter(job => job.isAIGenerated);
+  }
 
   const handleSort = () => {
     if (sortOrder === 'default') setSortOrder('priority-high');
@@ -103,92 +131,132 @@ const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete, onReorder, formPosition
     setDraggedItem(null);
   };
 
-  // Form to add new jobs
+  // Compact form to add new jobs
   const AddJobForm = () => (
-    <div className="p-4 border rounded-md space-y-4 mb-4">
-      <div>
-        <Input 
-          value={newJobContent}
-          onChange={(e) => setNewJobContent(e.target.value)}
-          placeholder="Add a new customer job..."
-        />
-      </div>
-      
-      <div>
-        <Label className="text-sm font-medium mb-2">Priority Level:</Label>
-        <RadioGroup 
-          value={newJobPriority} 
-          onValueChange={(value) => setNewJobPriority(value as 'low' | 'medium' | 'high')}
-          className="flex space-x-4 mt-1"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="low" id="new-job-low" />
-            <Label htmlFor="new-job-low" className="text-sm">Low</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="medium" id="new-job-medium" />
-            <Label htmlFor="new-job-medium" className="text-sm">Medium</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="high" id="new-job-high" />
-            <Label htmlFor="new-job-high" className="text-sm">High</Label>
-          </div>
-        </RadioGroup>
-      </div>
-      
-      <div className="text-right">
+    <div className="p-4 border rounded-md mb-4">
+      <div className="flex flex-wrap items-end gap-2">
+        <div className="flex-1 min-w-[200px]">
+          <Input 
+            ref={newJobInputRef}
+            value={newJobContent}
+            onChange={(e) => setNewJobContent(e.target.value)}
+            placeholder="Add a new customer job..."
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && newJobContent.trim()) {
+                handleAddJob();
+                e.preventDefault();
+              }
+            }}
+          />
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <RadioGroup 
+            value={newJobPriority} 
+            onValueChange={(value) => setNewJobPriority(value as 'low' | 'medium' | 'high')}
+            className="flex space-x-2"
+          >
+            <div className="flex items-center space-x-1">
+              <RadioGroupItem value="low" id="new-job-low" />
+              <Label htmlFor="new-job-low" className="text-xs">Low</Label>
+            </div>
+            <div className="flex items-center space-x-1">
+              <RadioGroupItem value="medium" id="new-job-medium" />
+              <Label htmlFor="new-job-medium" className="text-xs">Medium</Label>
+            </div>
+            <div className="flex items-center space-x-1">
+              <RadioGroupItem value="high" id="new-job-high" />
+              <Label htmlFor="new-job-high" className="text-xs">High</Label>
+            </div>
+          </RadioGroup>
+        </div>
+        
         <Button 
           onClick={handleAddJob}
           disabled={!newJobContent.trim()}
+          size="sm"
         >
-          <Plus className="h-4 w-4 mr-1" /> Add Job
+          <Plus className="h-4 w-4 mr-1" /> Add
         </Button>
       </div>
     </div>
   );
 
+  const aiGeneratedCount = jobs.filter(job => job.isAIGenerated).length;
+
   return (
     <div className="space-y-6">
-      <div className="bg-blue-50 p-4 rounded-lg">
-        <h3 className="text-base font-medium text-blue-800 mb-2">What are Customer Jobs?</h3>
-        <p className="text-sm text-blue-700">
-          Customer jobs describe what your customers are trying to get done in their work and lives. 
-          These could be tasks they're trying to complete, problems they're trying to solve, or needs they're trying to satisfy.
-        </p>
+      <div className="flex items-center justify-between">
+        <h3 className="text-base font-medium">Customer Jobs</h3>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <HelpCircle className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-sm">
+              <div className="space-y-2">
+                <p className="font-medium">What are Customer Jobs?</p>
+                <p className="text-sm">
+                  Customer jobs describe what your customers are trying to get done in their work and lives. 
+                  These could be tasks they're trying to complete, problems they're trying to solve, or needs they're trying to satisfy.
+                </p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       {formPosition === 'top' && <AddJobForm />}
 
-      {sortedJobs.length > 0 && (
-        <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
           <Button 
             variant="outline" 
             size="sm" 
             onClick={handleSort}
-            className="flex items-center space-x-1 text-sm"
+            className="flex items-center gap-1 text-xs"
           >
             <ArrowUpDown className="h-3 w-3" />
-            <span>
-              {sortOrder === 'default' ? 'Default Order' : 
-               sortOrder === 'priority-high' ? 'Highest Priority First' : 
-               'Lowest Priority First'}
-            </span>
+            {sortOrder === 'default' ? 'Order' : 
+             sortOrder === 'priority-high' ? 'High→Low' : 'Low→High'}
           </Button>
           
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setAiOnlyFilter(!aiOnlyFilter)}
+            className={`flex items-center gap-1 text-xs ${aiOnlyFilter ? 'bg-primary/10' : ''}`}
+          >
+            <Filter className="h-3 w-3" />
+            AI Only
+          </Button>
+          
+          {aiGeneratedCount > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDeleteAIGenerated}
+              className="flex items-center gap-1 text-xs text-red-500"
+            >
+              <Trash2 className="h-3 w-3" />
+              Clear AI ({aiGeneratedCount})
+            </Button>
+          )}
+        </div>
+        
+        {jobs.length > 0 && (
           <Button
             variant="ghost"
             size="sm"
             onClick={toggleSelectMode}
-            className="text-sm"
+            className="text-xs"
           >
-            {isSelectMode ? (
-              <>Cancel Selection</>
-            ) : (
-              <>Select Multiple</>
-            )}
+            {isSelectMode ? 'Cancel' : 'Select'}
           </Button>
-        </div>
-      )}
+        )}
+      </div>
 
       {isSelectMode && selectedJobs.length > 0 && (
         <div className="flex items-center justify-between p-2 bg-slate-100 rounded-md">
@@ -197,82 +265,94 @@ const CustomerJobs = ({ jobs, onAdd, onUpdate, onDelete, onReorder, formPosition
             variant="destructive"
             size="sm"
             onClick={handleDeleteSelected}
+            className="text-xs"
           >
             Delete Selected
           </Button>
         </div>
       )}
 
-      <div className="space-y-2">
-        {sortedJobs.map((job) => (
-          <div 
-            key={job.id} 
-            className={`p-3 bg-white border rounded-md ${
-              isSelectMode && selectedJobs.includes(job.id) ? 'border-primary bg-primary/5' : ''
-            } ${draggedItem === job.id ? 'opacity-50' : 'opacity-100'}`}
-            draggable={onReorder !== undefined}
-            onDragStart={(e) => handleDragStart(e, job.id)}
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, job.id)}
-          >
-            <div className="flex items-center space-x-2">
-              {onReorder && (
-                <div className="cursor-grab">
-                  <GripVertical className="h-5 w-5 text-gray-400" />
+      {sortedJobs.length === 0 ? (
+        <div className="text-center p-4 border border-dashed rounded-md">
+          <p className="text-muted-foreground">
+            {aiOnlyFilter 
+              ? "No AI-generated jobs found. Generate some using the AI Generator tab." 
+              : "No jobs added yet. Add your first customer job above."
+            }
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {sortedJobs.map((job) => (
+            <div 
+              key={job.id} 
+              className={`p-3 bg-white border rounded-md ${
+                isSelectMode && selectedJobs.includes(job.id) ? 'border-primary bg-primary/5' : ''
+              } ${draggedItem === job.id ? 'opacity-50' : 'opacity-100'}`}
+              draggable={onReorder !== undefined}
+              onDragStart={(e) => handleDragStart(e, job.id)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, job.id)}
+            >
+              <div className="flex items-center space-x-2">
+                {onReorder && (
+                  <div className="cursor-grab">
+                    <GripVertical className="h-5 w-5 text-gray-400" />
+                  </div>
+                )}
+                
+                {isSelectMode ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="p-0 h-6 w-6"
+                    onClick={() => toggleSelectJob(job.id)}
+                  >
+                    {selectedJobs.includes(job.id) ? (
+                      <CheckSquare className="h-5 w-5 text-primary" />
+                    ) : (
+                      <Square className="h-5 w-5" />
+                    )}
+                  </Button>
+                ) : null}
+                
+                <Badge 
+                  variant={job.priority === 'high' ? 'destructive' : 
+                          job.priority === 'medium' ? 'warning' : 'success'}
+                  className="w-16 flex justify-center"
+                >
+                  {job.priority.charAt(0).toUpperCase() + job.priority.slice(1)}
+                </Badge>
+                
+                <div className="flex-1">
+                  <Input 
+                    value={job.content}
+                    onChange={(e) => onUpdate(job.id, e.target.value, job.priority)}
+                    placeholder="What job is your customer trying to get done?"
+                  />
                 </div>
-              )}
-              
-              {isSelectMode ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="p-0 h-6 w-6"
-                  onClick={() => toggleSelectJob(job.id)}
-                >
-                  {selectedJobs.includes(job.id) ? (
-                    <CheckSquare className="h-5 w-5 text-primary" />
-                  ) : (
-                    <Square className="h-5 w-5" />
-                  )}
-                </Button>
-              ) : null}
-              
-              <Badge 
-                variant={job.priority === 'high' ? 'destructive' : 
-                        job.priority === 'medium' ? 'warning' : 'success'}
-                className="w-16 flex justify-center"
-              >
-                {job.priority.charAt(0).toUpperCase() + job.priority.slice(1)}
-              </Badge>
-              
-              <div className="flex-1">
-                <Input 
-                  value={job.content}
-                  onChange={(e) => onUpdate(job.id, e.target.value, job.priority)}
-                  placeholder="What is your customer trying to accomplish?"
-                />
+                
+                {job.isAIGenerated ? (
+                  <Bot className="h-5 w-5 text-blue-500 mr-1" />
+                ) : (
+                  <User className="h-5 w-5 text-gray-500 mr-1" />
+                )}
+                
+                {!isSelectMode && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => onDelete(job.id)}
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50 h-9 w-9 p-0"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
-              
-              {job.isAIGenerated ? (
-                <Bot className="h-5 w-5 text-blue-500 mr-1" />
-              ) : (
-                <User className="h-5 w-5 text-gray-500 mr-1" />
-              )}
-              
-              {!isSelectMode && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => onDelete(job.id)}
-                  className="text-red-500 hover:text-red-700 hover:bg-red-50 h-9 w-9 p-0"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {formPosition === 'bottom' && <AddJobForm />}
     </div>
