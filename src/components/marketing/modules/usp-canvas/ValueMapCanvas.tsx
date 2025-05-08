@@ -74,7 +74,7 @@ const ValueMapCanvas = ({
         </TooltipProvider>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="services" className="mt-6">
+      <Tabs defaultValue="services" className="mt-6">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="services">
             Products & Services
