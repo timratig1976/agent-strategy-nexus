@@ -48,14 +48,14 @@ export class UspCanvasService {
         return {
           error: error.message || 'Failed to generate USP Canvas profile',
           debugInfo: {
-            error,
             requestData: { 
               strategyId,
               briefingContentLength: briefingContent?.length || 0,
               personaContentLength: personaContent?.length || 0,
               section,
               enhancementText 
-            }
+            },
+            responseData: { errorDetails: error }
           }
         };
       }
@@ -65,14 +65,14 @@ export class UspCanvasService {
         return {
           error: 'Invalid response from AI service',
           debugInfo: {
-            response: data,
             requestData: { 
               strategyId,
               briefingContentLength: briefingContent?.length || 0,
               personaContentLength: personaContent?.length || 0,
               section,
               enhancementText 
-            }
+            },
+            responseData: data
           }
         };
       }
@@ -89,8 +89,11 @@ export class UspCanvasService {
             section,
             enhancementText 
           },
-          responseData: data,
-          timestamp: new Date().toISOString()
+          responseData: {
+            result: data,
+            timeTaken: `${endTime - startTime}ms`,
+            timestamp: new Date().toISOString()
+          }
         }
       };
     } catch (error) {
@@ -107,8 +110,7 @@ export class UspCanvasService {
             section,
             enhancementText 
           },
-          error,
-          timestamp: new Date().toISOString()
+          responseData: { errorMessage: String(error) }
         }
       };
     }
