@@ -47,6 +47,11 @@ const CustomerProfileCanvas = ({
   reorderCustomerGains,
   formPosition = 'bottom'
 }: CustomerProfileCanvasProps) => {
+  // Calculate counts for each section
+  const jobsCount = canvas.customerJobs.length;
+  const painsCount = canvas.customerPains.length;
+  const gainsCount = canvas.customerGains.length;
+  
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
@@ -73,9 +78,30 @@ const CustomerProfileCanvas = ({
 
       <Tabs defaultValue="jobs" className="mt-6">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="jobs">Jobs</TabsTrigger>
-          <TabsTrigger value="pains">Pains</TabsTrigger>
-          <TabsTrigger value="gains">Gains</TabsTrigger>
+          <TabsTrigger value="jobs">
+            Jobs
+            {jobsCount > 0 && (
+              <span className="ml-2 px-1.5 py-0.5 rounded-full bg-blue-100 text-xs text-blue-800">
+                {jobsCount}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="pains">
+            Pains
+            {painsCount > 0 && (
+              <span className="ml-2 px-1.5 py-0.5 rounded-full bg-red-100 text-xs text-red-800">
+                {painsCount}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="gains">
+            Gains
+            {gainsCount > 0 && (
+              <span className="ml-2 px-1.5 py-0.5 rounded-full bg-green-100 text-xs text-green-800">
+                {gainsCount}
+              </span>
+            )}
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="jobs" className="mt-4 p-4 bg-slate-50 rounded-md">

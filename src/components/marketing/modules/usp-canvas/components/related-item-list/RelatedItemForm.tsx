@@ -78,62 +78,68 @@ const RelatedItemForm = ({
   };
 
   return (
-    <div className="p-4 border rounded-md space-y-4 mb-4">
-      <div className="flex items-center gap-2">
-        <div className="flex-1 min-w-[200px]">
-          <Input 
-            ref={inputRef}
-            value={newItemContent}
-            onChange={(e) => setNewItemContent(e.target.value)}
-            placeholder={`Add a new ${customerItemType}...`}
-            className="w-full"
-            onKeyDown={handleKeyDown}
-            autoFocus
-          />
-        </div>
-        
-        <Button 
-          onClick={handleSubmit}
-          disabled={!newItemContent.trim()}
-          size="sm"
-        >
-          <Plus className="h-4 w-4 mr-1" /> Add
-        </Button>
-      </div>
-      
-      {customerItems.length > 0 && (
-        <div>
-          <Label className="text-sm font-medium mb-2 block">Related Customer {customerItemType}s:</Label>
-          <div className="space-y-2">
-            {customerItems.map((customerItem) => (
-              <div key={customerItem.id} className="flex items-center space-x-2">
-                <Checkbox 
-                  id={`new-item-${customerItem.id}`} 
-                  checked={newItemRelatedIds.includes(customerItem.id)}
-                  onCheckedChange={() => toggleItemSelection(customerItem.id)}
-                />
-                <Label 
-                  htmlFor={`new-item-${customerItem.id}`}
-                  className="text-sm flex-1"
-                >
-                  {customerItem.content}
-                  {getRating(customerItem) === 'high' && (
-                    <span className={`ml-2 text-xs px-1.5 py-0.5 rounded-full ${getBgColorClass(customerItemRatingLabel)}`}>
-                      High {customerItemRatingLabel.charAt(0).toUpperCase() + customerItemRatingLabel.slice(1)}
-                    </span>
-                  )}
-                </Label>
-              </div>
-            ))}
+    <div className="p-4 border rounded-md mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <Input 
+                ref={inputRef}
+                value={newItemContent}
+                onChange={(e) => setNewItemContent(e.target.value)}
+                placeholder={`Add a new ${customerItemType}...`}
+                className="w-full"
+                onKeyDown={handleKeyDown}
+                autoFocus
+              />
+            </div>
+            
+            <Button 
+              onClick={handleSubmit}
+              disabled={!newItemContent.trim()}
+              size="sm"
+            >
+              <Plus className="h-4 w-4 mr-1" /> Add
+            </Button>
           </div>
         </div>
-      )}
-      
-      {customerItems.length === 0 && (
-        <p className="text-sm text-muted-foreground text-center">
-          No customer {customerItemType}s available
-        </p>
-      )}
+        
+        <div>
+          {customerItems.length > 0 ? (
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Related {customerItemType}s:</Label>
+              <div className="max-h-48 overflow-y-auto p-2 border rounded-md bg-slate-50">
+                <div className="grid grid-cols-1 gap-1">
+                  {customerItems.map((customerItem) => (
+                    <div key={customerItem.id} className="flex items-center space-x-2 py-1">
+                      <Checkbox 
+                        id={`new-item-${customerItem.id}`} 
+                        checked={newItemRelatedIds.includes(customerItem.id)}
+                        onCheckedChange={() => toggleItemSelection(customerItem.id)}
+                      />
+                      <Label 
+                        htmlFor={`new-item-${customerItem.id}`}
+                        className="text-sm flex-1 cursor-pointer"
+                      >
+                        <span className="line-clamp-1">{customerItem.content}</span>
+                        {getRating(customerItem) === 'high' && (
+                          <span className={`ml-1 text-xs px-1 py-0.5 rounded-full inline-flex items-center ${getBgColorClass(customerItemRatingLabel)}`}>
+                            High
+                          </span>
+                        )}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center mt-2">
+              No customer {customerItemType}s available
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
