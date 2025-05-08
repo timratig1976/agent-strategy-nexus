@@ -233,4 +233,3 @@ export const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
 };
 
 export default AIPromptSettings;
-

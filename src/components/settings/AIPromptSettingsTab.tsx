@@ -1,7 +1,8 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { AIPromptSettings } from "@/components/settings";
 import { OutputLanguage } from "@/services/ai/types";
+import { Badge } from "@/components/ui/badge";
 
 interface AIPromptSettingsTabProps {
   language: OutputLanguage;
@@ -68,6 +69,15 @@ export const AIPromptSettingsTab: React.FC<AIPromptSettingsTabProps> = ({
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-semibold">
+          {language === 'english' ? 'AI Prompt Settings' : 'KI-Prompt Einstellungen'}
+        </h2>
+        <Badge variant={language === 'english' ? 'default' : 'secondary'}>
+          {language === 'english' ? 'English Mode' : 'Deutscher Modus'}
+        </Badge>
+      </div>
+      
       <AIPromptSettings
         module="briefing"
         title={moduleLabels.briefing.title[language]}
@@ -102,4 +112,3 @@ export const AIPromptSettingsTab: React.FC<AIPromptSettingsTabProps> = ({
 };
 
 export default AIPromptSettingsTab;
-
