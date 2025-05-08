@@ -10,12 +10,24 @@ export const usePromptData = (module: string, language: OutputLanguage) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Make sure we have a valid module
+  const safeModule = module || '';
+  
+  // Make sure we have a valid language
+  const safeLanguage: OutputLanguage = language === 'deutsch' ? 'deutsch' : 'english';
+
   // Get the module name with language suffix if needed
   const getModuleWithLanguage = () => {
-    return language === 'deutsch' ? `${module}_de` : module;
+    return safeLanguage === 'deutsch' ? `${safeModule}_de` : safeModule;
   };
 
   const fetchPromptData = async () => {
+    if (!safeModule) {
+      console.warn("No module specified, skipping fetch");
+      setIsLoading(false);
+      return;
+    }
+    
     setIsLoading(true);
     try {
       const moduleWithLanguage = getModuleWithLanguage();
@@ -29,7 +41,7 @@ export const usePromptData = (module: string, language: OutputLanguage) => {
 
       if (error) {
         console.error("Error fetching prompt data:", error);
-        toast.error(language === 'english' 
+        toast.error(safeLanguage === 'english' 
           ? "Failed to load prompt data" 
           : "Fehler beim Laden der Prompt-Daten");
       } else if (data) {
@@ -37,7 +49,7 @@ export const usePromptData = (module: string, language: OutputLanguage) => {
         setUserPrompt(data.user_prompt || "");
       } else {
         // If no data found for German version, notify the user
-        if (language === 'deutsch') {
+        if (safeLanguage === 'deutsch') {
           toast.info("Kein deutscher Prompt gefunden. Erstelle einen neuen.");
           setSystemPrompt("");
           setUserPrompt("");
@@ -45,7 +57,7 @@ export const usePromptData = (module: string, language: OutputLanguage) => {
       }
     } catch (error) {
       console.error("Error:", error);
-      toast.error(language === 'english' 
+      toast.error(safeLanguage === 'english' 
         ? "Failed to load prompt data" 
         : "Fehler beim Laden der Prompt-Daten");
     } finally {
@@ -55,13 +67,19 @@ export const usePromptData = (module: string, language: OutputLanguage) => {
 
   const handleSave = async () => {
     if (!systemPrompt.trim() || !userPrompt.trim()) {
-      toast.error(language === 'english' 
+      toast.error(safeLanguage === 'english' 
         ? "Both system and user prompts are required" 
         : "Sowohl System- als auch Benutzer-Prompts sind erforderlich");
       return;
     }
 
     const moduleWithLanguage = getModuleWithLanguage();
+    if (!moduleWithLanguage) {
+      toast.error(safeLanguage === 'english'
+        ? "Invalid module name"
+        : "Ungültiger Modulname");
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -102,12 +120,12 @@ export const usePromptData = (module: string, language: OutputLanguage) => {
 
       if (result.error) throw result.error;
       
-      toast.success(language === 'english' 
+      toast.success(safeLanguage === 'english' 
         ? "AI prompt updated successfully" 
         : "AI-Prompt erfolgreich aktualisiert");
     } catch (error) {
       console.error("Error saving prompt:", error);
-      toast.error(language === 'english' 
+      toast.error(safeLanguage === 'english' 
         ? "Failed to update AI prompt" 
         : "Fehler beim Aktualisieren des AI-Prompts");
     } finally {
@@ -117,7 +135,7 @@ export const usePromptData = (module: string, language: OutputLanguage) => {
 
   useEffect(() => {
     fetchPromptData();
-  }, [module, language]);
+  }, [safeModule, safeLanguage]);
 
   return {
     systemPrompt, 

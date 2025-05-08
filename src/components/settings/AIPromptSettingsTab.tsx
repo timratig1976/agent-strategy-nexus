@@ -18,7 +18,16 @@ export const AIPromptSettingsTab: React.FC<AIPromptSettingsTabProps> = ({
   const safeLanguage: OutputLanguage = (language === "deutsch") ? "deutsch" : "english";
   
   // Get all module keys from our configuration
-  const moduleKeys = Object.keys(moduleLabels);
+  const moduleKeys = Object.keys(moduleLabels || {});
+
+  if (!moduleKeys.length) {
+    console.warn("No modules found in configuration");
+    return (
+      <div className="p-4 text-center">
+        No modules configured for AI prompt settings
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

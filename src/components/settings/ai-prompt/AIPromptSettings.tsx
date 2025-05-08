@@ -29,7 +29,7 @@ const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
     isLoading,
     isSaving,
     handleSave
-  } = usePromptData(module, language);
+  } = usePromptData(module || '', language);
 
   // Ensure we have valid language
   const safeLanguage: OutputLanguage = language === 'deutsch' ? 'deutsch' : 'english';
@@ -63,8 +63,8 @@ const AIPromptSettings: React.FC<AIPromptSettingsProps> = ({
       ) : (
         <CardContent>
           <PromptForm
-            systemPrompt={systemPrompt}
-            userPrompt={userPrompt}
+            systemPrompt={systemPrompt || ''}
+            userPrompt={userPrompt || ''}
             setSystemPrompt={setSystemPrompt}
             setUserPrompt={setUserPrompt}
             handleSave={handleSave}

@@ -31,7 +31,7 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
   const [open, setOpen] = React.useState(false);
   
   // Make sure we have a valid value, defaulting to "english"
-  const safeValue = value && languages.some(lang => lang.value === value) 
+  const safeValue: OutputLanguage = value && languages.some(lang => lang.value === value) 
     ? value 
     : "english";
 
@@ -47,7 +47,7 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
           >
             <div className="flex items-center gap-2">
               <GlobeIcon className="h-4 w-4" />
-              {languages.find((language) => language.value === safeValue)?.label || "Select language"}
+              {languages.find((language) => language.value === safeValue)?.label || "English"}
             </div>
           </Button>
         </PopoverTrigger>

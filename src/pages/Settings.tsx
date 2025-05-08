@@ -24,6 +24,7 @@ const Settings = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  // Ensure we always have a valid language
   const [language, setLanguage] = useState<OutputLanguage>('english');
   const [companySettings, setCompanySettings] = useState<CompanySettings>({
     name: "",
@@ -71,11 +72,14 @@ const Settings = () => {
     };
 
     fetchCompanySettings();
-  }, [user, toast]);
+  }, [user, toast, language]);
 
   // Handle language change at page level and pass down to children
   const handleLanguageChange = (newLanguage: OutputLanguage) => {
-    setLanguage(newLanguage);
+    // Only set valid languages
+    if (newLanguage === 'english' || newLanguage === 'deutsch') {
+      setLanguage(newLanguage);
+    }
   };
 
   return (
@@ -116,4 +120,3 @@ const Settings = () => {
 };
 
 export default Settings;
-
