@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileUpIcon, Loader2, XIcon } from 'lucide-react';
@@ -45,7 +46,7 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({ strategyId, onUploa
           // Upload the file to Supabase Storage
           const filePath = `${strategyId}/${Date.now()}-${fileName}`;
           
-          // Upload with manual progress tracking since onUploadProgress isn't available
+          // Upload with progress tracking
           const { error: uploadError } = await supabase.storage
             .from('strategy_documents')
             .upload(filePath, file, {
@@ -54,10 +55,11 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({ strategyId, onUploa
             });
           
           if (uploadError) {
+            console.error('Upload error:', uploadError);
             throw new Error(`Error uploading ${fileName}: ${uploadError.message}`);
           }
           
-          // Manual progress update since onUploadProgress is not available
+          // Set complete progress since we don't have real-time updates
           setUploadState(prev => ({
             ...prev,
             progress: { ...prev.progress, [fileName]: 100 }

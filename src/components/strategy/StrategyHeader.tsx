@@ -1,8 +1,7 @@
 
 import React from "react";
-import { Badge } from "@/components/ui/badge";
-import CompanyLogo from "@/components/CompanyLogo";
 import { Strategy } from "@/types/marketing";
+import { Badge } from "@/components/ui/badge";
 
 interface StrategyHeaderProps {
   strategy: Strategy;
@@ -16,10 +15,9 @@ const StrategyHeader: React.FC<StrategyHeaderProps> = ({
   getStateColor
 }) => {
   return (
-    <div className="flex items-center gap-3 mb-2">
-      <CompanyLogo size="md" />
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
       <h1 className="text-3xl font-bold">{strategy.name}</h1>
-      <Badge className={getStateColor(strategy.state)}>
+      <Badge className={`${getStateColor(strategy.state)} mt-2 sm:mt-0`}>
         {getStateLabel(strategy.state)}
       </Badge>
     </div>

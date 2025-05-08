@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import NavBar from "@/components/NavBar";
 import { useParams, useNavigate } from "react-router-dom";
@@ -73,7 +72,7 @@ const StrategyDetailsWithNav = () => {
             getStateColor={getStateColor}
           />
           
-          <p className="text-gray-700">{strategy.description}</p>
+          {/* Description removed from here */}
         </div>
         
         <Tabs defaultValue="tasks">

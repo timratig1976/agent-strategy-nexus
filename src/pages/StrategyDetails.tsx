@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -151,7 +150,7 @@ const StrategyDetails = () => {
             getStateColor={getStateColor}
           />
           
-          <p className="text-gray-700">{strategy.description}</p>
+          {/* Description removed from here */}
         </div>
         
         {contentComponent}
