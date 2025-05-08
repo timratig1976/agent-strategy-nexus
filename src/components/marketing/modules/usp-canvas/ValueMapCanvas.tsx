@@ -5,15 +5,6 @@ import ProductServices from "./ProductServices";
 import PainRelievers from "./PainRelievers";
 import GainCreators from "./GainCreators";
 import { UspCanvas, ProductService, PainReliever, GainCreator } from "./types";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { HelpCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import SectionHeader from "./components/SectionHeader";
 
 interface ValueMapCanvasProps {
   canvas: UspCanvas;
@@ -51,25 +42,11 @@ const ValueMapCanvas = ({
     <div>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Value Map</h2>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <HelpCircle className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-sm">
-              <div className="space-y-2">
-                <p className="font-medium">What is the Value Map?</p>
-                <p className="text-sm">
-                  The Value Map describes how your products and services create value 
-                  for your customers by relieving their pains and creating gains. This 
-                  helps you align your offerings with what your customers truly need.
-                </p>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <SectionHeader
+          title=""
+          tooltipTitle="What is the Value Map?"
+          tooltipContent="The Value Map describes how your products and services create value for your customers by relieving their pains and creating gains. This helps you align your offerings with what your customers truly need."
+        />
       </div>
 
       <Tabs defaultValue="services" className="mt-6">

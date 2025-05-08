@@ -1,23 +1,15 @@
 
-import React, { useEffect } from 'react';
-import { 
-  RelatedItemHeader, 
-  RelatedItemForm, 
-  RelatedItemCard, 
-  RelatedCustomerItem 
-} from './related-item-list';
-import { useRelatedItems } from './related-item-list/useRelatedItems';
-
-export interface RelatedItem {
-  id: string;
-  content: string;
-  relatedItemIds: string[];
-}
+import React, { useState } from 'react';
+import { Empty } from '@/components/ui/empty';
+import { Badge } from "@/components/ui/badge";
+import RelatedItemCard from './related-item-list/RelatedItemCard';
+import RelatedItemForm from './related-item-list/RelatedItemForm';
+import { RelatedItem, RelatedCustomerItem } from './related-item-list/types';
 
 interface RelatedItemListProps {
-  title: string;
+  title?: string;
   description: string;
-  bgColor: string;
+  bgColor: string; 
   titleColor: string;
   textColor: string;
   items: RelatedItem[];
@@ -51,83 +43,38 @@ const RelatedItemList = ({
   onDelete,
   formPosition = 'bottom'
 }: RelatedItemListProps) => {
-  const {
-    newItemContent,
-    setNewItemContent,
-    newItemRelatedIds,
-    setNewItemRelatedIds,
-    editValues,
-    setEditValues,
-    activeEditId,
-    setActiveEditId,
-    inputRef,
-    getRating,
-    toggleItemSelection
-  } = useRelatedItems(customerItems, customerItemRatingType);
-
-  // Initialize edit values when items change
-  useEffect(() => {
-    const initialValues: Record<string, string> = {};
-    items.forEach(item => {
-      initialValues[item.id] = item.content;
-    });
-    setEditValues(initialValues);
-  }, [items.map(s => s.id).join(',')]);
-
-  const handleInputChange = (itemId: string, value: string) => {
-    setEditValues(prev => ({
-      ...prev,
-      [itemId]: value
-    }));
-  };
-
-  const handleInputBlur = (itemId: string) => {
-    const item = items.find(s => s.id === itemId);
-    if (item && editValues[itemId] !== item.content) {
-      onUpdate(itemId, editValues[itemId], item.relatedItemIds);
-    }
-    setActiveEditId(null);
-  };
+  const [newItemContent, setNewItemContent] = useState('');
+  const [newItemRelatedIds, setNewItemRelatedIds] = useState<string[]>([]);
 
   const handleAddItem = () => {
     if (newItemContent.trim()) {
       onAdd(newItemContent.trim(), newItemRelatedIds);
       setNewItemContent('');
       setNewItemRelatedIds([]);
-      
-      // Focus back on the input after adding
-      setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.focus();
-        }
-      }, 0);
     }
   };
 
-  const handleToggleItemSelection = (customerItemId: string, itemId?: string) => {
-    if (itemId) {
-      // Update existing item
-      const item = items.find(s => s.id === itemId);
-      if (item) {
-        const updatedItemIds = item.relatedItemIds.includes(customerItemId)
-          ? item.relatedItemIds.filter(id => id !== customerItemId)
-          : [...item.relatedItemIds, customerItemId];
-        
-        onUpdate(itemId, editValues[itemId] || item.content, updatedItemIds);
-      }
-    } else {
-      // For new item form
-      toggleItemSelection(customerItemId);
-    }
+  const toggleItemSelection = (itemId: string) => {
+    setNewItemRelatedIds(prev => 
+      prev.includes(itemId) 
+        ? prev.filter(id => id !== itemId)
+        : [...prev, itemId]
+    );
   };
 
-  // Form to add new items
-  const AddItemFormComponent = () => (
+  const getRating = (item: RelatedCustomerItem): 'low' | 'medium' | 'high' | undefined => {
+    if ('priority' in item) return item.priority;
+    if ('severity' in item) return item.severity;
+    if ('importance' in item) return item.importance;
+    return undefined;
+  };
+
+  const renderForm = () => (
     <RelatedItemForm
       newItemContent={newItemContent}
       setNewItemContent={setNewItemContent}
       newItemRelatedIds={newItemRelatedIds}
-      toggleItemSelection={(customerItemId) => handleToggleItemSelection(customerItemId)}
+      toggleItemSelection={toggleItemSelection}
       customerItems={customerItems}
       customerItemType={customerItemType}
       customerItemRatingType={customerItemRatingType}
@@ -136,52 +83,37 @@ const RelatedItemList = ({
       getRating={getRating}
     />
   );
-
+  
   return (
-    <div className="space-y-6">
-      <RelatedItemHeader
-        title={title}
-        description={description}
-        bgColor={bgColor}
-        titleColor={titleColor}
-        textColor={textColor}
-      />
-
-      {formPosition === 'top' && <AddItemFormComponent />}
-
-      {customerItems.length === 0 ? (
-        <div className="text-center p-4 border border-dashed rounded-md">
-          <p className="text-muted-foreground">
-            {emptyCustomerItemsMessage}
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {items.map((item) => (
+    <div className="mt-4">
+      {formPosition === 'top' && renderForm()}
+      
+      {items.length > 0 ? (
+        <div className="space-y-3">
+          {items.map(item => (
             <RelatedItemCard
               key={item.id}
-              itemId={item.id}
-              content={item.content}
-              relatedItemIds={item.relatedItemIds}
+              item={item}
               customerItems={customerItems}
               customerItemType={customerItemType}
-              customerItemRatingType={customerItemRatingType}
-              customerItemRatingLabel={customerItemRatingLabel}
-              editValues={editValues}
-              activeEditId={activeEditId}
-              handleInputChange={handleInputChange}
-              setActiveEditId={setActiveEditId}
-              handleInputBlur={handleInputBlur}
-              toggleItemSelection={handleToggleItemSelection}
-              onDelete={onDelete}
-              getRating={getRating}
-              itemPlaceholder={itemPlaceholder}
+              textColor={textColor}
+              bgColor={bgColor}
+              onUpdate={(content, relatedItemIds) => onUpdate(item.id, content, relatedItemIds)}
+              onDelete={() => onDelete(item.id)}
             />
           ))}
         </div>
+      ) : (
+        <div className="py-8 text-center border border-dashed rounded-md">
+          <p className="text-muted-foreground mb-3">
+            {customerItems.length === 0 
+              ? emptyCustomerItemsMessage 
+              : `No ${title || 'items'} added yet.`}
+          </p>
+        </div>
       )}
-
-      {formPosition === 'bottom' && customerItems.length > 0 && <AddItemFormComponent />}
+      
+      {formPosition === 'bottom' && renderForm()}
     </div>
   );
 };
