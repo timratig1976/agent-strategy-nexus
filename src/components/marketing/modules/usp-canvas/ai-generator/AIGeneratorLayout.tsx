@@ -71,6 +71,7 @@ const AIGeneratorLayout: React.FC<AIGeneratorLayoutProps> = ({
     if (storedAIResult?.jobs && storedAIResult.jobs.length > 0) {
       console.log('Adding jobs to canvas:', storedAIResult.jobs);
       onAddJobs(storedAIResult.jobs);
+      toast.success(`Added ${storedAIResult.jobs.length} jobs to canvas`);
     }
   };
 
@@ -78,6 +79,7 @@ const AIGeneratorLayout: React.FC<AIGeneratorLayoutProps> = ({
     if (storedAIResult?.pains && storedAIResult.pains.length > 0) {
       console.log('Adding pains to canvas:', storedAIResult.pains);
       onAddPains(storedAIResult.pains);
+      toast.success(`Added ${storedAIResult.pains.length} pains to canvas`);
     }
   };
 
@@ -85,6 +87,7 @@ const AIGeneratorLayout: React.FC<AIGeneratorLayoutProps> = ({
     if (storedAIResult?.gains && storedAIResult.gains.length > 0) {
       console.log('Adding gains to canvas:', storedAIResult.gains);
       onAddGains(storedAIResult.gains);
+      toast.success(`Added ${storedAIResult.gains.length} gains to canvas`);
     }
   };
 

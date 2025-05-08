@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { UspCanvasService } from '@/services/ai/uspCanvasService';
 import { StoredAIResult } from '../types';
@@ -56,7 +57,7 @@ export const useAIGenerator = (
 
         if (result.data) {
           // Parse results and set state
-          const { jobs, pains, gains, rawOutput } = result.data;
+          const { jobs = [], pains = [], gains = [], rawOutput = '' } = result.data;
           const jobsFound = jobs?.length || 0;
           const painsFound = pains?.length || 0;
           const gainsFound = gains?.length || 0;
@@ -76,7 +77,7 @@ export const useAIGenerator = (
             extractedItems
           });
 
-          // Validate results
+          // Validate results - we need at least one item in each category
           const jobsComplete = jobsFound > 0;
           const painsComplete = painsFound > 0;
           const gainsComplete = gainsFound > 0;
@@ -111,8 +112,14 @@ export const useAIGenerator = (
             }
           ]);
           
-          // Show success toast
-          toast.success('AI Generation Complete!');
+          // Show appropriate toast based on completeness
+          if (isComplete) {
+            toast.success('AI Generation Complete!');
+          } else {
+            toast.success('AI Generation Completed with Partial Results', {
+              description: 'Some sections may not have been fully parsed. Check the results.'
+            });
+          }
         } else {
           setError('No data received from AI service.');
           toast.error('AI Generation Failed: No data received.');

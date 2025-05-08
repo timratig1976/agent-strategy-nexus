@@ -5,6 +5,7 @@ import { useAIResults } from "./hooks/useAIResults";
 import { useNavigation } from "./hooks/useNavigation";
 import UspCanvasHeader from "./components/UspCanvasHeader";
 import UspCanvasModuleTabs from "./components/UspCanvasModuleTabs";
+import { toast } from "sonner";
 
 interface UspCanvasModuleProps {
   strategyId: string;
@@ -138,8 +139,5 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     </div>
   );
 };
-
-// Import toast at the top level
-import { toast } from "sonner";
 
 export default UspCanvasModule;
