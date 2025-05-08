@@ -1,11 +1,12 @@
 
 import React from 'react';
 import ItemCard from '../../ItemCard';
+import { RatingValue } from '../types';
 
 interface CustomerItemProps {
   id: string;
   content: string;
-  rating: string;
+  rating: RatingValue; // Changed from string to RatingValue
   isAIGenerated?: boolean;
   isSelected: boolean;
   isSelectMode: boolean;
@@ -41,7 +42,7 @@ const CustomerItem: React.FC<CustomerItemProps> = ({
       id={id}
       content={content}
       rating={rating}
-      ratingLabel={rating}
+      ratingLabel="priority" // Changed from rating to a fixed value
       isAIGenerated={isAIGenerated}
       isSelected={isSelected}
       isSelectMode={isSelectMode}
