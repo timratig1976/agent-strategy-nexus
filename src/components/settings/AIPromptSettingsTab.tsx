@@ -20,7 +20,7 @@ export const AIPromptSettingsTab: React.FC = () => {
   const moduleKeys = moduleLabels ? Object.keys(moduleLabels) : [];
 
   // Improved system prompt for website crawling
-  const systemPrompt = `You are an expert marketing strategist AI assistant helping to create professional marketing strategy briefings.
+  const briefingSystemPrompt = `You are an expert marketing strategist AI assistant helping to create professional marketing strategy briefings.
 
 Your task is to synthesize information from multiple sources, including:
 1. Form data provided by the user
@@ -39,7 +39,7 @@ Format the briefing in a professional, readable structure with clear sections an
 Maintain a professional tone suitable for marketing experts while being accessible.`;
 
   // Improved user prompt template with website crawling variables
-  const userPrompt = `I need to create a marketing strategy briefing for:
+  const briefingUserPrompt = `I need to create a marketing strategy briefing for:
 - Strategy ID: {{strategyId}}
 - Strategy Name: {{formData.name}}
 - Company Name: {{formData.companyName}}
@@ -64,23 +64,87 @@ Please provide a comprehensive marketing strategy briefing that includes:
 Bitte schreibe alle Antworten auf Deutsch.
 {{/if}}`;
 
+  // Optimized system prompt for persona generation
+  const personaSystemPrompt = `You are an expert marketing strategist AI assistant specializing in customer persona development.
+
+Your task is to create detailed and actionable customer personas based on:
+1. The marketing strategy briefing provided by the user
+2. Any additional context or requirements specified
+3. Your knowledge of effective persona development methods
+
+Create comprehensive customer personas that include:
+- Detailed demographic information (age, gender, income, education, occupation, location)
+- Psychographic details (values, interests, lifestyle, personality traits)
+- Behavioral patterns and habits relevant to the product/service
+- Specific pain points and challenges they face
+- Goals and aspirations related to the product/service
+- Preferred communication channels and content types
+- Decision-making factors and influences
+- Objections and barriers to purchase
+- Quotes or narratives that bring the persona to life
+
+Format each persona in a structured, readable format with clear sections and helpful details.
+Ensure the personas are realistic, specific, and actionable for marketing strategy development.
+Avoid generic descriptions and focus on insights that can drive marketing decisions.`;
+
+  // Optimized user prompt template for persona generation
+  const personaUserPrompt = `I need to create detailed customer personas based on the following marketing briefing:
+
+{{briefingContent}}
+
+{{#if enhancementText}}
+Additional instructions for customizing the personas:
+{{enhancementText}}
+{{/if}}
+
+Please provide 2-3 detailed customer personas that include:
+1. Name and basic demographic information
+2. Occupation and professional background
+3. Personal background and lifestyle
+4. Goals and challenges
+5. Pain points and frustrations
+6. Decision-making process
+7. Preferred communication channels
+8. Objections to overcome
+9. A day in their life (optional)
+10. Quote that represents their mindset
+
+Format each persona in a clear, structured way with separate sections for each persona.
+
+{{#if outputLanguage equals "deutsch"}}
+Bitte schreibe alle Antworten auf Deutsch.
+{{/if}}`;
+
   // Set up the optimized prompts on component mount
   useEffect(() => {
     const initializeOptimizedPrompts = async () => {
       try {
         setIsInitializing(true);
-        const { data, error } = await RPCService.updateOrCreatePrompt(
+        
+        // Initialize briefing prompts
+        const briefingResult = await RPCService.updateOrCreatePrompt(
           "briefing",
-          systemPrompt,
-          userPrompt
+          briefingSystemPrompt,
+          briefingUserPrompt
         );
         
-        if (error) {
-          throw new Error(error);
+        if (briefingResult.error) {
+          throw new Error(briefingResult.error);
+        }
+        
+        // Initialize persona prompts
+        const personaResult = await RPCService.updateOrCreatePrompt(
+          "persona",
+          personaSystemPrompt,
+          personaUserPrompt
+        );
+        
+        if (personaResult.error) {
+          throw new Error(personaResult.error);
         }
         
         toast({
-          description: "Optimized briefing prompts have been initialized.",
+          description: "Optimized briefing and persona prompts have been initialized.",
         });
       } catch (err) {
         console.error("Error initializing optimized prompts:", err);
