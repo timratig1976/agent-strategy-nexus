@@ -28,8 +28,8 @@ export const useUspCanvas = (strategyId?: string) => {
     canvas.gainCreators
   );
   
-  // Fix: Use strategyId instead of passing it twice
-  const canvasManager = useCanvasManager(initialCanvas, strategyId);
+  // Fix: Only pass initialCanvas as the useCanvasManager hook only expects one argument
+  const canvasManager = useCanvasManager(initialCanvas);
   
   // Load saved canvas data when the component mounts
   useEffect(() => {
