@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Tabs, TabsContent, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProductServices from "./ProductServices";
 import PainRelievers from "./PainRelievers";
 import GainCreators from "./GainCreators";
@@ -75,8 +75,8 @@ const ValueMapCanvas = ({
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="services" className="mt-6">
-        <div className="grid w-full grid-cols-3">
-          <TabsTrigger value="services" className="relative">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="services">
             Products & Services
             {servicesCount > 0 && (
               <span className="ml-2 px-1.5 py-0.5 rounded-full bg-blue-100 text-xs text-blue-800">
@@ -84,7 +84,7 @@ const ValueMapCanvas = ({
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="relievers" className="relative">
+          <TabsTrigger value="relievers">
             Pain Relievers
             {relieversCount > 0 && (
               <span className="ml-2 px-1.5 py-0.5 rounded-full bg-red-100 text-xs text-red-800">
@@ -92,7 +92,7 @@ const ValueMapCanvas = ({
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="creators" className="relative">
+          <TabsTrigger value="creators">
             Gain Creators
             {creatorsCount > 0 && (
               <span className="ml-2 px-1.5 py-0.5 rounded-full bg-green-100 text-xs text-green-800">
@@ -100,7 +100,7 @@ const ValueMapCanvas = ({
               </span>
             )}
           </TabsTrigger>
-        </div>
+        </TabsList>
         
         <TabsContent value="services" className="mt-4 p-4 bg-slate-50 rounded-md">
           <ProductServices 
