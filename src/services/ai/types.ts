@@ -27,6 +27,7 @@ export interface UspCanvasAIResult {
   products?: UspCanvasProduct[];
   painRelievers?: UspCanvasPainReliever[];
   gainCreators?: UspCanvasGainCreator[];
+  rawOutput?: string; // Added property to store the raw text response
 }
 
 export interface UspCanvasJob {
