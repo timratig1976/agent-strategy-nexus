@@ -63,7 +63,8 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     reorderCustomerPains,
     reorderCustomerGains,
     canvasSaveHistory,
-    saveFinalVersion
+    saveFinalVersion,
+    applyAIGeneratedContent
   } = useUspCanvas(strategyId);
 
   // Handle saving AI results when switching tabs
@@ -100,7 +101,7 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     
     if (uniqueJobs.length > 0) {
       uniqueJobs.forEach(job => {
-        addCustomerJob(job.content, job.priority, true);
+        addCustomerJob(job.content, job.priority || 'medium', true);
       });
       toast.success(`${uniqueJobs.length} jobs added to canvas`);
     } else {
@@ -134,7 +135,7 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     
     if (uniquePains.length > 0) {
       uniquePains.forEach(pain => {
-        addCustomerPain(pain.content, pain.severity, true);
+        addCustomerPain(pain.content, pain.severity || 'medium', true);
       });
       toast.success(`${uniquePains.length} pains added to canvas`);
     } else {
@@ -168,7 +169,7 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     
     if (uniqueGains.length > 0) {
       uniqueGains.forEach(gain => {
-        addCustomerGain(gain.content, gain.importance, true);
+        addCustomerGain(gain.content, gain.importance || 'medium', true);
       });
       toast.success(`${uniqueGains.length} gains added to canvas`);
     } else {

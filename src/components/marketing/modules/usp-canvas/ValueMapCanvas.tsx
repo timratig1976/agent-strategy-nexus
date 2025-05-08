@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProductServices from "./ProductServices";
 import PainRelievers from "./PainRelievers";
 import GainCreators from "./GainCreators";
-import { UspCanvas } from "./types";
+import { UspCanvas, ProductService, PainReliever, GainCreator } from "./types";
 import {
   Tooltip,
   TooltipContent,
@@ -56,8 +56,9 @@ const ValueMapCanvas = ({
               <div className="space-y-2">
                 <p className="font-medium">What is the Value Map?</p>
                 <p className="text-sm">
-                  Define your value proposition by describing how your products and services address 
-                  customer jobs, relieve pains, and create gains that matter to your customers.
+                  The Value Map describes how your products and services create value 
+                  for your customers by relieving their pains and creating gains. This 
+                  helps you align your offerings with what your customers truly need.
                 </p>
               </div>
             </TooltipContent>
@@ -65,15 +66,15 @@ const ValueMapCanvas = ({
         </TooltipProvider>
       </div>
 
-      <Tabs defaultValue="products" className="mt-6">
+      <Tabs defaultValue="services" className="mt-6">
         <TabsList className="grid w-full grid-cols-3">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <TabsTrigger value="products">Products & Services</TabsTrigger>
+                <TabsTrigger value="services">Products & Services</TabsTrigger>
               </TooltipTrigger>
               <TooltipContent>
-                <p className="text-sm max-w-xs">Define what your business offers to help customers complete their jobs</p>
+                <p className="text-sm">Define what your company offers to help customers complete their jobs</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -81,10 +82,10 @@ const ValueMapCanvas = ({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <TabsTrigger value="pain-relievers">Pain Relievers</TabsTrigger>
+                <TabsTrigger value="relievers">Pain Relievers</TabsTrigger>
               </TooltipTrigger>
               <TooltipContent>
-                <p className="text-sm max-w-xs">Describe how your products and services alleviate customer pains</p>
+                <p className="text-sm">How your offerings solve customer problems</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -92,16 +93,16 @@ const ValueMapCanvas = ({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <TabsTrigger value="gain-creators">Gain Creators</TabsTrigger>
+                <TabsTrigger value="creators">Gain Creators</TabsTrigger>
               </TooltipTrigger>
               <TooltipContent>
-                <p className="text-sm max-w-xs">Explain how your offerings create customer gains and benefits</p>
+                <p className="text-sm">How your offerings create additional value for customers</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </TabsList>
         
-        <TabsContent value="products" className="mt-4 p-4 bg-slate-50 rounded-md">
+        <TabsContent value="services" className="mt-4 p-4 bg-slate-50 rounded-md">
           <ProductServices 
             services={canvas.productServices}
             jobs={canvas.customerJobs}
@@ -112,8 +113,8 @@ const ValueMapCanvas = ({
           />
         </TabsContent>
         
-        <TabsContent value="pain-relievers" className="mt-4 p-4 bg-slate-50 rounded-md">
-          <PainRelievers 
+        <TabsContent value="relievers" className="mt-4 p-4 bg-slate-50 rounded-md">
+          <PainRelievers
             relievers={canvas.painRelievers}
             pains={canvas.customerPains}
             onAdd={addPainReliever}
@@ -123,8 +124,8 @@ const ValueMapCanvas = ({
           />
         </TabsContent>
         
-        <TabsContent value="gain-creators" className="mt-4 p-4 bg-slate-50 rounded-md">
-          <GainCreators 
+        <TabsContent value="creators" className="mt-4 p-4 bg-slate-50 rounded-md">
+          <GainCreators
             creators={canvas.gainCreators}
             gains={canvas.customerGains}
             onAdd={addGainCreator}

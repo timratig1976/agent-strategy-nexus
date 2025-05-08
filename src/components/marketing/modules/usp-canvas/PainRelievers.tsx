@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,12 +19,44 @@ interface PainRelieversProps {
 const PainRelievers = ({ relievers, pains, onAdd, onUpdate, onDelete, formPosition = 'bottom' }: PainRelieversProps) => {
   const [newRelieverContent, setNewRelieverContent] = useState('');
   const [newRelieverPainIds, setNewRelieverPainIds] = useState<string[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [editValues, setEditValues] = useState<Record<string, string>>({});
+
+  // Initialize edit values when relievers change
+  useEffect(() => {
+    const initialValues: Record<string, string> = {};
+    relievers.forEach(reliever => {
+      initialValues[reliever.id] = reliever.content;
+    });
+    setEditValues(initialValues);
+  }, [relievers.map(r => r.id).join(',')]);
+
+  const handleInputChange = (relieverId: string, value: string) => {
+    setEditValues(prev => ({
+      ...prev,
+      [relieverId]: value
+    }));
+  };
+
+  const handleInputBlur = (relieverId: string) => {
+    const reliever = relievers.find(r => r.id === relieverId);
+    if (reliever && editValues[relieverId] !== reliever.content) {
+      onUpdate(relieverId, editValues[relieverId], reliever.relatedPainIds);
+    }
+  };
 
   const handleAddReliever = () => {
     if (newRelieverContent.trim()) {
       onAdd(newRelieverContent.trim(), newRelieverPainIds);
       setNewRelieverContent('');
       setNewRelieverPainIds([]);
+      
+      // Focus back on the input after adding
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 0);
     }
   };
 
@@ -37,7 +69,7 @@ const PainRelievers = ({ relievers, pains, onAdd, onUpdate, onDelete, formPositi
           ? reliever.relatedPainIds.filter(id => id !== painId)
           : [...reliever.relatedPainIds, painId];
         
-        onUpdate(relieverId, reliever.content, updatedPainIds);
+        onUpdate(relieverId, editValues[relieverId] || reliever.content, updatedPainIds);
       }
     } else {
       // Update new reliever form
@@ -49,47 +81,54 @@ const PainRelievers = ({ relievers, pains, onAdd, onUpdate, onDelete, formPositi
     }
   };
 
-  // Form to add new pain relievers
+  // Form to add new relievers
   const AddRelieverForm = () => (
     <div className="p-4 border rounded-md space-y-4 mb-4">
       <div className="flex-1">
         <Input 
+          ref={inputRef}
           value={newRelieverContent}
           onChange={(e) => setNewRelieverContent(e.target.value)}
           placeholder="Add a new pain reliever..."
+          className="w-full"
         />
       </div>
       
       <div>
         <Label className="text-sm font-medium mb-2 block">Related Customer Pains:</Label>
-        <div className="space-y-2 ml-2">
-          {pains.map((pain) => (
-            <div key={pain.id} className="flex items-center space-x-2">
-              <Checkbox 
-                id={`new-reliever-pain-${pain.id}`} 
-                checked={newRelieverPainIds.includes(pain.id)}
-                onCheckedChange={() => togglePainSelection(pain.id)}
-              />
-              <Label 
-                htmlFor={`new-reliever-pain-${pain.id}`}
-                className="text-sm"
-              >
-                {pain.content}
-                {pain.severity === 'high' && (
-                  <span className="ml-2 text-xs px-1.5 py-0.5 bg-red-100 text-red-800 rounded-full">
-                    High Severity
-                  </span>
-                )}
-              </Label>
-            </div>
-          ))}
+        <div className="space-y-2 ml-2 flex flex-col items-center">
+          {pains.length > 0 ? (
+            pains.map((pain) => (
+              <div key={pain.id} className="flex items-center space-x-2 w-full justify-center">
+                <Checkbox 
+                  id={`new-reliever-pain-${pain.id}`} 
+                  checked={newRelieverPainIds.includes(pain.id)}
+                  onCheckedChange={() => togglePainSelection(pain.id)}
+                />
+                <Label 
+                  htmlFor={`new-reliever-pain-${pain.id}`}
+                  className="text-sm flex-1"
+                >
+                  {pain.content}
+                  {pain.severity === 'high' && (
+                    <span className="ml-2 text-xs px-1.5 py-0.5 bg-red-100 text-red-800 rounded-full">
+                      High Severity
+                    </span>
+                  )}
+                </Label>
+              </div>
+            ))
+          ) : (
+            <p className="text-muted-foreground text-center">No customer pains available</p>
+          )}
         </div>
       </div>
       
-      <div className="text-right">
+      <div className="text-center">
         <Button 
           onClick={handleAddReliever}
           disabled={!newRelieverContent.trim()}
+          className="mx-auto"
         >
           <Plus className="h-4 w-4 mr-1" /> Add Pain Reliever
         </Button>
@@ -99,11 +138,11 @@ const PainRelievers = ({ relievers, pains, onAdd, onUpdate, onDelete, formPositi
 
   return (
     <div className="space-y-6">
-      <div className="bg-orange-50 p-4 rounded-lg">
-        <h3 className="text-base font-medium text-orange-800 mb-2">What are Pain Relievers?</h3>
-        <p className="text-sm text-orange-700">
-          Pain relievers describe how your products and services alleviate specific customer pains. 
-          They explicitly outline how you intend to reduce or eliminate the things that annoy your customers.
+      <div className="bg-red-50 p-4 rounded-lg">
+        <h3 className="text-base font-medium text-red-800 mb-2">What are Pain Relievers?</h3>
+        <p className="text-sm text-red-700">
+          Describe how your products and services alleviate specific customer pains.
+          These are the features that eliminate or reduce negative emotions, costs, and situations that customers experience.
         </p>
       </div>
 
@@ -122,8 +161,9 @@ const PainRelievers = ({ relievers, pains, onAdd, onUpdate, onDelete, formPositi
               <div className="flex items-start space-x-3 mb-3">
                 <div className="flex-1">
                   <Input 
-                    value={reliever.content}
-                    onChange={(e) => onUpdate(reliever.id, e.target.value, reliever.relatedPainIds)}
+                    value={editValues[reliever.id] !== undefined ? editValues[reliever.id] : reliever.content}
+                    onChange={(e) => handleInputChange(reliever.id, e.target.value)}
+                    onBlur={() => handleInputBlur(reliever.id)}
                     placeholder="How do you relieve customer pains?"
                   />
                 </div>
@@ -139,9 +179,9 @@ const PainRelievers = ({ relievers, pains, onAdd, onUpdate, onDelete, formPositi
               
               <div className="mt-3">
                 <Label className="text-sm font-medium mb-2 block">Related Customer Pains:</Label>
-                <div className="space-y-2 ml-2">
+                <div className="space-y-2 ml-2 flex flex-col items-center">
                   {pains.map((pain) => (
-                    <div key={pain.id} className="flex items-center space-x-2">
+                    <div key={pain.id} className="flex items-center space-x-2 w-full justify-center">
                       <Checkbox 
                         id={`reliever-${reliever.id}-pain-${pain.id}`} 
                         checked={reliever.relatedPainIds.includes(pain.id)}
@@ -149,7 +189,7 @@ const PainRelievers = ({ relievers, pains, onAdd, onUpdate, onDelete, formPositi
                       />
                       <Label 
                         htmlFor={`reliever-${reliever.id}-pain-${pain.id}`}
-                        className="text-sm"
+                        className="text-sm flex-1"
                       >
                         {pain.content}
                         {pain.severity === 'high' && (

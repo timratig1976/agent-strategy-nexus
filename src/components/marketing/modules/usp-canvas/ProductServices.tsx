@@ -20,36 +20,30 @@ const ProductServices = ({ services, jobs, onAdd, onUpdate, onDelete, formPositi
   const [newServiceContent, setNewServiceContent] = useState('');
   const [newServiceJobIds, setNewServiceJobIds] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [editValues, setEditValues] = useState<Record<string, string>>({});
 
-  // Fix focus issues by maintaining focus on input element
+  // Initialize edit values when services change
   useEffect(() => {
-    const focusTimeout = setTimeout(() => {
-      if (inputRef.current) {
-        const savedSelection = window.getSelection()?.getRangeAt(0);
-        const savedSelectionStart = savedSelection?.startOffset;
-        const savedSelectionEnd = savedSelection?.endOffset;
-        
-        inputRef.current.focus();
-        
-        if (savedSelectionStart !== undefined && savedSelectionEnd !== undefined) {
-          try {
-            const range = document.createRange();
-            range.setStart(inputRef.current, savedSelectionStart);
-            range.setEnd(inputRef.current, savedSelectionEnd);
-            const selection = window.getSelection();
-            if (selection) {
-              selection.removeAllRanges();
-              selection.addRange(range);
-            }
-          } catch (e) {
-            // Silently fail if selection can't be restored
-          }
-        }
-      }
-    }, 0);
-    
-    return () => clearTimeout(focusTimeout);
-  }, [newServiceContent]);
+    const initialValues: Record<string, string> = {};
+    services.forEach(service => {
+      initialValues[service.id] = service.content;
+    });
+    setEditValues(initialValues);
+  }, [services.map(s => s.id).join(',')]);
+
+  const handleInputChange = (serviceId: string, value: string) => {
+    setEditValues(prev => ({
+      ...prev,
+      [serviceId]: value
+    }));
+  };
+
+  const handleInputBlur = (serviceId: string) => {
+    const service = services.find(s => s.id === serviceId);
+    if (service && editValues[serviceId] !== service.content) {
+      onUpdate(serviceId, editValues[serviceId], service.relatedJobIds);
+    }
+  };
 
   const handleAddService = () => {
     if (newServiceContent.trim()) {
@@ -75,7 +69,7 @@ const ProductServices = ({ services, jobs, onAdd, onUpdate, onDelete, formPositi
           ? service.relatedJobIds.filter(id => id !== jobId)
           : [...service.relatedJobIds, jobId];
         
-        onUpdate(serviceId, service.content, updatedJobIds);
+        onUpdate(serviceId, editValues[serviceId] || service.content, updatedJobIds);
       }
     } else {
       // Update new service form
@@ -167,8 +161,9 @@ const ProductServices = ({ services, jobs, onAdd, onUpdate, onDelete, formPositi
               <div className="flex items-start space-x-3 mb-3">
                 <div className="flex-1">
                   <Input 
-                    value={service.content}
-                    onChange={(e) => onUpdate(service.id, e.target.value, service.relatedJobIds)}
+                    value={editValues[service.id] !== undefined ? editValues[service.id] : service.content}
+                    onChange={(e) => handleInputChange(service.id, e.target.value)}
+                    onBlur={() => handleInputBlur(service.id)}
                     placeholder="What product or service do you offer?"
                   />
                 </div>
