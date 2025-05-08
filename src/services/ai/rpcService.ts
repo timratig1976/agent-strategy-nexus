@@ -1,129 +1,128 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { AIServiceResponse, StrategyMetadata } from "./types";
 
 export class RPCService {
   /**
-   * Get strategy metadata using the properly typed RPC function
+   * Gets strategy metadata from the database using an RPC function
    */
-  static async getStrategyMetadata(strategyId: string): Promise<AIServiceResponse<StrategyMetadata | null>> {
+  static async getStrategyMetadata(
+    strategyId: string
+  ): Promise<AIServiceResponse<StrategyMetadata>> {
     try {
-      const { data, error } = await supabase.rpc(
-        'get_strategy_metadata',
-        { strategy_id_param: strategyId }
-      );
+      const { data, error } = await supabase.rpc('get_strategy_metadata', {
+        strategy_id_param: strategyId
+      });
       
       if (error) {
         throw error;
       }
       
-      return {
-        data: data.length > 0 ? data[0] : null,
-        debugInfo: {
-          requestData: { strategyId },
-          responseData: data
-        }
-      };
+      if (!data || data.length === 0) {
+        return { 
+          error: `No metadata found for strategy ID: ${strategyId}` 
+        };
+      }
+      
+      return { data: data[0] as StrategyMetadata };
     } catch (error) {
-      console.error(`Error fetching strategy metadata for strategy ID ${strategyId}:`, error);
+      console.error(`Error fetching strategy metadata for ID ${strategyId}:`, error);
       return { 
         error: error instanceof Error 
           ? error.message 
-          : 'An unexpected error occurred while fetching strategy metadata',
-        debugInfo: {
-          requestData: { strategyId },
-          responseData: error
-        }
+          : 'An unexpected error occurred while fetching strategy metadata' 
       };
     }
   }
 
   /**
-   * Update strategy metadata using the properly typed RPC function
+   * Updates strategy metadata in the database using an RPC function
    */
   static async updateStrategyMetadata(
     strategyId: string,
-    metadata: {
-      companyName?: string | null;
-      websiteUrl?: string | null;
-      productDescription?: string | null;
-      productUrl?: string | null;
-      additionalInfo?: string | null;
-    }
-  ): Promise<AIServiceResponse<void>> {
+    metadata: Partial<StrategyMetadata>
+  ): Promise<AIServiceResponse<boolean>> {
     try {
-      const { error } = await supabase.rpc(
-        'upsert_strategy_metadata',
-        {
-          strategy_id_param: strategyId,
-          company_name_param: metadata.companyName ?? null,
-          website_url_param: metadata.websiteUrl ?? null,
-          product_description_param: metadata.productDescription ?? null,
-          product_url_param: metadata.productUrl ?? null,
-          additional_info_param: metadata.additionalInfo ?? null
-        }
-      );
+      const { error } = await supabase.rpc('upsert_strategy_metadata', {
+        strategy_id_param: strategyId,
+        company_name_param: metadata.company_name || null,
+        website_url_param: metadata.website_url || null,
+        product_description_param: metadata.product_description || null,
+        product_url_param: metadata.product_url || null,
+        additional_info_param: metadata.additional_info || null
+      });
       
       if (error) {
         throw error;
       }
       
-      return {
-        data: undefined,
-        debugInfo: {
-          requestData: { strategyId, metadata }
-        }
-      };
+      return { data: true };
     } catch (error) {
-      console.error(`Error updating strategy metadata for strategy ID ${strategyId}:`, error);
+      console.error(`Error updating strategy metadata for ID ${strategyId}:`, error);
       return { 
         error: error instanceof Error 
           ? error.message 
-          : 'An unexpected error occurred while updating strategy metadata',
-        debugInfo: {
-          requestData: { strategyId, metadata },
-          responseData: error
-        }
+          : 'An unexpected error occurred while updating strategy metadata' 
       };
     }
   }
 
   /**
-   * Update the final status of agent results
+   * Updates an AI prompt in the database or creates it if it doesn't exist
    */
-  static async updateAgentResultsFinalStatus(
-    strategyId: string, 
-    resultType: string
-  ): Promise<AIServiceResponse<void>> {
+  static async updateOrCreatePrompt(
+    module: string,
+    systemPrompt: string,
+    userPrompt: string
+  ): Promise<AIServiceResponse<boolean>> {
     try {
-      const { error } = await supabase.rpc(
-        'update_agent_results_final_status',
-        {
-          strategy_id_param: strategyId,
-          result_type_param: resultType
-        }
-      );
+      console.log(`Updating prompt for module: ${module}`);
       
-      if (error) {
-        throw error;
+      // Check if prompt exists
+      const { data: existingPrompt, error: fetchError } = await supabase
+        .from('ai_prompts')
+        .select('id')
+        .eq('module', module)
+        .maybeSingle();
+      
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        throw fetchError;
       }
       
-      return {
-        data: undefined,
-        debugInfo: {
-          requestData: { strategyId, resultType }
-        }
-      };
+      let result;
+      
+      if (existingPrompt) {
+        // Update existing prompt
+        result = await supabase
+          .from('ai_prompts')
+          .update({
+            system_prompt: systemPrompt,
+            user_prompt: userPrompt,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingPrompt.id);
+      } else {
+        // Insert new prompt
+        result = await supabase
+          .from('ai_prompts')
+          .insert({
+            module,
+            system_prompt: systemPrompt,
+            user_prompt: userPrompt
+          });
+      }
+      
+      if (result.error) {
+        throw result.error;
+      }
+      
+      console.log(`Successfully updated prompt for module: ${module}`);
+      return { data: true };
     } catch (error) {
-      console.error(`Error updating final status for ${resultType} results:`, error);
+      console.error(`Error updating AI prompt for module ${module}:`, error);
       return { 
         error: error instanceof Error 
           ? error.message 
-          : 'An unexpected error occurred while updating final status',
-        debugInfo: {
-          requestData: { strategyId, resultType },
-          responseData: error
-        }
+          : 'An unexpected error occurred while updating the prompt'
       };
     }
   }

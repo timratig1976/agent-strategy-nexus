@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { BriefingPromptSetup } from "./ai-prompt/BriefingPromptSetup";
 
 export const AIPromptSettingsTab: React.FC = () => {
   // Get all module keys from our configuration and ensure it's not undefined
@@ -32,6 +33,8 @@ export const AIPromptSettingsTab: React.FC = () => {
             </AlertDescription>
           </div>
         </Alert>
+
+        <BriefingPromptSetup />
       </div>
       
       {moduleKeys.length === 0 ? (
