@@ -6,6 +6,12 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter }
 import { StoredAIResult, CustomerJob, CustomerPain, CustomerGain } from './types';
 import { ArrowDown, Loader2, AlertCircle, Check, Plus } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface UspCanvasAIGeneratorProps {
   strategyId: string;
@@ -31,6 +37,7 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<string>("jobs");
 
   const generateResult = async () => {
     setIsGenerating(true);
@@ -97,7 +104,7 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
         console.error("Error parsing result:", parseError);
         throw new Error("Failed to parse AI results");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error generating canvas data:", err);
       setError(err.message || "Failed to generate canvas data. Please try again.");
     } finally {
@@ -175,23 +182,34 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
         )}
         
         <div className="flex items-center justify-center">
-          <Button 
-            onClick={generateResult} 
-            disabled={isGenerating}
-            className="flex items-center"
-            size="lg"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Generating Canvas Data...
-              </>
-            ) : (
-              <>
-                Generate Canvas Data
-              </>
-            )}
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  onClick={generateResult} 
+                  disabled={isGenerating}
+                  className="flex items-center"
+                  size="lg"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Generating Canvas Data...
+                    </>
+                  ) : (
+                    <>
+                      Generate Canvas Data
+                    </>
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-sm">
+                  Analyze your marketing brief and personas to automatically generate customer profile elements
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         
         {!isGenerating && hasResults && (
@@ -203,32 +221,83 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
       
       {!isGenerating && hasResults && (
         <div className="mt-8">
-          <Tabs defaultValue="jobs">
+          <Tabs 
+            value={activeTab} 
+            onValueChange={setActiveTab} 
+            defaultValue="jobs"
+          >
             <TabsList className="grid w-full grid-cols-3 mb-6">
-              <TabsTrigger value="jobs" className="relative">
-                Customer Jobs
-                {storedAIResult.jobs && storedAIResult.jobs.length > 0 && (
-                  <span className="ml-2 px-1.5 py-0.5 rounded-full bg-blue-100 text-xs text-blue-800">
-                    {storedAIResult.jobs.length}
-                  </span>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="pains" className="relative">
-                Customer Pains
-                {storedAIResult.pains && storedAIResult.pains.length > 0 && (
-                  <span className="ml-2 px-1.5 py-0.5 rounded-full bg-red-100 text-xs text-red-800">
-                    {storedAIResult.pains.length}
-                  </span>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="gains" className="relative">
-                Customer Gains
-                {storedAIResult.gains && storedAIResult.gains.length > 0 && (
-                  <span className="ml-2 px-1.5 py-0.5 rounded-full bg-green-100 text-xs text-green-800">
-                    {storedAIResult.gains.length}
-                  </span>
-                )}
-              </TabsTrigger>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <TabsTrigger 
+                      value="jobs" 
+                      className={`relative ${activeTab === "jobs" ? "font-medium" : ""}`}
+                    >
+                      Customer Jobs
+                      {storedAIResult.jobs && storedAIResult.jobs.length > 0 && (
+                        <span className="ml-2 px-1.5 py-0.5 rounded-full bg-blue-100 text-xs text-blue-800">
+                          {storedAIResult.jobs.length}
+                        </span>
+                      )}
+                      {activeTab === "jobs" && (
+                        <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
+                      )}
+                    </TabsTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p className="text-sm">Tasks customers are trying to complete</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <TabsTrigger 
+                      value="pains" 
+                      className={`relative ${activeTab === "pains" ? "font-medium" : ""}`}
+                    >
+                      Customer Pains
+                      {storedAIResult.pains && storedAIResult.pains.length > 0 && (
+                        <span className="ml-2 px-1.5 py-0.5 rounded-full bg-red-100 text-xs text-red-800">
+                          {storedAIResult.pains.length}
+                        </span>
+                      )}
+                      {activeTab === "pains" && (
+                        <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
+                      )}
+                    </TabsTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p className="text-sm">Frustrations, problems, and obstacles customers face</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <TabsTrigger 
+                      value="gains" 
+                      className={`relative ${activeTab === "gains" ? "font-medium" : ""}`}
+                    >
+                      Customer Gains
+                      {storedAIResult.gains && storedAIResult.gains.length > 0 && (
+                        <span className="ml-2 px-1.5 py-0.5 rounded-full bg-green-100 text-xs text-green-800">
+                          {storedAIResult.gains.length}
+                        </span>
+                      )}
+                      {activeTab === "gains" && (
+                        <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
+                      )}
+                    </TabsTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p className="text-sm">Benefits and outcomes customers want to achieve</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </TabsList>
             
             <TabsContent value="jobs">
@@ -236,13 +305,22 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
                 <CardHeader>
                   <CardTitle className="flex justify-between items-center">
                     <span>Generated Customer Jobs</span>
-                    <Button 
-                      onClick={handleAddJobs} 
-                      disabled={!storedAIResult.jobs || storedAIResult.jobs.length === 0}
-                      className="flex items-center"
-                    >
-                      <Plus className="h-4 w-4 mr-1" /> Add All to Canvas
-                    </Button>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            onClick={handleAddJobs} 
+                            disabled={!storedAIResult.jobs || storedAIResult.jobs.length === 0}
+                            className="flex items-center"
+                          >
+                            <Plus className="h-4 w-4 mr-1" /> Add All to Canvas
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          <p className="text-sm">Add all generated jobs to your customer profile</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </CardTitle>
                   <CardDescription>
                     The tasks your customers are trying to complete or problems they're trying to solve.
@@ -259,13 +337,22 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
                 <CardHeader>
                   <CardTitle className="flex justify-between items-center">
                     <span>Generated Customer Pains</span>
-                    <Button 
-                      onClick={handleAddPains} 
-                      disabled={!storedAIResult.pains || storedAIResult.pains.length === 0}
-                      className="flex items-center"
-                    >
-                      <Plus className="h-4 w-4 mr-1" /> Add All to Canvas
-                    </Button>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            onClick={handleAddPains} 
+                            disabled={!storedAIResult.pains || storedAIResult.pains.length === 0}
+                            className="flex items-center"
+                          >
+                            <Plus className="h-4 w-4 mr-1" /> Add All to Canvas
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          <p className="text-sm">Add all generated pains to your customer profile</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </CardTitle>
                   <CardDescription>
                     The negative experiences, risks, and obstacles customers face.
@@ -282,13 +369,22 @@ const UspCanvasAIGenerator: React.FC<UspCanvasAIGeneratorProps> = ({
                 <CardHeader>
                   <CardTitle className="flex justify-between items-center">
                     <span>Generated Customer Gains</span>
-                    <Button 
-                      onClick={handleAddGains} 
-                      disabled={!storedAIResult.gains || storedAIResult.gains.length === 0}
-                      className="flex items-center"
-                    >
-                      <Plus className="h-4 w-4 mr-1" /> Add All to Canvas
-                    </Button>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            onClick={handleAddGains} 
+                            disabled={!storedAIResult.gains || storedAIResult.gains.length === 0}
+                            className="flex items-center"
+                          >
+                            <Plus className="h-4 w-4 mr-1" /> Add All to Canvas
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          <p className="text-sm">Add all generated gains to your customer profile</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </CardTitle>
                   <CardDescription>
                     The benefits and positive outcomes your customers expect or would be surprised by.
