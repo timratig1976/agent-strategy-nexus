@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/tooltip";
 import { HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import SectionHeader from "./components/SectionHeader";
 
 interface ValueMapCanvasProps {
   canvas: UspCanvas;
