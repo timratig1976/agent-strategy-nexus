@@ -20,6 +20,7 @@ interface ExtractedContent {
   keywords: string[];
   content_extracted: boolean;
   crawled_at: string;
+  url_type?: 'website' | 'product'; // Add URL type to track source
 }
 
 /**
@@ -29,14 +30,18 @@ export class StorageClient {
   /**
    * Save website crawl results to the database
    */
-  static async saveCrawlResults(strategyId: string, crawlResults: WebsiteCrawlResult): Promise<boolean> {
+  static async saveCrawlResults(
+    strategyId: string, 
+    crawlResults: WebsiteCrawlResult, 
+    urlType: 'website' | 'product' = 'website'
+  ): Promise<boolean> {
     try {
-      console.log("Saving crawl results for strategy:", strategyId);
+      console.log(`Saving ${urlType} crawl results for strategy:`, strategyId);
       
       // Create a cleaned and prepared version of the data for storage
       // Focus only on the markdown content and essential metadata
       const storageData = {
-        project_id: strategyId, // Renamed from strategy_id to match DB schema
+        project_id: strategyId,
         url: crawlResults.url,
         status: crawlResults.status || 'completed',
         // Using extracted_content field to store all our data as JSON
@@ -49,7 +54,8 @@ export class StorageClient {
           pages_crawled: crawlResults.pagesCrawled,
           keywords: crawlResults.keywordsFound,
           content_extracted: crawlResults.contentExtracted,
-          crawled_at: new Date().toISOString()
+          crawled_at: new Date().toISOString(),
+          url_type: urlType // Store the URL type to distinguish between website and product
         }
       };
       
@@ -63,7 +69,7 @@ export class StorageClient {
         return false;
       }
       
-      console.log("Successfully saved crawl results to database");
+      console.log(`Successfully saved ${urlType} crawl results to database`);
       return true;
     } catch (err) {
       console.error("Failed to save crawl results:", err);
@@ -75,15 +81,19 @@ export class StorageClient {
   /**
    * Get the most recent website crawl result for a strategy
    */
-  static async getLatestCrawlResult(strategyId: string): Promise<WebsiteCrawlResult | null> {
+  static async getLatestCrawlResult(
+    strategyId: string, 
+    urlType: 'website' | 'product' = 'website'
+  ): Promise<WebsiteCrawlResult | null> {
     try {
-      console.log("Retrieving latest crawl result for strategy:", strategyId);
+      console.log(`Retrieving latest ${urlType} crawl result for strategy:`, strategyId);
       
-      // Query the database for the latest crawl result for this strategy
+      // Query the database for the latest crawl result for this strategy and URL type
       const { data, error } = await supabase
         .from('website_crawls')
         .select('*')
-        .eq('project_id', strategyId) // Using project_id instead of strategy_id
+        .eq('project_id', strategyId)
+        .filter('extracted_content->url_type', 'eq', urlType) // Filter by URL type
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
@@ -94,7 +104,7 @@ export class StorageClient {
       }
       
       if (!data) {
-        console.log("No crawl results found for strategy:", strategyId);
+        console.log(`No ${urlType} crawl results found for strategy:`, strategyId);
         return null;
       }
       
@@ -128,16 +138,21 @@ export class StorageClient {
   /**
    * Get all website crawl results for a strategy
    */
-  static async getAllCrawlResults(strategyId: string): Promise<WebsiteCrawlResult[]> {
+  static async getAllCrawlResults(
+    strategyId: string,
+    urlType: 'website' | 'product' = 'website'
+  ): Promise<WebsiteCrawlResult[]> {
     try {
+      // Query the database for all crawl results for this strategy and URL type
       const { data, error } = await supabase
         .from('website_crawls')
         .select('*')
-        .eq('project_id', strategyId) // Using project_id instead of strategy_id
+        .eq('project_id', strategyId)
+        .filter('extracted_content->url_type', 'eq', urlType) // Filter by URL type
         .order('created_at', { ascending: false });
       
       if (error) {
-        console.error("Error retrieving all crawl results:", error);
+        console.error(`Error retrieving all ${urlType} crawl results:`, error);
         return [];
       }
       
@@ -152,7 +167,7 @@ export class StorageClient {
           contentExtracted: extractedContent.content_extracted || false,
           summary: extractedContent.summary || "",
           keywordsFound: extractedContent.keywords || [],
-          technologiesDetected: [], // Removed technologies as per request
+          technologiesDetected: [],
           data: extractedContent.data || [],
           url: record.url,
           id: record.id,
@@ -160,7 +175,7 @@ export class StorageClient {
         };
       });
     } catch (err) {
-      console.error("Failed to retrieve all crawl results:", err);
+      console.error(`Failed to retrieve all ${urlType} crawl results:`, err);
       return [];
     }
   }
@@ -178,6 +193,7 @@ export class StorageClient {
       keywords: [],
       content_extracted: false,
       crawled_at: new Date().toISOString(),
+      url_type: 'website'
     };
 
     // If jsonData is not an object or is null/undefined, return defaults
@@ -192,7 +208,8 @@ export class StorageClient {
       pages_crawled: typeof jsonData.pages_crawled === 'number' ? jsonData.pages_crawled : defaultContent.pages_crawled,
       keywords: Array.isArray(jsonData.keywords) ? jsonData.keywords : defaultContent.keywords,
       content_extracted: !!jsonData.content_extracted,
-      crawled_at: typeof jsonData.crawled_at === 'string' ? jsonData.crawled_at : defaultContent.crawled_at
+      crawled_at: typeof jsonData.crawled_at === 'string' ? jsonData.crawled_at : defaultContent.crawled_at,
+      url_type: jsonData.url_type || defaultContent.url_type
     };
   }
 }

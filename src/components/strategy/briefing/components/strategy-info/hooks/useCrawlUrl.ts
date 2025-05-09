@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +15,7 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
   const [showWebsitePreview, setShowWebsitePreview] = useState(false);
   const [showProductPreview, setShowProductPreview] = useState(false);
   const [hasApiKey, setHasApiKey] = useState(false);
-  const [crawlStatus, setCrawlStatus] = useState<string>(""); 
+  const [crawlStatus, setCrawlStatus] = useState<string>("");
   const [loadingStoredData, setLoadingStoredData] = useState<boolean>(false);
 
   // Check for API key and update state
@@ -24,7 +25,6 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
     return !!apiKey;
   };
   
-  // Load the latest crawl results from the database on component mount
   useEffect(() => {
     checkApiKey();
   }, []);
@@ -36,12 +36,27 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
     setLoadingStoredData(true);
     try {
       console.log("Attempting to load saved crawl results for strategy:", formValues.id);
-      // Check for website URL crawl results
-      const websiteResults = await FirecrawlService.getLatestCrawlResult(formValues.id);
-      if (websiteResults && websiteResults.success) {
-        console.log("Found saved website crawl results:", websiteResults);
-        setWebsitePreviewResults(websiteResults);
-        setShowWebsitePreview(true);
+      
+      // Load website URL crawl results
+      if (formValues.websiteUrl) {
+        const websiteResults = await FirecrawlService.getLatestCrawlResult(formValues.id);
+        if (websiteResults && websiteResults.success) {
+          console.log("Found saved website crawl results:", websiteResults);
+          setWebsitePreviewResults(websiteResults);
+          // Initially show preview if data exists
+          setShowWebsitePreview(true);
+        }
+      }
+      
+      // Load product URL crawl results (implement similar functionality for product URL)
+      if (formValues.productUrl) {
+        const productResults = await FirecrawlService.getLatestCrawlResult(formValues.id, 'product');
+        if (productResults && productResults.success) {
+          console.log("Found saved product crawl results:", productResults);
+          setProductPreviewResults(productResults);
+          // Initially show preview if data exists
+          setShowProductPreview(true);
+        }
       }
     } catch (err) {
       console.error("Error loading saved crawl results:", err);
@@ -131,10 +146,10 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
         }
       }, 1500);
       
-      // Pass the strategy ID to save the results to the database
+      // Pass the strategy ID and URL type to save the results to the database
       const crawlResult = await FirecrawlService.crawlWebsite(
         url, 
-        { timeout: 60000 }, 
+        { timeout: 60000, urlType }, // Pass URL type to distinguish between website and product
         formValues.id // Pass the strategy ID for database storage
       );
       
@@ -155,14 +170,13 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
         }
         
         // Save crawl results to the database but don't modify additional info
-        // Don't auto-fill form fields with content from crawled sites
         const { error: saveError } = await supabase.rpc(
           'upsert_strategy_metadata',
           {
             strategy_id_param: formValues.id,
-            company_name_param: formValues.companyName || "", // Keep original values
+            company_name_param: formValues.companyName || "", 
             website_url_param: urlType === 'websiteUrl' ? url : formValues.websiteUrl || "",
-            product_description_param: formValues.productDescription || "", // Keep original values
+            product_description_param: formValues.productDescription || "",
             product_url_param: urlType === 'productUrl' ? url : formValues.productUrl || "",
             additional_info_param: formValues.additionalInfo || ""
           }

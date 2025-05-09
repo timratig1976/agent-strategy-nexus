@@ -16,15 +16,16 @@ const CrawlDataDialog: React.FC<CrawlDataDialogProps> = ({
   crawlResult, 
   title = "Website Crawl Data"
 }) => {
+  // Don't render if no results exist
   if (!crawlResult || !crawlResult.data || crawlResult.data.length === 0) {
     return null;
   }
 
-  const markdownContent = crawlResult.data[0].markdown || "No markdown content available";
+  // Safely access markdown content
+  const markdownContent = crawlResult.data[0]?.markdown || "No markdown content available";
   
-  const metadata = crawlResult.data[0].metadata 
-    ? crawlResult.data[0].metadata 
-    : {};
+  // Safely access metadata
+  const metadata = crawlResult.data[0]?.metadata || {};
 
   return (
     <Dialog>
@@ -83,8 +84,8 @@ const CrawlDataDialog: React.FC<CrawlDataDialogProps> = ({
         </Tabs>
         
         <div className="text-xs text-muted-foreground mt-2">
-          <p>Pages Crawled: {crawlResult.pagesCrawled}</p>
-          <p>URL: {crawlResult.url}</p>
+          <p>Pages Crawled: {crawlResult.pagesCrawled || 0}</p>
+          <p>URL: {crawlResult.url || 'N/A'}</p>
           <p>Status: {crawlResult.status || "completed"}</p>
         </div>
       </DialogContent>

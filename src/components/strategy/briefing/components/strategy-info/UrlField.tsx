@@ -7,22 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Loader2, ArrowRight } from "lucide-react";
 import CrawlPreview from "./CrawlPreview";
 import CrawlDataDialog from "./CrawlDataDialog";
-
-interface UrlFieldProps {
-  id: string;
-  name: string;
-  label: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onCrawl: () => void;
-  isCrawling: boolean;
-  crawlProgress: number;
-  showPreview: boolean;
-  setShowPreview: (show: boolean) => void;
-  previewResults: any;
-  crawlingUrl: string | null;
-  hasApiKey: boolean;
-}
+import { UrlFieldProps } from "./types";
 
 const UrlField: React.FC<UrlFieldProps> = ({
   id,
@@ -37,8 +22,12 @@ const UrlField: React.FC<UrlFieldProps> = ({
   setShowPreview,
   previewResults,
   crawlingUrl,
-  hasApiKey
+  hasApiKey,
+  crawlStatus
 }) => {
+  // Check if we have data to show the View Data button
+  const hasData = !!previewResults;
+
   return (
     <div className="space-y-1">
       <Label htmlFor={id} className="text-right">
@@ -79,8 +68,8 @@ const UrlField: React.FC<UrlFieldProps> = ({
           </Button>
         )}
         
-        {/* Show View Data button only when preview results are available */}
-        {previewResults && !isCrawling && (
+        {/* Always show View Data button when results are available */}
+        {hasData && (
           <CrawlDataDialog 
             crawlResult={previewResults} 
             title={`${label} Crawl Data`} 
