@@ -15,6 +15,7 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
   const [showWebsitePreview, setShowWebsitePreview] = useState(false);
   const [showProductPreview, setShowProductPreview] = useState(false);
   const [hasApiKey, setHasApiKey] = useState(!!FirecrawlService.getApiKey());
+  const [crawlStatus, setCrawlStatus] = useState<string>(""); // Track the crawl status
 
   // Check for API key and update state
   const checkApiKey = () => {
@@ -44,6 +45,7 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
 
     setCrawlingUrl(urlType);
     setCrawlProgress(10);
+    setCrawlStatus("initializing");
     
     if (urlType === 'websiteUrl') {
       setShowWebsitePreview(false);
@@ -56,19 +58,40 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
     try {
       toast.info(`Crawling ${urlType === 'websiteUrl' ? 'website' : 'product'} URL...`);
       
-      // Progress simulation
+      // More realistic progress simulation with status updates
+      let progressValue = 10;
       const progressInterval = setInterval(() => {
+        // Update status message based on progress
+        if (progressValue <= 20) {
+          setCrawlStatus("initializing");
+        } else if (progressValue <= 40) {
+          setCrawlStatus("scraping");
+        } else if (progressValue <= 60) {
+          setCrawlStatus("processing");
+        } else if (progressValue <= 90) {
+          setCrawlStatus("analyzing");
+        }
+        
+        // Increment progress, but slow down as we get higher
         setCrawlProgress(prev => {
-          const newProgress = prev + 10;
-          return newProgress < 90 ? newProgress : prev;
+          if (prev < 30) return prev + 5;
+          if (prev < 60) return prev + 3;
+          if (prev < 80) return prev + 1;
+          return prev;
         });
-      }, 1000);
+        
+        progressValue += 5;
+        if (progressValue >= 90) {
+          clearInterval(progressInterval);
+        }
+      }, 1500);
       
       // Direct API call to FireCrawl instead of using Edge Function
       const crawlResult = await FirecrawlService.crawlWebsite(url);
       
       clearInterval(progressInterval);
       setCrawlProgress(100);
+      setCrawlStatus("completed");
       
       if (crawlResult) {
         console.log(`${urlType} crawl results:`, crawlResult);
@@ -118,6 +141,7 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
     } catch (err: any) {
       console.error(`Error crawling ${urlType}:`, err);
       toast.error(err.message || `Failed to crawl ${urlType === 'websiteUrl' ? 'website' : 'product'} URL`);
+      setCrawlStatus("failed");
     } finally {
       setCrawlingUrl(null);
       setCrawlProgress(100);
@@ -137,6 +161,7 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
     setShowProductPreview,
     handleCrawl,
     hasApiKey,
-    checkApiKey
+    checkApiKey,
+    crawlStatus // Add the crawl status to the return value
   };
 }

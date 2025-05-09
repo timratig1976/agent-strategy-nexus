@@ -10,6 +10,7 @@ export const useWebsiteCrawler = (initialData?: WebsiteCrawlResult) => {
   const [results, setResults] = useState<WebsiteCrawlResult | null>(initialData || null);
   const [error, setError] = useState<string | null>(null);
   const [hasApiKey, setHasApiKey] = useState(!!FirecrawlService.getApiKey());
+  const [crawlStatus, setCrawlStatus] = useState<string>(""); // Track the crawl status
 
   const checkApiKey = () => {
     const apiKey = FirecrawlService.getApiKey();
@@ -40,21 +41,43 @@ export const useWebsiteCrawler = (initialData?: WebsiteCrawlResult) => {
     setIsLoading(true);
     setProgress(10);
     setError(null);
+    setCrawlStatus("initializing");
     
     try {
-      // Progress simulation
+      // Start a more realistic progress simulation
+      let progressValue = 10;
       const progressInterval = setInterval(() => {
+        // Update status message based on progress
+        if (progressValue <= 20) {
+          setCrawlStatus("initializing");
+        } else if (progressValue <= 40) {
+          setCrawlStatus("scraping");
+        } else if (progressValue <= 60) {
+          setCrawlStatus("processing");
+        } else if (progressValue <= 90) {
+          setCrawlStatus("analyzing");
+        }
+        
+        // Increment progress, but slow down as we get higher
         setProgress(prev => {
-          const newProgress = prev + 5;
-          return newProgress < 90 ? newProgress : prev;
+          if (prev < 30) return prev + 5;
+          if (prev < 60) return prev + 3;
+          if (prev < 80) return prev + 1;
+          return prev;
         });
-      }, 1000);
+        
+        progressValue += 5;
+        if (progressValue >= 90) {
+          clearInterval(progressInterval);
+        }
+      }, 1500);
       
       // Make the direct API call
       const crawlResult = await FirecrawlService.crawlWebsite(processedUrl);
       
       clearInterval(progressInterval);
       setProgress(100);
+      setCrawlStatus("completed");
       
       if (!crawlResult.success) {
         throw new Error(crawlResult.summary || "Failed to crawl website");
@@ -72,6 +95,7 @@ export const useWebsiteCrawler = (initialData?: WebsiteCrawlResult) => {
     } catch (err: any) {
       console.error("Error crawling website:", err);
       setError(err.message || "Failed to crawl website");
+      setCrawlStatus("failed");
       toast.error("Failed to crawl website");
     } finally {
       setIsLoading(false);
@@ -92,6 +116,7 @@ export const useWebsiteCrawler = (initialData?: WebsiteCrawlResult) => {
     error,
     handleSubmit,
     hasApiKey,
-    onApiKeyValidated
+    onApiKeyValidated,
+    crawlStatus
   };
 };

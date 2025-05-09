@@ -25,7 +25,8 @@ const WebsiteCrawlingModule: React.FC<WebsiteCrawlingModuleProps> = ({
     error,
     handleSubmit,
     hasApiKey,
-    onApiKeyValidated
+    onApiKeyValidated,
+    crawlStatus // Get the crawl status from hook
   } = useWebsiteCrawler(initialData);
 
   // Update parent component when results change
@@ -60,6 +61,7 @@ const WebsiteCrawlingModule: React.FC<WebsiteCrawlingModuleProps> = ({
         handleSubmit={handleSubmit}
         hasApiKey={hasApiKey}
         onApiKeyValidated={onApiKeyValidated}
+        crawlStatus={crawlStatus} // Pass the crawl status
       />
 
       {results && <WebsiteCrawlerResults results={results} />}

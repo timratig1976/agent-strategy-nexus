@@ -39,26 +39,78 @@ export async function crawlWebsite(url: string, apiKey: string) {
     
     const result = await response.json();
     
-    // If we have an ID, get the detailed results
+    // If we have an ID, start polling for results
     if (result.id) {
       const resultUrl = `https://api.firecrawl.dev/v1/crawl/${result.id}`;
-      console.log("Fetching detailed results from:", resultUrl);
+      console.log("Polling for results from:", resultUrl);
       
-      const detailsResponse = await fetch(resultUrl, {
+      // Maximum number of retries and delay between attempts
+      const maxRetries = 10;
+      const pollingDelay = 3000; // 3 seconds between polls
+      let attempts = 0;
+      
+      // Implement polling loop
+      while (attempts < maxRetries) {
+        console.log(`Polling attempt ${attempts + 1} of ${maxRetries}`);
+        
+        const detailsResponse = await fetch(resultUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+          }
+        });
+        
+        if (!detailsResponse.ok) {
+          const errorData = await detailsResponse.json().catch(() => ({}));
+          console.error("Error fetching crawl details:", errorData);
+          throw new Error(`Failed to fetch crawl details: ${errorData.message || detailsResponse.statusText}`);
+        }
+        
+        const detailedResults = await detailsResponse.json();
+        console.log("Crawl status:", detailedResults.status);
+        
+        // If the crawl is complete, return the results
+        if (detailedResults.status === "completed" || 
+            detailedResults.status === "completed_with_errors" || 
+            detailedResults.status === "failed") {
+          console.log("Crawl completed with status:", detailedResults.status);
+          return detailedResults;
+        }
+        
+        // If still scraping, wait before next attempt
+        if (detailedResults.status === "scraping" || detailedResults.status === "processing") {
+          console.log("Crawl still in progress, waiting before next poll...");
+          await new Promise(resolve => setTimeout(resolve, pollingDelay));
+          attempts++;
+          continue;
+        }
+        
+        // For any other status, return what we have
+        console.log("Unexpected status:", detailedResults.status);
+        return detailedResults;
+      }
+      
+      // If we've reached the maximum retries, return the last known state
+      console.log("Maximum polling attempts reached. Returning current state.");
+      const finalDetailsResponse = await fetch(resultUrl, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
         }
       });
       
-      if (detailsResponse.ok) {
-        const detailedResults = await detailsResponse.json();
-        console.log("Crawl detailed results received");
-        return detailedResults;
+      if (finalDetailsResponse.ok) {
+        const finalResults = await finalDetailsResponse.json();
+        return {
+          ...finalResults,
+          status: "timeout",
+          message: "Crawl is taking longer than expected. Partial results returned."
+        };
       }
     }
     
-    console.log("Crawl completed successfully");
+    // If no ID was returned, return the initial result
+    console.log("No crawl ID returned, returning initial result");
     return result;
   } catch (error) {
     console.error("Error crawling website:", error);
