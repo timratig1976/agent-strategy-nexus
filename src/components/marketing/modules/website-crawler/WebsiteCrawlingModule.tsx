@@ -1,10 +1,9 @@
-
 import React from "react";
 import { Globe } from "lucide-react";
 import WebsiteAnalysisForm from "./WebsiteAnalysisForm";
 import WebsiteCrawlerResults from "./WebsiteCrawlerResults";
 import { useWebsiteCrawler } from "./useWebsiteCrawler";
-import { WebsiteCrawlResult } from "@/services/FirecrawlService";
+import { WebsiteCrawlResult } from "@/services/firecrawl";
 
 interface WebsiteCrawlingModuleProps {
   initialData?: WebsiteCrawlResult;

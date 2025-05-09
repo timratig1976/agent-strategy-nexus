@@ -1,11 +1,10 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { CheckCircle, AlertTriangle, ExternalLink } from "lucide-react";
-import { WebsiteCrawlResult } from "@/services/FirecrawlService";
+import { WebsiteCrawlResult } from "@/services/firecrawl";
 
 interface WebsiteCrawlerResultsProps {
   results: WebsiteCrawlResult;

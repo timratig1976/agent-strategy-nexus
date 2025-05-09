@@ -1,6 +1,6 @@
 
 import React from "react";
-import { WebsiteCrawlResult } from "@/services/FirecrawlService";
+import { WebsiteCrawlResult } from "@/services/firecrawl";
 import { CrawlPreviewProps } from "./types";
 import { AlertTriangle } from "lucide-react";
 

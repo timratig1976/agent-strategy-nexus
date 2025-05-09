@@ -1,5 +1,5 @@
 
-import { WebsiteCrawlResult } from "@/services/FirecrawlService";
+import { WebsiteCrawlResult } from "@/services/firecrawl";
 import { StrategyFormValues } from "@/components/strategy-form";
 import { CrawlUrlType } from "./hooks/useCrawlUrl";
 
