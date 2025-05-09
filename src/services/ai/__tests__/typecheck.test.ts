@@ -19,19 +19,8 @@ import type {
   StrategyMetadata
 } from '../types';
 
-// Define the extended interface for MarketingAIService with static methods
-// to make TypeScript happy in this test file
-declare module '../marketingAIService' {
-  interface MarketingAIServiceStatic {
-    getStrategyMetadata(strategyId: string): Promise<AIServiceResponse<StrategyMetadata>>;
-    updateStrategyMetadata(strategyId: string, metadata: Partial<StrategyMetadata>): Promise<AIServiceResponse<boolean>>;
-    generateUspCanvasProfile(strategyId: string, content: string): Promise<AIServiceResponse<UspCanvasAIResult>>;
-    generateUspCanvasValueMap(strategyId: string, content: string): Promise<AIServiceResponse<UspCanvasAIResult>>;
-  }
-  
-  // Extend the MarketingAIService class constructor
-  interface MarketingAIService extends MarketingAIServiceStatic {}
-}
+// No need for declaration merging since the methods will be properly attached
+// in the root marketingAIService.ts file
 
 // Type-level test - If this compiles, the types are compatible
 const testMarketingAIServiceTypes = async (): Promise<void> => {
@@ -47,9 +36,9 @@ const testMarketingAIServiceTypes = async (): Promise<void> => {
   const _error = contentResponse.error;
   const _debugInfo = contentResponse.debugInfo;
 
-  // Test static method
+  // Test static method via RPCService directly
   const metadataResponse: AIServiceResponse<StrategyMetadata> = 
-    await MarketingAIService.getStrategyMetadata('test-id');
+    await RPCService.getStrategyMetadata('test-id');
   
   // Test USP Canvas Profile generation API
   const profileResponse: AIServiceResponse<UspCanvasAIResult> = 
@@ -68,6 +57,3 @@ const testMarketingAIServiceTypes = async (): Promise<void> => {
     }
   }
 };
-
-// This doesn't need to be an actual test - TypeScript will validate the types
-// during build time. These "tests" ensure the modules have the correct API signature.

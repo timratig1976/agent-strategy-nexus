@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import { MarketingAIService } from '@/services/marketingAIService';
+import { MarketingAIService } from '@/services/ai/marketingAIService';
 import { useAgentPrompt } from './useAgentPrompt';
 
 interface GenerationOptions {
