@@ -62,7 +62,7 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
         .from('website_crawls')
         .select('*')
         .eq('project_id', strategyId)
-        .eq('extracted_content->url_type', 'website')
+        .eq('extracted_content->>url_type', 'website')
         .order('created_at', { ascending: false })
         .limit(1);
       
@@ -95,7 +95,7 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
         .from('website_crawls')
         .select('*')
         .eq('project_id', strategyId)
-        .eq('extracted_content->url_type', 'product')
+        .eq('extracted_content->>url_type', 'product')
         .order('created_at', { ascending: false })
         .limit(1);
       
