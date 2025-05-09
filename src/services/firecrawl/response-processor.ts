@@ -104,7 +104,7 @@ export function detectTechnologies(pageData: any): string[] {
     if (htmlLower.includes('google tag manager') || htmlLower.includes('gtm')) 
       technologies.add("Google Tag Manager");
     
-    if (htmlLower.includes('google analytics') || htmlLower.includes('ga('')) 
+    if (htmlLower.includes('google analytics') || htmlLower.includes('ga(')) 
       technologies.add("Google Analytics");
     
     if (htmlLower.includes('hubspot')) 
