@@ -2,7 +2,7 @@
 /**
  * Scraper client for FireCrawl API
  */
-import FirecrawlApp, { ScrapeResponse as FirecrawlScrapeResponse } from "@mendable/firecrawl-js";
+import FirecrawlApp from "@mendable/firecrawl-js";
 import { processApiResponse } from "./content-processor";
 
 /**
@@ -88,17 +88,17 @@ export class ScraperClient {
         dataPresent: result.data ? 'Data present' : 'No data'
       });
       
-      // Convert FirecrawlScrapeResponse to our ScrapeResponse
-      if (result.success) {
+      // Convert to our ScrapeResponse
+      if (result.success && 'data' in result) {
         return {
           success: true,
           data: result.data,
-          id: result.id
+          id: 'id' in result ? result.id : undefined
         };
       } else {
         return {
           success: false,
-          error: (result as any).error || "Unknown error during scraping"
+          error: 'error' in result ? result.error : "Unknown error during scraping"
         };
       }
     } catch (error) {
