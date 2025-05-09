@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -29,7 +28,7 @@ serve(async (req) => {
 
     console.log("Crawling website:", url);
 
-    // Make API call to Firecrawl with improved parameters
+    // Make API call to Firecrawl with correct parameters according to v1 API
     const response = await fetch('https://api.firecrawl.dev/v1/crawl', {
       method: 'POST',
       headers: {
@@ -39,11 +38,8 @@ serve(async (req) => {
       body: JSON.stringify({
         url: url,
         limit: 20, // Increased page limit for better content extraction
-        waitForSelector: 'body', // Wait for body to be loaded
-        depth: 2, // Control crawl depth
         scrapeOptions: {
-          formats: ['markdown', 'html'],
-          selectors: ['h1', 'h2', 'p', 'meta[name="description"]', 'meta[name="keywords"]'] // Target specific content
+          formats: ['markdown', 'html']
         }
       }),
     });
