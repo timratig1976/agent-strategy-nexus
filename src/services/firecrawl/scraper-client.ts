@@ -2,7 +2,7 @@
 /**
  * Scraper client for FireCrawl API
  */
-import FirecrawlApp, { ScrapeResponse as FirecrawlScrapeResponse } from "@mendable/firecrawl-js";
+import FirecrawlApp from "@mendable/firecrawl-js";
 import { processApiResponse } from "./content-processor";
 
 /**
@@ -20,6 +20,12 @@ interface SuccessResponse<T = any> {
   html?: string;
   metadata?: any;
   id?: string;
+}
+
+// Custom type for ActionsResult since it's referenced in ScrapeResponse
+interface ActionsResult {
+  screenshots?: string[];
+  scrapes?: Array<{url: string, html: string}>;
 }
 
 // Union type for response handling
@@ -191,7 +197,7 @@ export class ScraperClient {
           return {
             success: true,
             data: extractedData,
-            id: 'id' in anyResponse ? anyResponse.id : undefined
+            id: anyResponse.id
           };
         }
         
