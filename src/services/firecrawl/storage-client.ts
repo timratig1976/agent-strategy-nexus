@@ -8,6 +8,20 @@ import { WebsiteCrawlResult } from './types';
 import { toast } from "sonner";
 
 /**
+ * Interface for the stored extracted content to ensure type safety
+ */
+interface ExtractedContent {
+  data: any[];
+  summary: string;
+  pages_crawled: number;
+  keywords: string[];
+  technologies: string[];
+  content_extracted: boolean;
+  crawled_at: string;
+  metadata: Record<string, any>;
+}
+
+/**
  * Provides methods for storing and retrieving crawl data in the database
  */
 export class StorageClient {
@@ -79,18 +93,18 @@ export class StorageClient {
         return null;
       }
       
-      // Extract the data from the extracted_content JSON field
-      const extractedContent = data.extracted_content || {};
+      // Extract the data from the extracted_content JSON field and type cast it
+      const extractedContent = data.extracted_content as ExtractedContent;
       
       // Transform the database record back into WebsiteCrawlResult format
       const crawlResult: WebsiteCrawlResult = {
         success: true,
-        pagesCrawled: extractedContent.pages_crawled || 0,
-        contentExtracted: extractedContent.content_extracted || false,
-        summary: extractedContent.summary || "",
-        keywordsFound: extractedContent.keywords || [],
-        technologiesDetected: extractedContent.technologies || [],
-        data: extractedContent.data || [],
+        pagesCrawled: extractedContent?.pages_crawled || 0,
+        contentExtracted: extractedContent?.content_extracted || false,
+        summary: extractedContent?.summary || "",
+        keywordsFound: extractedContent?.keywords || [],
+        technologiesDetected: extractedContent?.technologies || [],
+        data: extractedContent?.data || [],
         url: data.url,
         id: data.id,
         status: data.status
@@ -121,16 +135,17 @@ export class StorageClient {
       
       // Transform all database records into WebsiteCrawlResult format
       return (data || []).map(record => {
-        const extractedContent = record.extracted_content || {};
+        // Type cast the extracted content to our interface
+        const extractedContent = record.extracted_content as ExtractedContent;
         
         return {
           success: true,
-          pagesCrawled: extractedContent.pages_crawled || 0,
-          contentExtracted: extractedContent.content_extracted || false,
-          summary: extractedContent.summary || "",
-          keywordsFound: extractedContent.keywords || [],
-          technologiesDetected: extractedContent.technologies || [],
-          data: extractedContent.data || [],
+          pagesCrawled: extractedContent?.pages_crawled || 0,
+          contentExtracted: extractedContent?.content_extracted || false,
+          summary: extractedContent?.summary || "",
+          keywordsFound: extractedContent?.keywords || [],
+          technologiesDetected: extractedContent?.technologies || [],
+          data: extractedContent?.data || [],
           url: record.url,
           id: record.id,
           status: record.status
