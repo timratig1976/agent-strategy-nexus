@@ -20,18 +20,18 @@ export class StorageClient {
       
       // Create a cleaned and prepared version of the data for storage
       const storageData = {
-        strategy_id: strategyId,
+        project_id: strategyId, // Renamed from strategy_id to match DB schema
         url: crawlResults.url,
         status: crawlResults.status || 'completed',
-        crawled_at: new Date().toISOString(),
-        summary: crawlResults.summary,
-        pages_crawled: crawlResults.pagesCrawled,
-        keywords: crawlResults.keywordsFound,
-        technologies: crawlResults.technologiesDetected,
-        content_extracted: crawlResults.contentExtracted,
-        // Store the actual extracted content
+        // Using extracted_content field to store all our data as JSON
         extracted_content: {
           data: crawlResults.data,
+          summary: crawlResults.summary,
+          pages_crawled: crawlResults.pagesCrawled,
+          keywords: crawlResults.keywordsFound,
+          technologies: crawlResults.technologiesDetected,
+          content_extracted: crawlResults.contentExtracted,
+          crawled_at: new Date().toISOString(),
           metadata: crawlResults.data && crawlResults.data[0]?.metadata ? 
             crawlResults.data[0].metadata : {}
         }
@@ -65,8 +65,8 @@ export class StorageClient {
       const { data, error } = await supabase
         .from('website_crawls')
         .select('*')
-        .eq('strategy_id', strategyId)
-        .order('crawled_at', { ascending: false })
+        .eq('project_id', strategyId) // Using project_id instead of strategy_id
+        .order('created_at', { ascending: false })
         .limit(1)
         .single();
       
@@ -79,15 +79,18 @@ export class StorageClient {
         return null;
       }
       
+      // Extract the data from the extracted_content JSON field
+      const extractedContent = data.extracted_content || {};
+      
       // Transform the database record back into WebsiteCrawlResult format
       const crawlResult: WebsiteCrawlResult = {
         success: true,
-        pagesCrawled: data.pages_crawled || 0,
-        contentExtracted: data.content_extracted || false,
-        summary: data.summary || "",
-        keywordsFound: data.keywords || [],
-        technologiesDetected: data.technologies || [],
-        data: data.extracted_content?.data || [],
+        pagesCrawled: extractedContent.pages_crawled || 0,
+        contentExtracted: extractedContent.content_extracted || false,
+        summary: extractedContent.summary || "",
+        keywordsFound: extractedContent.keywords || [],
+        technologiesDetected: extractedContent.technologies || [],
+        data: extractedContent.data || [],
         url: data.url,
         id: data.id,
         status: data.status
@@ -108,8 +111,8 @@ export class StorageClient {
       const { data, error } = await supabase
         .from('website_crawls')
         .select('*')
-        .eq('strategy_id', strategyId)
-        .order('crawled_at', { ascending: false });
+        .eq('project_id', strategyId) // Using project_id instead of strategy_id
+        .order('created_at', { ascending: false });
       
       if (error) {
         console.error("Error retrieving all crawl results:", error);
@@ -117,18 +120,22 @@ export class StorageClient {
       }
       
       // Transform all database records into WebsiteCrawlResult format
-      return (data || []).map(record => ({
-        success: true,
-        pagesCrawled: record.pages_crawled || 0,
-        contentExtracted: record.content_extracted || false,
-        summary: record.summary || "",
-        keywordsFound: record.keywords || [],
-        technologiesDetected: record.technologies || [],
-        data: record.extracted_content?.data || [],
-        url: record.url,
-        id: record.id,
-        status: record.status
-      }));
+      return (data || []).map(record => {
+        const extractedContent = record.extracted_content || {};
+        
+        return {
+          success: true,
+          pagesCrawled: extractedContent.pages_crawled || 0,
+          contentExtracted: extractedContent.content_extracted || false,
+          summary: extractedContent.summary || "",
+          keywordsFound: extractedContent.keywords || [],
+          technologiesDetected: extractedContent.technologies || [],
+          data: extractedContent.data || [],
+          url: record.url,
+          id: record.id,
+          status: record.status
+        };
+      });
     } catch (err) {
       console.error("Failed to retrieve all crawl results:", err);
       return [];
