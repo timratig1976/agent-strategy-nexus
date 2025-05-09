@@ -1,10 +1,11 @@
 
-import { Strategy, AgentResult } from "@/types/marketing";
-import { WebsiteCrawlResult } from "@/services/firecrawl";
+import { ReactNode } from "react";
+import { AgentResult } from "@/types/marketing";
+import { StrategyFormValues } from "@/components/strategy-form";
 
 export interface StrategyBriefingProps {
-  strategy: Strategy;
-  agentResults: AgentResult[];
+  strategy: any;
+  agentResults?: AgentResult[];
 }
 
 export interface BriefingHeaderProps {
@@ -13,15 +14,15 @@ export interface BriefingHeaderProps {
 }
 
 export interface BriefingLayoutProps {
-  leftContent: React.ReactNode;
-  rightContent: React.ReactNode;
+  leftContent: ReactNode;
+  rightContent: ReactNode;
 }
 
-export interface StrategyInfoCardProps {
-  formValues: any;
-  saveStrategyMetadata: (values: any) => Promise<void>;
-  showCrawler: boolean;
-  setShowCrawler: (show: boolean) => void;
+export interface BriefingResultCardProps {
+  latestBriefing: AgentResult | null;
+  isGenerating: boolean;
+  generateBriefing: () => void;
+  saveAgentResult: (content: string) => Promise<void>;
 }
 
 export interface BriefingResultProps {
@@ -34,6 +35,7 @@ export interface BriefingResultProps {
   setBriefingHistory: React.Dispatch<React.SetStateAction<AgentResult[]>>;
   onBriefingSaved?: (isFinal: boolean) => void;
   aiDebugInfo?: any;
+  error?: string | null;
   customTitle?: string;
   generateButtonText?: string;
   saveButtonText?: string;
@@ -41,21 +43,20 @@ export interface BriefingResultProps {
   placeholderText?: string;
 }
 
-export interface BriefingResultCardProps {
-  latestBriefing: AgentResult | null;
-  isGenerating: boolean;
-  generateBriefing: () => void;
-  saveAgentResult: (content: string, isFinal?: boolean) => void;
+export interface EnhancerProps {
+  enhancementText: string;
+  setEnhancementText: (text: string) => void;
+}
+
+export interface StrategyInfoCardProps {
+  formValues: StrategyFormValues;
+  saveStrategyMetadata: (values: StrategyFormValues) => Promise<void>;
+  showCrawler: boolean;
+  setShowCrawler: (show: boolean) => void;
 }
 
 export interface WebsiteCrawlerWrapperProps {
   onBack: () => void;
-  crawlResults: WebsiteCrawlResult | null;
-  setCrawlResults: React.Dispatch<React.SetStateAction<WebsiteCrawlResult | null>>;
-}
-
-export interface CrawlPreviewProps {
-  results: WebsiteCrawlResult | null;
-  show: boolean;
-  source?: 'website' | 'product';
+  crawlResults: any | null;
+  setCrawlResults: (results: any | null) => void;
 }

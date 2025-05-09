@@ -9,12 +9,6 @@ const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')!
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
 
-// Initialize OpenAI API
-const configuration = new Configuration({
-  apiKey: OPENAI_API_KEY,
-})
-const openai = new OpenAIApi(configuration)
-
 // Initialize Supabase client
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
@@ -25,6 +19,17 @@ serve(async (req) => {
   }
 
   try {
+    // Verify OpenAI API key is available
+    if (!OPENAI_API_KEY || OPENAI_API_KEY === '') {
+      throw new Error('Missing OPENAI_API_KEY environment variable')
+    }
+
+    // Initialize OpenAI API
+    const configuration = new Configuration({
+      apiKey: OPENAI_API_KEY,
+    })
+    const openai = new OpenAIApi(configuration)
+
     // Get request body
     const requestData = await req.json()
     const { 
@@ -35,6 +40,7 @@ serve(async (req) => {
     } = requestData
 
     console.log(`Processing request for module: ${module}, action: ${action}`)
+    console.log(`Data includes: ${Object.keys(data || {}).join(', ')}`)
 
     // Get the prompts from the database for the specified module
     const { data: promptData, error: promptError } = await supabase
@@ -42,6 +48,8 @@ serve(async (req) => {
       .select('system_prompt, user_prompt')
       .eq('module', module)
       .maybeSingle()
+
+    console.log(`Prompt data fetch result: ${!!promptData}, error: ${!!promptError}`)
 
     if (promptError) {
       throw new Error(`Error fetching prompts: ${promptError.message}`)
@@ -58,18 +66,24 @@ serve(async (req) => {
     let processedUserPrompt = user_prompt
 
     // Extract data from the request
-    // Example: For briefing, we might have strategyId, formData, enhancementText, etc.
     const {
       strategyId,
       formData,
       enhancementText,
       briefingContent,
       personaContent,
-      documentContent, // NEW: Include document content
+      documentContent,
+      websiteData,
       outputLanguage = 'english'
     } = data || {}
 
-    console.log('Data received:', { strategyId, formData, enhancementText, documentContent: !!documentContent })
+    console.log('Data received:', { 
+      strategyId, 
+      hasFormData: !!formData, 
+      hasEnhancement: !!enhancementText, 
+      hasDocumentContent: !!documentContent,
+      hasWebsiteData: !!websiteData
+    })
 
     // Replace placeholders based on the data
     if (strategyId) {
@@ -86,10 +100,10 @@ serve(async (req) => {
     }
 
     // Handle website crawl data
-    if (data.websiteCrawlData) {
+    if (data.websiteData) {
       processedUserPrompt = processedUserPrompt.replace(
         /{{#if websiteCrawlData}}([\s\S]*?){{websiteCrawlData}}([\s\S]*?){{\/if}}/g, 
-        `$1${data.websiteCrawlData}$2`
+        `$1${data.websiteData}$2`
       )
     } else {
       // Remove the conditional block if websiteCrawlData is not available
@@ -99,9 +113,9 @@ serve(async (req) => {
       )
     }
 
-    // Handle documentContent - NEW
+    // Handle documentContent
     if (documentContent) {
-      processedUserPrompt = `${processedUserPrompt}\n\n${documentContent}`
+      processedUserPrompt = `${processedUserPrompt}\n\nAdditional Documents:\n${documentContent}`
     }
 
     // Handle briefing content
@@ -163,7 +177,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        data: {
+        result: {
           rawOutput: response
         },
         debugInfo: {

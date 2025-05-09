@@ -38,7 +38,8 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
     generateBriefing,
     briefingHistory,
     setBriefingHistory,
-    aiDebugInfo
+    aiDebugInfo,
+    error
   } = useBriefingGenerator(strategy.id);
   
   // Check if there's a final briefing in the history
@@ -159,6 +160,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
       setBriefingHistory={setBriefingHistory}
       onBriefingSaved={handleBriefingSaved}
       aiDebugInfo={aiDebugInfo}
+      error={error}
     />
   );
 

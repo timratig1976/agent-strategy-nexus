@@ -3,7 +3,8 @@ import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
-import { History, Sparkles } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, History, Sparkles } from "lucide-react";
 import { BriefingResultProps } from "../../types";
 import BriefingContentEditor from "./BriefingContentEditor";
 import BriefingHistorySheet from "./BriefingHistorySheet";
@@ -21,6 +22,7 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
   setBriefingHistory,
   onBriefingSaved,
   aiDebugInfo,
+  error,
   customTitle = "AI Briefing",
   generateButtonText = "Generate Briefing",
   saveButtonText = "Save Briefing",
@@ -121,6 +123,17 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
       </CardHeader>
       
       <CardContent className="flex-grow flex flex-col">
+        {/* Display error if present */}
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error generating briefing</AlertTitle>
+            <AlertDescription>
+              {error}
+            </AlertDescription>
+          </Alert>
+        )}
+        
         {/* Special Instructions first */}
         <BriefingAIEnhancer 
           enhancementText={enhancementText} 

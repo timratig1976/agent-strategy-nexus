@@ -12,6 +12,7 @@ export const useBriefingGenerator = (strategyId: string) => {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
   const [aiDebugInfo, setAiDebugInfo] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
   
   const { 
     briefingHistory, 
@@ -24,7 +25,7 @@ export const useBriefingGenerator = (strategyId: string) => {
   // Use the document processing hook to get document content
   const { 
     getDocumentContentForAI, 
-    getWebsiteCrawlDataForAI // Use the new function
+    getWebsiteCrawlDataForAI 
   } = useDocumentProcessing(strategyId);
 
   // Function to generate AI briefing with progress updates
@@ -36,6 +37,7 @@ export const useBriefingGenerator = (strategyId: string) => {
       setIsGenerating(true);
       setProgress(10);
       setAiDebugInfo(null); // Reset debug info
+      setError(null); // Reset error state
       
       console.log("Generating briefing for strategy ID:", strategyId, "with values:", formValues);
       console.log("Enhancement text:", enhancementText);
@@ -45,7 +47,7 @@ export const useBriefingGenerator = (strategyId: string) => {
         .from('strategies')
         .select('language')
         .eq('id', strategyId)
-        .single();
+        .maybeSingle();
       
       if (strategyError) {
         console.error("Error fetching strategy language:", strategyError);
@@ -93,6 +95,7 @@ export const useBriefingGenerator = (strategyId: string) => {
       
       if (aiError) {
         clearInterval(progressInterval);
+        setError(aiError);
         throw new Error(aiError);
       }
       
@@ -119,7 +122,7 @@ export const useBriefingGenerator = (strategyId: string) => {
       };
       
       // Save the result to the database
-      const savedResult = await saveAgentResult(strategyId, newResult.content, newResult.metadata);
+      const savedResult = await saveAgentResultToDb(strategy_id, newResult.content, newResult.metadata);
       
       // Update local state with the new result
       if (savedResult) {
@@ -133,6 +136,7 @@ export const useBriefingGenerator = (strategyId: string) => {
       console.error("Error generating briefing:", error);
       toast.error("Failed to generate briefing: " + 
         (error instanceof Error ? error.message : "Unknown error"));
+      setError(error instanceof Error ? error.message : "Unknown error");
     } finally {
       setIsGenerating(false);
     }
@@ -144,6 +148,7 @@ export const useBriefingGenerator = (strategyId: string) => {
     generateBriefing,
     briefingHistory,
     setBriefingHistory,
-    aiDebugInfo
+    aiDebugInfo,
+    error
   };
 };
