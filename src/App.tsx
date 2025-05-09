@@ -14,6 +14,7 @@ import StrategyOverview from '@/pages/StrategyOverview';
 import MarketingHubPage from '@/pages/MarketingHubPage';
 import ModulePage from '@/pages/ModulePage';
 import NotFound from "@/pages/NotFound";
+import StrategyBoardPage from '@/pages/StrategyBoardPage';
 import AIPromptManagerPage from "@/pages/AIPromptManagerPage";
 import { AuthProvider } from "@/context/AuthProvider";
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -38,6 +39,7 @@ function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/strategy/:id" element={<StrategyDetailsWithNav />} />
           <Route path="/strategy-details/:id" element={<StrategyDetails />} />
+          <Route path="/strategy-board/:id" element={<StrategyBoardPage />} />
           <Route path="/create-strategy" element={<CreateStrategy />} />
           <Route path="/strategy-overview/:id" element={<StrategyOverview />} />
           <Route path="/marketing-hub" element={<MarketingHubPage />} />
