@@ -75,9 +75,11 @@ export const useScrapeWebsite = (options: UseScrapeWebsiteOptions = {}) => {
       const scrapeResult = await app.scrapeUrl(url, scrapeOptions) as CustomScrapeResponse;
 
       if (!scrapeResult.success) {
+        // Type guard ensures TypeScript knows this is CustomErrorResponse
         throw new Error(`Failed to scrape: ${scrapeResult.error}`);
       }
 
+      // At this point TypeScript knows scrapeResult is CustomSuccessResponse
       // Extract the data from the result
       const resultData = {
         markdown: scrapeResult.data?.markdown,
