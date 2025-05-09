@@ -1,100 +1,130 @@
 
 import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { FirecrawlService } from "@/services/firecrawl";
+import { CheckCircle, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
-const ApiKeyManager: React.FC = () => {
-  const [apiKey, setApiKey] = useState("");
-  const [hasValidKey, setHasValidKey] = useState(false);
-  const [isValidating, setIsValidating] = useState(false);
+interface ApiKeyManagerProps {
+  onApiKeyValidated?: () => void;
+}
 
-  // Check if we already have a stored API key on component mount
+const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyValidated }) => {
+  const [apiKey, setApiKey] = useState<string>("");
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isValidated, setIsValidated] = useState<boolean>(false);
+  const [hasExistingKey, setHasExistingKey] = useState<boolean>(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Check for existing API key on component mount
   useEffect(() => {
-    const storedKey = FirecrawlService.getApiKey();
-    if (storedKey) {
-      setApiKey(storedKey);
-      setHasValidKey(true);
+    const existingKey = FirecrawlService.getApiKey();
+    if (existingKey) {
+      setApiKey(existingKey);
+      setHasExistingKey(true);
+      setIsValidated(true);
     }
   }, []);
 
-  const handleValidateKey = async () => {
+  const validateApiKeyFormat = (key: string): boolean => {
+    // Check if key starts with 'fc-' and is at least 10 characters
+    return key.startsWith('fc-') && key.length >= 10;
+  };
+
+  const handleSaveApiKey = async () => {
     if (!apiKey.trim()) {
-      toast.error("Please enter an API key");
-      return;
-    }
-    
-    // Check if the API key has the correct format
-    if (!apiKey.startsWith('fc-')) {
-      toast.error("Invalid API key format. Firecrawl API keys start with 'fc-'");
+      setValidationError("API key cannot be empty");
       return;
     }
 
-    setIsValidating(true);
+    if (!validateApiKeyFormat(apiKey)) {
+      setValidationError("Invalid API key format. It should start with 'fc-'");
+      return;
+    }
+
+    setValidationError(null);
+    setIsSaving(true);
+
     try {
-      console.log("Validating API key:", apiKey.substring(0, 5) + "...");
       const isValid = await FirecrawlService.testApiKey(apiKey);
       
       if (isValid) {
-        console.log("API key validation successful");
         FirecrawlService.saveApiKey(apiKey);
-        setHasValidKey(true);
-        toast.success("API key validated and saved successfully");
+        setIsValidated(true);
+        setHasExistingKey(true);
+        toast.success("API key saved and validated successfully");
+        
+        // Call the callback if provided
+        if (onApiKeyValidated) {
+          onApiKeyValidated();
+        }
       } else {
-        console.log("API key validation failed");
-        toast.error(
-          "Could not validate the API key. Please ensure you're using a valid Firecrawl API key."
-        );
+        setValidationError("API key validation failed. Please check your key and try again.");
+        toast.error("API key validation failed");
       }
     } catch (error) {
-      console.error("Error validating API key:", error);
-      toast.error("Failed to connect to Firecrawl API. Please check your internet connection and try again.");
+      console.error("API key validation error:", error);
+      setValidationError("Error validating API key. Please try again.");
+      toast.error("Error validating API key");
     } finally {
-      setIsValidating(false);
+      setIsSaving(false);
     }
   };
 
-  const handleClearKey = () => {
-    FirecrawlService.clearApiKey();
+  const handleClearApiKey = () => {
     setApiKey("");
-    setHasValidKey(false);
-    toast.info("API key cleared");
+    setIsValidated(false);
+    setHasExistingKey(false);
+    FirecrawlService.clearApiKey();
+    toast.success("API key removed");
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div className="flex gap-2">
         <Input
           type="password"
-          placeholder="Enter your Firecrawl API key"
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
-          className="flex-grow"
+          placeholder="Enter your Firecrawl API key"
+          className="flex-1"
+          disabled={isSaving}
         />
-        {!hasValidKey ? (
+        <Button 
+          onClick={handleSaveApiKey} 
+          disabled={isSaving || (isValidated && apiKey === FirecrawlService.getApiKey())}
+          variant="outline"
+        >
+          {isSaving ? "Validating..." : hasExistingKey ? "Update" : "Save"}
+        </Button>
+        {hasExistingKey && (
           <Button 
-            onClick={handleValidateKey} 
-            disabled={isValidating || !apiKey.trim()}
+            onClick={handleClearApiKey}
+            variant="outline"
+            className="border-destructive text-destructive hover:bg-destructive/10"
           >
-            {isValidating ? "Validating..." : "Save Key"}
-          </Button>
-        ) : (
-          <Button variant="outline" onClick={handleClearKey}>
-            Clear Key
+            Clear
           </Button>
         )}
       </div>
       
-      {hasValidKey && (
-        <p className="text-sm text-green-600">
-          ✓ Valid API key is set
-        </p>
+      {validationError && (
+        <div className="text-sm text-destructive flex items-center gap-1 mt-1">
+          <AlertCircle className="h-4 w-4" />
+          <span>{validationError}</span>
+        </div>
       )}
       
-      <p className="text-xs text-muted-foreground">
-        Get your Firecrawl API key from <a href="https://firecrawl.dev" target="_blank" rel="noopener noreferrer" className="underline">Firecrawl.dev</a>. 
-        Firecrawl API keys start with 'fc-'.
+      {isValidated && !validationError && (
+        <div className="text-sm text-green-600 flex items-center gap-1 mt-1">
+          <CheckCircle className="h-4 w-4" />
+          <span>API key validated successfully</span>
+        </div>
+      )}
+      
+      <p className="text-xs text-muted-foreground mt-1">
+        Need a Firecrawl API key? Sign up at <a href="https://firecrawl.dev" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">firecrawl.dev</a>
       </p>
     </div>
   );
