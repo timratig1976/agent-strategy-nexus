@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { WebsiteCrawlResult, FirecrawlService } from "@/services/FirecrawlService";
+import { WebsiteCrawlResult, FirecrawlService } from "@/services/firecrawl";
 import { toast } from "sonner";
 
 export const useWebsiteCrawler = (initialData?: WebsiteCrawlResult) => {

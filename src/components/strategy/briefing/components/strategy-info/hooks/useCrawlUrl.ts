@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { WebsiteCrawlResult, FirecrawlService } from "@/services/FirecrawlService";
+import { WebsiteCrawlResult, FirecrawlService } from "@/services/firecrawl";
 import { StrategyFormValues } from "@/components/strategy-form";
 
 export type CrawlUrlType = 'websiteUrl' | 'productUrl';
