@@ -25,3 +25,10 @@ export interface UrlFieldProps {
   hasApiKey: boolean;
   crawlStatus?: string;
 }
+
+export interface CrawlPreviewProps {
+  results: WebsiteCrawlResult | null;
+  show: boolean;
+  source?: 'website' | 'product';
+  onClose?: () => void;
+}
