@@ -1,4 +1,3 @@
-
 /**
  * Core service for handling website crawling operations
  */
@@ -6,8 +5,7 @@ export async function crawlWebsite(url: string, apiKey: string) {
   console.log("Crawling website:", url);
   
   try {
-    // Make the API call to Firecrawl REST API with enhanced browser rendering
-    // Using /scrape endpoint instead of /crawl
+    // Make the API call to Firecrawl REST API with updated request format
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
@@ -16,17 +14,9 @@ export async function crawlWebsite(url: string, apiKey: string) {
       },
       body: JSON.stringify({
         url: url,
-        limit: 10, // Limit pages for faster response
-        scrapeOptions: {
-          formats: ['markdown'], // Only use markdown format
-          timeout: 30000, // 30s timeout
-          renderOptions: {
-            // Enhanced rendering options for JS-heavy sites
-            waitForSelector: 'body',
-            scrollToBottom: true,
-            waitForTimeout: 2000, // Give JS more time to load
-          }
-        },
+        // Removed the "limit" and "scrapeOptions" keys that caused errors
+        format: 'markdown',
+        timeout: 30000
       }),
     });
     

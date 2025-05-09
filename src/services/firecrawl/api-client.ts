@@ -23,8 +23,8 @@ export class FirecrawlApiClient {
   static async testApiKey(apiKey: string): Promise<boolean> {
     try {
       console.log('Testing API key with Firecrawl API');
-      // A simple test crawl to verify the API key
-      const testResponse = await this.crawlWithApiKey('https://example.com', apiKey, { limit: 1 });
+      // A simple test request to verify the API key
+      const testResponse = await this.crawlWithApiKey('https://example.com', apiKey);
       return testResponse.success;
     } catch (error) {
       console.error('Error testing API key:', error);
@@ -32,32 +32,29 @@ export class FirecrawlApiClient {
     }
   }
 
-  static async crawlWithApiKey(url: string, apiKey: string, options?: { limit?: number, formats?: string[], timeout?: number }): Promise<any> {
+  static async crawlWithApiKey(url: string, apiKey: string, options?: { timeout?: number }): Promise<any> {
     try {
-      console.log('Making initial crawl request to Firecrawl API for URL:', url);
+      console.log('Making initial scrape request to Firecrawl API for URL:', url);
       
-      // Build request options - Using markdown format only
-      const requestOptions = {
-        limit: options?.limit || 10,
-        formats: options?.formats || ['markdown'],
+      // Updated request body format based on API error
+      const requestBody = {
+        url: url,
+        // Removed "limit" and "scrapeOptions" keys that were causing errors
+        // Only including format here, as it's likely still needed
+        format: 'markdown',
         timeout: options?.timeout || 30000
       };
       
-      // Make initial POST request to start the crawl - Using /scrape endpoint
+      console.log("Request body:", requestBody);
+      
+      // Make initial POST request to start the scrape
       const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`,
         },
-        body: JSON.stringify({
-          url: url,
-          limit: requestOptions.limit,
-          scrapeOptions: {
-            formats: requestOptions.formats,
-            timeout: requestOptions.timeout
-          }
-        }),
+        body: JSON.stringify(requestBody),
       });
       
       if (!response.ok) {
@@ -86,7 +83,7 @@ export class FirecrawlApiClient {
         throw new Error('No crawl ID returned from Firecrawl API');
       }
       
-      // Begin polling for results - Using /scrape endpoint
+      // Begin polling for results
       const resultUrl = `https://api.firecrawl.dev/v1/scrape/${initialResponse.id}`;
       console.log("Polling for crawl results from:", resultUrl);
       
