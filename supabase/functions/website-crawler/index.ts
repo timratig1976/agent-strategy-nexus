@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { corsHeaders } from "../_shared/cors.ts";
-import { crawlWebsite, hasSubstantialContent } from "./crawler-service.ts";
+import { crawlWebsite, crawlWebsiteMultiPage, hasSubstantialContent } from "./crawler-service.ts";
 import { extractSummary, extractKeywords, detectTechnologies } from "./content-extractor.ts";
 import { enhanceEmptyResults } from "./result-enhancer.ts";
 
@@ -20,7 +20,7 @@ serve(async (req) => {
       throw new Error("Missing Firecrawl API key. Please set FIRECRAWL_API_KEY in your environment variables.");
     }
 
-    const { url } = await req.json();
+    const { url, crawlOptions } = await req.json();
 
     if (!url) {
       throw new Error("URL is required");
@@ -33,8 +33,22 @@ serve(async (req) => {
     console.log(`Normalized URL: ${normalizedUrl}`);
     
     try {
-      // Call the crawler service to fetch website data
-      const scrapeResult = await crawlWebsite(normalizedUrl, FIRECRAWL_API_KEY);
+      // Determine which crawl method to use based on options
+      const useMultiPageCrawl = crawlOptions && 
+        (crawlOptions.depth > 1 || crawlOptions.maxPages > 1 || crawlOptions.includeExternalLinks);
+      
+      let scrapeResult;
+      
+      if (useMultiPageCrawl) {
+        // Use the multi-page crawl for more extensive sites
+        console.log("Using multi-page crawl with options:", crawlOptions);
+        scrapeResult = await crawlWebsiteMultiPage(normalizedUrl, FIRECRAWL_API_KEY, crawlOptions);
+      } else {
+        // Use the default scrape for single pages
+        console.log("Using single-page scrape");
+        scrapeResult = await crawlWebsite(normalizedUrl, FIRECRAWL_API_KEY);
+      }
+      
       console.log("Raw scrape result received, checking content quality");
       
       // Check if we have substantial content
@@ -60,14 +74,15 @@ serve(async (req) => {
       
       const processedData = {
         success: true,
-        pagesCrawled: 1,
+        pagesCrawled: Array.isArray(scrapeResult.data) ? scrapeResult.data.length : 1,
         contentExtracted: true,
         summary: extractSummary(dataToProcess),
         keywordsFound: extractKeywords(dataToProcess),
         technologiesDetected: detectTechnologies(dataToProcess),
         data: dataToProcess,
         id: scrapeResult.id || null,
-        url: normalizedUrl
+        url: normalizedUrl,
+        crawlType: useMultiPageCrawl ? 'multi-page' : 'single-page'
       };
       
       console.log("Data processing complete, returning result");

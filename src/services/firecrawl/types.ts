@@ -7,6 +7,12 @@ export interface CrawlOptions {
   limit?: number;
   formats?: string[];
   timeout?: number;
+  crawlOptions?: {
+    depth?: number;
+    maxPages?: number;
+    includeExternalLinks?: boolean;
+    selectors?: string[];
+  };
 }
 
 export interface WebsiteCrawlResult {
@@ -22,3 +28,19 @@ export interface WebsiteCrawlResult {
   status?: string;
   error?: string;
 }
+
+export interface CrawlJobResponse {
+  success: boolean;
+  id: string;
+  url: string;
+}
+
+export interface CrawlStatusResponse {
+  status: string;
+  total: number;
+  completed: number;
+  creditsUsed: number;
+  expiresAt: string;
+  data: any[];
+}
+

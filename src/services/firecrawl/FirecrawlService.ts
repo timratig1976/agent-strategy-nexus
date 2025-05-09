@@ -6,7 +6,7 @@
 import { toast } from "sonner";
 import { FirecrawlApiClient } from "./api-client";
 import { processApiResponse } from "./content-processor";
-import type { CrawlOptions, WebsiteCrawlResult } from "./types";
+import type { CrawlOptions, WebsiteCrawlResult, CrawlJobResponse, CrawlStatusResponse } from "./types";
 
 /**
  * Main service class for FireCrawl operations
@@ -59,6 +59,134 @@ export class FirecrawlService {
     } catch (error) {
       console.error("Error crawling website:", error);
       // Return the error directly instead of using a fallback
+      return {
+        success: false,
+        pagesCrawled: 0,
+        contentExtracted: false,
+        summary: `Error: ${error instanceof Error ? error.message : 'Unknown error occurred during crawl'}`,
+        keywordsFound: [],
+        technologiesDetected: [],
+        data: [],
+        url: url,
+        error: error instanceof Error ? error.message : 'Unknown error occurred during crawl'
+      };
+    }
+  }
+  
+  /**
+   * NEW: Start a multi-page crawl job
+   * This is for more extensive crawling of websites with many pages
+   */
+  static async startCrawlJob(
+    url: string, 
+    options?: { 
+      depth?: number; 
+      maxPages?: number; 
+      includeExternalLinks?: boolean; 
+      selectors?: string[];
+    }
+  ): Promise<CrawlJobResponse> {
+    const apiKey = this.getApiKey();
+    if (!apiKey) {
+      toast.error('FireCrawl API key not found. Please set it in settings.');
+      throw new Error('API key not found');
+    }
+    
+    try {
+      return await FirecrawlApiClient.startCrawlJob(url, apiKey, options);
+    } catch (error) {
+      console.error("Error starting crawl job:", error);
+      throw error;
+    }
+  }
+  
+  /**
+   * NEW: Check the status of a crawl job
+   */
+  static async checkCrawlStatus(jobId: string): Promise<CrawlStatusResponse> {
+    const apiKey = this.getApiKey();
+    if (!apiKey) {
+      toast.error('FireCrawl API key not found. Please set it in settings.');
+      throw new Error('API key not found');
+    }
+    
+    try {
+      return await FirecrawlApiClient.checkCrawlStatus(jobId, apiKey);
+    } catch (error) {
+      console.error("Error checking crawl status:", error);
+      throw error;
+    }
+  }
+  
+  /**
+   * NEW: Complete crawl job processing
+   * This method handles polling for job completion and processing the results
+   */
+  static async completeCrawlJob(jobId: string, url: string): Promise<WebsiteCrawlResult> {
+    const apiKey = this.getApiKey();
+    if (!apiKey) {
+      toast.error('FireCrawl API key not found. Please set it in settings.');
+      throw new Error('API key not found');
+    }
+    
+    try {
+      // Polling configuration
+      const maxRetries = 20;
+      const pollingDelay = 3000; // 3 seconds between polls
+      let attempts = 0;
+      
+      // Polling loop
+      while (attempts < maxRetries) {
+        console.log(`Checking crawl job status (attempt ${attempts + 1} of ${maxRetries})`);
+        
+        const statusResult = await this.checkCrawlStatus(jobId);
+        
+        // Check if the crawl is complete
+        if (statusResult.status === "completed" || 
+            statusResult.status === "completed_with_errors" || 
+            statusResult.status === "failed") {
+          console.log("Crawl job completed with status:", statusResult.status);
+          
+          // Process the results
+          return {
+            success: true,
+            pagesCrawled: statusResult.completed,
+            contentExtracted: statusResult.completed > 0,
+            summary: `Crawled ${statusResult.completed} pages out of ${statusResult.total}`,
+            keywordsFound: [],  // Need to extract from data
+            technologiesDetected: [], // Need to extract from data
+            data: statusResult.data,
+            id: jobId,
+            url: url,
+            status: statusResult.status
+          };
+        }
+        
+        // If still processing, wait before next attempt
+        await new Promise(resolve => setTimeout(resolve, pollingDelay));
+        attempts++;
+      }
+      
+      // If we reached max attempts but crawl is still in progress
+      console.log("Maximum polling attempts reached. Returning partial results.");
+      
+      // Get the current state
+      const finalStatus = await this.checkCrawlStatus(jobId);
+      
+      return {
+        success: false,
+        pagesCrawled: finalStatus.completed,
+        contentExtracted: finalStatus.completed > 0,
+        summary: `Timeout waiting for crawl to complete. Processed ${finalStatus.completed} of ${finalStatus.total} pages.`,
+        keywordsFound: [],
+        technologiesDetected: [],
+        data: finalStatus.data || [],
+        id: jobId,
+        url: url,
+        status: "timeout"
+      };
+    } catch (error) {
+      console.error("Error completing crawl job:", error);
       return {
         success: false,
         pagesCrawled: 0,
