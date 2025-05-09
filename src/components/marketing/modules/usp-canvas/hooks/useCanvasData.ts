@@ -7,7 +7,7 @@ import { Json } from '@/integrations/supabase/types';
 
 // Helper types for database operations
 type DbUspCanvas = {
-  project_id: string;
+  strategy_id: string;
   customer_jobs: Json;
   pain_points: Json;
   gains: Json;
@@ -22,9 +22,9 @@ export const useCanvasData = (strategyId?: string) => {
   const [error, setError] = useState<string | null>(null);
 
   // Convert application model to database model
-  const mapCanvasToDbFormat = (canvas: UspCanvas, projectId: string): DbUspCanvas => {
+  const mapCanvasToDbFormat = (canvas: UspCanvas, strategyId: string): DbUspCanvas => {
     return {
-      project_id: projectId,
+      strategy_id: strategyId,
       customer_jobs: canvas.customerJobs as unknown as Json,
       pain_points: canvas.customerPains as unknown as Json,
       gains: canvas.customerGains as unknown as Json,
@@ -181,7 +181,7 @@ export const useCanvasData = (strategyId?: string) => {
       const { data, error: fetchError } = await supabase
         .from('usp_canvas')
         .select('*')
-        .eq('project_id', strategyId) // Using project_id as it matches our strategy_id
+        .eq('strategy_id', strategyId)  // Use strategy_id instead of project_id
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -226,7 +226,15 @@ export const useCanvasData = (strategyId?: string) => {
       // Perform the upsert operation with properly typed data
       const { error: upsertError } = await supabase
         .from('usp_canvas')
-        .upsert(dbCanvas);
+        .upsert([{
+          strategy_id: dbCanvas.strategy_id,
+          customer_jobs: dbCanvas.customer_jobs,
+          pain_points: dbCanvas.pain_points,
+          gains: dbCanvas.gains,
+          differentiators: dbCanvas.differentiators,
+          updated_at: dbCanvas.updated_at,
+          version: dbCanvas.version
+        }]);
       
       if (upsertError) {
         console.error("Error saving canvas to database:", upsertError);
