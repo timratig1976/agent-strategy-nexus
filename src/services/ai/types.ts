@@ -1,7 +1,8 @@
 
 import type { StrategyMetadata } from "@/integrations/supabase/client";
 
-export interface AIServiceResponse<T> {
+// Centralized type definitions (Best Practice #1)
+export interface AIServiceResponse<T = any> {
   data?: T;
   error?: string;
   debugInfo?: {
