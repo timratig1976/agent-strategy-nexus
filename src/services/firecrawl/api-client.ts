@@ -1,3 +1,4 @@
+
 /**
  * API client for FireCrawl API interactions
  */
@@ -23,7 +24,6 @@ export class FirecrawlApiClient {
     try {
       console.log('Testing API key with Firecrawl API');
       
-      // Using the updated request format with formats as an array
       const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
         method: 'POST',
         headers: {
@@ -32,7 +32,7 @@ export class FirecrawlApiClient {
         },
         body: JSON.stringify({
           url: 'https://example.com',
-          formats: ['markdown'], // Changed from format to formats (array)
+          formats: ['markdown'],
           timeout: 10000 // Short timeout for testing
         }),
       });
@@ -44,7 +44,7 @@ export class FirecrawlApiClient {
       }
       
       const result = await response.json();
-      return !!result.id; // If we got an ID, the API key is valid
+      return result.success === true;
     } catch (error) {
       console.error('Error testing API key:', error);
       return false;
@@ -53,18 +53,17 @@ export class FirecrawlApiClient {
 
   static async crawlWithApiKey(url: string, apiKey: string, options?: { timeout?: number }): Promise<any> {
     try {
-      console.log('Making initial scrape request to Firecrawl API for URL:', url);
+      console.log('Making scrape request to Firecrawl API for URL:', url);
       
-      // Updated request body format with formats as an array
       const requestBody = {
         url: url,
-        formats: ['markdown', 'html'], // Changed from format to formats (array)
+        formats: ['markdown', 'html'],
         timeout: options?.timeout || 30000
       };
       
       console.log("Request body:", requestBody);
       
-      // Make initial POST request to start the scrape
+      // Make the scrape request
       const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
         method: 'POST',
         headers: {
@@ -92,77 +91,201 @@ export class FirecrawlApiClient {
         };
       }
       
-      // Parse the initial response which contains the crawl ID and result URL
-      const initialResponse = await response.json();
-      console.log("FireCrawl initial response:", initialResponse);
+      // Parse the response - scrape endpoints typically return data directly
+      const scrapeResult = await response.json();
+      console.log("FireCrawl scrape response:", scrapeResult);
       
-      if (!initialResponse.id) {
-        throw new Error('No crawl ID returned from Firecrawl API');
+      // For most scrapes, the data is returned immediately
+      if (scrapeResult.success && scrapeResult.data) {
+        console.log("Scrape completed successfully with direct data");
+        return this.processScrapedData(scrapeResult, url);
       }
       
-      // Begin polling for results
-      const resultUrl = `https://api.firecrawl.dev/v1/scrape/${initialResponse.id}`;
-      console.log("Polling for crawl results from:", resultUrl);
-      
-      // Polling configuration
-      const maxRetries = 10; // Maximum number of polling attempts
-      const pollingDelay = 3000; // 3 seconds between polls
-      let attempts = 0;
-      let detailedResults: any = null;
-      
-      // Start polling loop
-      while (attempts < maxRetries) {
-        console.log(`Polling attempt ${attempts + 1} of ${maxRetries}`);
-        
-        const detailsResponse = await fetch(resultUrl, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-          }
-        });
-        
-        if (!detailsResponse.ok) {
-          const errorData = await detailsResponse.json();
-          console.error("Error fetching crawl details:", errorData);
-          throw new Error(`Failed to fetch crawl details: ${errorData.message || detailsResponse.statusText}`);
-        }
-        
-        detailedResults = await detailsResponse.json();
-        console.log("Crawl status:", detailedResults.status);
-        
-        // Check if the crawl is complete
-        if (detailedResults.status === "completed" || 
-            detailedResults.status === "completed_with_errors" || 
-            detailedResults.status === "failed") {
-          console.log("Crawl completed with status:", detailedResults.status);
-          break; // Exit polling loop if we have a completion status
-        }
-        
-        // If still processing, wait before next attempt
-        if (detailedResults.status === "scraping" || detailedResults.status === "processing") {
-          console.log(`Crawl in progress (${detailedResults.status}), waiting before next poll...`);
-          await new Promise(resolve => setTimeout(resolve, pollingDelay));
-          attempts++;
-          continue;
-        }
-        
-        // For any unexpected status, just use what we have
-        console.log("Unexpected status received:", detailedResults.status);
-        break;
+      // For larger or more complex scrapes that return a job ID, implement polling
+      if (scrapeResult.id) {
+        console.log("Scrape request returned a job ID for polling:", scrapeResult.id);
+        return await this.pollForScrapeResult(scrapeResult.id, apiKey, url);
       }
       
-      // If we reached max attempts but crawl is still in progress
-      if (attempts >= maxRetries && 
-          (detailedResults.status === "scraping" || detailedResults.status === "processing")) {
-        console.log("Maximum polling attempts reached. Returning partial results.");
-        detailedResults.status = "timeout";
-        detailedResults.message = "Crawl is taking longer than expected. Partial results returned.";
-      }
+      // Unexpected response format
+      console.error("Unexpected scrape result format:", scrapeResult);
+      return {
+        success: false,
+        pagesCrawled: 0,
+        contentExtracted: false,
+        summary: "Unexpected response format from Firecrawl API",
+        keywordsFound: [],
+        technologiesDetected: [],
+        data: [],
+        url: url,
+        error: "Unexpected response format from Firecrawl API"
+      };
       
-      return detailedResults;
     } catch (error) {
       console.error("Error in API client crawl:", error);
       throw error;
     }
+  }
+  
+  /**
+   * Process scraped data into a consistent format
+   */
+  private static processScrapedData(scrapeResult: any, url: string): any {
+    // Extract the page data from the result
+    const pageData = scrapeResult.data;
+    
+    // Process into a consistent format
+    return {
+      success: true,
+      pagesCrawled: 1, // Most scrapes are single page
+      contentExtracted: true,
+      summary: pageData.markdown ? pageData.markdown.substring(0, 300) + "..." : "Content successfully extracted",
+      keywordsFound: this.extractKeywords(pageData),
+      technologiesDetected: this.detectTechnologies(pageData),
+      data: [pageData], // Wrap in an array for consistency with crawl results
+      url: url,
+      id: scrapeResult.id || null
+    };
+  }
+  
+  /**
+   * Extract keywords from scraped content
+   */
+  private static extractKeywords(pageData: any): string[] {
+    // Simple keyword extraction based on common patterns
+    // This could be enhanced with NLP in a future iteration
+    const keywords: string[] = [];
+    
+    if (pageData.markdown) {
+      const content = pageData.markdown.toLowerCase();
+      
+      // Extract potential keywords from headings
+      const headingMatches = content.match(/#{1,6}\s+([a-z0-9\s]+)/g) || [];
+      headingMatches.forEach(match => {
+        const keyword = match.replace(/#{1,6}\s+/, "").trim();
+        if (keyword.length > 3 && !keywords.includes(keyword)) {
+          keywords.push(keyword);
+        }
+      });
+      
+      // Extract from bold or emphasized text
+      const emphasisMatches = content.match(/(\*\*|__|\*|_)([a-z0-9\s]+)\1/g) || [];
+      emphasisMatches.forEach(match => {
+        const keyword = match.replace(/(\*\*|__|\*|_)/g, "").trim();
+        if (keyword.length > 3 && !keywords.includes(keyword)) {
+          keywords.push(keyword);
+        }
+      });
+    }
+    
+    // Limit to top 10 keywords
+    return keywords.slice(0, 10);
+  }
+  
+  /**
+   * Detect technologies used in the website
+   */
+  private static detectTechnologies(pageData: any): string[] {
+    const technologies: string[] = [];
+    
+    if (pageData.html) {
+      const html = pageData.html.toLowerCase();
+      
+      // Check for common technologies
+      if (html.includes("wordpress")) technologies.push("WordPress");
+      if (html.includes("woocommerce")) technologies.push("WooCommerce");
+      if (html.includes("shopify")) technologies.push("Shopify");
+      if (html.includes("react")) technologies.push("React");
+      if (html.includes("vue")) technologies.push("Vue.js");
+      if (html.includes("angular")) technologies.push("Angular");
+      if (html.includes("bootstrap")) technologies.push("Bootstrap");
+      if (html.includes("tailwind")) technologies.push("Tailwind CSS");
+      if (html.includes("jquery")) technologies.push("jQuery");
+      if (html.includes("google tag manager")) technologies.push("Google Tag Manager");
+      if (html.includes("google analytics")) technologies.push("Google Analytics");
+      if (html.includes("hubspot")) technologies.push("HubSpot");
+      if (html.includes("marketo")) technologies.push("Marketo");
+      if (html.includes("mailchimp")) technologies.push("Mailchimp");
+    }
+    
+    return technologies;
+  }
+  
+  /**
+   * Poll for scrape result when a job ID is returned
+   */
+  private static async pollForScrapeResult(jobId: string, apiKey: string, url: string): Promise<any> {
+    const resultUrl = `https://api.firecrawl.dev/v1/scrape/${jobId}`;
+    console.log("Polling for scrape results from:", resultUrl);
+    
+    // Polling configuration
+    const maxRetries = 10;
+    const pollingDelay = 3000; // 3 seconds between polls
+    let attempts = 0;
+    
+    // Polling loop
+    while (attempts < maxRetries) {
+      console.log(`Polling attempt ${attempts + 1} of ${maxRetries}`);
+      
+      const detailsResponse = await fetch(resultUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        }
+      });
+      
+      if (!detailsResponse.ok) {
+        const errorData = await detailsResponse.json();
+        console.error("Error fetching scrape details:", errorData);
+        throw new Error(`Failed to fetch scrape details: ${errorData.message || detailsResponse.statusText}`);
+      }
+      
+      const detailedResults = await detailsResponse.json();
+      console.log("Scrape status:", detailedResults.status);
+      
+      // Check if the scrape is complete
+      if (detailedResults.status === "completed" || 
+          detailedResults.status === "completed_with_errors" || 
+          detailedResults.status === "failed") {
+        console.log("Scrape completed with status:", detailedResults.status);
+        return this.processScrapedData(detailedResults, url);
+      }
+      
+      // If still processing, wait before next attempt
+      await new Promise(resolve => setTimeout(resolve, pollingDelay));
+      attempts++;
+    }
+    
+    // If we reached max attempts but scrape is still in progress
+    console.log("Maximum polling attempts reached. Returning partial results.");
+    
+    // Try one more time to get whatever results are available
+    const finalResponse = await fetch(resultUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+      }
+    });
+    
+    if (finalResponse.ok) {
+      const finalResults = await finalResponse.json();
+      return {
+        ...this.processScrapedData(finalResults, url),
+        status: "timeout",
+        message: "Scrape is taking longer than expected. Partial results returned."
+      };
+    }
+    
+    return {
+      success: false,
+      pagesCrawled: 0,
+      contentExtracted: false,
+      summary: "Timeout while waiting for scrape results",
+      keywordsFound: [],
+      technologiesDetected: [],
+      data: [],
+      url: url,
+      error: "Timeout while waiting for scrape results"
+    };
   }
 }

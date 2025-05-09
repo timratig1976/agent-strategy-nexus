@@ -26,7 +26,7 @@ serve(async (req) => {
       throw new Error("URL is required");
     }
     
-    console.log(`Starting to crawl URL: ${url}`);
+    console.log(`Starting to scrape URL: ${url}`);
     
     // Normalize the URL - add https:// if missing
     const normalizedUrl = url.match(/^https?:\/\//) ? url : `https://${url}`;
@@ -34,15 +34,15 @@ serve(async (req) => {
     
     try {
       // Call the crawler service to fetch website data
-      const crawlResult = await crawlWebsite(normalizedUrl, FIRECRAWL_API_KEY);
-      console.log("Raw crawl result received, checking content quality");
+      const scrapeResult = await crawlWebsite(normalizedUrl, FIRECRAWL_API_KEY);
+      console.log("Raw scrape result received, checking content quality");
       
       // Check if we have substantial content
-      if (!hasSubstantialContent(crawlResult)) {
+      if (!hasSubstantialContent(scrapeResult)) {
         console.log("No substantial content was extracted from the website. Using enhanced fallback.");
         
         // Try to extract any metadata or information from the response
-        const enhancedResults = enhanceEmptyResults(crawlResult, normalizedUrl);
+        const enhancedResults = enhanceEmptyResults(scrapeResult, normalizedUrl);
         
         return new Response(JSON.stringify(enhancedResults), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -50,17 +50,23 @@ serve(async (req) => {
       }
 
       // Process and enrich the data
-      console.log(`Processing data from ${crawlResult.data?.length || 0} pages`);
+      // For direct scrape results, data is in scrapeResult.data
+      // Convert to consistent format for processing
+      const dataToProcess = Array.isArray(scrapeResult.data) ? 
+                          scrapeResult.data : 
+                          [scrapeResult.data];
+                          
+      console.log(`Processing data from scrape result`);
       
       const processedData = {
         success: true,
-        pagesCrawled: crawlResult.data?.length || 0,
+        pagesCrawled: 1,
         contentExtracted: true,
-        summary: extractSummary(crawlResult.data),
-        keywordsFound: extractKeywords(crawlResult.data),
-        technologiesDetected: detectTechnologies(crawlResult.data),
-        data: crawlResult.data || [],
-        id: crawlResult.id || null,
+        summary: extractSummary(dataToProcess),
+        keywordsFound: extractKeywords(dataToProcess),
+        technologiesDetected: detectTechnologies(dataToProcess),
+        data: dataToProcess,
+        id: scrapeResult.id || null,
         url: normalizedUrl
       };
       
@@ -70,7 +76,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     } catch (crawlError) {
-      console.error('Crawl operation failed:', crawlError);
+      console.error('Scrape operation failed:', crawlError);
       
       // Create a fallback response with domain information
       console.log("Creating fallback response based on URL");
