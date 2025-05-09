@@ -11,6 +11,62 @@ const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
 // Initialize Supabase client
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
+// Default prompts to use as fallbacks when database prompts aren't found
+const DEFAULT_PROMPTS = {
+  briefing: {
+    system_prompt: `You are an expert marketing strategist AI assistant helping to create professional marketing strategy briefings.
+
+Your task is to synthesize information from multiple sources, including:
+1. Form data provided by the user
+2. Website content crawled from the company URL (when available)
+3. Product description and additional context
+
+Create a comprehensive, well-structured marketing strategy briefing that includes:
+- Company and product overview based on the provided information and website data
+- Target audience analysis that identifies key demographics and psychographics
+- Unique value proposition and competitive positioning
+- Key marketing channels and tactics recommended for this specific business
+- Strategic approach recommendations tailored to the company's industry and offerings
+- Prioritized action items and next steps
+
+Format the briefing in a professional, readable structure with clear sections and bullet points where appropriate.
+Maintain a professional tone suitable for marketing experts while being accessible.`,
+    user_prompt: `I need to create a marketing strategy briefing for:
+- Strategy ID: {{strategyId}}
+- Strategy Name: {{formData.name}}
+- Company Name: {{formData.companyName}}
+- Website URL: {{formData.websiteUrl}}
+- Product/Service Description: {{formData.productDescription}}
+- Additional Information: {{formData.additionalInfo}}
+
+{{#if websiteCrawlData}}
+Here is additional data extracted from the company's website:
+{{websiteCrawlData}}
+{{/if}}
+
+Please provide a comprehensive marketing strategy briefing that includes:
+1. An overview of the company and its offerings
+2. Target audience analysis
+3. Key marketing channels to prioritize
+4. Key benefits of the product/service to highlight
+5. Recommendations for messaging and positioning
+6. Call to action and next steps
+
+{{#if outputLanguage equals "deutsch"}}
+Bitte schreibe alle Antworten auf Deutsch.
+{{/if}}`
+  },
+  persona: {
+    system_prompt: `You are an expert marketing strategist specializing in persona development.`,
+    user_prompt: `Based on the briefing content, create detailed buyer personas.
+{{briefingContent}}
+
+{{#if enhancementText}}
+Additional guidance: {{enhancementText}}
+{{/if}}`
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -49,27 +105,32 @@ serve(async (req) => {
       .maybeSingle()
 
     console.log(`Prompt data fetch result: ${!!promptData}, error: ${!!promptError}`)
+    
+    // Initialize prompts - either from database or defaults
+    let system_prompt = '';
+    let user_prompt = '';
 
-    if (promptError) {
-      console.error(`Error fetching prompts: ${JSON.stringify(promptError)}`)
-      throw new Error(`Error fetching prompts: ${promptError.message}`)
+    // Check if we got prompts from the database
+    if (promptData && promptData.system_prompt && promptData.user_prompt) {
+      // Use database prompts
+      system_prompt = promptData.system_prompt;
+      user_prompt = promptData.user_prompt;
+      console.log(`Using database prompts for module: ${module}`);
+    } else {
+      // Check if we have default prompts for this module
+      if (DEFAULT_PROMPTS[module]) {
+        system_prompt = DEFAULT_PROMPTS[module].system_prompt;
+        user_prompt = DEFAULT_PROMPTS[module].user_prompt;
+        console.log(`Using default fallback prompts for module: ${module}`);
+      } else {
+        // No prompts found in database or defaults
+        console.error(`No prompts found for module: ${module}`);
+        throw new Error(`No prompts found for module: ${module}`);
+      }
     }
-
-    if (!promptData) {
-      console.error(`No prompts found for module: ${module}`)
-      throw new Error(`No prompts found for module: ${module}`)
-    }
-
-    if (!promptData.system_prompt || !promptData.user_prompt) {
-      console.error(`Incomplete prompt data for module: ${module}`)
-      throw new Error(`Incomplete prompt data for module: ${module}`)
-    }
-
-    // Extract prompts
-    const { system_prompt, user_prompt } = promptData
 
     // Process the placeholders in the user prompt
-    let processedUserPrompt = user_prompt
+    let processedUserPrompt = user_prompt;
 
     // Extract data from the request
     const {
@@ -81,7 +142,7 @@ serve(async (req) => {
       documentContent,
       websiteData,
       outputLanguage = 'english'
-    } = data || {}
+    } = data || {};
 
     console.log('Data received:', { 
       strategyId, 
@@ -90,20 +151,20 @@ serve(async (req) => {
       hasDocumentContent: !!documentContent,
       hasWebsiteData: !!websiteData,
       outputLanguage
-    })
+    });
 
     // Replace placeholders based on the data
     if (strategyId) {
-      processedUserPrompt = processedUserPrompt.replace(/{{strategyId}}/g, strategyId)
+      processedUserPrompt = processedUserPrompt.replace(/{{strategyId}}/g, strategyId);
     }
 
     // Handle form data replacement
     if (formData) {
       // Replace formData.X placeholders
       Object.entries(formData).forEach(([key, value]) => {
-        const regex = new RegExp(`{{formData\\.${key}}}`, 'g')
-        processedUserPrompt = processedUserPrompt.replace(regex, value as string || '')
-      })
+        const regex = new RegExp(`{{formData\\.${key}}}`, 'g');
+        processedUserPrompt = processedUserPrompt.replace(regex, value as string || '');
+      });
     }
 
     // Handle website crawl data
@@ -111,28 +172,28 @@ serve(async (req) => {
       processedUserPrompt = processedUserPrompt.replace(
         /{{#if websiteCrawlData}}([\s\S]*?){{websiteCrawlData}}([\s\S]*?){{\/if}}/g, 
         `$1${websiteData}$2`
-      )
+      );
     } else {
       // Remove the conditional block if websiteCrawlData is not available
       processedUserPrompt = processedUserPrompt.replace(
         /{{#if websiteCrawlData}}[\s\S]*?{{\/if}}/g, 
         ''
-      )
+      );
     }
 
     // Handle documentContent
     if (documentContent) {
-      processedUserPrompt = `${processedUserPrompt}\n\nAdditional Documents:\n${documentContent}`
+      processedUserPrompt = `${processedUserPrompt}\n\nAdditional Documents:\n${documentContent}`;
     }
 
     // Handle briefing content
     if (briefingContent) {
-      processedUserPrompt = processedUserPrompt.replace(/{{briefingContent}}/g, briefingContent)
+      processedUserPrompt = processedUserPrompt.replace(/{{briefingContent}}/g, briefingContent);
     }
 
     // Handle persona content
     if (personaContent) {
-      processedUserPrompt = processedUserPrompt.replace(/{{personaContent}}/g, personaContent)
+      processedUserPrompt = processedUserPrompt.replace(/{{personaContent}}/g, personaContent);
     }
 
     // Handle enhancement text
@@ -140,13 +201,13 @@ serve(async (req) => {
       processedUserPrompt = processedUserPrompt.replace(
         /{{#if enhancementText}}([\s\S]*?){{enhancementText}}([\s\S]*?){{\/if}}/g, 
         `$1${enhancementText}$2`
-      )
+      );
     } else {
       // Remove the conditional block if enhancement text is not available
       processedUserPrompt = processedUserPrompt.replace(
         /{{#if enhancementText}}[\s\S]*?{{\/if}}/g, 
         ''
-      )
+      );
     }
 
     // Handle output language
@@ -154,16 +215,16 @@ serve(async (req) => {
       processedUserPrompt = processedUserPrompt.replace(
         /{{#if outputLanguage equals "deutsch"}}([\s\S]*?){{\/if}}/g, 
         '$1'
-      )
+      );
     } else {
       processedUserPrompt = processedUserPrompt.replace(
         /{{#if outputLanguage equals "deutsch"}}[\s\S]*?{{\/if}}/g, 
         ''
-      )
+      );
     }
 
-    console.log('System prompt length:', system_prompt.length)
-    console.log('Processed user prompt length:', processedUserPrompt.length)
+    console.log('System prompt length:', system_prompt.length);
+    console.log('Processed user prompt length:', processedUserPrompt.length);
 
     // Call OpenAI API
     const completion = await openai.createChatCompletion({

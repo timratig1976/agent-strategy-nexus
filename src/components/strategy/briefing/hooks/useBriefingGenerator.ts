@@ -25,7 +25,8 @@ export const useBriefingGenerator = (strategyId: string) => {
   // Use the document processing hook to get document content
   const { 
     getDocumentContentForAI, 
-    getWebsiteCrawlDataForAI 
+    getWebsiteCrawlDataForAI,
+    ensurePromptsExist 
   } = useDocumentProcessing(strategyId);
 
   // Function to generate AI briefing with progress updates
@@ -65,6 +66,15 @@ export const useBriefingGenerator = (strategyId: string) => {
       const websiteCrawlData = await getWebsiteCrawlDataForAI();
       console.log("Website crawl data available:", !!websiteCrawlData);
       
+      // Before proceeding, ensure the prompts exist for the 'briefing' module
+      console.log("Checking if briefing prompts exist...");
+      const promptsExist = await ensurePromptsExist('briefing');
+      if (!promptsExist) {
+        console.log("Creating default prompts failed, but proceeding anyway...");
+      } else {
+        console.log("Briefing prompts are available.");
+      }
+      
       // Simulate progress updates
       const progressInterval = setInterval(() => {
         setProgress(prev => {
@@ -96,6 +106,24 @@ export const useBriefingGenerator = (strategyId: string) => {
         
         if (aiError) {
           clearInterval(progressInterval);
+          
+          // If we get a "No prompts found" error, try installing default prompts and re-run
+          if (aiError.includes("No prompts found for module")) {
+            console.log("No prompts found. Attempting to create default prompts and retry...");
+            
+            const retryPromptCreation = await ensurePromptsExist('briefing');
+            
+            if (retryPromptCreation) {
+              console.log("Default prompts created. Retrying briefing generation...");
+              // Clear this interval first to prevent having multiple
+              clearInterval(progressInterval);
+              
+              // Retry the generation (recursive call, but should only happen once)
+              generateBriefing(formValues, enhancementText);
+              return;
+            }
+          }
+          
           setError(aiError);
           throw new Error(aiError);
         }
