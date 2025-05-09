@@ -5,6 +5,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { WebsiteCrawlResult } from "./types";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * Interface for database record structure from website_crawls table
@@ -28,6 +29,11 @@ interface WebsiteCrawlRecord {
  */
 export class StorageClient {
   private static readonly TABLE_NAME = "website_crawls";
+  
+  // Simplified Supabase client to avoid deep type inference
+  private static get db(): SupabaseClient<any> {
+    return supabase as SupabaseClient<any>;
+  }
   
   /**
    * Save crawl results to the database
@@ -62,7 +68,7 @@ export class StorageClient {
       };
       
       // Insert into the database using the website_crawls table
-      const { error } = await supabase
+      const { error } = await this.db
         .from(this.TABLE_NAME)
         .insert(record);
       
@@ -93,30 +99,25 @@ export class StorageClient {
         return null;
       }
       
-      // Break the complex type inference chain by executing the query without type inference
-      // and then explicitly casting the result
-      const query = supabase
+      // Use the simplified client and bypass type inference
+      const { data, error } = await this.db
         .from(this.TABLE_NAME)
         .select('*')
         .eq('project_id', strategyId)
         .eq('extracted_content->url_type', urlType)
         .order('created_at', { ascending: false })
         .limit(1);
-        
-      // Execute query as any to bypass type inference
-      const response = await (query as any);
-        
-      // Manually extract data and error with explicit typing
-      const data = response.data as WebsiteCrawlRecord[] | null;
-      const error = response.error;
       
       if (error) {
         console.error("Error fetching crawl results:", error);
         return null;
       }
       
-      if (data && data.length > 0) {
-        return this.mapFromDatabaseRecord(data[0]);
+      // Manually cast data to our expected record type
+      const records = data as WebsiteCrawlRecord[] | null;
+      
+      if (records && records.length > 0) {
+        return this.mapFromDatabaseRecord(records[0]);
       }
       
       return null;
@@ -143,29 +144,24 @@ export class StorageClient {
         return [];
       }
       
-      // Break the complex type inference chain by executing the query without type inference
-      // and then explicitly casting the result
-      const query = supabase
+      // Use the simplified client and bypass type inference
+      const { data, error } = await this.db
         .from(this.TABLE_NAME)
         .select('*')
         .eq('project_id', strategyId)
         .eq('extracted_content->url_type', urlType)
         .order('created_at', { ascending: false });
-        
-      // Execute query as any to bypass type inference
-      const response = await (query as any);
-        
-      // Manually extract data and error with explicit typing
-      const data = response.data as WebsiteCrawlRecord[] | null;
-      const error = response.error;
       
       if (error) {
         console.error("Error fetching crawl results:", error);
         return [];
       }
       
-      if (data && data.length > 0) {
-        return data.map((record) => this.mapFromDatabaseRecord(record));
+      // Manually cast data to our expected record type
+      const records = data as WebsiteCrawlRecord[] | null;
+      
+      if (records && records.length > 0) {
+        return records.map((record) => this.mapFromDatabaseRecord(record));
       }
       
       return [];
