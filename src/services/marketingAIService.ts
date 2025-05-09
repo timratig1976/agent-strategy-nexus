@@ -1,7 +1,7 @@
 
 import { MarketingAIService as AIServiceImpl } from './ai/marketingAIService';
 import { RPCService } from './ai/rpcService';
-import { UspCanvasService } from './ai/uspCanvasService';
+import * as UspCanvasServiceExports from './ai/uspCanvasService';
 import type { 
   AIServiceResponse, 
   AIPrompt, 
@@ -19,7 +19,7 @@ import type {
 export {
   AIServiceImpl,
   RPCService,
-  UspCanvasService
+  UspCanvasServiceExports as UspCanvasService
 };
 
 // Re-export types
@@ -41,8 +41,8 @@ const MarketingAIService = {
   generateContent: AIServiceImpl.generateContent,
   getStrategyMetadata: RPCService.getStrategyMetadata,
   updateStrategyMetadata: RPCService.updateStrategyMetadata,
-  generateUspCanvasProfile: UspCanvasService.generateUspCanvasProfile,
-  generateUspCanvasValueMap: UspCanvasService.generateUspCanvasValueMap
+  generateUspCanvasProfile: UspCanvasServiceExports.generateUspCanvasProfile,
+  generateUspCanvasValueProposition: UspCanvasServiceExports.generateUspCanvasValueProposition
 };
 
 // Export the combined service

@@ -8,7 +8,7 @@ describe('AI Types', () => {
       id: '1',
       title: 'Test job',
       description: 'Test job description',
-      priority: 'medium' // This was causing the error
+      priority: 'medium' 
     };
 
     expect(job.id).toBe('1');
