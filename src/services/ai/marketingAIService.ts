@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AgentCoreService } from "./agentCoreService";
 import type { AIServiceResponse } from "./types";
 
-// Define the class interface with proper static method declarations (Best Practice #2)
+// Define the class interface with proper static method declarations
 export interface MarketingAIServiceStatic {
   generateContent<T>(
     module: string,
@@ -14,7 +14,7 @@ export interface MarketingAIServiceStatic {
 }
 
 // Implement the MarketingAIService class with its core functionality
-export class MarketingAIService {
+export class MarketingAIService implements MarketingAIServiceStatic {
   /**
    * Generate content using AI with robust error handling and fallbacks
    * @param module The module name

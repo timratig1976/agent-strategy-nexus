@@ -1,5 +1,5 @@
 
-import { MarketingAIService } from './ai/marketingAIService';
+import { MarketingAIService as AIServiceImpl } from './ai/marketingAIService';
 import { RPCService } from './ai/rpcService';
 import { UspCanvasService } from './ai/uspCanvasService';
 import type { 
@@ -17,7 +17,7 @@ import type {
 
 // Re-export everything from the new modular service files
 export {
-  MarketingAIService,
+  AIServiceImpl as MarketingAIService,
   RPCService,
   UspCanvasService
 };
@@ -36,14 +36,20 @@ export type {
   StrategyMetadata
 };
 
-// Update the namespace directly
-// This adds the static methods to the MarketingAIService class for backward compatibility
-namespace MarketingAIService {
+// Create a namespace to add the static methods to the exported class
+namespace MarketingAIServiceNamespace {
+  export const generateContent = AIServiceImpl.generateContent;
   export const getStrategyMetadata = RPCService.getStrategyMetadata;
   export const updateStrategyMetadata = RPCService.updateStrategyMetadata;
   export const generateUspCanvasProfile = UspCanvasService.generateUspCanvasProfile;
   export const generateUspCanvasValueMap = UspCanvasService.generateUspCanvasValueMap;
 }
 
-// Export the namespace for use
-export { MarketingAIService };
+// Combine the class with the namespace methods
+const CombinedMarketingAIService = Object.assign(
+  AIServiceImpl,
+  MarketingAIServiceNamespace
+);
+
+// Export the combined service
+export { CombinedMarketingAIService as MarketingAIService };
