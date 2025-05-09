@@ -259,15 +259,17 @@ export class ScraperClient {
     
     // Handle well-formed success response
     if (isSuccessResponse(response)) {
-      // Use the data object if it exists, otherwise use the response itself as data
-      const responseData = response.data || response;
+      // Access data correctly based on response structure
+      const markdown = response.data?.markdown || response.markdown || "";
+      const html = response.data?.html || response.html || "";
+      const metadata = response.data?.metadata || response.metadata || { sourceURL: url };
       
       return {
         success: true,
         data: {
-          markdown: typeof responseData.markdown === 'string' ? responseData.markdown : "",
-          html: typeof responseData.html === 'string' ? responseData.html : "",
-          metadata: responseData.metadata || { sourceURL: url }
+          markdown: typeof markdown === 'string' ? markdown : "",
+          html: typeof html === 'string' ? html : "",
+          metadata
         },
         id: response.id
       };
