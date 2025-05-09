@@ -54,6 +54,9 @@ export class StorageClient {
         return;
       }
       
+      console.log(`Saving ${urlType} crawl results to database for strategy ${strategyId}`);
+      console.log(`Results summary: ${results.summary?.substring(0, 50)}...`);
+      
       // Prepare the record for storage
       const record = {
         project_id: strategyId, // Using project_id as it exists in website_crawls table
@@ -68,14 +71,15 @@ export class StorageClient {
       };
       
       // Insert into the database using the website_crawls table
-      const { error } = await this.db
+      const { error, data } = await this.db
         .from(this.TABLE_NAME)
-        .insert(record);
+        .insert(record)
+        .select();
       
       if (error) {
         console.error("Error saving crawl results:", error);
       } else {
-        console.log(`${urlType} crawl results saved for strategy ${strategyId}`);
+        console.log(`${urlType} crawl results saved successfully with ID: ${data?.[0]?.id}`);
       }
     } catch (err) {
       console.error("Error in saveCrawlResults:", err);
@@ -99,6 +103,8 @@ export class StorageClient {
         return null;
       }
       
+      console.log(`Getting latest ${urlType} crawl result for strategy ${strategyId}`);
+      
       // Use the simplified client and bypass type inference
       const { data, error } = await this.db
         .from(this.TABLE_NAME)
@@ -117,9 +123,11 @@ export class StorageClient {
       const records = data as WebsiteCrawlRecord[] | null;
       
       if (records && records.length > 0) {
+        console.log(`Found ${urlType} crawl result with ID: ${records[0].id}`);
         return this.mapFromDatabaseRecord(records[0]);
       }
       
+      console.log(`No ${urlType} crawl results found for strategy ${strategyId}`);
       return null;
     } catch (err) {
       console.error("Error in getLatestCrawlResult:", err);
@@ -161,9 +169,11 @@ export class StorageClient {
       const records = data as WebsiteCrawlRecord[] | null;
       
       if (records && records.length > 0) {
+        console.log(`Found ${records.length} ${urlType} crawl results for strategy ${strategyId}`);
         return records.map((record) => this.mapFromDatabaseRecord(record));
       }
       
+      console.log(`No ${urlType} crawl results found for strategy ${strategyId}`);
       return [];
     } catch (err) {
       console.error("Error in getAllCrawlResults:", err);

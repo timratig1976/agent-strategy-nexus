@@ -1,26 +1,25 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
+import { Card } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
-import CrawlPreview from "./CrawlPreview";
-import ApiKeyManager from "@/components/marketing/modules/website-crawler/ApiKeyManager";
-import CrawlDataDialog from "./CrawlDataDialog";
 import UrlField from "./UrlField";
+import ApiKeyManager from "@/components/marketing/modules/website-crawler/ApiKeyManager";
+import { StrategyFormValues } from "@/components/strategy-form";
+import { WebsiteCrawlResult } from "@/services/firecrawl";
 
 interface StrategyFormProps {
-  localFormValues: any;
+  localFormValues: StrategyFormValues;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  handleSubmit: (e: React.FormEvent) => void;
+  handleSubmit: (e: React.FormEvent) => Promise<void>;
   isSaving: boolean;
   crawlingUrl: string | null;
-  handleCrawl: (type: 'websiteUrl' | 'productUrl') => Promise<any>;
+  handleCrawl: (urlType: 'websiteUrl' | 'productUrl') => Promise<{ success: boolean }>;
   crawlProgress: number;
-  websitePreviewResults: any;
-  productPreviewResults: any;
+  websitePreviewResults: WebsiteCrawlResult | null;
+  productPreviewResults: WebsiteCrawlResult | null;
   showWebsitePreview: boolean;
   showProductPreview: boolean;
   setShowWebsitePreview: (show: boolean) => void;
@@ -46,124 +45,118 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
   hasApiKey,
   onApiKeyValidated
 }) => {
+  // Debug to check if results exist
+  console.log("StrategyForm: WebsitePreviewResults:", !!websitePreviewResults);
+  console.log("StrategyForm: ProductPreviewResults:", !!productPreviewResults);
+  console.log("StrategyForm: HasApiKey:", hasApiKey);
+
+  // Handle crawl button clicks
+  const onCrawlWebsite = () => handleCrawl('websiteUrl');
+  const onCrawlProduct = () => handleCrawl('productUrl');
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-3">
-        <div className="grid gap-4">
-          {/* Strategy name and company name in a separate row */}
+    <form onSubmit={handleSubmit}>
+      <div className="space-y-4">
+        <Card className="p-4 bg-primary/5">
+          <h3 className="text-sm font-medium mb-3">Firecrawl API Key</h3>
+          <ApiKeyManager onApiKeyValidated={onApiKeyValidated} />
+        </Card>
+        
+        <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="name" className="text-right">
-                Strategy Name
-              </Label>
-              <Input
-                id="name"
-                name="name"
-                value={localFormValues.name || ""}
-                onChange={handleInputChange}
-                placeholder="My Strategy"
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label htmlFor="companyName" className="text-right">
+              <label htmlFor="companyName" className="text-sm font-medium">
                 Company Name
-              </Label>
+              </label>
               <Input
                 id="companyName"
                 name="companyName"
                 value={localFormValues.companyName || ""}
                 onChange={handleInputChange}
-                placeholder="Company Name"
+                placeholder="Enter company name"
                 className="mt-1"
               />
             </div>
+            
+            <UrlField
+              id="websiteUrl"
+              name="websiteUrl"
+              label="Website URL"
+              value={localFormValues.websiteUrl || ""}
+              onChange={handleInputChange}
+              onCrawl={onCrawlWebsite}
+              isCrawling={!!crawlingUrl}
+              crawlProgress={crawlProgress}
+              showPreview={showWebsitePreview}
+              setShowPreview={setShowWebsitePreview}
+              previewResults={websitePreviewResults}
+              crawlingUrl={crawlingUrl}
+              hasApiKey={hasApiKey}
+            />
           </div>
           
-          {!hasApiKey && (
-            <div className="bg-amber-50 border border-amber-200 rounded-md p-4 my-2">
-              <h4 className="font-medium text-amber-800 mb-2">API Key Required</h4>
-              <p className="text-sm text-amber-700 mb-3">
-                To use the website crawler feature, please set your Firecrawl API key.
-              </p>
-              <ApiKeyManager onApiKeyValidated={onApiKeyValidated} />
-            </div>
-          )}
-          
-          {/* Website URL field with crawl button using UrlField component */}
-          <UrlField
-            id="websiteUrl"
-            name="websiteUrl"
-            label="Website URL"
-            value={localFormValues.websiteUrl}
-            onChange={handleInputChange}
-            onCrawl={() => handleCrawl("websiteUrl")}
-            isCrawling={crawlingUrl === "websiteUrl"}
-            crawlProgress={crawlProgress}
-            showPreview={showWebsitePreview}
-            setShowPreview={setShowWebsitePreview}
-            previewResults={websitePreviewResults}
-            crawlingUrl={crawlingUrl}
-            hasApiKey={hasApiKey}
-          />
-          
           <div>
-            <Label htmlFor="productDescription" className="text-right">
-              Product Description
-            </Label>
+            <label htmlFor="productDescription" className="text-sm font-medium">
+              Product / Service Description
+            </label>
             <Textarea
               id="productDescription"
               name="productDescription"
               value={localFormValues.productDescription || ""}
               onChange={handleInputChange}
               placeholder="Describe your product or service"
-              className="mt-1"
+              className="mt-1 resize-none"
+              rows={4}
             />
           </div>
           
-          {/* Product URL field with crawl button using UrlField component */}
-          <UrlField
-            id="productUrl"
-            name="productUrl"
-            label="Product URL"
-            value={localFormValues.productUrl}
-            onChange={handleInputChange}
-            onCrawl={() => handleCrawl("productUrl")}
-            isCrawling={crawlingUrl === "productUrl"}
-            crawlProgress={crawlProgress}
-            showPreview={showProductPreview}
-            setShowPreview={setShowProductPreview}
-            previewResults={productPreviewResults}
-            crawlingUrl={crawlingUrl}
-            hasApiKey={hasApiKey}
-          />
-          
-          <div>
-            <Label htmlFor="additionalInfo" className="text-right">
-              Additional Information
-            </Label>
-            <Textarea
-              id="additionalInfo"
-              name="additionalInfo"
-              value={localFormValues.additionalInfo || ""}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <UrlField
+              id="productUrl"
+              name="productUrl"
+              label="Product URL"
+              value={localFormValues.productUrl || ""}
               onChange={handleInputChange}
-              placeholder="Additional information about your strategy"
-              className="mt-1"
+              onCrawl={onCrawlProduct}
+              isCrawling={!!crawlingUrl}
+              crawlProgress={crawlProgress}
+              showPreview={showProductPreview}
+              setShowPreview={setShowProductPreview}
+              previewResults={productPreviewResults}
+              crawlingUrl={crawlingUrl}
+              hasApiKey={hasApiKey}
             />
+            
+            <div>
+              <label htmlFor="additionalInfo" className="text-sm font-medium">
+                Additional Information
+              </label>
+              <Input
+                id="additionalInfo"
+                name="additionalInfo"
+                value={localFormValues.additionalInfo || ""}
+                onChange={handleInputChange}
+                placeholder="Any other relevant information"
+                className="mt-1"
+              />
+            </div>
           </div>
+          
+          <Button
+            type="submit"
+            disabled={isSaving}
+            className="w-full"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Saving...
+              </>
+            ) : (
+              "Save Strategy Information"
+            )}
+          </Button>
         </div>
-      </div>
-
-      <div className="flex justify-start">
-        <Button type="submit" className="mr-2" disabled={isSaving}>
-          {isSaving ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
-            </>
-          ) : (
-            "Save Information"
-          )}
-        </Button>
       </div>
     </form>
   );

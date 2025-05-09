@@ -28,6 +28,15 @@ const UrlField: React.FC<UrlFieldProps> = ({
   // Check if we have data to show the View Data button
   const hasData = !!previewResults;
 
+  // Debug output to help diagnose issues
+  console.log(`UrlField rendering for ${name}:`, { 
+    value, 
+    hasData, 
+    hasApiKey, 
+    isCrawling, 
+    crawlingUrl 
+  });
+
   return (
     <div className="space-y-1">
       <Label htmlFor={id} className="text-right">
@@ -56,7 +65,7 @@ const UrlField: React.FC<UrlFieldProps> = ({
           {isCrawling && (crawlingUrl === name) ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Crawling...
+              {crawlStatus || "Crawling..."}
             </>
           ) : (
             <>
@@ -66,7 +75,7 @@ const UrlField: React.FC<UrlFieldProps> = ({
           )}
         </Button>
         
-        {/* Always show View Data button when results are available */}
+        {/* Show View Data button when results are available */}
         {hasData && (
           <Button 
             size="sm" 
@@ -78,7 +87,7 @@ const UrlField: React.FC<UrlFieldProps> = ({
           </Button>
         )}
         
-        {/* Always show the dialog button when data is available */}
+        {/* Show the dialog button when data is available */}
         {hasData && (
           <CrawlDataDialog 
             crawlResult={previewResults} 
@@ -88,7 +97,12 @@ const UrlField: React.FC<UrlFieldProps> = ({
       </div>
       
       {isCrawling && (crawlingUrl === name) && (
-        <Progress value={crawlProgress} className="h-1 mt-1" />
+        <div className="space-y-1">
+          <Progress value={crawlProgress} className="h-1 mt-1" />
+          {crawlStatus && (
+            <p className="text-xs text-muted-foreground">{crawlStatus}</p>
+          )}
+        </div>
       )}
       
       {showPreview && previewResults && (

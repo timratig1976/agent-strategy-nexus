@@ -21,6 +21,7 @@ export class FirecrawlService {
    * @param apiKey The API key to use for the service
    */
   static initialize(apiKey: string) {
+    console.log("Initializing FirecrawlService with API key");
     FirecrawlService.apiKey = apiKey;
     ScraperClient.setApiKey(apiKey);
   }
@@ -30,15 +31,22 @@ export class FirecrawlService {
    * @returns The API key or null if not initialized
    */
   static getApiKey(): string | null {
-    return FirecrawlService.apiKey;
+    const storedKey = FirecrawlAuthManager.getApiKey();
+    if (storedKey && !FirecrawlService.apiKey) {
+      // Initialize if we have a stored key but service isn't initialized
+      FirecrawlService.initialize(storedKey);
+    }
+    return storedKey || FirecrawlService.apiKey;
   }
 
   /**
    * Clear the API key used by the FirecrawlService
    */
   static clearApiKey() {
+    console.log("Clearing FirecrawlService API key");
     FirecrawlService.apiKey = null;
     ScraperClient.clearApiKey();
+    FirecrawlAuthManager.clearApiKey();
   }
 
   /**
@@ -55,6 +63,7 @@ export class FirecrawlService {
    * @param apiKey The API key to save
    */
   static saveApiKey(apiKey: string): void {
+    console.log("Saving API key to FirecrawlService and localStorage");
     FirecrawlAuthManager.saveApiKey(apiKey);
     FirecrawlService.initialize(apiKey);
   }
@@ -73,10 +82,11 @@ export class FirecrawlService {
     strategyId?: string
   ): Promise<WebsiteCrawlResult> {
     try {
-      console.log("Starting website crawl for URL:", url);
+      console.log(`Starting website crawl for URL: ${url}, with strategyId: ${strategyId || 'none'}`);
       
       // Determine whether this is for a website or product URL
       const urlType = options.urlType === 'productUrl' ? 'product' : 'website';
+      console.log(`URL type: ${urlType}`);
       
       // Get the API key
       const apiKey = FirecrawlService.getApiKey();
@@ -100,6 +110,7 @@ export class FirecrawlService {
       
       // If we have a strategy ID, save the results to the database
       if (strategyId) {
+        console.log(`Saving crawl results to database for strategy: ${strategyId}, url type: ${urlType}`);
         await StorageClient.saveCrawlResults(strategyId, processedResults, urlType as 'website' | 'product');
       }
       
@@ -132,7 +143,10 @@ export class FirecrawlService {
     strategyId: string,
     urlType: 'website' | 'product' = 'website'
   ): Promise<WebsiteCrawlResult | null> {
-    return StorageClient.getLatestCrawlResult(strategyId, urlType);
+    console.log(`Getting latest crawl result for strategy: ${strategyId}, url type: ${urlType}`);
+    const result = await StorageClient.getLatestCrawlResult(strategyId, urlType);
+    console.log(`Retrieved latest ${urlType} result:`, result ? "found" : "not found");
+    return result;
   }
 
   /**

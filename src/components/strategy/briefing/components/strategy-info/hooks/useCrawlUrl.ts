@@ -21,6 +21,7 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
   // Check for API key and update state
   const checkApiKey = () => {
     const apiKey = FirecrawlService.getApiKey();
+    console.log(`API key check result: ${!!apiKey}`);
     setHasApiKey(!!apiKey);
     return !!apiKey;
   };
@@ -31,31 +32,42 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
 
   // Load the latest crawl results from the database
   const loadSavedCrawlResults = async () => {
-    if (!formValues.id) return;
+    if (!formValues.id) {
+      console.log("No strategy ID available for loading crawl results");
+      return;
+    }
     
     setLoadingStoredData(true);
     try {
-      console.log("Attempting to load saved crawl results for strategy:", formValues.id);
+      console.log(`Loading saved crawl results for strategy: ${formValues.id}`);
       
       // Load website URL crawl results
       if (formValues.websiteUrl) {
+        console.log(`Attempting to load website crawl results for URL: ${formValues.websiteUrl}`);
         const websiteResults = await FirecrawlService.getLatestCrawlResult(formValues.id);
+        
         if (websiteResults && websiteResults.success) {
-          console.log("Found saved website crawl results:", websiteResults);
+          console.log(`Found saved website crawl results:`, websiteResults);
           setWebsitePreviewResults(websiteResults);
-          // We'll show the view data button, but not automatically show the preview
+          // Make the View Data button visible but don't show the preview
           setShowWebsitePreview(false);
+        } else {
+          console.log("No saved website crawl results found");
         }
       }
       
       // Load product URL crawl results
       if (formValues.productUrl) {
+        console.log(`Attempting to load product crawl results for URL: ${formValues.productUrl}`);
         const productResults = await FirecrawlService.getLatestCrawlResult(formValues.id, 'product');
+        
         if (productResults && productResults.success) {
-          console.log("Found saved product crawl results:", productResults);
+          console.log(`Found saved product crawl results:`, productResults);
           setProductPreviewResults(productResults);
-          // We'll show the view data button, but not automatically show the preview
+          // Make the View Data button visible but don't show the preview
           setShowProductPreview(false);
+        } else {
+          console.log("No saved product crawl results found");
         }
       }
     } catch (err) {
@@ -68,6 +80,7 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
   // Load saved crawl results when the component mounts or form values ID changes
   useEffect(() => {
     if (formValues.id) {
+      console.log(`Strategy ID detected: ${formValues.id}, loading saved crawl data`);
       loadSavedCrawlResults();
     }
   }, [formValues.id]);
@@ -140,6 +153,8 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
           clearInterval(progressInterval);
         }
       }, 1500);
+      
+      console.log(`Starting crawl for ${urlType}: ${url} with strategy ID: ${formValues.id}`);
       
       // Pass the strategy ID and URL type to save the results to the database
       const crawlResult = await FirecrawlService.crawlWebsite(
