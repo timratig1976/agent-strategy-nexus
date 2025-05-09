@@ -52,11 +52,13 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyValidated }) => {
         }
       } else {
         console.log("API key validation failed");
-        toast.error("Invalid API key. Please check and try again.");
+        toast.error(
+          "Could not validate the API key. Please ensure you're using a valid Firecrawl API key."
+        );
       }
     } catch (error) {
       console.error("Error validating API key:", error);
-      toast.error("Failed to validate API key. Please check your internet connection.");
+      toast.error("Failed to connect to Firecrawl API. Please check your internet connection and try again.");
     } finally {
       setIsValidating(false);
     }
