@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, ArrowRight } from "lucide-react";
+import { Loader2, ArrowRight, Eye } from "lucide-react";
 import CrawlPreview from "./CrawlPreview";
 import CrawlDataDialog from "./CrawlDataDialog";
 import { UrlFieldProps } from "./types";
@@ -45,30 +45,40 @@ const UrlField: React.FC<UrlFieldProps> = ({
           />
         </div>
         
-        {/* Crawl button */}
-        {hasApiKey && (
+        {/* Always show Crawl button */}
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onCrawl} 
+          disabled={isCrawling || !value || !hasApiKey}
+          className="flex gap-1 whitespace-nowrap mt-1"
+        >
+          {isCrawling && (crawlingUrl === name) ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Crawling...
+            </>
+          ) : (
+            <>
+              <ArrowRight className="h-4 w-4" />
+              Crawl
+            </>
+          )}
+        </Button>
+        
+        {/* Always show View Data button when results are available */}
+        {hasData && (
           <Button 
-            type="button" 
+            size="sm" 
             variant="outline" 
-            onClick={onCrawl} 
-            disabled={isCrawling || !value}
-            className="flex gap-1 whitespace-nowrap mt-1"
+            onClick={() => setShowPreview(true)}
+            className="text-xs flex gap-1 items-center mt-1"
           >
-            {isCrawling && (crawlingUrl === name) ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Crawling...
-              </>
-            ) : (
-              <>
-                <ArrowRight className="h-4 w-4" />
-                Crawl
-              </>
-            )}
+            <Eye className="h-3.5 w-3.5" /> View Data
           </Button>
         )}
         
-        {/* Always show View Data button when results are available */}
+        {/* Always show the dialog button when data is available */}
         {hasData && (
           <CrawlDataDialog 
             crawlResult={previewResults} 

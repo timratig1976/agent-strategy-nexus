@@ -1,102 +1,98 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { FirecrawlService } from "@/services/firecrawl";
 
-export interface ApiKeyManagerProps {
+interface ApiKeyManagerProps {
   onApiKeyValidated?: () => void;
 }
 
 const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyValidated }) => {
-  const [isOpen, setIsOpen] = useState(false);
   const [apiKey, setApiKey] = useState("");
-  const [isTesting, setIsTesting] = useState(false);
-  const [hasApiKey, setHasApiKey] = useState(false);
-  
-  // Check if API key exists on mount
+  const [hasValidKey, setHasValidKey] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
+
+  // Check if we already have a stored API key on component mount
   useEffect(() => {
-    const existingKey = FirecrawlService.getApiKey();
-    setHasApiKey(!!existingKey);
+    const storedKey = FirecrawlService.getApiKey();
+    if (storedKey) {
+      setApiKey(storedKey);
+      setHasValidKey(true);
+    }
   }, []);
-  
-  const handleSaveApiKey = async () => {
+
+  const handleValidateKey = async () => {
     if (!apiKey.trim()) {
-      toast.error("Please enter a valid API key");
+      toast.error("Please enter an API key");
       return;
     }
-    
-    setIsTesting(true);
-    
+
+    setIsValidating(true);
     try {
       const isValid = await FirecrawlService.testApiKey(apiKey);
-      
       if (isValid) {
         FirecrawlService.saveApiKey(apiKey);
-        setHasApiKey(true);
+        setHasValidKey(true);
         toast.success("API key validated and saved successfully");
-        setIsOpen(false);
-        if (onApiKeyValidated) onApiKeyValidated();
+        
+        // Notify parent component if callback provided
+        if (onApiKeyValidated) {
+          onApiKeyValidated();
+        }
       } else {
         toast.error("Invalid API key. Please check and try again.");
       }
     } catch (error) {
-      console.error("Error testing API key:", error);
+      console.error("Error validating API key:", error);
       toast.error("Failed to validate API key");
     } finally {
-      setIsTesting(false);
+      setIsValidating(false);
     }
   };
-  
+
+  const handleClearKey = () => {
+    FirecrawlService.clearApiKey();
+    setApiKey("");
+    setHasValidKey(false);
+    toast.info("API key cleared");
+  };
+
   return (
-    <>
-      <Button 
-        variant={hasApiKey ? "outline" : "default"} 
-        size="sm"
-        onClick={() => setIsOpen(true)}
-        className="mb-4"
-      >
-        {hasApiKey ? "Update FireCrawl API Key" : "Set FireCrawl API Key"}
-      </Button>
+    <div className="space-y-3">
+      <div className="flex gap-2">
+        <Input
+          type="password"
+          placeholder="Enter your Firecrawl API key"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          className="flex-grow"
+        />
+        {!hasValidKey ? (
+          <Button 
+            onClick={handleValidateKey} 
+            disabled={isValidating || !apiKey.trim()}
+          >
+            {isValidating ? "Validating..." : "Save Key"}
+          </Button>
+        ) : (
+          <Button variant="outline" onClick={handleClearKey}>
+            Clear Key
+          </Button>
+        )}
+      </div>
       
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{hasApiKey ? "Update" : "Set"} FireCrawl API Key</DialogTitle>
-            <DialogDescription>
-              Enter your FireCrawl API key to enable website crawling functionality.
-              {!hasApiKey && " You'll need this key to analyze websites."}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="api-key">API Key</Label>
-              <Input
-                id="api-key"
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="Enter your FireCrawl API key"
-              />
-              <p className="text-xs text-muted-foreground">
-                Your API key is stored securely in your browser's local storage.
-              </p>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveApiKey} disabled={isTesting}>
-              {isTesting ? "Testing..." : "Save API Key"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+      {hasValidKey && (
+        <p className="text-sm text-green-600">
+          ✓ Valid API key is set
+        </p>
+      )}
+      
+      <p className="text-xs text-muted-foreground">
+        Get your Firecrawl API key from <a href="https://firecrawl.dev" target="_blank" rel="noopener noreferrer" className="underline">Firecrawl.dev</a>
+      </p>
+    </div>
   );
 };
 

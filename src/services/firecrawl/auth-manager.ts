@@ -1,61 +1,56 @@
 
 /**
- * Authentication management for FireCrawl API
+ * Authentication manager for FireCrawl API
  */
 
-import { toast } from "sonner";
-import { API_KEY_STORAGE_KEY, SCRAPE_ENDPOINT, TEST_TIMEOUT, DEFAULT_FORMATS } from "./constants";
-
-/**
- * Handles API key management and authentication testing
- */
 export class FirecrawlAuthManager {
-  /**
-   * Save API key to local storage
-   */
-  static saveApiKey(apiKey: string): void {
-    localStorage.setItem(API_KEY_STORAGE_KEY, apiKey);
-    console.log('FireCrawl API key saved successfully');
-  }
+  private static readonly API_KEY_STORAGE_KEY = 'firecrawl_api_key';
 
   /**
-   * Get API key from local storage
-   */
-  static getApiKey(): string | null {
-    return localStorage.getItem(API_KEY_STORAGE_KEY);
-  }
-
-  /**
-   * Test the validity of an API key
+   * Test if an API key is valid
+   * @param apiKey The API key to test
+   * @returns Promise resolving to true if valid, false otherwise
    */
   static async testApiKey(apiKey: string): Promise<boolean> {
     try {
-      console.log('Testing API key with Firecrawl API');
-      
-      const response = await fetch(SCRAPE_ENDPOINT, {
-        method: 'POST',
+      // Make a simple request to validate the API key
+      const response = await fetch('https://api.firecrawl.dev/v1/auth/validate', {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          url: 'https://example.com',
-          formats: DEFAULT_FORMATS,
-          timeout: TEST_TIMEOUT
-        }),
+          'Content-Type': 'application/json'
+        }
       });
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Firecrawl test API error:", errorData);
-        return false;
-      }
-      
-      const result = await response.json();
-      return result.success === true;
+      return response.ok;
     } catch (error) {
-      console.error('Error testing API key:', error);
+      console.error("Error validating API key:", error);
       return false;
     }
+  }
+
+  /**
+   * Save the API key to localStorage
+   * @param apiKey The API key to save
+   */
+  static saveApiKey(apiKey: string): void {
+    localStorage.setItem(this.API_KEY_STORAGE_KEY, apiKey);
+    console.log("API key saved to localStorage");
+  }
+
+  /**
+   * Get the API key from localStorage
+   * @returns The API key or null if not found
+   */
+  static getApiKey(): string | null {
+    return localStorage.getItem(this.API_KEY_STORAGE_KEY);
+  }
+
+  /**
+   * Clear the API key from localStorage
+   */
+  static clearApiKey(): void {
+    localStorage.removeItem(this.API_KEY_STORAGE_KEY);
+    console.log("API key removed from localStorage");
   }
 }

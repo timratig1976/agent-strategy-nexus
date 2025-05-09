@@ -43,19 +43,19 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
         if (websiteResults && websiteResults.success) {
           console.log("Found saved website crawl results:", websiteResults);
           setWebsitePreviewResults(websiteResults);
-          // Initially show preview if data exists
-          setShowWebsitePreview(true);
+          // We'll show the view data button, but not automatically show the preview
+          setShowWebsitePreview(false);
         }
       }
       
-      // Load product URL crawl results (implement similar functionality for product URL)
+      // Load product URL crawl results
       if (formValues.productUrl) {
         const productResults = await FirecrawlService.getLatestCrawlResult(formValues.id, 'product');
         if (productResults && productResults.success) {
           console.log("Found saved product crawl results:", productResults);
           setProductPreviewResults(productResults);
-          // Initially show preview if data exists
-          setShowProductPreview(true);
+          // We'll show the view data button, but not automatically show the preview
+          setShowProductPreview(false);
         }
       }
     } catch (err) {
@@ -108,11 +108,6 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
       const url = formValues[urlType]; // Get the URL from the form values
       if (!url) {
         toast.error("Please enter a URL to crawl");
-        return { success: false };
-      }
-
-      if (!checkApiKey()) {
-        toast.error("Please set your FireCrawl API key first");
         return { success: false };
       }
 
