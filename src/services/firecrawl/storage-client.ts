@@ -4,7 +4,7 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
-import { WebsiteCrawlResult, CrawlStorageRecord } from "./types";
+import { WebsiteCrawlResult } from "./types";
 
 /**
  * StorageClient handles database operations for crawl results
