@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { UspCanvasService } from '@/services/ai/uspCanvasService';
+import { generateUspCanvasProfile } from '@/services/ai/uspCanvasService';
 import { StoredAIResult } from '../types';
 import AIResultsPanel from './AIResultsPanel';
 import AIResultsItem from './AIResultsItem';
@@ -45,7 +45,7 @@ const AIGeneratorLayout: React.FC<AIGeneratorLayoutProps> = ({
 
     setIsGenerating(true);
     try {
-      const response = await UspCanvasService.generateUspCanvasProfile(
+      const response = await generateUspCanvasProfile(
         strategyId,
         briefingContent,
         'all',

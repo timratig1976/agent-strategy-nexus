@@ -1,6 +1,6 @@
 
-import { useState, useCallback, useEffect } from 'react';
-import { UspCanvasService } from '@/services/ai/uspCanvasService';
+import { useState, useCallback } from 'react';
+import { generateUspCanvasProfile } from '@/services/ai/uspCanvasService';
 import { StoredAIResult } from '../types';
 import { toast } from 'sonner';
 
@@ -37,7 +37,7 @@ export const useAIGenerator = (
       setParseResults(null);
 
       try {
-        const result = await UspCanvasService.generateUspCanvasProfile(
+        const result = await generateUspCanvasProfile(
           strategyId,
           briefingContent,
           'all',

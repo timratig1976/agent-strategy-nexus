@@ -1,7 +1,7 @@
 
 import { MarketingAIService } from './ai/marketingAIService';
 import { RPCService } from './ai/rpcService';
-import { UspCanvasService } from './ai/uspCanvasService';
+import { generateUspCanvasProfile, generateUspCanvasValueMap, UspCanvasService } from './ai/uspCanvasService';
 import type { 
   AIServiceResponse, 
   AIPrompt, 
@@ -39,18 +39,10 @@ export type {
 // Add methods to the MarketingAIService class to maintain backward compatibility
 // These will delegate to the appropriate service classes
 
-// Create an interface to extend the MarketingAIService with static methods
-interface MarketingAIServiceStatic {
-  getStrategyMetadata: typeof RPCService.getStrategyMetadata;
-  updateStrategyMetadata: typeof RPCService.updateStrategyMetadata;
-  generateUspCanvasProfile: typeof UspCanvasService.generateUspCanvasProfile;
-  generateUspCanvasValueMap: typeof UspCanvasService.generateUspCanvasValueMap;
-}
-
 // Add RPC methods to MarketingAIService for backward compatibility
-(MarketingAIService as unknown as MarketingAIServiceStatic).getStrategyMetadata = RPCService.getStrategyMetadata;
-(MarketingAIService as unknown as MarketingAIServiceStatic).updateStrategyMetadata = RPCService.updateStrategyMetadata;
+MarketingAIService.getStrategyMetadata = RPCService.getStrategyMetadata;
+MarketingAIService.updateStrategyMetadata = RPCService.updateStrategyMetadata;
 
 // Add USP Canvas methods to MarketingAIService for backward compatibility
-(MarketingAIService as unknown as MarketingAIServiceStatic).generateUspCanvasProfile = UspCanvasService.generateUspCanvasProfile;
-(MarketingAIService as unknown as MarketingAIServiceStatic).generateUspCanvasValueMap = UspCanvasService.generateUspCanvasValueMap;
+MarketingAIService.generateUspCanvasProfile = generateUspCanvasProfile;
+MarketingAIService.generateUspCanvasValueMap = generateUspCanvasValueMap;
