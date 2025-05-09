@@ -32,42 +32,54 @@ serve(async (req) => {
     const normalizedUrl = url.match(/^https?:\/\//) ? url : `https://${url}`;
     console.log(`Normalized URL: ${normalizedUrl}`);
     
-    // Call the crawler service to fetch website data
-    const crawlResult = await crawlWebsite(normalizedUrl, FIRECRAWL_API_KEY);
-    console.log("Raw crawl result received, checking content quality");
-    
-    // Check if we have substantial content
-    if (!hasSubstantialContent(crawlResult)) {
-      console.log("No substantial content was extracted from the website. Using enhanced fallback.");
+    try {
+      // Call the crawler service to fetch website data
+      const crawlResult = await crawlWebsite(normalizedUrl, FIRECRAWL_API_KEY);
+      console.log("Raw crawl result received, checking content quality");
       
-      // Try to extract any metadata or information from the response
-      const enhancedResults = enhanceEmptyResults(crawlResult, normalizedUrl);
+      // Check if we have substantial content
+      if (!hasSubstantialContent(crawlResult)) {
+        console.log("No substantial content was extracted from the website. Using enhanced fallback.");
+        
+        // Try to extract any metadata or information from the response
+        const enhancedResults = enhanceEmptyResults(crawlResult, normalizedUrl);
+        
+        return new Response(JSON.stringify(enhancedResults), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Process and enrich the data
+      console.log(`Processing data from ${crawlResult.data?.length || 0} pages`);
       
-      return new Response(JSON.stringify(enhancedResults), {
+      const processedData = {
+        success: true,
+        pagesCrawled: crawlResult.data?.length || 0,
+        contentExtracted: true,
+        summary: extractSummary(crawlResult.data),
+        keywordsFound: extractKeywords(crawlResult.data),
+        technologiesDetected: detectTechnologies(crawlResult.data),
+        data: crawlResult.data || [],
+        id: crawlResult.id || null,
+        url: normalizedUrl
+      };
+      
+      console.log("Data processing complete, returning result");
+
+      return new Response(JSON.stringify(processedData), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    } catch (crawlError) {
+      console.error('Crawl operation failed:', crawlError);
+      
+      // Create a fallback response with domain information
+      console.log("Creating fallback response based on URL");
+      const fallbackResponse = enhanceEmptyResults(null, normalizedUrl);
+      
+      return new Response(JSON.stringify(fallbackResponse), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-
-    // Process and enrich the data
-    console.log(`Processing data from ${crawlResult.data?.length || 0} pages`);
-    
-    const processedData = {
-      success: true,
-      pagesCrawled: crawlResult.data?.length || 0,
-      contentExtracted: true,
-      summary: extractSummary(crawlResult.data),
-      keywordsFound: extractKeywords(crawlResult.data),
-      technologiesDetected: detectTechnologies(crawlResult.data),
-      data: crawlResult.data || [],
-      id: crawlResult.id || null,
-      url: normalizedUrl
-    };
-    
-    console.log("Data processing complete, returning result");
-
-    return new Response(JSON.stringify(processedData), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
   } catch (error) {
     console.error('Error in website crawler function:', error);
     

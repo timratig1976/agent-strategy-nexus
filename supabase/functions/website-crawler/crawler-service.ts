@@ -6,7 +6,7 @@ export async function crawlWebsite(url: string, apiKey: string) {
   console.log("Crawling website:", url);
   
   try {
-    // Make the API call to Firecrawl REST API
+    // Make the API call to Firecrawl REST API with enhanced browser rendering
     const response = await fetch('https://api.firecrawl.dev/v1/crawl', {
       method: 'POST',
       headers: {
@@ -19,6 +19,14 @@ export async function crawlWebsite(url: string, apiKey: string) {
         scrapeOptions: {
           formats: ['markdown', 'html'],
           timeout: 30000, // 30s timeout
+          waitUntil: 'networkidle2', // Wait for network to be idle
+          javascript: true, // Explicitly enable JavaScript processing
+          renderOptions: {
+            // Enhanced rendering options for JS-heavy sites
+            waitForSelector: 'body',
+            scrollToBottom: true,
+            waitForTimeout: 2000, // Give JS more time to load
+          }
         },
       }),
     });
@@ -43,13 +51,32 @@ export async function crawlWebsite(url: string, apiKey: string) {
  * Checks if the crawl result contains substantial content
  */
 export function hasSubstantialContent(crawlResult: any): boolean {
-  // Check if result has content with sufficient data
-  return crawlResult && 
-         crawlResult.data && 
-         Array.isArray(crawlResult.data) &&
-         crawlResult.data.length > 0 && 
-         crawlResult.data.some((page: any) => 
-           (page.content && page.content.trim().length > 30) || 
-           (page.html && page.html.length > 100)
-         );
+  // More sophisticated check for substantial content
+  if (!crawlResult || !crawlResult.data || !Array.isArray(crawlResult.data)) {
+    return false;
+  }
+  
+  // Check if we have at least one page with meaningful content
+  return crawlResult.data.some((page: any) => {
+    // Check for substantial HTML content
+    if (page.html && page.html.length > 500) {
+      // Check for meaningful text content (not just boilerplate)
+      const hasStructuredContent = page.html.includes('<div') && 
+                                  page.html.includes('<p') && 
+                                  page.html.length > 1000;
+      return hasStructuredContent;
+    }
+    
+    // Check for substantial markdown content
+    if (page.content && page.content.trim().length > 200) {
+      // Ignore pages with just error messages
+      const lowerContent = page.content.toLowerCase();
+      const isErrorPage = lowerContent.includes('access denied') || 
+                         lowerContent.includes('404') || 
+                         lowerContent.includes('not found');
+      return !isErrorPage;
+    }
+    
+    return false;
+  });
 }

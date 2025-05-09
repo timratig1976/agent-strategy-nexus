@@ -9,6 +9,19 @@ export function extractSummary(data: any[]): string {
   
   // Get the main page content and create a better summary
   let combinedContent = '';
+  let metaDescription = '';
+  
+  // Check for meta description first as it's often the highest quality summary
+  for (const page of data) {
+    if (page.metadata && page.metadata.description && page.metadata.description.length > 30) {
+      metaDescription = page.metadata.description;
+      break;
+    }
+  }
+  
+  if (metaDescription) {
+    return metaDescription.length > 300 ? metaDescription.substring(0, 300) + "..." : metaDescription;
+  }
   
   // Prioritize content from index/home page if available
   const homePage = data.find(page => 
@@ -71,6 +84,45 @@ export function extractKeywords(data: any[]): string[] {
     if (page.title) {
       extractCommonWords(page.title.toLowerCase(), 3).forEach(word => keywords.add(word));
     }
+    
+    // Look for schema.org metadata
+    if (page.html) {
+      const schemaMatches = page.html.match(/<script type="application\/ld\+json">(.*?)<\/script>/gs);
+      if (schemaMatches) {
+        schemaMatches.forEach(match => {
+          try {
+            const schemaText = match.replace(/<script type="application\/ld\+json">/, '')
+                                   .replace(/<\/script>/, '');
+            const schemaData = JSON.parse(schemaText);
+            
+            // Extract keywords from schema data
+            const extractFromSchema = (obj: any) => {
+              if (typeof obj !== 'object' || obj === null) return;
+              
+              Object.entries(obj).forEach(([key, value]) => {
+                if (typeof value === 'string' && ['name', 'description', 'text', 'headline', 'keywords'].includes(key.toLowerCase())) {
+                  extractCommonWords(value.toLowerCase(), 3).forEach(word => keywords.add(word));
+                } else if (Array.isArray(value)) {
+                  value.forEach(item => {
+                    if (typeof item === 'string') {
+                      keywords.add(item.toLowerCase());
+                    } else if (typeof item === 'object') {
+                      extractFromSchema(item);
+                    }
+                  });
+                } else if (typeof value === 'object') {
+                  extractFromSchema(value);
+                }
+              });
+            };
+            
+            extractFromSchema(schemaData);
+          } catch (e) {
+            // Ignore JSON parse errors
+          }
+        });
+      }
+    }
   });
   
   // If not enough keywords found, extract common words from content
@@ -123,10 +175,33 @@ export function detectTechnologies(data: any[]): string[] {
     'Elementor': ['elementor'],
     'Hubspot': ['hubspot', 'hs-'],
     'Mailchimp': ['mailchimp', 'mc-'],
+    'Jamstack': ['gatsby', 'next', 'nuxt', 'static-site', 'contentful'],
+    'Sanity CMS': ['sanity', '@sanity'],
+    'Contentful': ['contentful'],
+    'Netlify': ['netlify'],
+    'Vercel': ['vercel'],
+    'Prismic': ['prismic'],
   };
   
-  // Search for technology signatures in HTML
+  // Check for response headers that indicate technologies
   data.forEach(page => {
+    if (page.headers) {
+      if (page.headers['x-powered-by']) {
+        const poweredBy = page.headers['x-powered-by'].toLowerCase();
+        if (poweredBy.includes('php')) technologies.add('PHP');
+        if (poweredBy.includes('express')) technologies.add('Express.js');
+        if (poweredBy.includes('aspnet')) technologies.add('ASP.NET');
+      }
+      
+      if (page.headers['server']) {
+        const server = page.headers['server'].toLowerCase();
+        if (server.includes('nginx')) technologies.add('Nginx');
+        if (server.includes('apache')) technologies.add('Apache');
+        if (server.includes('cloudflare')) technologies.add('Cloudflare');
+      }
+    }
+    
+    // Search for technology signatures in HTML
     if (page.html) {
       const html = page.html.toLowerCase();
       
@@ -164,8 +239,21 @@ export function extractCommonWords(text: string, count: number): string[] {
     'his', 'her', 'you', 'your', 'has', 'have', 'had', 'not', 'no', 'do', 'does', 
     'did', 'can', 'could', 'will', 'would', 'should', 'shall', 'may', 'might', 
     'must', 'as', 'from', 'when', 'where', 'why', 'how', 'what', 'who', 'whom',
-    'which', 'whose', 'if', 'then', 'than', 'so'
+    'which', 'whose', 'if', 'then', 'than', 'so', 'just', 'now', 'more', 'some',
+    'such', 'use', 'used', 'using', 'get', 'got', 'gets', 'page', 'website',
+    'site', 'click', 'cookies', 'cookie'
   ]);
+  
+  // German stop words (helpful for German websites)
+  const germanStopWords = new Set([
+    'der', 'die', 'das', 'ein', 'eine', 'und', 'oder', 'aber', 'auch', 'in', 'mit',
+    'für', 'von', 'bei', 'durch', 'wenn', 'weil', 'wie', 'wer', 'was', 'wo', 'zu',
+    'zur', 'zum', 'nach', 'aus', 'über', 'unter', 'vor', 'dann', 'ist', 'sind', 
+    'war', 'waren', 'wird', 'werden', 'wurde', 'wurden'
+  ]);
+  
+  // Add German stop words to the stop words set
+  germanStopWords.forEach(word => stopWords.add(word));
   
   // Extract words and count frequency
   const words = text.match(/\b(\w{3,})\b/g) || [];
