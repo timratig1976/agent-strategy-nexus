@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
-import { Form } from "@/components/ui/form";
-import { AlertTriangle, Globe, Loader2 } from "lucide-react";
+import { AlertTriangle, Globe, Loader2, Settings } from "lucide-react";
 import ApiKeyManager from "./ApiKeyManager";
+import { useNavigate } from "react-router-dom";
 
 interface WebsiteAnalysisFormProps {
   url: string;
@@ -17,7 +17,7 @@ interface WebsiteAnalysisFormProps {
   handleSubmit: (e?: React.FormEvent) => Promise<void>;
   hasApiKey: boolean;
   onApiKeyValidated: () => void;
-  crawlStatus?: string; // Add crawl status prop
+  crawlStatus?: string;
 }
 
 const WebsiteAnalysisForm: React.FC<WebsiteAnalysisFormProps> = ({
@@ -29,9 +29,10 @@ const WebsiteAnalysisForm: React.FC<WebsiteAnalysisFormProps> = ({
   handleSubmit,
   hasApiKey,
   onApiKeyValidated,
-  crawlStatus // Use the crawl status
+  crawlStatus
 }) => {
   const [showApiKeyForm, setShowApiKeyForm] = useState(!hasApiKey);
+  const navigate = useNavigate();
 
   // Return human-readable status message
   const getStatusMessage = (status: string | undefined) => {
@@ -55,17 +56,45 @@ const WebsiteAnalysisForm: React.FC<WebsiteAnalysisFormProps> = ({
     }
   };
 
+  const goToSettings = () => {
+    navigate('/settings');
+  };
+
   return (
     <Card className="mb-6">
       <CardContent className="pt-6">
         {showApiKeyForm ? (
-          <div className="mb-4">
-            <ApiKeyManager 
-              onApiKeyValidated={() => {
-                onApiKeyValidated();
-                setShowApiKeyForm(false);
-              }} 
-            />
+          <div className="space-y-4">
+            <div className="mb-4">
+              <ApiKeyManager />
+            </div>
+            {/* Temporary inline ApiKeyManager with option to go to settings */}
+            <div className="flex justify-between items-center border-t pt-4">
+              <p className="text-sm">
+                For permanent API key management, use the Settings page.
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  setShowApiKeyForm(false);
+                  if (hasApiKey) {
+                    onApiKeyValidated();
+                  }
+                }}
+              >
+                {hasApiKey ? "Continue with saved key" : "Skip for now"}
+              </Button>
+              <Button 
+                variant="default" 
+                size="sm"
+                onClick={goToSettings}
+                className="flex items-center gap-1"
+              >
+                <Settings className="h-4 w-4" />
+                Go to Settings
+              </Button>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -118,14 +147,28 @@ const WebsiteAnalysisForm: React.FC<WebsiteAnalysisFormProps> = ({
             )}
 
             <div className="flex justify-between">
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm"
-                onClick={() => setShowApiKeyForm(true)}
-              >
-                Set FireCrawl API Key
-              </Button>
+              {!hasApiKey ? (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowApiKeyForm(true)}
+                >
+                  Set FireCrawl API Key
+                </Button>
+              ) : (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={goToSettings}
+                  className="flex items-center gap-1"
+                >
+                  <Settings className="h-4 w-4" />
+                  Manage API Keys
+                </Button>
+              )}
+              
               {hasApiKey && (
                 <div className="text-sm text-muted-foreground">
                   API key set ✓

@@ -10,7 +10,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { AIPromptSettingsTab, CompanyProfileTab } from "@/components/settings";
+import { AIPromptSettingsTab, CompanyProfileTab, APIKeysTab } from "@/components/settings";
 
 type CompanySettings = {
   name: string;
@@ -86,6 +86,9 @@ const Settings = () => {
             <TabsTrigger value="ai-prompts">
               AI Prompt Settings
             </TabsTrigger>
+            <TabsTrigger value="api-keys">
+              API Keys
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="company">
@@ -97,6 +100,10 @@ const Settings = () => {
           
           <TabsContent value="ai-prompts">
             <AIPromptSettingsTab />
+          </TabsContent>
+          
+          <TabsContent value="api-keys">
+            <APIKeysTab />
           </TabsContent>
         </Tabs>
       </div>

@@ -5,11 +5,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { FirecrawlService } from "@/services/firecrawl";
 
-interface ApiKeyManagerProps {
-  onApiKeyValidated?: () => void;
-}
-
-const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyValidated }) => {
+const ApiKeyManager: React.FC = () => {
   const [apiKey, setApiKey] = useState("");
   const [hasValidKey, setHasValidKey] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
@@ -45,11 +41,6 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyValidated }) => {
         FirecrawlService.saveApiKey(apiKey);
         setHasValidKey(true);
         toast.success("API key validated and saved successfully");
-        
-        // Notify parent component if callback provided
-        if (onApiKeyValidated) {
-          onApiKeyValidated();
-        }
       } else {
         console.log("API key validation failed");
         toast.error(

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Globe } from "lucide-react";
 import WebsiteAnalysisForm from "./WebsiteAnalysisForm";
@@ -25,7 +26,7 @@ const WebsiteCrawlingModule: React.FC<WebsiteCrawlingModuleProps> = ({
     handleSubmit,
     hasApiKey,
     onApiKeyValidated,
-    crawlStatus // Get the crawl status from hook
+    crawlStatus 
   } = useWebsiteCrawler(initialData);
 
   // Update parent component when results change
@@ -60,7 +61,7 @@ const WebsiteCrawlingModule: React.FC<WebsiteCrawlingModuleProps> = ({
         handleSubmit={handleSubmit}
         hasApiKey={hasApiKey}
         onApiKeyValidated={onApiKeyValidated}
-        crawlStatus={crawlStatus} // Pass the crawl status
+        crawlStatus={crawlStatus}
       />
 
       {results && <WebsiteCrawlerResults results={results} />}
