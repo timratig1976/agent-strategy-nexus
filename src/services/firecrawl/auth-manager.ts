@@ -7,40 +7,16 @@ export class FirecrawlAuthManager {
   private static readonly API_KEY_STORAGE_KEY = 'firecrawl_api_key';
 
   /**
-   * Test if an API key is valid
+   * Test if an API key has valid format
    * @param apiKey The API key to test
-   * @returns Promise resolving to true if valid, false otherwise
+   * @returns True if key has valid format, false otherwise
    */
-  static async testApiKey(apiKey: string): Promise<boolean> {
-    try {
-      if (!apiKey || !apiKey.trim() || !apiKey.startsWith('fc-')) {
-        console.log("Invalid API key format");
-        return false;
-      }
-
-      // Make a request to the Firecrawl API to check if the key is valid
-      const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          url: 'https://example.com',
-          formats: ['markdown'],
-          timeout: 5000 // Short timeout for validation
-        })
-      });
-      
-      // Log the response for debugging
-      console.log("API key validation response:", response.status, response.statusText);
-      
-      // Any 2xx status code should indicate success
-      return response.status >= 200 && response.status < 300;
-    } catch (error) {
-      console.error("Error validating API key:", error);
+  static validateApiKeyFormat(apiKey: string): boolean {
+    if (!apiKey || !apiKey.trim() || !apiKey.startsWith('fc-')) {
+      console.log("Invalid API key format");
       return false;
     }
+    return true;
   }
 
   /**

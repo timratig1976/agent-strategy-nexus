@@ -50,12 +50,12 @@ export class FirecrawlService {
   }
 
   /**
-   * Test if an API key is valid
+   * Check if an API key has valid format (only validates format, not actual API access)
    * @param apiKey The API key to test
-   * @returns Promise resolving to true if valid, false otherwise
+   * @returns Boolean indicating if the key format is valid
    */
-  static async testApiKey(apiKey: string): Promise<boolean> {
-    return FirecrawlAuthManager.testApiKey(apiKey);
+  static testApiKey(apiKey: string): boolean {
+    return FirecrawlAuthManager.validateApiKeyFormat(apiKey);
   }
 
   /**

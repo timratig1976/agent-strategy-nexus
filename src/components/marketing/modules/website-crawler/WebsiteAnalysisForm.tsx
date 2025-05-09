@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AlertTriangle, Globe, Loader2, Settings } from "lucide-react";
 import ApiKeyManager from "./ApiKeyManager";
 import { useNavigate } from "react-router-dom";
+import { FirecrawlService } from "@/services/firecrawl";
 
 interface WebsiteAnalysisFormProps {
   url: string;
@@ -59,6 +60,11 @@ const WebsiteAnalysisForm: React.FC<WebsiteAnalysisFormProps> = ({
   const goToSettings = () => {
     navigate('/settings');
   };
+  
+  const checkApiKey = () => {
+    const apiKey = FirecrawlService.getApiKey();
+    return !!apiKey;
+  };
 
   return (
     <Card className="mb-6">
@@ -66,7 +72,10 @@ const WebsiteAnalysisForm: React.FC<WebsiteAnalysisFormProps> = ({
         {showApiKeyForm ? (
           <div className="space-y-4">
             <div className="mb-4">
-              <ApiKeyManager />
+              <ApiKeyManager onApiKeyValidated={() => {
+                setShowApiKeyForm(false);
+                onApiKeyValidated();
+              }} />
             </div>
             {/* Temporary inline ApiKeyManager with option to go to settings */}
             <div className="flex justify-between items-center border-t pt-4">
@@ -78,12 +87,12 @@ const WebsiteAnalysisForm: React.FC<WebsiteAnalysisFormProps> = ({
                 size="sm"
                 onClick={() => {
                   setShowApiKeyForm(false);
-                  if (hasApiKey) {
+                  if (checkApiKey()) {
                     onApiKeyValidated();
                   }
                 }}
               >
-                {hasApiKey ? "Continue with saved key" : "Skip for now"}
+                {checkApiKey() ? "Continue with saved key" : "Skip for now"}
               </Button>
               <Button 
                 variant="default" 

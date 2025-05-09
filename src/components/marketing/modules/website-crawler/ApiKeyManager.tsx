@@ -3,7 +3,8 @@ import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FirecrawlService } from "@/services/firecrawl";
-import { CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { FirecrawlAuthManager } from "@/services/firecrawl/auth-manager";
+import { CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface ApiKeyManagerProps {
@@ -12,10 +13,8 @@ interface ApiKeyManagerProps {
 
 const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyValidated }) => {
   const [apiKey, setApiKey] = useState<string>("");
-  const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [isValidated, setIsValidated] = useState<boolean>(false);
-  const [hasExistingKey, setHasExistingKey] = useState<boolean>(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [hasExistingKey, setHasExistingKey] = useState<boolean>(false);
 
   // Check for existing API key on component mount
   useEffect(() => {
@@ -23,7 +22,6 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyValidated }) => {
     if (existingKey) {
       setApiKey(existingKey);
       setHasExistingKey(true);
-      setIsValidated(true);
     }
   }, []);
 
@@ -32,7 +30,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyValidated }) => {
     return key.startsWith('fc-') && key.length >= 10;
   };
 
-  const handleSaveApiKey = async () => {
+  const handleSaveApiKey = () => {
     if (!apiKey.trim()) {
       setValidationError("API key cannot be empty");
       return;
@@ -44,41 +42,20 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyValidated }) => {
     }
 
     setValidationError(null);
-    setIsSaving(true);
-
-    try {
-      console.log("Testing API key:", apiKey.substring(0, 5) + "...");
-      const isValid = await FirecrawlService.testApiKey(apiKey);
-      console.log("API key validation result:", isValid);
-      
-      if (isValid) {
-        console.log("API key validated successfully, saving");
-        FirecrawlService.saveApiKey(apiKey);
-        setIsValidated(true);
-        setHasExistingKey(true);
-        toast.success("API key saved and validated successfully");
-        
-        // Call the callback if provided
-        if (onApiKeyValidated) {
-          onApiKeyValidated();
-        }
-      } else {
-        console.log("API key validation failed");
-        setValidationError("API key validation failed. Please check your key and try again.");
-        toast.error("API key validation failed");
-      }
-    } catch (error) {
-      console.error("API key validation error:", error);
-      setValidationError("Error validating API key. Please try again.");
-      toast.error("Error validating API key");
-    } finally {
-      setIsSaving(false);
+    
+    // Save the API key without validation
+    FirecrawlService.saveApiKey(apiKey);
+    setHasExistingKey(true);
+    toast.success("API key saved successfully");
+    
+    // Call the callback if provided
+    if (onApiKeyValidated) {
+      onApiKeyValidated();
     }
   };
 
   const handleClearApiKey = () => {
     setApiKey("");
-    setIsValidated(false);
     setHasExistingKey(false);
     FirecrawlService.clearApiKey();
     toast.success("API key removed");
@@ -93,19 +70,13 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyValidated }) => {
           onChange={(e) => setApiKey(e.target.value)}
           placeholder="Enter your Firecrawl API key"
           className="flex-1"
-          disabled={isSaving}
         />
         <Button 
           onClick={handleSaveApiKey} 
-          disabled={isSaving || (isValidated && apiKey === FirecrawlService.getApiKey())}
+          disabled={hasExistingKey && apiKey === FirecrawlService.getApiKey()}
           variant="outline"
         >
-          {isSaving ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Validating...
-            </>
-          ) : hasExistingKey ? "Update" : "Save"}
+          {hasExistingKey ? "Update" : "Save"}
         </Button>
         {hasExistingKey && (
           <Button 
@@ -125,10 +96,10 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyValidated }) => {
         </div>
       )}
       
-      {isValidated && !validationError && (
+      {hasExistingKey && !validationError && (
         <div className="text-sm text-green-600 flex items-center gap-1 mt-1">
           <CheckCircle className="h-4 w-4" />
-          <span>API key validated successfully</span>
+          <span>API key saved successfully</span>
         </div>
       )}
       
