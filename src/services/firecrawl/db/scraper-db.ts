@@ -38,7 +38,7 @@ export class ScraperDbService {
       console.log(`Saving ${urlType} crawl result for strategy ${strategyId}`);
 
       const data = {
-        project_id: strategyId,
+        strategy_id: strategyId, // Fixed: Changed project_id to strategy_id
         url: url,
         status: 'completed',
         extracted_content: {

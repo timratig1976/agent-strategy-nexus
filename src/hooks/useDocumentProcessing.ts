@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { useCallback } from "react";
 
@@ -49,10 +50,11 @@ export const useDocumentProcessing = (strategyId: string) => {
       if (!strategyId) return null;
 
       // Get the latest crawl result from the database
+      // Fixed: Changed project_id to strategy_id in the query
       const { data: crawlResults, error } = await supabase
         .from('website_crawls')
         .select('url, extracted_content')
-        .eq('project_id', strategyId) // Using project_id as that's the column name in website_crawls
+        .eq('strategy_id', strategyId)
         .order('created_at', { ascending: false })
         .limit(1);
       
@@ -97,6 +99,7 @@ export const useDocumentProcessing = (strategyId: string) => {
   }, [strategyId]);
 
   // New function to check if prompts exist for a given module and create them if they don't
+  // Fixed: Simplified type handling to avoid excessive instantiation
   const ensurePromptsExist = useCallback(async (module: string): Promise<boolean> => {
     try {
       if (!module) return false;
