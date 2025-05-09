@@ -71,32 +71,6 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
               className="mt-1"
             />
           </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="scrapeWebsite" className="text-sm font-medium">
-              Scrape Website
-            </label>
-            <p className="text-xs text-muted-foreground">
-              Analyze your website to extract company information automatically.
-            </p>
-            <Button 
-              type="button" 
-              variant="outline" 
-              size="sm"
-              className="w-full"
-              disabled={!hasApiKey || isSaving || !!crawlingUrl}
-              onClick={() => onCrawlWebsite()}
-            >
-              {crawlingUrl === 'websiteUrl' ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Analyzing website...
-                </>
-              ) : (
-                "Analyze Website"
-              )}
-            </Button>
-          </div>
             
           <UrlField
             id="websiteUrl"
