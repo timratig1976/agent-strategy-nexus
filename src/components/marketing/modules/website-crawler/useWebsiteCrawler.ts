@@ -1,7 +1,6 @@
 
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { WebsiteCrawlResult } from "./types";
+import { WebsiteCrawlResult, FirecrawlService } from "@/services/FirecrawlService";
 import { toast } from "sonner";
 
 export const useWebsiteCrawler = (initialData?: WebsiteCrawlResult) => {
@@ -10,12 +9,25 @@ export const useWebsiteCrawler = (initialData?: WebsiteCrawlResult) => {
   const [progress, setProgress] = useState(0);
   const [results, setResults] = useState<WebsiteCrawlResult | null>(initialData || null);
   const [error, setError] = useState<string | null>(null);
+  const [hasApiKey, setHasApiKey] = useState(!!FirecrawlService.getApiKey());
+
+  const checkApiKey = () => {
+    const apiKey = FirecrawlService.getApiKey();
+    setHasApiKey(!!apiKey);
+    return !!apiKey;
+  };
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
     if (!url) {
       setError("Please enter a website URL");
+      return;
+    }
+    
+    if (!checkApiKey()) {
+      toast.error("Please set your FireCrawl API key first");
+      setError("FireCrawl API key not set");
       return;
     }
     
@@ -38,28 +50,25 @@ export const useWebsiteCrawler = (initialData?: WebsiteCrawlResult) => {
         });
       }, 1000);
       
-      const { data, error } = await supabase.functions.invoke('website-crawler', {
-        body: { url: processedUrl }
-      });
+      // Make the direct API call
+      const crawlResult = await FirecrawlService.crawlWebsite(processedUrl);
       
       clearInterval(progressInterval);
       setProgress(100);
       
-      if (error) {
-        throw new Error(error.message);
+      if (!crawlResult.success) {
+        throw new Error(crawlResult.summary || "Failed to crawl website");
       }
       
-      if (data) {
-        console.log("Website crawl results:", data);
-        
-        if (data.contentExtracted) {
-          toast.success("Website crawled successfully");
-        } else {
-          toast.info("Website crawled, but limited content was extracted");
-        }
-        
-        setResults(data);
+      console.log("Website crawl results:", crawlResult);
+      
+      if (crawlResult.contentExtracted) {
+        toast.success("Website crawled successfully");
+      } else {
+        toast.info("Website crawled, but limited content was extracted");
       }
+      
+      setResults(crawlResult);
     } catch (err: any) {
       console.error("Error crawling website:", err);
       setError(err.message || "Failed to crawl website");
@@ -67,6 +76,10 @@ export const useWebsiteCrawler = (initialData?: WebsiteCrawlResult) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const onApiKeyValidated = () => {
+    setHasApiKey(true);
   };
 
   return {
@@ -77,6 +90,8 @@ export const useWebsiteCrawler = (initialData?: WebsiteCrawlResult) => {
     results,
     setResults,
     error,
-    handleSubmit
+    handleSubmit,
+    hasApiKey,
+    onApiKeyValidated
   };
 };

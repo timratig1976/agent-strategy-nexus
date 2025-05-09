@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Save } from "lucide-react";
 import { StrategyFormProps } from "./types";
 import UrlField from "./UrlField";
+import ApiKeyManager from "@/components/marketing/modules/website-crawler/ApiKeyManager";
 
 const StrategyForm: React.FC<StrategyFormProps> = ({
   localFormValues,
@@ -21,7 +22,9 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
   showWebsitePreview,
   showProductPreview,
   setShowWebsitePreview,
-  setShowProductPreview
+  setShowProductPreview,
+  hasApiKey,
+  onApiKeyValidated
 }) => {
   // Create wrapper functions that return Promise<void> for each URL type
   const handleWebsiteCrawl = async () => {
@@ -34,6 +37,8 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <ApiKeyManager onApiKeyValidated={onApiKeyValidated} />
+      
       <div className="space-y-2">
         <Label htmlFor="companyName">Company Name</Label>
         <Input 
@@ -58,6 +63,7 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
         setShowPreview={setShowWebsitePreview}
         previewResults={websitePreviewResults}
         crawlingUrl={crawlingUrl}
+        hasApiKey={hasApiKey}
       />
       
       <div className="space-y-2">
@@ -85,6 +91,7 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
         setShowPreview={setShowProductPreview}
         previewResults={productPreviewResults}
         crawlingUrl={crawlingUrl}
+        hasApiKey={hasApiKey}
       />
       
       <div className="space-y-2">

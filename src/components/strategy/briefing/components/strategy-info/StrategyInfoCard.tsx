@@ -25,7 +25,9 @@ const StrategyInfoCard: React.FC<StrategyInfoCardProps> = ({
     showProductPreview,
     setShowWebsitePreview,
     setShowProductPreview,
-    handleCrawl
+    handleCrawl,
+    hasApiKey,
+    checkApiKey
   } = useCrawlUrl(localFormValues);
   
   // Update local form values when formValues prop changes
@@ -51,6 +53,10 @@ const StrategyInfoCard: React.FC<StrategyInfoCardProps> = ({
     }
   };
 
+  const onApiKeyValidated = () => {
+    checkApiKey();
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -71,6 +77,8 @@ const StrategyInfoCard: React.FC<StrategyInfoCardProps> = ({
           showProductPreview={showProductPreview}
           setShowWebsitePreview={setShowWebsitePreview}
           setShowProductPreview={setShowProductPreview}
+          hasApiKey={hasApiKey}
+          onApiKeyValidated={onApiKeyValidated}
         />
         
         {/* Add DocumentManager component if we have a strategy ID */}

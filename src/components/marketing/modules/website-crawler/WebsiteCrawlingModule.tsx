@@ -4,7 +4,7 @@ import { Globe } from "lucide-react";
 import WebsiteAnalysisForm from "./WebsiteAnalysisForm";
 import WebsiteCrawlerResults from "./WebsiteCrawlerResults";
 import { useWebsiteCrawler } from "./useWebsiteCrawler";
-import { WebsiteCrawlResult } from "./types";
+import { WebsiteCrawlResult } from "@/services/FirecrawlService";
 
 interface WebsiteCrawlingModuleProps {
   initialData?: WebsiteCrawlResult;
@@ -22,8 +22,10 @@ const WebsiteCrawlingModule: React.FC<WebsiteCrawlingModuleProps> = ({
     progress, 
     results: internalResults, 
     setResults: setInternalResults,
-    error, 
-    handleSubmit 
+    error,
+    handleSubmit,
+    hasApiKey,
+    onApiKeyValidated
   } = useWebsiteCrawler(initialData);
 
   // Update parent component when results change
@@ -56,6 +58,8 @@ const WebsiteCrawlingModule: React.FC<WebsiteCrawlingModuleProps> = ({
         progress={progress}
         error={error}
         handleSubmit={handleSubmit}
+        hasApiKey={hasApiKey}
+        onApiKeyValidated={onApiKeyValidated}
       />
 
       {results && <WebsiteCrawlerResults results={results} />}

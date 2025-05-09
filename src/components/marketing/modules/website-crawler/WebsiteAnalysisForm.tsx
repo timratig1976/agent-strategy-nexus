@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import ApiKeyManager from "./ApiKeyManager";
 
 interface WebsiteAnalysisFormProps {
   url: string;
@@ -21,6 +22,8 @@ interface WebsiteAnalysisFormProps {
   progress: number;
   error: string | null;
   handleSubmit: (e: React.FormEvent) => void;
+  hasApiKey: boolean;
+  onApiKeyValidated: () => void;
 }
 
 const WebsiteAnalysisForm: React.FC<WebsiteAnalysisFormProps> = ({
@@ -29,7 +32,9 @@ const WebsiteAnalysisForm: React.FC<WebsiteAnalysisFormProps> = ({
   isLoading,
   progress,
   error,
-  handleSubmit
+  handleSubmit,
+  hasApiKey,
+  onApiKeyValidated
 }) => {
   return (
     <Card className="mb-8">
@@ -42,6 +47,18 @@ const WebsiteAnalysisForm: React.FC<WebsiteAnalysisFormProps> = ({
         </CardHeader>
         
         <CardContent className="space-y-4">
+          <ApiKeyManager onApiKeyValidated={onApiKeyValidated} />
+          
+          {!hasApiKey && (
+            <Alert variant="warning">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>API Key Required</AlertTitle>
+              <AlertDescription>
+                You need to set your FireCrawl API key before you can analyze websites.
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <div className="space-y-2">
             <Label htmlFor="website-url">Website URL</Label>
             <div className="flex space-x-2">
@@ -50,10 +67,13 @@ const WebsiteAnalysisForm: React.FC<WebsiteAnalysisFormProps> = ({
                 placeholder="https://yourwebsite.com"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                disabled={isLoading}
+                disabled={isLoading || !hasApiKey}
                 className="flex-1"
               />
-              <Button type="submit" disabled={isLoading || !url}>
+              <Button 
+                type="submit" 
+                disabled={isLoading || !url || !hasApiKey}
+              >
                 {isLoading ? "Analyzing..." : "Analyze"}
               </Button>
             </div>

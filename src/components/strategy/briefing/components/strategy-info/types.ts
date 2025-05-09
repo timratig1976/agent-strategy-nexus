@@ -1,34 +1,25 @@
+import { WebsiteCrawlResult } from "@/services/FirecrawlService";
 
-import { WebsiteCrawlResult } from "@/components/marketing/modules/website-crawler/types";
-import React from "react";
-import { CrawlUrlType } from "./hooks/useCrawlUrl";
+export interface CrawlPreviewProps {
+  results: WebsiteCrawlResult;
+  show: boolean;
+  source?: 'website' | 'product';
+}
 
 export interface UrlFieldProps {
   id: string;
   name: string;
   label: string;
-  value: string;
+  value: string | null;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onCrawl: () => Promise<void>;
   isCrawling: boolean;
   crawlProgress: number;
   showPreview: boolean;
-  setShowPreview: (show: boolean) => void;
+  setShowPreview: React.Dispatch<React.SetStateAction<boolean>>;
   previewResults: WebsiteCrawlResult | null;
   crawlingUrl: string | null;
-}
-
-export interface CrawlPreviewProps {
-  results: WebsiteCrawlResult | null;
-  show: boolean;
-  source?: 'website' | 'product';
-}
-
-export interface StrategyInfoCardProps {
-  formValues: any;
-  saveStrategyMetadata: (updatedValues: any) => Promise<boolean>;
-  showCrawler: boolean;
-  setShowCrawler: (show: boolean) => void;
+  hasApiKey: boolean;
 }
 
 export interface StrategyFormProps {
@@ -37,12 +28,21 @@ export interface StrategyFormProps {
   handleSubmit: (e: React.FormEvent) => void;
   isSaving: boolean;
   crawlingUrl: string | null;
-  handleCrawl: (urlType: CrawlUrlType) => Promise<any>; // Updated return type to be more flexible
+  handleCrawl: (urlType: 'websiteUrl' | 'productUrl') => Promise<any>;
   crawlProgress: number;
   websitePreviewResults: WebsiteCrawlResult | null;
   productPreviewResults: WebsiteCrawlResult | null;
   showWebsitePreview: boolean;
   showProductPreview: boolean;
-  setShowWebsitePreview: (show: boolean) => void;
-  setShowProductPreview: (show: boolean) => void;
+  setShowWebsitePreview: React.Dispatch<React.SetStateAction<boolean>>;
+  setShowProductPreview: React.Dispatch<React.SetStateAction<boolean>>;
+  hasApiKey: boolean;
+  onApiKeyValidated: () => void;
+}
+
+export interface StrategyInfoCardProps {
+  formValues: any;
+  saveStrategyMetadata: (values: any) => Promise<void>;
+  showCrawler: boolean;
+  setShowCrawler: React.Dispatch<React.SetStateAction<boolean>>;
 }

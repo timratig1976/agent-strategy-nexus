@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { WebsiteCrawlResult } from "@/components/marketing/modules/website-crawler/types";
+import { WebsiteCrawlResult, FirecrawlService } from "@/services/FirecrawlService";
 import { StrategyFormValues } from "@/components/strategy-form";
 
 export type CrawlUrlType = 'websiteUrl' | 'productUrl';
@@ -14,6 +14,14 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
   const [productPreviewResults, setProductPreviewResults] = useState<WebsiteCrawlResult | null>(null);
   const [showWebsitePreview, setShowWebsitePreview] = useState(false);
   const [showProductPreview, setShowProductPreview] = useState(false);
+  const [hasApiKey, setHasApiKey] = useState(!!FirecrawlService.getApiKey());
+
+  // Check for API key and update state
+  const checkApiKey = () => {
+    const apiKey = FirecrawlService.getApiKey();
+    setHasApiKey(!!apiKey);
+    return !!apiKey;
+  };
 
   const handleCrawl = async (urlType: CrawlUrlType) => {
     const url = formValues[urlType];
@@ -25,6 +33,12 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
 
     if (!/^https?:\/\//i.test(url)) {
       toast.error("Please enter a valid URL starting with http:// or https://");
+      return { success: false };
+    }
+
+    // Check for API key
+    if (!checkApiKey()) {
+      toast.error("Please set your FireCrawl API key first");
       return { success: false };
     }
 
@@ -42,23 +56,28 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
     try {
       toast.info(`Crawling ${urlType === 'websiteUrl' ? 'website' : 'product'} URL...`);
       
-      // Call the website crawler function
-      const { data, error } = await supabase.functions.invoke('website-crawler', {
-        body: { url }
-      });
+      // Progress simulation
+      const progressInterval = setInterval(() => {
+        setCrawlProgress(prev => {
+          const newProgress = prev + 10;
+          return newProgress < 90 ? newProgress : prev;
+        });
+      }, 1000);
       
-      if (error) {
-        throw new Error(error.message);
-      }
+      // Direct API call to FireCrawl instead of using Edge Function
+      const crawlResult = await FirecrawlService.crawlWebsite(url);
       
-      if (data) {
-        console.log(`${urlType} crawl results:`, data);
+      clearInterval(progressInterval);
+      setCrawlProgress(100);
+      
+      if (crawlResult) {
+        console.log(`${urlType} crawl results:`, crawlResult);
         
         // Set the appropriate preview results based on URL type
         if (urlType === 'websiteUrl') {
-          setWebsitePreviewResults(data);
+          setWebsitePreviewResults(crawlResult);
         } else {
-          setProductPreviewResults(data);
+          setProductPreviewResults(crawlResult);
         }
         
         // Save crawl results to the database but don't modify additional info
@@ -67,10 +86,10 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
           {
             strategy_id_param: formValues.id,
             company_name_param: urlType === 'websiteUrl' ? 
-              (data.summary || formValues.companyName) : formValues.companyName,
+              (crawlResult.summary || formValues.companyName) : formValues.companyName,
             website_url_param: urlType === 'websiteUrl' ? url : formValues.websiteUrl,
             product_description_param: urlType === 'productUrl' ? 
-              (data.summary || formValues.productDescription) : formValues.productDescription,
+              (crawlResult.summary || formValues.productDescription) : formValues.productDescription,
             product_url_param: urlType === 'productUrl' ? url : formValues.productUrl,
             additional_info_param: formValues.additionalInfo
           }
@@ -91,7 +110,7 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
 
           return {
             success: true,
-            data,
+            data: crawlResult,
             urlType
           };
         }
@@ -116,6 +135,8 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
     showProductPreview,
     setShowWebsitePreview,
     setShowProductPreview,
-    handleCrawl
+    handleCrawl,
+    hasApiKey,
+    checkApiKey
   };
 }

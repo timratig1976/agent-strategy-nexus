@@ -4,9 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { Search, Eye } from "lucide-react";
+import { Search, Eye, AlertTriangle } from "lucide-react";
 import { UrlFieldProps } from "./types";
 import CrawlPreview from "./CrawlPreview";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const UrlField: React.FC<UrlFieldProps> = ({
   id,
@@ -20,7 +21,8 @@ const UrlField: React.FC<UrlFieldProps> = ({
   showPreview,
   setShowPreview,
   previewResults,
-  crawlingUrl
+  crawlingUrl,
+  hasApiKey
 }) => {
   const isProductUrl = name === 'productUrl';
   
@@ -45,8 +47,10 @@ const UrlField: React.FC<UrlFieldProps> = ({
           variant="outline"
           size="icon"
           onClick={handleCrawlClick}
-          disabled={crawlingUrl !== null}
-          title={`Crawl ${isProductUrl ? 'product page' : 'website'} for information`}
+          disabled={crawlingUrl !== null || !hasApiKey}
+          title={hasApiKey ? 
+            `Crawl ${isProductUrl ? 'product page' : 'website'} for information` : 
+            "API key required to crawl"}
         >
           {isCrawling ? (
             <div className="animate-spin">
@@ -68,6 +72,14 @@ const UrlField: React.FC<UrlFieldProps> = ({
           </Button>
         )}
       </div>
+      {!hasApiKey && (
+        <Alert variant="warning" className="py-2">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription className="text-xs">
+            FireCrawl API key required. Click "Set FireCrawl API Key" at the top of the form.
+          </AlertDescription>
+        </Alert>
+      )}
       {isCrawling && (
         <Progress value={crawlProgress} className="h-1 mt-1" />
       )}

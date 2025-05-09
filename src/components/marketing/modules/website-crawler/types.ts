@@ -1,29 +1,4 @@
 
-export interface WebsiteCrawlResult {
-  success: boolean;
-  status?: string;
-  completed?: number;
-  total?: number;
-  creditsUsed?: number;
-  expiresAt?: string;
-  data?: any[];
-  error?: string;
-  // Fields for display
-  pagesCrawled?: number;
-  contentExtracted?: boolean;
-  summary?: string;
-  keywordsFound?: string[];
-  technologiesDetected?: string[];
-  // Additional fields for tracking
-  id?: string;
-  url?: string;
-}
+export type { WebsiteCrawlResult } from "@/services/FirecrawlService";
 
-// Define additional type for saving website crawl data to strategy metadata
-export interface WebsiteCrawlData {
-  url: string;
-  summary: string;
-  keywordsFound: string[];
-  technologiesDetected: string[];
-  pagesCrawled: number;
-}
+// Add any other website crawler specific types here
