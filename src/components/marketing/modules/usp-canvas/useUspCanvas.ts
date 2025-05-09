@@ -1,10 +1,11 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { UspCanvas } from './types';
 import { useCustomerProfile, useValueMap, useCanvasManager } from './hooks';
 import { useCanvasStorage } from './hooks/useCanvasStorage';
 import { useAIContentHandler } from './hooks/useAIContentHandler';
 import { useRelationshipHandler } from './hooks/useRelationshipHandler';
+import { useCanvasData } from './hooks/useCanvasData';
 import { toast } from 'sonner';
 
 const initialCanvas: UspCanvas = {
@@ -18,6 +19,15 @@ const initialCanvas: UspCanvas = {
 
 export const useUspCanvas = (strategyId?: string) => {
   const [canvas, setCanvas] = useState<UspCanvas>(initialCanvas);
+  
+  // Use the data fetching hook
+  const { 
+    canvasData, 
+    isLoading,
+    error,
+    fetchCanvasData, 
+    saveCanvasToDatabase 
+  } = useCanvasData(strategyId);
   
   // Use the customer profile hook for jobs, pains, and gains
   const customerProfile = useCustomerProfile(
@@ -56,6 +66,23 @@ export const useUspCanvas = (strategyId?: string) => {
     valueMap.updateGainCreator
   );
   
+  // Set the canvas data when it loads from the database
+  useEffect(() => {
+    if (canvasData) {
+      console.log("Setting canvas data from database:", canvasData);
+      setCanvas(canvasData);
+      
+      // Initialize the sub-hooks with the loaded data
+      customerProfile.setCustomerJobs(canvasData.customerJobs);
+      customerProfile.setCustomerPains(canvasData.customerPains);
+      customerProfile.setCustomerGains(canvasData.customerGains);
+      
+      valueMap.setProductServices(canvasData.productServices);
+      valueMap.setPainRelievers(canvasData.painRelievers);
+      valueMap.setGainCreators(canvasData.gainCreators);
+    }
+  }, [canvasData]);
+
   // Create enhanced delete functions that update relationships
   const deleteCustomerJob = (id: string) => {
     customerProfile.deleteCustomerJob(id);
@@ -81,15 +108,29 @@ export const useUspCanvas = (strategyId?: string) => {
     }
   };
   
-  // Save canvas wrapper that uses the current canvas state
+  // Save canvas wrapper that uses the current canvas state and persists to database
   const saveCanvas = () => {
+    // First save to localStorage using the existing storage hook
     const result = storage.saveCanvas(updatedCanvas);
+    
+    // Then save to the database
+    if (result) {
+      saveCanvasToDatabase(updatedCanvas);
+    }
+    
     return result;
   };
   
   // Save final version wrapper that uses the current canvas state
   const saveFinalVersion = () => {
-    return storage.saveFinalVersion(updatedCanvas);
+    const result = storage.saveFinalVersion(updatedCanvas);
+    
+    // Also save to the database with final flag
+    if (result) {
+      saveCanvasToDatabase(updatedCanvas);
+    }
+    
+    return result;
   };
   
   // Synchronize the state from sub-hooks with the main canvas state
@@ -114,6 +155,9 @@ export const useUspCanvas = (strategyId?: string) => {
     resetCanvas,
     saveCanvas,
     saveFinalVersion,
-    applyAIGeneratedContent: aiContentHandler.applyAIGeneratedContent
+    applyAIGeneratedContent: aiContentHandler.applyAIGeneratedContent,
+    isLoading,
+    error,
+    refreshCanvasData: fetchCanvasData
   };
 };

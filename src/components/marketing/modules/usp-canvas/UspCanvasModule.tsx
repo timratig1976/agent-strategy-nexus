@@ -1,11 +1,12 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useUspCanvas } from "./useUspCanvas";
 import { useAIResults } from "./hooks/useAIResults";
 import { useNavigation } from "./hooks/useNavigation";
 import UspCanvasHeader from "./components/UspCanvasHeader";
 import UspCanvasModuleTabs from "./components/UspCanvasModuleTabs";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 interface UspCanvasModuleProps {
   strategyId: string;
@@ -57,7 +58,10 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     reorderCustomerGains,
     canvasSaveHistory,
     saveFinalVersion,
-    applyAIGeneratedContent
+    applyAIGeneratedContent,
+    isLoading,
+    error,
+    refreshCanvasData
   } = useUspCanvas(strategyId);
 
   const {
@@ -86,6 +90,23 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
   const addAIJobs = (jobs) => handleAddAIJobs(jobs, addCustomerJob);
   const addAIPains = (pains) => handleAddAIPains(pains, addCustomerPain);
   const addAIGains = (gains) => handleAddAIGains(gains, addCustomerGain);
+
+  // Show error if there was an issue loading the canvas data
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
+
+  // If loading, show a loading indicator
+  if (isLoading) {
+    return (
+      <div className="w-full flex flex-col items-center justify-center py-16">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Loading USP Canvas data...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -135,6 +156,7 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
         storedAIResult={storedAIResult}
         handleAIResultsGenerated={handleAIResultsGenerated}
         canvasSaveHistory={canvasSaveHistory}
+        refreshData={refreshCanvasData}
       />
     </div>
   );

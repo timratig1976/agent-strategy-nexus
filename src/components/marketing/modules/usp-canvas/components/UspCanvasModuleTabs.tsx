@@ -43,6 +43,7 @@ interface UspCanvasModuleTabsProps {
   storedAIResult: StoredAIResult;
   handleAIResultsGenerated: (result: any, debugInfo?: any) => void;
   canvasSaveHistory: Array<{timestamp: number, data: any}>;
+  refreshData?: () => void;
 }
 
 const UspCanvasModuleTabs: React.FC<UspCanvasModuleTabsProps> = ({
@@ -81,9 +82,14 @@ const UspCanvasModuleTabs: React.FC<UspCanvasModuleTabsProps> = ({
   handleAddAIGains,
   storedAIResult,
   handleAIResultsGenerated,
-  canvasSaveHistory
+  canvasSaveHistory,
+  refreshData
 }) => {
   const handleTabChange = (value: string) => {
+    // When switching to the overview tab, refresh data if possible
+    if (value === 'overview' && refreshData) {
+      refreshData();
+    }
     setActiveTab(value);
   };
 
@@ -143,7 +149,10 @@ const UspCanvasModuleTabs: React.FC<UspCanvasModuleTabsProps> = ({
       </TabsContent>
       
       <TabsContent value="history" className="mt-6">
-        <HistoryTab canvasSaveHistory={canvasSaveHistory} />
+        <HistoryTab 
+          canvasSaveHistory={canvasSaveHistory} 
+          refreshData={refreshData}
+        />
       </TabsContent>
     </Tabs>
   );

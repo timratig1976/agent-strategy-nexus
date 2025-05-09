@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
@@ -15,14 +15,23 @@ import CampaignIdeasModule from "@/components/marketing/modules/campaign-ideas";
 import AdCreativeModule from "@/components/marketing/modules/ad-creative";
 import ContentStrategyModule from "@/components/marketing/modules/content-strategy";
 import LeadMagnetsModule from "@/components/marketing/modules/lead-magnets";
+import { v4 as uuidv4 } from 'uuid';
 
 const ModulePage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const moduleType = searchParams.get("type") || "briefing";
-
+  
   // Set a default strategy ID for modules that require it in standalone mode
-  const defaultStrategyId = "standalone-module";
+  // If the strategy ID is provided in the URL, use that instead
+  const strategyId = searchParams.get("strategyId") || localStorage.getItem("standalone_strategy_id") || uuidv4();
+
+  // Store the strategy ID in localStorage to persist it across refreshes
+  useEffect(() => {
+    if (!searchParams.get("strategyId")) {
+      localStorage.setItem("standalone_strategy_id", strategyId);
+    }
+  }, [strategyId, searchParams]);
 
   const renderModule = () => {
     switch (moduleType) {
@@ -34,7 +43,7 @@ const ModulePage = () => {
         return <PersonaGeneratorModule />;
       case "usp_canvas":
         // Pass the required props to UspCanvasModule
-        return <UspCanvasModule strategyId={defaultStrategyId} briefingContent="" />;
+        return <UspCanvasModule strategyId={strategyId} briefingContent="" />;
       case "usp_generator":
         return <UspGeneratorModule />;
       case "channel_strategy":
