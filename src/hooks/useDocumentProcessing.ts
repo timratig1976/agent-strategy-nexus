@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { StrategyDocument } from "@/types/document";
@@ -91,6 +90,53 @@ export const useDocumentProcessing = (strategyId: string) => {
     }
   };
 
+  // Get website crawl data for AI prompts
+  const getWebsiteCrawlDataForAI = async (): Promise<string> => {
+    try {
+      const { FirecrawlService } = await import('@/services/firecrawl');
+      const latestCrawl = await FirecrawlService.getLatestCrawlResult(strategyId);
+      
+      if (!latestCrawl || !latestCrawl.success || !latestCrawl.data || latestCrawl.data.length === 0) {
+        return '';
+      }
+      
+      // Extract and format the crawled website data for AI
+      let websiteContent = '--- CRAWLED WEBSITE CONTENT ---\n\n';
+      
+      // Add metadata and summary
+      websiteContent += `Website URL: ${latestCrawl.url}\n`;
+      websiteContent += `Crawled Pages: ${latestCrawl.pagesCrawled}\n`;
+      websiteContent += `Technologies: ${latestCrawl.technologiesDetected.join(', ')}\n`;
+      websiteContent += `Keywords: ${latestCrawl.keywordsFound.join(', ')}\n\n`;
+      
+      // Add content from crawled pages
+      latestCrawl.data.forEach((page, index) => {
+        const pageTitle = page.metadata?.title || `Page ${index + 1}`;
+        const pageUrl = page.url || latestCrawl.url;
+        
+        websiteContent += `--- PAGE: ${pageTitle} (${pageUrl}) ---\n`;
+        
+        if (page.markdown) {
+          // Use markdown content if available as it's cleaner
+          websiteContent += `${page.markdown.substring(0, 2000)}\n`; // Limit size
+        } else if (page.content) {
+          // Fall back to content if markdown is not available
+          websiteContent += `${page.content.substring(0, 2000)}\n`; // Limit size
+        }
+        
+        websiteContent += '\n';
+        
+        // Limit to first 3 pages maximum
+        if (index >= 2) return false;
+      });
+      
+      return websiteContent;
+    } catch (error) {
+      console.error('Error getting website crawl data for AI:', error);
+      return '';
+    }
+  };
+
   // Process any unprocessed documents when the component mounts
   useEffect(() => {
     if (!strategyId) return;
@@ -138,6 +184,7 @@ export const useDocumentProcessing = (strategyId: string) => {
     processingDocument,
     processDocument,
     fetchDocuments,
-    getDocumentContentForAI
+    getDocumentContentForAI,
+    getWebsiteCrawlDataForAI
   };
 };

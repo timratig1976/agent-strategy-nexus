@@ -16,12 +16,34 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
   const [showProductPreview, setShowProductPreview] = useState(false);
   const [hasApiKey, setHasApiKey] = useState(!!FirecrawlService.getApiKey());
   const [crawlStatus, setCrawlStatus] = useState<string>(""); // Track the crawl status
+  const [loadingStoredData, setLoadingStoredData] = useState<boolean>(false);
 
   // Check for API key and update state
   const checkApiKey = () => {
     const apiKey = FirecrawlService.getApiKey();
     setHasApiKey(!!apiKey);
     return !!apiKey;
+  };
+  
+  // Load the latest crawl results from the database
+  const loadSavedCrawlResults = async () => {
+    if (!formValues.id) return;
+    
+    setLoadingStoredData(true);
+    try {
+      // Check for website URL crawl results
+      const websiteResults = await FirecrawlService.getLatestCrawlResult(formValues.id);
+      if (websiteResults && websiteResults.success) {
+        setWebsitePreviewResults(websiteResults);
+      }
+      
+      // In a more advanced implementation, you might want to check if the URL matches
+      // the current URL in the form, but for simplicity we'll just load the latest
+    } catch (err) {
+      console.error("Error loading saved crawl results:", err);
+    } finally {
+      setLoadingStoredData(false);
+    }
   };
 
   const handleCrawl = async (urlType: CrawlUrlType) => {
@@ -86,8 +108,12 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
         }
       }, 1500);
       
-      // Direct API call to FireCrawl instead of using Edge Function
-      const crawlResult = await FirecrawlService.crawlWebsite(url);
+      // Pass the strategy ID to save the results to the database
+      const crawlResult = await FirecrawlService.crawlWebsite(
+        url, 
+        { timeout: 60000 }, 
+        formValues.id // Pass the strategy ID for database storage
+      );
       
       clearInterval(progressInterval);
       setCrawlProgress(100);
@@ -161,6 +187,8 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
     handleCrawl,
     hasApiKey,
     checkApiKey,
-    crawlStatus // Add the crawl status to the return value
+    crawlStatus,
+    loadSavedCrawlResults,
+    loadingStoredData
   };
 }

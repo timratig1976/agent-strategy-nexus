@@ -37,32 +37,119 @@ export function extractKeywords(pageData: any): string[] {
 }
 
 /**
- * Detect technologies used in the website
+ * Detect technologies used in the website with more accurate identification
  */
 export function detectTechnologies(pageData: any): string[] {
-  const technologies: string[] = [];
+  const technologies: Set<string> = new Set();
   
-  if (pageData.html) {
-    const html = pageData.html.toLowerCase();
+  if (!pageData) return [];
+  
+  // Function to check for technology signatures in HTML content
+  const checkHtmlForTechnologies = (html: string) => {
+    if (!html) return;
     
-    // Check for common technologies
-    if (html.includes("wordpress")) technologies.push("WordPress");
-    if (html.includes("woocommerce")) technologies.push("WooCommerce");
-    if (html.includes("shopify")) technologies.push("Shopify");
-    if (html.includes("react")) technologies.push("React");
-    if (html.includes("vue")) technologies.push("Vue.js");
-    if (html.includes("angular")) technologies.push("Angular");
-    if (html.includes("bootstrap")) technologies.push("Bootstrap");
-    if (html.includes("tailwind")) technologies.push("Tailwind CSS");
-    if (html.includes("jquery")) technologies.push("jQuery");
-    if (html.includes("google tag manager")) technologies.push("Google Tag Manager");
-    if (html.includes("google analytics")) technologies.push("Google Analytics");
-    if (html.includes("hubspot")) technologies.push("HubSpot");
-    if (html.includes("marketo")) technologies.push("Marketo");
-    if (html.includes("mailchimp")) technologies.push("Mailchimp");
+    const htmlLower = html.toLowerCase();
+    
+    // CMS systems
+    if (htmlLower.includes('wp-content') || htmlLower.includes('wp-includes') || htmlLower.includes('wordpress')) 
+      technologies.add("WordPress");
+    
+    if (htmlLower.includes('drupal')) 
+      technologies.add("Drupal");
+    
+    if (htmlLower.includes('joomla')) 
+      technologies.add("Joomla");
+      
+    if (htmlLower.includes('magento')) 
+      technologies.add("Magento");
+    
+    // E-commerce platforms
+    if (htmlLower.includes('woocommerce')) 
+      technologies.add("WooCommerce");
+    
+    if (htmlLower.includes('shopify') || htmlLower.includes('shopify.com')) 
+      technologies.add("Shopify");
+    
+    if (htmlLower.includes('bigcommerce')) 
+      technologies.add("BigCommerce");
+    
+    // JavaScript frameworks
+    if (htmlLower.includes('react') || htmlLower.includes('reactjs') || htmlLower.includes('_reactrootcontainer')) 
+      technologies.add("React");
+    
+    if (htmlLower.includes('vue') || htmlLower.includes('vuejs') || htmlLower.includes('v-bind') || htmlLower.includes('v-on')) 
+      technologies.add("Vue.js");
+    
+    if (htmlLower.includes('angular') || htmlLower.includes('ng-') || htmlLower.includes('ng-app')) 
+      technologies.add("Angular");
+    
+    // CSS frameworks
+    if (htmlLower.includes('bootstrap') || htmlLower.includes('navbar-toggler') || htmlLower.includes('btn-primary')) 
+      technologies.add("Bootstrap");
+    
+    if (htmlLower.includes('tailwind') || htmlLower.includes('tw-') || htmlLower.includes('text-xl')) 
+      technologies.add("Tailwind CSS");
+      
+    if (htmlLower.includes('bulma')) 
+      technologies.add("Bulma");
+    
+    // JavaScript libraries
+    if (htmlLower.includes('jquery') || htmlLower.includes('$("') || htmlLower.includes('$(\'')) 
+      technologies.add("jQuery");
+    
+    if (htmlLower.includes('lodash') || htmlLower.includes('_.')) 
+      technologies.add("Lodash");
+    
+    // Analytics & Marketing
+    if (htmlLower.includes('google tag manager') || htmlLower.includes('gtm')) 
+      technologies.add("Google Tag Manager");
+    
+    if (htmlLower.includes('google analytics') || htmlLower.includes('ga('')) 
+      technologies.add("Google Analytics");
+    
+    if (htmlLower.includes('hubspot')) 
+      technologies.add("HubSpot");
+    
+    if (htmlLower.includes('marketo')) 
+      technologies.add("Marketo");
+    
+    if (htmlLower.includes('mailchimp')) 
+      technologies.add("Mailchimp");
+    
+    // Web servers (harder to detect from HTML, but sometimes possible)
+    if (htmlLower.includes('apache')) 
+      technologies.add("Apache");
+    
+    if (htmlLower.includes('nginx')) 
+      technologies.add("Nginx");
+    
+    // Static site generators
+    if (htmlLower.includes('gatsby')) 
+      technologies.add("Gatsby");
+      
+    if (htmlLower.includes('next') || htmlLower.includes('__next')) 
+      technologies.add("Next.js");
+  };
+  
+  // Check for technology signatures in HTML of all pages
+  if (Array.isArray(pageData)) {
+    for (const page of pageData) {
+      if (page.html) {
+        checkHtmlForTechnologies(page.html);
+      } else if (page.content) {
+        checkHtmlForTechnologies(page.content);
+      }
+    }
+  } else {
+    // Single page data
+    if (pageData.html) {
+      checkHtmlForTechnologies(pageData.html);
+    } else if (pageData.content) {
+      checkHtmlForTechnologies(pageData.content);
+    }
   }
   
-  return technologies;
+  return Array.from(technologies);
 }
 
 /**

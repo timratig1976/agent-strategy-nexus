@@ -1,20 +1,23 @@
 
 /**
- * Type definitions for the FirecrawlService
+ * Type definitions for FireCrawl service
  */
 
+/**
+ * Options for crawling websites
+ */
 export interface CrawlOptions {
-  limit?: number;
-  formats?: string[];
   timeout?: number;
-  crawlOptions?: {
-    depth?: number;
-    maxPages?: number;
-    includeExternalLinks?: boolean;
-    selectors?: string[];
-  };
+  depth?: number;
+  maxPages?: number;
+  includeExternalLinks?: boolean;
+  selectors?: string[];
+  keywords?: string[];
 }
 
+/**
+ * Response for website crawl operations
+ */
 export interface WebsiteCrawlResult {
   success: boolean;
   pagesCrawled: number;
@@ -23,24 +26,53 @@ export interface WebsiteCrawlResult {
   keywordsFound: string[];
   technologiesDetected: string[];
   data: any[];
-  id?: string | null;
   url: string;
+  id?: string;
+  error?: string;
   status?: string;
+  strategyId?: string; // Added for storage operations
+}
+
+/**
+ * Response when starting a crawl job
+ */
+export interface CrawlJobResponse {
+  success: boolean;
+  id?: string;
+  url?: string;
   error?: string;
 }
 
-export interface CrawlJobResponse {
-  success: boolean;
-  id: string;
-  url: string;
-}
-
+/**
+ * Response when checking crawl status
+ */
 export interface CrawlStatusResponse {
-  status: string;
+  id: string;
+  status: "created" | "processing" | "completed" | "completed_with_errors" | "failed" | "timeout";
   total: number;
   completed: number;
   creditsUsed: number;
   expiresAt: string;
-  data: any[];
+  data?: any[];
+  error?: string;
 }
 
+/**
+ * Database storage for crawl results
+ */
+export interface CrawlStorageRecord {
+  id: string;
+  strategy_id: string;
+  url: string;
+  status: string;
+  extracted_content: {
+    data: any[];
+    metadata?: any;
+  };
+  pages_crawled: number;
+  keywords: string[];
+  technologies: string[];
+  content_extracted: boolean;
+  summary: string;
+  crawled_at: string;
+}

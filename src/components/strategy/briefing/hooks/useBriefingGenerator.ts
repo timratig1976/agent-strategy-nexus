@@ -22,7 +22,10 @@ export const useBriefingGenerator = (strategyId: string) => {
   const { saveAgentResult } = useAgentResultSaver();
   
   // Use the document processing hook to get document content
-  const { getDocumentContentForAI } = useDocumentProcessing(strategyId);
+  const { 
+    getDocumentContentForAI, 
+    getWebsiteCrawlDataForAI // Use the new function
+  } = useDocumentProcessing(strategyId);
 
   // Function to generate AI briefing with progress updates
   const generateBriefing = async (
@@ -56,6 +59,10 @@ export const useBriefingGenerator = (strategyId: string) => {
       const documentContent = await getDocumentContentForAI();
       console.log("Document content available:", !!documentContent);
       
+      // Get website crawl data for AI
+      const websiteCrawlData = await getWebsiteCrawlDataForAI();
+      console.log("Website crawl data available:", !!websiteCrawlData);
+      
       // Simulate progress updates
       const progressInterval = setInterval(() => {
         setProgress(prev => {
@@ -75,7 +82,8 @@ export const useBriefingGenerator = (strategyId: string) => {
           strategyId: strategyId,
           formData: formValues,
           enhancementText: enhancementText || '',
-          documentContent: documentContent || '',  // Include document content
+          documentContent: documentContent || '',
+          websiteData: websiteCrawlData || '',  // Include website crawl data
           outputLanguage: language as 'english' | 'deutsch'
         }
       );
