@@ -76,15 +76,22 @@ export class StorageClient {
         return null;
       }
       
+      // Use a proper type assertion that doesn't cause infinite type instantiation
+      interface QueryResult {
+        data: any[] | null;
+        error: any;
+      }
+      
       // Query for the latest result from website_crawls table
-      // Fix: Type explicitly as any to avoid infinite type instantiation
-      const { data, error } = await supabase
+      const result: QueryResult = await supabase
         .from(this.TABLE_NAME)
         .select('*')
         .eq('project_id', strategyId)
         .eq('extracted_content->url_type', urlType)
         .order('created_at', { ascending: false })
-        .limit(1) as { data: any, error: any };
+        .limit(1);
+      
+      const { data, error } = result;
       
       if (error) {
         console.error("Error fetching crawl results:", error);
@@ -119,14 +126,21 @@ export class StorageClient {
         return [];
       }
       
+      // Use a proper type assertion that doesn't cause infinite type instantiation
+      interface QueryResult {
+        data: any[] | null;
+        error: any;
+      }
+      
       // Query for all results
-      // Fix: Type explicitly as any to avoid infinite type instantiation
-      const { data, error } = await supabase
+      const result: QueryResult = await supabase
         .from(this.TABLE_NAME)
         .select('*')
         .eq('project_id', strategyId)
         .eq('extracted_content->url_type', urlType)
-        .order('created_at', { ascending: false }) as { data: any, error: any };
+        .order('created_at', { ascending: false });
+      
+      const { data, error } = result;
       
       if (error) {
         console.error("Error fetching crawl results:", error);
