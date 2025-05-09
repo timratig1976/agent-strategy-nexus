@@ -95,7 +95,9 @@ const UrlField: React.FC<UrlFieldProps> = ({
       {showPreview && previewResults && (
         <CrawlPreview 
           results={previewResults} 
+          show={showPreview}
           onClose={() => setShowPreview(false)} 
+          source={name === "websiteUrl" ? "website" : "product"}
         />
       )}
     </div>

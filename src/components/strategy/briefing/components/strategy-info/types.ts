@@ -26,7 +26,7 @@ export interface StrategyFormProps {
   setShowProductPreview: (show: boolean) => void;
   hasApiKey: boolean;
   onApiKeyValidated: () => void;
-  crawlStatus?: string; // Add crawl status prop
+  crawlStatus?: string;
 }
 
 export interface UrlFieldProps {
@@ -43,11 +43,12 @@ export interface UrlFieldProps {
   previewResults: WebsiteCrawlResult | null;
   crawlingUrl: string | null;
   hasApiKey: boolean;
-  crawlStatus?: string; // Add crawl status prop
+  crawlStatus?: string;
 }
 
 export interface CrawlPreviewProps {
   results: WebsiteCrawlResult;
-  show: boolean;
+  show?: boolean;
   source?: 'website' | 'product';
+  onClose?: () => void;
 }

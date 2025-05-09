@@ -2,9 +2,15 @@
 import React from "react";
 import { WebsiteCrawlResult } from "@/services/firecrawl";
 import { CrawlPreviewProps } from "./types";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-const CrawlPreview: React.FC<CrawlPreviewProps> = ({ results, show, source = 'website' }) => {
+const CrawlPreview: React.FC<CrawlPreviewProps> = ({ 
+  results, 
+  show = true, 
+  source = 'website',
+  onClose
+}) => {
   if (!show || !results) return null;
 
   // Check if there's an error
@@ -12,7 +18,19 @@ const CrawlPreview: React.FC<CrawlPreviewProps> = ({ results, show, source = 'we
   const hasContent = results.contentExtracted && results.data && results.data.length > 0;
 
   return (
-    <div className="bg-muted/50 p-3 rounded-md text-sm mt-2 max-h-48 overflow-auto">
+    <div className="bg-muted/50 p-3 rounded-md text-sm mt-2 max-h-48 overflow-auto relative">
+      {onClose && (
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="absolute top-1 right-1 h-6 w-6 p-0" 
+          onClick={onClose}
+        >
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </Button>
+      )}
+      
       <h4 className="font-medium mb-1">{source === 'website' ? 'Website' : 'Product Page'} Crawl Results</h4>
       <p className="text-xs text-muted-foreground mb-2">
         Pages crawled: {results.pagesCrawled || 0} | 
