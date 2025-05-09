@@ -89,6 +89,21 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
             crawlStatus={crawlingUrl === 'websiteUrl' ? "Crawling website..." : undefined}
           />
 
+          <div className="space-y-2">
+            <label htmlFor="productDescription" className="text-sm font-medium">
+              Product / Service Description
+            </label>
+            <Textarea
+              id="productDescription"
+              name="productDescription"
+              value={localFormValues.productDescription || ""}
+              onChange={handleInputChange}
+              placeholder="Describe your product or service"
+              className="mt-1 resize-none"
+              rows={4}
+            />
+          </div>
+
           <UrlField
             id="productUrl"
             name="productUrl"
@@ -118,21 +133,6 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
               placeholder="Any other relevant information"
               className="mt-1 resize-none h-[38px]"
               rows={1}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="productDescription" className="text-sm font-medium">
-              Product / Service Description
-            </label>
-            <Textarea
-              id="productDescription"
-              name="productDescription"
-              value={localFormValues.productDescription || ""}
-              onChange={handleInputChange}
-              placeholder="Describe your product or service"
-              className="mt-1 resize-none"
-              rows={4}
             />
           </div>
           
