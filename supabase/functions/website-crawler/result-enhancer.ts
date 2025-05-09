@@ -22,14 +22,14 @@ export function enhanceEmptyResults(crawlResult: any, url: string): any {
     return {
       success: true,
       status: "completed",
-      pagesCrawled: crawlResult.data?.length || 0,
+      pagesCrawled: 1,
       contentExtracted: false,
       summary: `The website ${domain} appears to be protected against web crawling or uses technology that prevents content extraction. Consider manually reviewing the website to gather information for your marketing strategy.`,
       keywordsFound: [possibleCompanyName, "website", domain],
       technologiesDetected: ["Content Protection", "JavaScript Rendering"],
-      data: crawlResult.data || [],
+      data: [],
       id: crawlResult.id || null,
-      url: crawlResult.url || url
+      url: url
     };
   } catch (e) {
     console.error("Error enhancing empty results:", e);
@@ -45,4 +45,3 @@ export function enhanceEmptyResults(crawlResult: any, url: string): any {
     };
   }
 }
-

@@ -42,17 +42,26 @@ serve(async (req) => {
       });
     }
 
-    // Process and enrich the data with improved content extraction
-    const enrichedResult = {
-      ...crawlResult,
-      pagesCrawled: crawlResult.data?.length || 0,
+    // Process and enrich the data
+    const processedData = {
+      success: true,
+      pagesCrawled: 1,
       contentExtracted: true,
-      summary: extractSummary(crawlResult.data),
-      keywordsFound: extractKeywords(crawlResult.data),
-      technologiesDetected: detectTechnologies(crawlResult.data)
+      summary: extractSummary([{ content: crawlResult.data.content }]),
+      keywordsFound: extractKeywords([{ content: crawlResult.data.content }]),
+      technologiesDetected: detectTechnologies([{ html: crawlResult.data.html }]),
+      data: [
+        {
+          url: url,
+          content: crawlResult.data.content,
+          html: crawlResult.data.html
+        }
+      ],
+      id: crawlResult.id || null,
+      url: url
     };
 
-    return new Response(JSON.stringify(enrichedResult), {
+    return new Response(JSON.stringify(processedData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
