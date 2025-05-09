@@ -36,13 +36,19 @@ export type {
   StrategyMetadata
 };
 
-// Add methods to the MarketingAIService for backward compatibility
-// These will delegate to the appropriate service classes
+// Extend the MarketingAIService class with the methods we're attaching
+// This matches the declare module in the test file
+interface MarketingAIServiceStatic {
+  getStrategyMetadata(strategyId: string): Promise<AIServiceResponse<StrategyMetadata>>;
+  updateStrategyMetadata(strategyId: string, metadata: Partial<StrategyMetadata>): Promise<AIServiceResponse<boolean>>;
+  generateUspCanvasProfile(strategyId: string, content: string): Promise<AIServiceResponse<UspCanvasAIResult>>;
+  generateUspCanvasValueMap(strategyId: string, content: string): Promise<AIServiceResponse<UspCanvasAIResult>>;
+}
 
 // Add RPC methods to MarketingAIService for backward compatibility
-(MarketingAIService as any).getStrategyMetadata = RPCService.getStrategyMetadata;
-(MarketingAIService as any).updateStrategyMetadata = RPCService.updateStrategyMetadata;
+(MarketingAIService as unknown as MarketingAIServiceStatic).getStrategyMetadata = RPCService.getStrategyMetadata;
+(MarketingAIService as unknown as MarketingAIServiceStatic).updateStrategyMetadata = RPCService.updateStrategyMetadata;
 
 // Add USP Canvas methods to MarketingAIService for backward compatibility
-(MarketingAIService as any).generateUspCanvasProfile = UspCanvasService.generateUspCanvasProfile;
-(MarketingAIService as any).generateUspCanvasValueMap = UspCanvasService.generateUspCanvasValueMap;
+(MarketingAIService as unknown as MarketingAIServiceStatic).generateUspCanvasProfile = UspCanvasService.generateUspCanvasProfile;
+(MarketingAIService as unknown as MarketingAIServiceStatic).generateUspCanvasValueMap = UspCanvasService.generateUspCanvasValueMap;

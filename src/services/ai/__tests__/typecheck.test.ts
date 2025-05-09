@@ -19,15 +19,18 @@ import type {
   StrategyMetadata
 } from '../types';
 
-// We need to add these method declarations to make TypeScript happy
-// These methods are actually added in src/services/marketingAIService.ts
+// Define the extended interface for MarketingAIService with static methods
+// to make TypeScript happy in this test file
 declare module '../marketingAIService' {
-  export interface MarketingAIService {
+  interface MarketingAIServiceStatic {
     getStrategyMetadata(strategyId: string): Promise<AIServiceResponse<StrategyMetadata>>;
     updateStrategyMetadata(strategyId: string, metadata: Partial<StrategyMetadata>): Promise<AIServiceResponse<boolean>>;
     generateUspCanvasProfile(strategyId: string, content: string): Promise<AIServiceResponse<UspCanvasAIResult>>;
     generateUspCanvasValueMap(strategyId: string, content: string): Promise<AIServiceResponse<UspCanvasAIResult>>;
   }
+  
+  // Extend the MarketingAIService class constructor
+  interface MarketingAIService extends MarketingAIServiceStatic {}
 }
 
 // Type-level test - If this compiles, the types are compatible
