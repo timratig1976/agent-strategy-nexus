@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useCallback } from "react";
 
@@ -50,7 +49,7 @@ export const useDocumentProcessing = (strategyId: string) => {
       if (!strategyId) return null;
 
       // Get the latest crawl result from the database
-      // Fixed: Use contains instead of jsonb path query
+      // Use contains() for proper JSON field filtering
       const { data: crawlResults, error } = await supabase
         .from('website_crawls')
         .select('*')
@@ -99,8 +98,7 @@ export const useDocumentProcessing = (strategyId: string) => {
     }
   }, [strategyId]);
 
-  // New function to check if prompts exist for a given module and create them if they don't
-  // Fixed: Simplified type handling to avoid excessive instantiation
+  // Function to ensure prompts exist for a given module
   const ensurePromptsExist = useCallback(async (module: string): Promise<boolean> => {
     try {
       if (!module) return false;
