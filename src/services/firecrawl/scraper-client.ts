@@ -107,8 +107,8 @@ export class ScraperClient {
         if (response.success === true) {
           return {
             success: true,
-            data: response.data,
-            id: response.id
+            data: (response as any).data,
+            id: (response as any).id
           };
         } else {
           return {
@@ -127,7 +127,7 @@ export class ScraperClient {
         if ('data' in response) {
           return {
             success: true,
-            data: response.data
+            data: (response as any).data
           };
         } 
         
