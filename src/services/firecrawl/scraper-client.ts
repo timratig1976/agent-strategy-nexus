@@ -6,6 +6,22 @@ import FirecrawlApp from "@mendable/firecrawl-js";
 import { processApiResponse } from "./content-processor";
 
 /**
+ * Define types for the FirecrawlApp responses to properly handle them
+ */
+interface ErrorResponse {
+  success: false;
+  error: string;
+}
+
+interface SuccessResponse<T = any> {
+  success: true;
+  data: T;
+  id?: string;
+}
+
+type FirecrawlResponse = ErrorResponse | SuccessResponse;
+
+/**
  * Custom type for our application's scrape response
  */
 export interface ScrapeResponse {
@@ -81,11 +97,12 @@ export class ScraperClient {
       const result = await app.scrapeUrl(url, { 
         formats,
         timeout: options.timeout || 30000 // 30 seconds default timeout
-      });
+      }) as FirecrawlResponse;
       
+      // Safely log the response without causing type errors
       console.log(`Scrape response received for ${url}:`, {
         success: result.success,
-        dataPresent: result.data ? 'Data present' : 'No data'
+        dataPresent: result.success && 'data' in result ? 'Data present' : 'No data'
       });
       
       // Convert to our ScrapeResponse
@@ -93,12 +110,12 @@ export class ScraperClient {
         return {
           success: true,
           data: result.data,
-          id: 'id' in result ? result.id : undefined
+          id: result.id
         };
       } else {
         return {
           success: false,
-          error: 'error' in result ? result.error : "Unknown error during scraping"
+          error: !result.success && 'error' in result ? result.error : "Unknown error during scraping"
         };
       }
     } catch (error) {
