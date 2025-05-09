@@ -99,6 +99,7 @@ export class StorageClient {
       const extractedContent = this.parseExtractedContent(data.extracted_content);
       
       // Transform the database record back into WebsiteCrawlResult format
+      // Only include markdown data as requested
       const crawlResult: WebsiteCrawlResult = {
         success: true,
         pagesCrawled: extractedContent.pages_crawled || 0,

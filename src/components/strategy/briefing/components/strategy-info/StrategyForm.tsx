@@ -9,6 +9,7 @@ import { Loader2 } from "lucide-react";
 import CrawlPreview from "./CrawlPreview";
 import ApiKeyManager from "@/components/marketing/modules/website-crawler/ApiKeyManager";
 import CrawlDataDialog from "./CrawlDataDialog";
+import UrlField from "./UrlField";
 
 interface StrategyFormProps {
   localFormValues: any;
@@ -49,7 +50,8 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-3">
         <div className="grid gap-4">
-          <div className="grid grid-cols-2 gap-4">
+          {/* Strategy name and company name in a separate row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="name" className="text-right">
                 Strategy Name
@@ -88,69 +90,22 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
             </div>
           )}
           
-          <div>
-            <div className="flex items-end justify-between">
-              <Label htmlFor="websiteUrl" className="text-right">
-                Website URL
-              </Label>
-              <div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  disabled={crawlingUrl !== null || !hasApiKey || !localFormValues.websiteUrl}
-                  onClick={() => handleCrawl("websiteUrl")}
-                  className="text-xs"
-                >
-                  {crawlingUrl === "websiteUrl" ? (
-                    <>
-                      <Loader2 className="mr-1 h-3 w-3 animate-spin" /> Crawling...
-                    </>
-                  ) : (
-                    "Crawl"
-                  )}
-                </Button>
-              </div>
-            </div>
-            <div className="flex mt-1 space-x-2">
-              <Input
-                id="websiteUrl"
-                name="websiteUrl"
-                value={localFormValues.websiteUrl || ""}
-                onChange={handleInputChange}
-                placeholder="https://example.com"
-                className="flex-1"
-              />
-            </div>
-            {crawlingUrl === "websiteUrl" && (
-              <Progress value={crawlProgress} className="h-1 mt-2" />
-            )}
-            {/* Website preview with view data dialog */}
-            {showWebsitePreview && (
-              <div className="mt-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-medium">Crawl Results</span>
-                  <div className="flex items-center gap-2">
-                    <CrawlDataDialog crawlResult={websitePreviewResults} title="Website Crawl Data" />
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setShowWebsitePreview(false)}
-                      className="text-xs h-6"
-                    >
-                      Hide
-                    </Button>
-                  </div>
-                </div>
-                <CrawlPreview
-                  results={websitePreviewResults}
-                  show={showWebsitePreview}
-                  source="website"
-                />
-              </div>
-            )}
-          </div>
+          {/* Website URL field with crawl button using UrlField component */}
+          <UrlField
+            id="websiteUrl"
+            name="websiteUrl"
+            label="Website URL"
+            value={localFormValues.websiteUrl}
+            onChange={handleInputChange}
+            onCrawl={() => handleCrawl("websiteUrl")}
+            isCrawling={crawlingUrl === "websiteUrl"}
+            crawlProgress={crawlProgress}
+            showPreview={showWebsitePreview}
+            setShowPreview={setShowWebsitePreview}
+            previewResults={websitePreviewResults}
+            crawlingUrl={crawlingUrl}
+            hasApiKey={hasApiKey}
+          />
           
           <div>
             <Label htmlFor="productDescription" className="text-right">
@@ -166,69 +121,22 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
             />
           </div>
           
-          <div>
-            <div className="flex items-end justify-between">
-              <Label htmlFor="productUrl" className="text-right">
-                Product URL
-              </Label>
-              <div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  disabled={crawlingUrl !== null || !hasApiKey || !localFormValues.productUrl}
-                  onClick={() => handleCrawl("productUrl")}
-                  className="text-xs"
-                >
-                  {crawlingUrl === "productUrl" ? (
-                    <>
-                      <Loader2 className="mr-1 h-3 w-3 animate-spin" /> Crawling...
-                    </>
-                  ) : (
-                    "Crawl"
-                  )}
-                </Button>
-              </div>
-            </div>
-            <div className="flex mt-1 space-x-2">
-              <Input
-                id="productUrl"
-                name="productUrl"
-                value={localFormValues.productUrl || ""}
-                onChange={handleInputChange}
-                placeholder="https://example.com/product"
-                className="flex-1"
-              />
-            </div>
-            {crawlingUrl === "productUrl" && (
-              <Progress value={crawlProgress} className="h-1 mt-2" />
-            )}
-            {/* Product preview with view data dialog */}
-            {showProductPreview && (
-              <div className="mt-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-medium">Crawl Results</span>
-                  <div className="flex items-center gap-2">
-                    <CrawlDataDialog crawlResult={productPreviewResults} title="Product Crawl Data" />
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setShowProductPreview(false)}
-                      className="text-xs h-6"
-                    >
-                      Hide
-                    </Button>
-                  </div>
-                </div>
-                <CrawlPreview
-                  results={productPreviewResults}
-                  show={showProductPreview}
-                  source="product"
-                />
-              </div>
-            )}
-          </div>
+          {/* Product URL field with crawl button using UrlField component */}
+          <UrlField
+            id="productUrl"
+            name="productUrl"
+            label="Product URL"
+            value={localFormValues.productUrl}
+            onChange={handleInputChange}
+            onCrawl={() => handleCrawl("productUrl")}
+            isCrawling={crawlingUrl === "productUrl"}
+            crawlProgress={crawlProgress}
+            showPreview={showProductPreview}
+            setShowPreview={setShowProductPreview}
+            previewResults={productPreviewResults}
+            crawlingUrl={crawlingUrl}
+            hasApiKey={hasApiKey}
+          />
           
           <div>
             <Label htmlFor="additionalInfo" className="text-right">
@@ -262,4 +170,3 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
 };
 
 export default StrategyForm;
-

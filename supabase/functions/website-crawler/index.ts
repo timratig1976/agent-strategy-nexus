@@ -42,11 +42,14 @@ serve(async (req) => {
       if (useMultiPageCrawl) {
         // Use the multi-page crawl for more extensive sites
         console.log("Using multi-page crawl with options:", crawlOptions);
-        scrapeResult = await crawlWebsiteMultiPage(normalizedUrl, FIRECRAWL_API_KEY, crawlOptions);
+        // Request only markdown format
+        const options = { ...crawlOptions, formats: ['markdown'] };
+        scrapeResult = await crawlWebsiteMultiPage(normalizedUrl, FIRECRAWL_API_KEY, options);
       } else {
         // Use the default scrape for single pages
         console.log("Using single-page scrape");
-        scrapeResult = await crawlWebsite(normalizedUrl, FIRECRAWL_API_KEY);
+        // Request only markdown format
+        scrapeResult = await crawlWebsite(normalizedUrl, FIRECRAWL_API_KEY, { formats: ['markdown'] });
       }
       
       console.log("Raw scrape result received, checking content quality");
