@@ -1,12 +1,158 @@
+
 import { useState, useEffect } from 'react';
 import { UspCanvas, CustomerJob, CustomerPain, CustomerGain, ProductService, PainReliever, GainCreator } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Json } from '@/integrations/supabase/types';
+
+// Helper types for database operations
+type DbUspCanvas = {
+  project_id: string;
+  customer_jobs: Json;
+  pain_points: Json;
+  gains: Json;
+  differentiators: Json;
+  updated_at: string;
+  version?: number;
+};
 
 export const useCanvasData = (strategyId?: string) => {
   const [canvasData, setCanvasData] = useState<UspCanvas | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Convert application model to database model
+  const mapCanvasToDbFormat = (canvas: UspCanvas, projectId: string): DbUspCanvas => {
+    return {
+      project_id: projectId,
+      customer_jobs: canvas.customerJobs as unknown as Json,
+      pain_points: canvas.customerPains as unknown as Json,
+      gains: canvas.customerGains as unknown as Json,
+      differentiators: [
+        ...canvas.productServices,
+        ...canvas.painRelievers,
+        ...canvas.gainCreators
+      ] as unknown as Json,
+      updated_at: new Date().toISOString(),
+      version: 1 // Default version
+    };
+  };
+
+  // Convert database model to application model
+  const mapDbToCanvas = (dbData: any): UspCanvas => {
+    const customerJobs: CustomerJob[] = [];
+    const customerPains: CustomerPain[] = [];
+    const customerGains: CustomerGain[] = [];
+    const productServices: ProductService[] = [];
+    const painRelievers: PainReliever[] = [];
+    const gainCreators: GainCreator[] = [];
+    
+    // Process customer jobs safely
+    if (dbData.customer_jobs && Array.isArray(dbData.customer_jobs)) {
+      dbData.customer_jobs.forEach((job: any) => {
+        if (typeof job === 'object' && job !== null && 
+            'id' in job && 'content' in job && 'priority' in job) {
+          customerJobs.push({
+            id: String(job.id),
+            content: String(job.content),
+            priority: job.priority === 'low' || job.priority === 'medium' || job.priority === 'high' 
+              ? job.priority 
+              : 'medium',
+            isAIGenerated: Boolean(job.isAIGenerated || false)
+          });
+        }
+      });
+    }
+    
+    // Process customer pains safely
+    if (dbData.pain_points && Array.isArray(dbData.pain_points)) {
+      dbData.pain_points.forEach((pain: any) => {
+        if (typeof pain === 'object' && pain !== null && 
+            'id' in pain && 'content' in pain && 'severity' in pain) {
+          customerPains.push({
+            id: String(pain.id),
+            content: String(pain.content),
+            severity: pain.severity === 'low' || pain.severity === 'medium' || pain.severity === 'high'
+              ? pain.severity
+              : 'medium',
+            isAIGenerated: Boolean(pain.isAIGenerated || false)
+          });
+        }
+      });
+    }
+    
+    // Process customer gains safely
+    if (dbData.gains && Array.isArray(dbData.gains)) {
+      dbData.gains.forEach((gain: any) => {
+        if (typeof gain === 'object' && gain !== null && 
+            'id' in gain && 'content' in gain && 'importance' in gain) {
+          customerGains.push({
+            id: String(gain.id),
+            content: String(gain.content),
+            importance: gain.importance === 'low' || gain.importance === 'medium' || gain.importance === 'high'
+              ? gain.importance
+              : 'medium',
+            isAIGenerated: Boolean(gain.isAIGenerated || false)
+          });
+        }
+      });
+    }
+    
+    // Process differentiators safely (if they contain product services)
+    if (dbData.differentiators && Array.isArray(dbData.differentiators)) {
+      // Try to extract product services, pain relievers, and gain creators from differentiators
+      dbData.differentiators.forEach((item: any) => {
+        if (typeof item === 'object' && item !== null) {
+          // Check if it's a product service
+          if ('relatedJobIds' in item) {
+            const relatedJobIds: string[] = Array.isArray(item.relatedJobIds) 
+              ? item.relatedJobIds.map((id: any) => String(id)) 
+              : [];
+            
+            productServices.push({
+              id: String(item.id),
+              content: String(item.content),
+              relatedJobIds
+            });
+          }
+          // Check if it's a pain reliever
+          else if ('relatedPainIds' in item) {
+            const relatedPainIds: string[] = Array.isArray(item.relatedPainIds)
+              ? item.relatedPainIds.map((id: any) => String(id))
+              : [];
+            
+            painRelievers.push({
+              id: String(item.id),
+              content: String(item.content),
+              relatedPainIds
+            });
+          }
+          // Check if it's a gain creator
+          else if ('relatedGainIds' in item) {
+            const relatedGainIds: string[] = Array.isArray(item.relatedGainIds)
+              ? item.relatedGainIds.map((id: any) => String(id))
+              : [];
+            
+            gainCreators.push({
+              id: String(item.id),
+              content: String(item.content),
+              relatedGainIds
+            });
+          }
+        }
+      });
+    }
+
+    // Create the canvas with the extracted data
+    return {
+      customerJobs,
+      customerPains,
+      customerGains,
+      productServices,
+      painRelievers,
+      gainCreators
+    };
+  };
 
   // Fetch the canvas data from the database
   const fetchCanvasData = async () => {
@@ -32,7 +178,7 @@ export const useCanvasData = (strategyId?: string) => {
       }
       
       // Try to fetch from database if available
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from('usp_canvas')
         .select('*')
         .eq('project_id', strategyId) // Using project_id as it matches our strategy_id
@@ -40,126 +186,14 @@ export const useCanvasData = (strategyId?: string) => {
         .limit(1)
         .maybeSingle();
       
-      if (error) {
-        console.error("Error fetching canvas data:", error);
+      if (fetchError) {
+        console.error("Error fetching canvas data:", fetchError);
         setError("Failed to load canvas data from the database");
       } else if (data) {
         console.log("Canvas data retrieved from database:", data);
         
-        // Convert JSON data to our typed objects with proper type safety
-        const customerJobs: CustomerJob[] = [];
-        const customerPains: CustomerPain[] = [];
-        const customerGains: CustomerGain[] = [];
-        const productServices: ProductService[] = [];
-        const painRelievers: PainReliever[] = [];
-        const gainCreators: GainCreator[] = [];
-        
-        // Process customer jobs safely
-        if (data.customer_jobs && Array.isArray(data.customer_jobs)) {
-          data.customer_jobs.forEach(job => {
-            if (typeof job === 'object' && job !== null && 
-                'id' in job && 'content' in job && 'priority' in job) {
-              customerJobs.push({
-                id: String(job.id),
-                content: String(job.content),
-                priority: job.priority === 'low' || job.priority === 'medium' || job.priority === 'high' 
-                  ? job.priority 
-                  : 'medium',
-                isAIGenerated: Boolean(job.isAIGenerated || false)
-              });
-            }
-          });
-        }
-        
-        // Process customer pains safely
-        if (data.pain_points && Array.isArray(data.pain_points)) {
-          data.pain_points.forEach(pain => {
-            if (typeof pain === 'object' && pain !== null && 
-                'id' in pain && 'content' in pain && 'severity' in pain) {
-              customerPains.push({
-                id: String(pain.id),
-                content: String(pain.content),
-                severity: pain.severity === 'low' || pain.severity === 'medium' || pain.severity === 'high'
-                  ? pain.severity
-                  : 'medium',
-                isAIGenerated: Boolean(pain.isAIGenerated || false)
-              });
-            }
-          });
-        }
-        
-        // Process customer gains safely
-        if (data.gains && Array.isArray(data.gains)) {
-          data.gains.forEach(gain => {
-            if (typeof gain === 'object' && gain !== null && 
-                'id' in gain && 'content' in gain && 'importance' in gain) {
-              customerGains.push({
-                id: String(gain.id),
-                content: String(gain.content),
-                importance: gain.importance === 'low' || gain.importance === 'medium' || gain.importance === 'high'
-                  ? gain.importance
-                  : 'medium',
-                isAIGenerated: Boolean(gain.isAIGenerated || false)
-              });
-            }
-          });
-        }
-        
-        // Process differentiators safely (if they contain product services)
-        if (data.differentiators && Array.isArray(data.differentiators)) {
-          // Try to extract product services, pain relievers, and gain creators from differentiators
-          data.differentiators.forEach(item => {
-            if (typeof item === 'object' && item !== null) {
-              // Check if it's a product service
-              if ('relatedJobIds' in item) {
-                const relatedJobIds: string[] = Array.isArray(item.relatedJobIds) 
-                  ? item.relatedJobIds.map(id => String(id)) 
-                  : [];
-                
-                productServices.push({
-                  id: String(item.id),
-                  content: String(item.content),
-                  relatedJobIds
-                });
-              }
-              // Check if it's a pain reliever
-              else if ('relatedPainIds' in item) {
-                const relatedPainIds: string[] = Array.isArray(item.relatedPainIds)
-                  ? item.relatedPainIds.map(id => String(id))
-                  : [];
-                
-                painRelievers.push({
-                  id: String(item.id),
-                  content: String(item.content),
-                  relatedPainIds
-                });
-              }
-              // Check if it's a gain creator
-              else if ('relatedGainIds' in item) {
-                const relatedGainIds: string[] = Array.isArray(item.relatedGainIds)
-                  ? item.relatedGainIds.map(id => String(id))
-                  : [];
-                
-                gainCreators.push({
-                  id: String(item.id),
-                  content: String(item.content),
-                  relatedGainIds
-                });
-              }
-            }
-          });
-        }
-
-        // Create the canvas with the extracted data
-        const canvas: UspCanvas = {
-          customerJobs,
-          customerPains,
-          customerGains,
-          productServices,
-          painRelievers,
-          gainCreators
-        };
-        
+        // Map data to canvas structure
+        const canvas = mapDbToCanvas(data);
         setCanvasData(canvas);
         
         // Update local storage with the latest data
@@ -186,25 +220,16 @@ export const useCanvasData = (strategyId?: string) => {
     try {
       console.log("Saving USP canvas to database for strategy:", strategyId);
 
-      // Prepare the data for saving according to the database schema
-      // Fix TypeScript error by passing an array of objects and using upsert
-      const { error } = await supabase
-        .from('usp_canvas')
-        .upsert([{
-          project_id: strategyId,
-          customer_jobs: canvas.customerJobs,
-          pain_points: canvas.customerPains,
-          gains: canvas.customerGains,
-          differentiators: [
-            ...canvas.productServices,
-            ...canvas.painRelievers, 
-            ...canvas.gainCreators
-          ], // Store all value map items in the differentiators field
-          updated_at: new Date().toISOString()
-        }]);
+      // Convert our canvas to the database format using the helper function
+      const dbCanvas = mapCanvasToDbFormat(canvas, strategyId);
       
-      if (error) {
-        console.error("Error saving canvas to database:", error);
+      // Perform the upsert operation with properly typed data
+      const { error: upsertError } = await supabase
+        .from('usp_canvas')
+        .upsert(dbCanvas);
+      
+      if (upsertError) {
+        console.error("Error saving canvas to database:", upsertError);
         toast.error("Failed to save canvas to database");
         return false;
       }
