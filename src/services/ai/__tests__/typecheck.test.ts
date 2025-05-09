@@ -23,10 +23,10 @@ import type {
 // These methods are actually added in src/services/marketingAIService.ts
 declare module '../marketingAIService' {
   export interface MarketingAIService {
-    static getStrategyMetadata(strategyId: string): Promise<AIServiceResponse<StrategyMetadata>>;
-    static updateStrategyMetadata(strategyId: string, metadata: Partial<StrategyMetadata>): Promise<AIServiceResponse<boolean>>;
-    static generateUspCanvasProfile(strategyId: string, content: string): Promise<AIServiceResponse<UspCanvasAIResult>>;
-    static generateUspCanvasValueMap(strategyId: string, content: string): Promise<AIServiceResponse<UspCanvasAIResult>>;
+    getStrategyMetadata(strategyId: string): Promise<AIServiceResponse<StrategyMetadata>>;
+    updateStrategyMetadata(strategyId: string, metadata: Partial<StrategyMetadata>): Promise<AIServiceResponse<boolean>>;
+    generateUspCanvasProfile(strategyId: string, content: string): Promise<AIServiceResponse<UspCanvasAIResult>>;
+    generateUspCanvasValueMap(strategyId: string, content: string): Promise<AIServiceResponse<UspCanvasAIResult>>;
   }
 }
 

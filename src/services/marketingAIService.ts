@@ -40,9 +40,9 @@ export type {
 // These will delegate to the appropriate service classes
 
 // Add RPC methods to MarketingAIService for backward compatibility
-MarketingAIService.getStrategyMetadata = RPCService.getStrategyMetadata;
-MarketingAIService.updateStrategyMetadata = RPCService.updateStrategyMetadata;
+(MarketingAIService as any).getStrategyMetadata = RPCService.getStrategyMetadata;
+(MarketingAIService as any).updateStrategyMetadata = RPCService.updateStrategyMetadata;
 
 // Add USP Canvas methods to MarketingAIService for backward compatibility
-MarketingAIService.generateUspCanvasProfile = UspCanvasService.generateUspCanvasProfile;
-MarketingAIService.generateUspCanvasValueMap = UspCanvasService.generateUspCanvasValueMap;
+(MarketingAIService as any).generateUspCanvasProfile = UspCanvasService.generateUspCanvasProfile;
+(MarketingAIService as any).generateUspCanvasValueMap = UspCanvasService.generateUspCanvasValueMap;
