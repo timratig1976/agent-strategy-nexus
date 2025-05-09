@@ -22,16 +22,22 @@ interface ScrapeOptions {
 
 /**
  * Structure for API success response
+ * Updated to properly handle both direct properties and nested data object
  */
 interface ScrapeSuccessResponse {
   success: true;
-  data: {
+  data?: {
     markdown?: string;
     html?: string;
     metadata?: Record<string, any>;
     [key: string]: any;
   };
+  // Allow direct properties for backward compatibility
+  markdown?: string;
+  html?: string;
+  metadata?: Record<string, any>;
   id?: string;
+  [key: string]: any;
 }
 
 /**
@@ -259,19 +265,32 @@ export class ScraperClient {
     
     // Handle well-formed success response
     if (isSuccessResponse(response)) {
-      // Access data correctly based on response structure
-      const markdown = response.data?.markdown || response.markdown || "";
-      const html = response.data?.html || response.html || "";
-      const metadata = response.data?.metadata || response.metadata || { sourceURL: url };
+      // Extract data safely with proper type checking
+      const dataSource = response as ScrapeSuccessResponse;
+      
+      // Get markdown from either the data object or direct property
+      const markdown = 
+        (dataSource.data && typeof dataSource.data.markdown === 'string') ? dataSource.data.markdown : 
+        (typeof dataSource.markdown === 'string' ? dataSource.markdown : "");
+      
+      // Get HTML from either the data object or direct property
+      const html = 
+        (dataSource.data && typeof dataSource.data.html === 'string') ? dataSource.data.html : 
+        (typeof dataSource.html === 'string' ? dataSource.html : "");
+      
+      // Get metadata from either the data object or direct property or create default
+      const metadata = 
+        (dataSource.data && dataSource.data.metadata) ? dataSource.data.metadata : 
+        (dataSource.metadata || { sourceURL: url });
       
       return {
         success: true,
         data: {
-          markdown: typeof markdown === 'string' ? markdown : "",
-          html: typeof html === 'string' ? html : "",
+          markdown,
+          html,
           metadata
         },
-        id: response.id
+        id: dataSource.id
       };
     }
     
