@@ -3,11 +3,12 @@ import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, FileText, ArrowRight } from "lucide-react";
+import { ArrowLeft, FileText, ArrowRight, Globe } from "lucide-react";
 import { toast } from "sonner";
 import NavBar from "@/components/NavBar";
 import useStrategyData from "@/hooks/useStrategyData";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getStateLabel, getStateColor } from "@/utils/strategyUtils";
 
 const StrategyOverview = () => {
   const { id } = useParams<{ id: string }>();
@@ -64,6 +65,9 @@ const StrategyOverview = () => {
     );
   }
 
+  // Get language code - default to EN
+  const languageCode = strategy.metadata?.language || 'EN';
+
   return (
     <>
       <NavBar />
@@ -77,15 +81,28 @@ const StrategyOverview = () => {
         <div className="max-w-3xl mx-auto">
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl flex items-center gap-2">
-                <FileText className="h-6 w-6" />
-                Strategy Created: {strategy.name}
-              </CardTitle>
+              <div className="flex justify-between items-start">
+                <CardTitle className="text-2xl flex items-center gap-2">
+                  <FileText className="h-6 w-6" />
+                  Strategy: {strategy.name}
+                </CardTitle>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center">
+                    <Globe className="h-4 w-4 text-muted-foreground" aria-label="Language" />
+                    <span className="text-xs font-medium ml-1 text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">
+                      {languageCode}
+                    </span>
+                  </div>
+                  <div className={`px-2 py-1 rounded text-xs font-medium ${getStateColor(strategy.state)}`}>
+                    {getStateLabel(strategy.state)}
+                  </div>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="bg-green-50 border border-green-200 p-4 rounded-md">
                 <p className="text-green-800 font-medium">Your marketing strategy has been successfully created!</p>
-                <p className="text-green-700 mt-2">You can now proceed to create an AI briefing for this strategy.</p>
+                <p className="text-green-700 mt-2">Current phase: <span className="font-semibold">{getStateLabel(strategy.state)}</span></p>
               </div>
 
               <div className="space-y-4">
@@ -95,12 +112,10 @@ const StrategyOverview = () => {
                     <p className="text-sm font-medium text-muted-foreground">Strategy Name</p>
                     <p className="text-base">{strategy.name}</p>
                   </div>
-                  {strategy.description && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Description</p>
-                      <p className="text-base">{strategy.description}</p>
-                    </div>
-                  )}
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Created</p>
+                    <p className="text-base">{new Date(strategy.createdAt).toLocaleDateString()}</p>
+                  </div>
                 </div>
               </div>
 

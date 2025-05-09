@@ -56,4 +56,8 @@ export interface Strategy {
   tasks: StrategyTask[];
   currentPhase?: MarketingPhase;
   completedPhases?: MarketingPhase[];
+  metadata?: {
+    language?: string;
+    [key: string]: any;
+  };
 }
