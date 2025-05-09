@@ -122,7 +122,7 @@ export const useBriefingGenerator = (strategyId: string) => {
       };
       
       // Save the result to the database
-      const savedResult = await saveAgentResultToDb(strategy_id, newResult.content, newResult.metadata);
+      const savedResult = await saveAgentResult(strategyId, newResult.content, newResult.metadata);
       
       // Update local state with the new result
       if (savedResult) {
