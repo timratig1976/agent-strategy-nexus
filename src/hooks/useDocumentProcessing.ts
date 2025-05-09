@@ -50,11 +50,12 @@ export const useDocumentProcessing = (strategyId: string) => {
       if (!strategyId) return null;
 
       // Get the latest crawl result from the database
-      // Fixed: Changed project_id to strategy_id in the query
+      // Fixed: Use contains instead of jsonb path query
       const { data: crawlResults, error } = await supabase
         .from('website_crawls')
-        .select('url, extracted_content')
+        .select('*')
         .eq('strategy_id', strategyId)
+        .contains('extracted_content', { url_type: 'website' })
         .order('created_at', { ascending: false })
         .limit(1);
       

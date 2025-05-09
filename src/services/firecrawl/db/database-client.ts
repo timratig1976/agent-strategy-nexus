@@ -53,13 +53,20 @@ export class DatabaseClient {
     console.log(`Querying for ${urlType} crawl records for strategy ${strategyId}`);
     
     try {
-      const { data, error } = await this.db
+      // Fix: Use contains instead of direct path query for JSON fields
+      const query = this.db
         .from(this.CRAWLS_TABLE)
         .select('*')
         .eq('strategy_id', strategyId)
-        .eq('extracted_content->url_type', urlType)
         .order('created_at', { ascending: false })
         .limit(limit);
+        
+      // Add filter for url_type if specified
+      if (urlType) {
+        query.contains('extracted_content', { url_type: urlType });
+      }
+      
+      const { data, error } = await query;
       
       if (error) {
         console.error("Error querying crawl records:", error);
