@@ -94,39 +94,68 @@ export class ScraperClient {
       const formats: FirecrawlFormat[] = options.formats || ['markdown', 'html'];
       
       // Execute the scrape operation with timeout
-      const result = await app.scrapeUrl(url, { 
+      const response = await app.scrapeUrl(url, { 
         formats,
         timeout: options.timeout || 30000 // 30 seconds default timeout
-      }) as FirecrawlResponse;
-      
-      console.log(`Raw result from scraping ${url}:`, result);
-      
-      // Safely log the response without causing type errors
-      console.log(`Scrape response received for ${url}:`, {
-        success: result.success,
-        dataPresent: result.success && 'data' in result ? 'Data present' : 'No data'
       });
       
-      // Convert to our ScrapeResponse
-      if ('success' in result && result.success === true && 'data' in result) {
+      console.log(`Raw scrape response for ${url}:`, response);
+      
+      // Direct handling of response without attempting type coercion first
+      // Check if we have a successful response with data structure we expect
+      if (response && typeof response === 'object' && 'success' in response) {
+        if (response.success === true) {
+          return {
+            success: true,
+            data: response.data,
+            id: response.id
+          };
+        } else {
+          return {
+            success: false,
+            error: (response as ErrorResponse).error || "API reported failure"
+          };
+        }
+      } 
+      
+      // If we get here, we have an unexpected response format
+      console.log("Got unexpected response format:", response);
+      
+      // Handle cases where we still get usable data in an unexpected format
+      if (response && typeof response === 'object') {
+        // Check if the response itself contains the data we need
+        if ('data' in response) {
+          return {
+            success: true,
+            data: response.data
+          };
+        } 
+        
+        // If the response itself looks like data (not error response)
+        if (!('error' in response) && !('success' in response)) {
+          return {
+            success: true,
+            data: response
+          };
+        }
+      }
+      
+      // If response is a string (could be HTML or other content)
+      if (typeof response === 'string' && response.length > 0) {
         return {
           success: true,
-          data: result.data,
-          id: result.id
-        };
-      } else if ('success' in result && result.success === false && 'error' in result) {
-        return {
-          success: false,
-          error: result.error
-        };
-      } else {
-        // Handle unexpected response format
-        console.error("Received unexpected response format:", result);
-        return {
-          success: false,
-          error: "Received unexpected response format from API"
+          data: {
+            html: response, 
+            markdown: ""
+          }
         };
       }
+      
+      // Fallback error for truly unexpected formats
+      return {
+        success: false,
+        error: "Received unexpected response format from API"
+      };
     } catch (error) {
       console.error(`Error scraping URL ${url}:`, error);
       return {
