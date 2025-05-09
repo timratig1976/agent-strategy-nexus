@@ -1,14 +1,12 @@
 
 import React from "react";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { AlertCircle, LoaderIcon } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
-import { OutputLanguage } from "@/services/ai/types";
+import { LoaderCircle } from "lucide-react";
 
 interface PersonaFormProps {
   industry: string;
@@ -21,7 +19,6 @@ interface PersonaFormProps {
   progress: number;
   error: string | null;
   handleSubmit: (e: React.FormEvent) => void;
-  outputLanguage?: OutputLanguage;
 }
 
 const PersonaForm: React.FC<PersonaFormProps> = ({
@@ -35,84 +32,75 @@ const PersonaForm: React.FC<PersonaFormProps> = ({
   progress,
   error,
   handleSubmit,
-  outputLanguage = 'english'
 }) => {
-  // Determine if we should use German labels
-  const isGerman = outputLanguage === 'deutsch';
-
   return (
     <form onSubmit={handleSubmit}>
       <Card>
         <CardContent className="pt-6 space-y-4">
           {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
+            <div className="p-3 text-sm bg-destructive/10 text-destructive rounded-md">
+              {error}
+            </div>
           )}
           
           <div className="space-y-2">
-            <Label htmlFor="industry">{isGerman ? 'Branche' : 'Industry'} *</Label>
-            <Input 
+            <Label htmlFor="industry">Industry or Business Type*</Label>
+            <Input
               id="industry"
-              placeholder={isGerman ? "z.B. Technologie, Gesundheitswesen, E-Commerce" : "e.g., Technology, Healthcare, E-commerce"}
               value={industry}
               onChange={(e) => setIndustry(e.target.value)}
-              disabled={isLoading}
+              placeholder="e.g., E-commerce, SaaS, Financial Services..."
               required
+              disabled={isLoading}
             />
           </div>
-
+          
           <div className="space-y-2">
-            <Label htmlFor="productDescription">{isGerman ? 'Produkt- oder Dienstleistungsbeschreibung' : 'Product or Service Description'} *</Label>
-            <Textarea 
+            <Label htmlFor="productDescription">Product or Service Description*</Label>
+            <Textarea
               id="productDescription"
-              placeholder={isGerman ? "Beschreiben Sie Ihr Produkt oder Ihre Dienstleistung im Detail..." : "Describe your product or service in detail..."}
-              rows={4}
               value={productDescription}
               onChange={(e) => setProductDescription(e.target.value)}
-              disabled={isLoading}
+              placeholder="Describe what you offer, including key features and benefits..."
+              rows={3}
               required
+              disabled={isLoading}
             />
           </div>
-
+          
           <div className="space-y-2">
-            <Label htmlFor="targetMarket">{isGerman ? 'Zielmarkt' : 'Target Market'} *</Label>
-            <Textarea 
+            <Label htmlFor="targetMarket">Target Market*</Label>
+            <Textarea
               id="targetMarket"
-              placeholder={isGerman ? 
-                "Beschreiben Sie Ihren idealen Kunden oder Markt..." : 
-                "Describe your ideal customer or market..."}
-              rows={3}
               value={targetMarket}
               onChange={(e) => setTargetMarket(e.target.value)}
-              disabled={isLoading}
+              placeholder="Describe who you're targeting (age, location, interests, needs)..."
+              rows={3}
               required
+              disabled={isLoading}
             />
           </div>
-
+          
           {isLoading && (
-            <div className="space-y-2">
-              <Label>{isGerman ? 'Personas werden generiert...' : 'Generating personas...'}</Label>
-              <Progress value={progress} className="h-2" />
-              <p className="text-xs text-muted-foreground text-center">{Math.round(progress)}%</p>
+            <div className="space-y-2 py-2">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm text-muted-foreground">Generating personas...</span>
+                <span className="text-sm font-medium">{Math.round(progress)}%</span>
+              </div>
+              <Progress value={progress} className="w-full" />
             </div>
           )}
         </CardContent>
         
-        <CardFooter>
-          <Button 
-            type="submit" 
-            disabled={isLoading}
-            className="ml-auto flex items-center gap-2"
-          >
+        <CardFooter className="border-t p-6 flex justify-end">
+          <Button type="submit" disabled={isLoading}>
             {isLoading ? (
               <>
-                <LoaderIcon size={16} className="animate-spin" />
-                {isGerman ? 'Generiere Personas...' : 'Generating Personas...'}
+                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                Generating...
               </>
             ) : (
-              isGerman ? 'Personas generieren' : 'Generate Personas'
+              "Generate Personas"
             )}
           </Button>
         </CardFooter>

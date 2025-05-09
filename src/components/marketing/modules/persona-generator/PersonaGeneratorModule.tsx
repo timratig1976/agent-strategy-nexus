@@ -1,16 +1,13 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { User } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PersonaForm from "./PersonaForm";
 import PersonaResultsList from "./PersonaResultsList";
 import { usePersonaGenerator } from "./usePersonaGenerator";
-import { LanguageSelector } from "@/components/ui/language-selector";
-import { OutputLanguage } from "@/services/ai/types";
 
 const PersonaGeneratorModule = () => {
-  const [outputLanguage, setOutputLanguage] = useState<OutputLanguage>('english');
-  
+  // Remove language state and selector, use the language from the strategy settings
   const { 
     industry,
     setIndustry,
@@ -26,11 +23,11 @@ const PersonaGeneratorModule = () => {
     setActiveTab,
     handleSubmit,
     handleReset
-  } = usePersonaGenerator(outputLanguage);
+  } = usePersonaGenerator();
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex items-center">
         <div className="flex items-center space-x-3">
           <div className="p-2 rounded-md bg-primary/10">
             <User className="h-6 w-6" />
@@ -42,7 +39,6 @@ const PersonaGeneratorModule = () => {
             </p>
           </div>
         </div>
-        <LanguageSelector value={outputLanguage} onChange={setOutputLanguage} />
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -63,7 +59,6 @@ const PersonaGeneratorModule = () => {
             progress={progress}
             error={error}
             handleSubmit={handleSubmit}
-            outputLanguage={outputLanguage}
           />
         </TabsContent>
         

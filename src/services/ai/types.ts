@@ -18,6 +18,7 @@ export interface UspCanvasJob {
   id: string;
   title: string;
   description: string;
+  priority?: 'low' | 'medium' | 'high'; // Add this property
 }
 
 export interface UspCanvasPain {
@@ -62,9 +63,14 @@ export interface UspCanvasAIResult {
   rawOutput?: string;
 }
 
+export interface FormatOptions {
+  outputLanguage?: OutputLanguage;
+}
+
 export interface StrategyMetadata {
   language?: string;
   currentPhase?: string;
   completedPhases?: string[];
   [key: string]: any;
 }
+

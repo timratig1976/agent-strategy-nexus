@@ -1,12 +1,16 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Persona } from "./types";
 import { OutputLanguage } from "@/services/ai/types";
 import { MarketingAIService } from "@/services/ai/marketingAIService";
+import { useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
-export const usePersonaGenerator = (outputLanguage: OutputLanguage = 'english') => {
+export const usePersonaGenerator = () => {
   const { toast } = useToast();
+  const { id: strategyId } = useParams<{ id: string }>();
+  const [outputLanguage, setOutputLanguage] = useState<OutputLanguage>('english');
   const [industry, setIndustry] = useState("");
   const [productDescription, setProductDescription] = useState("");
   const [targetMarket, setTargetMarket] = useState("");
@@ -15,6 +19,35 @@ export const usePersonaGenerator = (outputLanguage: OutputLanguage = 'english') 
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("form");
+  
+  // Fetch the strategy's language setting if we're in a strategy context
+  useEffect(() => {
+    const fetchStrategyLanguage = async () => {
+      if (strategyId) {
+        try {
+          const { data, error } = await supabase
+            .from('strategies')
+            .select('language')
+            .eq('id', strategyId)
+            .single();
+            
+          if (error) {
+            console.error("Error fetching strategy language:", error);
+            return;
+          }
+          
+          // If the language is valid, set it as the output language
+          if (data?.language && (data.language === 'english' || data.language === 'deutsch')) {
+            setOutputLanguage(data.language as OutputLanguage);
+          }
+        } catch (err) {
+          console.error("Error in fetching strategy language:", err);
+        }
+      }
+    };
+    
+    fetchStrategyLanguage();
+  }, [strategyId]);
   
   const generateProgress = () => {
     // Update progress bar
@@ -58,7 +91,8 @@ export const usePersonaGenerator = (outputLanguage: OutputLanguage = 'english') 
               industry,
               productDescription,
               targetMarket
-            }
+            },
+            strategyId: strategyId // Pass the strategy ID if available
           },
           { outputLanguage }
         );
