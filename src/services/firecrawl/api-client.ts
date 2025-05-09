@@ -27,10 +27,10 @@ export class FirecrawlApiClient {
   }
 
   /**
-   * Test the validity of an API key
+   * Test the validity of an API key format
    */
   static async testApiKey(apiKey: string): Promise<boolean> {
-    return FirecrawlAuthManager.testApiKey(apiKey);
+    return FirecrawlAuthManager.validateApiKeyFormat(apiKey);
   }
 
   /**
