@@ -3,10 +3,8 @@ import React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Card } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import UrlField from "./UrlField";
-import ApiKeyManager from "@/components/marketing/modules/website-crawler/ApiKeyManager";
 import { StrategyFormValues } from "@/components/strategy-form";
 import { WebsiteCrawlResult } from "@/services/firecrawl";
 
@@ -57,10 +55,7 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
   return (
     <form onSubmit={handleSubmit}>
       <div className="space-y-4">
-        <Card className="p-4 bg-primary/5">
-          <h3 className="text-sm font-medium mb-3">Firecrawl API Key</h3>
-          <ApiKeyManager onApiKeyValidated={onApiKeyValidated} />
-        </Card>
+        {/* Removed the Firecrawl API Key card */}
         
         <div className="space-y-4">
           <div>
