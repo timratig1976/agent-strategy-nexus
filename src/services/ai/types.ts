@@ -1,27 +1,57 @@
 
-import type { StrategyMetadata } from "@/integrations/supabase/client";
+// If this file doesn't exist yet, create it
 
-// Centralized type definitions (Best Practice #1)
+export type OutputLanguage = 'english' | 'deutsch';
+
 export interface AIServiceResponse<T = any> {
   data?: T;
   error?: string;
-  debugInfo?: {
-    requestData?: any;
-    responseData?: any;
-    error?: any; // Added missing error property
-  };
+  debugInfo?: any;
 }
 
 export interface AIPrompt {
-  id: string;
-  module: string;
-  systemPrompt: string;
-  userPrompt: string;
-  createdAt: string;
-  updatedAt: string;
+  system_prompt: string;
+  user_prompt: string;
 }
 
-// Types for USP Canvas AI generation
+export interface UspCanvasJob {
+  id: string;
+  title: string;
+  description: string;
+}
+
+export interface UspCanvasPain {
+  id: string;
+  title: string;
+  description: string;
+}
+
+export interface UspCanvasGain {
+  id: string;
+  title: string;
+  description: string;
+}
+
+export interface UspCanvasProduct {
+  id: string;
+  title: string;
+  description: string;
+}
+
+export interface UspCanvasPainReliever {
+  id: string;
+  title: string;
+  description: string;
+  painIds: string[];
+}
+
+export interface UspCanvasGainCreator {
+  id: string;
+  title: string;
+  description: string;
+  gainIds: string[];
+}
+
 export interface UspCanvasAIResult {
   jobs?: UspCanvasJob[];
   pains?: UspCanvasPain[];
@@ -29,45 +59,12 @@ export interface UspCanvasAIResult {
   products?: UspCanvasProduct[];
   painRelievers?: UspCanvasPainReliever[];
   gainCreators?: UspCanvasGainCreator[];
-  rawOutput?: string; // Added property to store the raw text response
+  rawOutput?: string;
 }
 
-export interface UspCanvasJob {
-  content: string;
-  priority: 'low' | 'medium' | 'high';
+export interface StrategyMetadata {
+  language?: string;
+  currentPhase?: string;
+  completedPhases?: string[];
+  [key: string]: any;
 }
-
-export interface UspCanvasPain {
-  content: string;
-  severity: 'low' | 'medium' | 'high';
-}
-
-export interface UspCanvasGain {
-  content: string;
-  importance: 'low' | 'medium' | 'high';
-}
-
-export interface UspCanvasProduct {
-  content: string;
-  relatedJobIds?: string[];
-}
-
-export interface UspCanvasPainReliever {
-  content: string;
-  relatedPainIds?: string[];
-}
-
-export interface UspCanvasGainCreator {
-  content: string;
-  relatedGainIds?: string[];
-}
-
-export type OutputLanguage = 'deutsch' | 'english';
-
-export interface FormatOptions {
-  strictFormat?: boolean;
-  outputLanguage?: OutputLanguage;
-}
-
-// Re-export the StrategyMetadata type for convenience
-export type { StrategyMetadata };

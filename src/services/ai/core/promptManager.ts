@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 /**
@@ -78,7 +79,23 @@ Please create 2-3 distinct, detailed buyer personas that represent the key custo
 - Pain points and challenges
 - Behavioral traits
 - Media preferences and channels
-- Decision-making factors`
+- Decision-making factors
+
+{{#if formData.industry}}
+Industry: {{formData.industry}}
+{{/if}}
+
+{{#if formData.productDescription}}
+Product/Service Description: {{formData.productDescription}}
+{{/if}}
+
+{{#if formData.targetMarket}}
+Target Market: {{formData.targetMarket}}
+{{/if}}
+
+{{#if outputLanguage equals "deutsch"}}
+Bitte schreibe alle Antworten auf Deutsch und stelle sicher, dass die Personas für den deutschsprachigen Markt relevant sind.
+{{/if}}`
   },
   usp_canvas: {
     system_prompt: `You are an expert marketing strategist specializing in value proposition and USP development.

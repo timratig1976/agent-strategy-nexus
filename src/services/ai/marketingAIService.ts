@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { AgentCoreService } from "./agentCoreService";
-import type { AIServiceResponse } from "./types";
+import type { AIServiceResponse, OutputLanguage } from "./types";
 
 // Define the class interface with proper static method declarations
 export interface MarketingAIServiceStatic {
@@ -9,7 +9,7 @@ export interface MarketingAIServiceStatic {
     module: string,
     action: string,
     data: Record<string, any>,
-    options?: { outputLanguage?: string }
+    options?: { outputLanguage?: OutputLanguage }
   ): Promise<AIServiceResponse<T>>;
 }
 
@@ -20,16 +20,18 @@ export class MarketingAIService {
    * @param module The module name
    * @param action The action to perform
    * @param data Input data for the generation
+   * @param options Additional options like output language
    * @returns Service response with data or error
    */
   static async generateContent<T = any>(
     module: string,
     action: string,
     data: Record<string, any>,
-    options?: { outputLanguage?: string }
+    options?: { outputLanguage?: OutputLanguage }
   ): Promise<AIServiceResponse<T>> {
     try {
       console.log(`Generating content for ${module}/${action} with data:`, data);
+      console.log(`Language option:`, options?.outputLanguage || 'english');
       
       // Check if the module has prompts, if not, try to create them
       const hasPrompts = await AgentCoreService.ensurePromptsExist(module);
@@ -42,7 +44,10 @@ export class MarketingAIService {
         body: {
           module,
           action,
-          data,
+          data: {
+            ...data,
+            outputLanguage: options?.outputLanguage || 'english'
+          },
           options
         }
       });

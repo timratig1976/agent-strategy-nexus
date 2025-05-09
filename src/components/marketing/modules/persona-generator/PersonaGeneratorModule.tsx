@@ -1,12 +1,16 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { User } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PersonaForm from "./PersonaForm";
 import PersonaResultsList from "./PersonaResultsList";
 import { usePersonaGenerator } from "./usePersonaGenerator";
+import { LanguageSelector } from "@/components/ui/language-selector";
+import { OutputLanguage } from "@/services/ai/types";
 
 const PersonaGeneratorModule = () => {
+  const [outputLanguage, setOutputLanguage] = useState<OutputLanguage>('english');
+  
   const { 
     industry,
     setIndustry,
@@ -22,20 +26,23 @@ const PersonaGeneratorModule = () => {
     setActiveTab,
     handleSubmit,
     handleReset
-  } = usePersonaGenerator();
+  } = usePersonaGenerator(outputLanguage);
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="mb-8 flex items-center space-x-3">
-        <div className="p-2 rounded-md bg-primary/10">
-          <User className="h-6 w-6" />
+      <div className="mb-8 flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 rounded-md bg-primary/10">
+            <User className="h-6 w-6" />
+          </div>
+          <div>
+            <h2 className="text-3xl font-bold">Persona Generator</h2>
+            <p className="text-muted-foreground mt-1">
+              Create detailed buyer personas for your target audience
+            </p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-3xl font-bold">Persona Generator</h2>
-          <p className="text-muted-foreground mt-1">
-            Create detailed buyer personas for your target audience
-          </p>
-        </div>
+        <LanguageSelector value={outputLanguage} onChange={setOutputLanguage} />
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -56,6 +63,7 @@ const PersonaGeneratorModule = () => {
             progress={progress}
             error={error}
             handleSubmit={handleSubmit}
+            outputLanguage={outputLanguage}
           />
         </TabsContent>
         
