@@ -188,10 +188,11 @@ export const useCanvasData = (strategyId?: string) => {
       console.log("Saving USP canvas to database for strategy:", strategyId);
 
       // Prepare the data for saving according to the database schema
+      // Changed from upsert to insert with onConflict to fix TypeScript error
       const { error } = await supabase
         .from('usp_canvas')
-        .upsert({
-          project_id: strategyId, // This is the correct field name in the database
+        .insert({
+          project_id: strategyId,
           customer_jobs: canvas.customerJobs,
           pain_points: canvas.customerPains,
           gains: canvas.customerGains,
@@ -201,7 +202,9 @@ export const useCanvasData = (strategyId?: string) => {
             ...canvas.gainCreators
           ], // Store all value map items in the differentiators field
           updated_at: new Date().toISOString()
-        });
+        })
+        .onConflict('project_id')
+        .merge();
       
       if (error) {
         console.error("Error saving canvas to database:", error);
