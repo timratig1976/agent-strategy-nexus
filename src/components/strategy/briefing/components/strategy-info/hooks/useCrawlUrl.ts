@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { WebsiteCrawlResult, FirecrawlService } from "@/services/firecrawl";
@@ -35,6 +35,8 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
       const websiteResults = await FirecrawlService.getLatestCrawlResult(formValues.id);
       if (websiteResults && websiteResults.success) {
         setWebsitePreviewResults(websiteResults);
+        setShowWebsitePreview(true);
+        console.log("Loaded saved website crawl results:", websiteResults);
       }
       
       // In a more advanced implementation, you might want to check if the URL matches
@@ -45,6 +47,13 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
       setLoadingStoredData(false);
     }
   };
+
+  // Load saved crawl results when the component mounts
+  useEffect(() => {
+    if (formValues.id) {
+      loadSavedCrawlResults();
+    }
+  }, [formValues.id]);
 
   const handleCrawl = async (urlType: CrawlUrlType) => {
     const url = formValues[urlType];

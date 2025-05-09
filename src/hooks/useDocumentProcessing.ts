@@ -1,189 +1,86 @@
-import { useEffect, useState } from "react";
+
 import { supabase } from "@/integrations/supabase/client";
-import { StrategyDocument } from "@/types/document";
-import { useToast } from "@/components/ui/use-toast";
+import { useCallback } from "react";
+import { FirecrawlService } from "@/services/firecrawl";
+
+interface UseDocumentProcessingProps {
+  strategyId: string;
+}
 
 export const useDocumentProcessing = (strategyId: string) => {
-  const [documents, setDocuments] = useState<StrategyDocument[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [processingDocument, setProcessingDocument] = useState(false);
-  const { toast } = useToast();
-
-  // Fetch all documents for the strategy
-  const fetchDocuments = async () => {
-    if (!strategyId) return;
-    
+  // Function to get document content for AI
+  const getDocumentContentForAI = useCallback(async (): Promise<string | null> => {
     try {
-      setLoading(true);
-      // Use RPC function to get documents
-      const { data, error } = await supabase.rpc(
-        'get_strategy_documents',
-        { strategy_id_param: strategyId }
-      );
+      if (!strategyId) return null;
       
-      if (error) throw error;
-      
-      // Set the documents directly as the RPC function returns the correct type
-      setDocuments(data || []);
-    } catch (error) {
-      console.error('Error fetching documents:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Process an unprocessed document
-  const processDocument = async (documentId: string) => {
-    try {
-      setProcessingDocument(true);
-      
-      // Call the edge function to process the document
-      const { data, error } = await supabase.functions.invoke('process-document', {
-        body: { documentId }
+      // Query the database for documents associated with this strategy
+      const { data: documents, error } = await supabase.rpc('get_strategy_documents', {
+        strategy_id_param: strategyId
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching documents:", error);
+        return null;
+      }
       
-      console.log('Document processed:', data);
+      if (!documents || documents.length === 0) {
+        console.log("No documents found for strategy:", strategyId);
+        return null;
+      }
       
-      // Refresh the documents list
-      await fetchDocuments();
-      
-      return true;
-    } catch (error) {
-      console.error('Error processing document:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Document processing failed',
-        description: error instanceof Error ? error.message : 'An unknown error occurred'
-      });
-      return false;
-    } finally {
-      setProcessingDocument(false);
-    }
-  };
-
-  // Get document content for AI prompts
-  const getDocumentContentForAI = async (): Promise<string> => {
-    try {
-      // Get all processed documents
+      // Prepare the document content for the AI
+      // We'll combine all the extracted text from processed documents
       const processedDocs = documents.filter(doc => doc.processed && doc.extracted_text);
       
       if (processedDocs.length === 0) {
-        return '';
+        console.log("No processed documents found with extracted text");
+        return null;
       }
       
-      // Combine all document content with headers for each document
-      let combinedContent = '--- ADDITIONAL DOCUMENTS ---\n\n';
-      
-      processedDocs.forEach(doc => {
-        if (doc.extracted_text) {
-          combinedContent += `--- DOCUMENT: ${doc.file_name} ---\n`;
-          combinedContent += `${doc.extracted_text}\n\n`;
-        }
-      });
+      // Combine the content from all documents with document name as header
+      const combinedContent = processedDocs.map(doc => {
+        return `# Document: ${doc.file_name}\n\n${doc.extracted_text}\n\n`;
+      }).join('---\n\n');
       
       return combinedContent;
-    } catch (error) {
-      console.error('Error getting document content for AI:', error);
-      return '';
+    } catch (err) {
+      console.error("Error getting document content for AI:", err);
+      return null;
     }
-  };
-
-  // Get website crawl data for AI prompts
-  const getWebsiteCrawlDataForAI = async (): Promise<string> => {
-    try {
-      const { FirecrawlService } = await import('@/services/firecrawl');
-      const latestCrawl = await FirecrawlService.getLatestCrawlResult(strategyId);
-      
-      if (!latestCrawl || !latestCrawl.success || !latestCrawl.data || latestCrawl.data.length === 0) {
-        return '';
-      }
-      
-      // Extract and format the crawled website data for AI
-      let websiteContent = '--- CRAWLED WEBSITE CONTENT ---\n\n';
-      
-      // Add metadata and summary
-      websiteContent += `Website URL: ${latestCrawl.url}\n`;
-      websiteContent += `Crawled Pages: ${latestCrawl.pagesCrawled}\n`;
-      websiteContent += `Technologies: ${latestCrawl.technologiesDetected.join(', ')}\n`;
-      websiteContent += `Keywords: ${latestCrawl.keywordsFound.join(', ')}\n\n`;
-      
-      // Add content from crawled pages
-      latestCrawl.data.forEach((page, index) => {
-        const pageTitle = page.metadata?.title || `Page ${index + 1}`;
-        const pageUrl = page.url || latestCrawl.url;
-        
-        websiteContent += `--- PAGE: ${pageTitle} (${pageUrl}) ---\n`;
-        
-        if (page.markdown) {
-          // Use markdown content if available as it's cleaner
-          websiteContent += `${page.markdown.substring(0, 2000)}\n`; // Limit size
-        } else if (page.content) {
-          // Fall back to content if markdown is not available
-          websiteContent += `${page.content.substring(0, 2000)}\n`; // Limit size
-        }
-        
-        websiteContent += '\n';
-        
-        // Limit to first 3 pages maximum
-        if (index >= 2) return false;
-      });
-      
-      return websiteContent;
-    } catch (error) {
-      console.error('Error getting website crawl data for AI:', error);
-      return '';
-    }
-  };
-
-  // Process any unprocessed documents when the component mounts
-  useEffect(() => {
-    if (!strategyId) return;
-    
-    fetchDocuments();
-    
-    // Set up a subscription to track changes
-    const subscription = supabase
-      .channel('strategy_documents_changes')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'strategy_documents',
-          filter: `strategy_id=eq.${strategyId}`
-        }, 
-        () => {
-          fetchDocuments();
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      subscription.unsubscribe();
-    };
   }, [strategyId]);
 
-  // Process any unprocessed documents when documents change
-  useEffect(() => {
-    const processUnprocessedDocuments = async () => {
-      const unprocessedDocs = documents.filter(doc => !doc.processed);
+  // Function to get website crawl data for AI
+  const getWebsiteCrawlDataForAI = useCallback(async (): Promise<string | null> => {
+    try {
+      if (!strategyId) return null;
+
+      // Get the latest crawl result from the database
+      const crawlResult = await FirecrawlService.getLatestCrawlResult(strategyId);
       
-      if (unprocessedDocs.length > 0 && !processingDocument) {
-        // Process one document at a time
-        await processDocument(unprocessedDocs[0].id);
+      if (!crawlResult || !crawlResult.data || crawlResult.data.length === 0) {
+        console.log("No website crawl data found for strategy:", strategyId);
+        return null;
       }
-    };
-    
-    processUnprocessedDocuments();
-  }, [documents, processingDocument]);
+
+      // Extract the markdown content to use with the AI
+      let websiteContent = '';
+      
+      // Add website URL as header
+      websiteContent += `# Website: ${crawlResult.url}\n\n`;
+      
+      // Add the markdown content
+      if (crawlResult.data[0].markdown) {
+        websiteContent += crawlResult.data[0].markdown;
+      }
+      
+      return websiteContent;
+    } catch (err) {
+      console.error("Error getting website crawl data for AI:", err);
+      return null;
+    }
+  }, [strategyId]);
 
   return {
-    documents,
-    loading,
-    processingDocument,
-    processDocument,
-    fetchDocuments,
     getDocumentContentForAI,
     getWebsiteCrawlDataForAI
   };

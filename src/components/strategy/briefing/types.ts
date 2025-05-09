@@ -1,16 +1,27 @@
 
-import { AgentResult } from "@/types/marketing";
-import { StrategyFormValues } from "@/components/strategy-form";
-import { WebsiteCrawlResult } from "@/components/marketing/modules/website-crawler/types";
+import { Strategy, AgentResult } from "@/types/marketing";
+import { WebsiteCrawlResult } from "@/services/firecrawl";
 
 export interface StrategyBriefingProps {
-  strategy: {
-    id: string;
-    name: string;
-    description?: string;
-    state?: string;
-  };
-  agentResults?: AgentResult[];
+  strategy: Strategy;
+  agentResults: AgentResult[];
+}
+
+export interface BriefingHeaderProps {
+  hasFinalBriefing: boolean;
+  goToNextStep: () => void;
+}
+
+export interface BriefingLayoutProps {
+  leftContent: React.ReactNode;
+  rightContent: React.ReactNode;
+}
+
+export interface StrategyInfoCardProps {
+  formValues: any;
+  saveStrategyMetadata: (values: any) => Promise<void>;
+  showCrawler: boolean;
+  setShowCrawler: (show: boolean) => void;
 }
 
 export interface BriefingResultProps {
@@ -34,11 +45,17 @@ export interface BriefingResultCardProps {
   latestBriefing: AgentResult | null;
   isGenerating: boolean;
   generateBriefing: () => void;
-  saveAgentResult: (result: AgentResult) => Promise<boolean>;
+  saveAgentResult: (content: string, isFinal?: boolean) => void;
 }
 
 export interface WebsiteCrawlerWrapperProps {
   onBack: () => void;
   crawlResults: WebsiteCrawlResult | null;
-  setCrawlResults: (results: WebsiteCrawlResult | null) => void;
+  setCrawlResults: React.Dispatch<React.SetStateAction<WebsiteCrawlResult | null>>;
+}
+
+export interface CrawlPreviewProps {
+  results: WebsiteCrawlResult | null;
+  show: boolean;
+  source?: 'website' | 'product';
 }
