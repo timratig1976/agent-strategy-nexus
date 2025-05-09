@@ -19,8 +19,7 @@ export async function crawlWebsite(url: string, apiKey: string) {
         scrapeOptions: {
           formats: ['markdown', 'html'],
           timeout: 30000, // 30s timeout
-          waitUntil: 'networkidle2', // Wait for network to be idle
-          javascript: true, // Explicitly enable JavaScript processing
+          // Removed javascript and waitUntil which are not supported
           renderOptions: {
             // Enhanced rendering options for JS-heavy sites
             waitForSelector: 'body',
@@ -39,6 +38,26 @@ export async function crawlWebsite(url: string, apiKey: string) {
     }
     
     const result = await response.json();
+    
+    // If we have an ID, get the detailed results
+    if (result.id) {
+      const resultUrl = `https://api.firecrawl.dev/v1/crawl/${result.id}`;
+      console.log("Fetching detailed results from:", resultUrl);
+      
+      const detailsResponse = await fetch(resultUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        }
+      });
+      
+      if (detailsResponse.ok) {
+        const detailedResults = await detailsResponse.json();
+        console.log("Crawl detailed results received");
+        return detailedResults;
+      }
+    }
+    
     console.log("Crawl completed successfully");
     return result;
   } catch (error) {

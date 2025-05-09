@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 interface CrawlOptions {
@@ -59,7 +58,7 @@ export class FirecrawlService {
     try {
       console.log('Making initial crawl request to Firecrawl API for URL:', url);
       
-      // Build request options
+      // Build request options - REMOVED javascript and waitUntil keys
       const requestOptions: CrawlOptions = {
         limit: options?.limit || 10,
         formats: options?.formats || ['markdown', 'html'],
@@ -78,9 +77,8 @@ export class FirecrawlService {
           limit: requestOptions.limit,
           scrapeOptions: {
             formats: requestOptions.formats,
-            timeout: requestOptions.timeout,
-            javascript: true,
-            waitUntil: 'networkidle2'
+            timeout: requestOptions.timeout
+            // Removed javascript and waitUntil keys that were causing the error
           }
         }),
       });
