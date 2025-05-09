@@ -77,13 +77,14 @@ export class StorageClient {
       }
       
       // Query for the latest result from website_crawls table
+      // Fix: Type explicitly as any to avoid infinite type instantiation
       const { data, error } = await supabase
         .from(this.TABLE_NAME)
         .select('*')
         .eq('project_id', strategyId)
         .eq('extracted_content->url_type', urlType)
         .order('created_at', { ascending: false })
-        .limit(1);
+        .limit(1) as { data: any, error: any };
       
       if (error) {
         console.error("Error fetching crawl results:", error);
@@ -119,12 +120,13 @@ export class StorageClient {
       }
       
       // Query for all results
+      // Fix: Type explicitly as any to avoid infinite type instantiation
       const { data, error } = await supabase
         .from(this.TABLE_NAME)
         .select('*')
         .eq('project_id', strategyId)
         .eq('extracted_content->url_type', urlType)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as { data: any, error: any };
       
       if (error) {
         console.error("Error fetching crawl results:", error);
@@ -132,7 +134,7 @@ export class StorageClient {
       }
       
       if (data && data.length > 0) {
-        return data.map(record => this.mapFromDatabaseRecord(record));
+        return data.map((record: any) => this.mapFromDatabaseRecord(record));
       }
       
       return [];

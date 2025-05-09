@@ -102,8 +102,8 @@ export class CrawlerClient {
    */
   static async completeCrawlJob(jobId: string, apiKey: string): Promise<any> {
     try {
-      const resultUrl = `${CRAWL_ENDPOINT}/${jobId}`;
-      return await pollForCrawlCompletion(jobId, apiKey, resultUrl);
+      // Note: Removed the resultUrl parameter that was causing the error
+      return await pollForCrawlCompletion(jobId, apiKey);
     } catch (error) {
       console.error("Error completing crawl job:", error);
       throw error;

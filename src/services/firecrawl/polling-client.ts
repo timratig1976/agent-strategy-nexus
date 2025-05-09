@@ -72,6 +72,7 @@ export async function pollForScrapeResult(
 
 /**
  * Poll for the result of a crawl operation
+ * Fixed signature to match the caller in crawler-client.ts
  */
 export async function pollForCrawlCompletion(
   jobId: string,
