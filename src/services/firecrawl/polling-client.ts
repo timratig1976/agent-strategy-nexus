@@ -81,3 +81,76 @@ export async function pollForScrapeResult(
   
   throw new Error("Failed to retrieve scrape results after multiple attempts");
 }
+
+/**
+ * Poll for the completion of a crawl operation
+ * 
+ * @param jobId The ID of the job to poll for
+ * @param apiKey The API key to use for authentication
+ * @param resultUrl The URL to poll for results
+ * @returns The crawl data when ready
+ */
+export async function pollForCrawlCompletion(
+  jobId: string,
+  apiKey: string,
+  resultUrl: string
+): Promise<any> {
+  console.log(`Polling for crawl completion: ${resultUrl}`);
+  
+  // Maximum number of retries and delay between attempts
+  const maxRetries = MAX_POLL_ATTEMPTS;
+  const pollingDelay = DEFAULT_POLL_INTERVAL;
+  let attempts = 0;
+  
+  // Implement polling loop
+  while (attempts < maxRetries) {
+    console.log(`Polling attempt ${attempts + 1} of ${maxRetries}`);
+    
+    const response = await fetch(resultUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+      }
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error("Error fetching crawl details:", errorData);
+      throw new Error(`Failed to fetch crawl details: ${errorData.message || response.statusText}`);
+    }
+    
+    const results = await response.json();
+    
+    // If the crawl is complete, return the results
+    if (results.status === "completed" || 
+        results.status === "completed_with_errors" || 
+        results.status === "failed") {
+      console.log("Crawl completed with status:", results.status);
+      return results;
+    }
+    
+    // If still in progress, wait before next attempt
+    await new Promise(resolve => setTimeout(resolve, pollingDelay));
+    attempts++;
+  }
+  
+  // If we've reached the maximum retries, return the last known state
+  console.log("Maximum polling attempts reached. Returning current state.");
+  const finalResponse = await fetch(resultUrl, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+    }
+  });
+  
+  if (finalResponse.ok) {
+    const finalResults = await finalResponse.json();
+    return {
+      ...finalResults,
+      status: "timeout",
+      message: "Crawl is taking longer than expected. Partial results returned."
+    };
+  }
+  
+  throw new Error("Failed to retrieve crawl results after multiple attempts");
+}

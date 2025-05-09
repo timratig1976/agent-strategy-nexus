@@ -4,7 +4,7 @@
  */
 
 import { ScraperClient } from "./scraper-client";
-import { ContentProcessor } from "./content-processor";
+import { ContentProcessor, processApiResponse } from "./content-processor";
 import { WebsiteCrawlResult } from "./types";
 import { StorageClient } from "./storage-client";
 import { FirecrawlAuthManager } from "./auth-manager";
@@ -14,6 +14,7 @@ import { FirecrawlAuthManager } from "./auth-manager";
  */
 export class FirecrawlService {
   private static apiKey: string | null = null;
+  private static contentProcessor = new ContentProcessor();
 
   /**
    * Initialize the FirecrawlService with an API key
@@ -95,8 +96,7 @@ export class FirecrawlService {
       }
       
       // Process the results and extract relevant info
-      const processor = new ContentProcessor();
-      const processedResults = processor.processScrapedData(response);
+      const processedResults = this.contentProcessor.processScrapedData(response);
       
       // If we have a strategy ID, save the results to the database
       if (strategyId) {

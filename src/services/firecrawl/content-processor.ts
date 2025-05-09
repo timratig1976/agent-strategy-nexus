@@ -1,3 +1,4 @@
+
 /**
  * Content processing utilities for FireCrawl results
  */
@@ -176,7 +177,7 @@ export function processApiResponse(apiResponse: any, url: string): any {
     contentExtracted: hasData, // Only true if we actually have data
     summary: hasData ? extractSummary(apiResponse.data) : "No content was extracted from the website.",
     keywordsFound: hasData ? extractKeywords(apiResponse.data) : [],
-    technologiesDetected: hasData ? detectTechnologies(apiResponse.data) : [],
+    technologiesDetected: [],
     data: apiResponse.data || [],
     id: apiResponse.id || null,
     url: url,
@@ -216,8 +217,8 @@ export function extractSummary(data: any[]): string {
     ))
   ) || data[0];
   
-  if (homePage?.content) {
-    return homePage.content.substring(0, 300) + "...";
+  if (homePage?.markdown) {
+    return homePage.markdown.substring(0, 300) + "...";
   }
   
   return "Content was extracted but no meaningful summary could be generated.";
@@ -241,54 +242,12 @@ export function extractKeywords(data: any[]): string[] {
     }
     
     // Extract from title
-    if (page.title) {
-      extractCommonWords(page.title.toLowerCase(), 3).forEach(word => keywords.add(word));
+    if (page.metadata && page.metadata.title) {
+      extractCommonWords(page.metadata.title.toLowerCase(), 3).forEach(word => keywords.add(word));
     }
   });
-  
-  // If not enough keywords, extract from content
-  if (keywords.size < 5 && data[0] && data[0].content) {
-    const commonWords = extractCommonWords(data[0].content.toLowerCase(), 10);
-    commonWords.forEach(word => keywords.add(word));
-  }
   
   return Array.from(keywords).slice(0, 15);
-}
-
-/**
- * Detect technologies used on the website
- */
-export function detectTechnologies(data: any[]): string[] {
-  if (!data || data.length === 0) return [];
-  
-  const technologies = new Set<string>();
-  const techSignatures: Record<string, string[]> = {
-    'WordPress': ['wp-content', 'wp-includes', 'wordpress'],
-    'React': ['react', 'reactjs', 'jsx'],
-    'Angular': ['ng-', 'angular', 'ngController'],
-    'Vue.js': ['vue', 'nuxt', 'vuejs'],
-    'Bootstrap': ['bootstrap', 'btn-primary'],
-    'jQuery': ['jquery', '$("'],
-    'Cloudflare': ['cloudflare', 'cdnjs.cloudflare'],
-    'Next.js': ['next/static', '__next'],
-    'Gatsby': ['gatsby-', '__gatsby'],
-    'Tailwind CSS': ['tailwind', 'tw-']
-  };
-  
-  // Check for technology signatures in HTML
-  data.forEach(page => {
-    if (page.html) {
-      const html = page.html.toLowerCase();
-      
-      Object.entries(techSignatures).forEach(([tech, signatures]) => {
-        if (signatures.some(sig => html.includes(sig.toLowerCase()))) {
-          technologies.add(tech);
-        }
-      });
-    }
-  });
-  
-  return Array.from(technologies);
 }
 
 /**

@@ -10,7 +10,7 @@ import { WebsiteCrawlResult, CrawlStorageRecord } from "./types";
  * StorageClient handles database operations for crawl results
  */
 export class StorageClient {
-  private static readonly TABLE_NAME = "website_crawl_results";
+  private static readonly TABLE_NAME = "website_crawls";
   
   /**
    * Save crawl results to the database
@@ -33,22 +33,18 @@ export class StorageClient {
       
       // Prepare the record for storage
       const record = {
-        strategy_id: strategyId,
+        project_id: strategyId, // Using project_id as it exists in website_crawls table
         url: results.url,
-        url_type: urlType,
+        status: results.status || 'completed',
         extracted_content: {
           data: results.data,
-          summary: results.summary
-        },
-        pages_crawled: results.pagesCrawled,
-        keywords: results.keywordsFound,
-        technologies: results.technologiesDetected,
-        content_extracted: results.contentExtracted,
-        summary: results.summary,
-        crawled_at: new Date().toISOString()
+          summary: results.summary,
+          keywords: results.keywordsFound,
+          url_type: urlType
+        }
       };
       
-      // Insert into the database
+      // Insert into the database using the website_crawls table
       const { error } = await supabase
         .from(this.TABLE_NAME)
         .insert(record);
@@ -80,13 +76,13 @@ export class StorageClient {
         return null;
       }
       
-      // Query for the latest result
+      // Query for the latest result from website_crawls table
       const { data, error } = await supabase
         .from(this.TABLE_NAME)
         .select('*')
-        .eq('strategy_id', strategyId)
-        .eq('url_type', urlType)
-        .order('crawled_at', { ascending: false })
+        .eq('project_id', strategyId)
+        .eq('extracted_content->url_type', urlType)
+        .order('created_at', { ascending: false })
         .limit(1);
       
       if (error) {
@@ -126,9 +122,9 @@ export class StorageClient {
       const { data, error } = await supabase
         .from(this.TABLE_NAME)
         .select('*')
-        .eq('strategy_id', strategyId)
-        .eq('url_type', urlType)
-        .order('crawled_at', { ascending: false });
+        .eq('project_id', strategyId)
+        .eq('extracted_content->url_type', urlType)
+        .order('created_at', { ascending: false });
       
       if (error) {
         console.error("Error fetching crawl results:", error);
@@ -149,18 +145,18 @@ export class StorageClient {
   /**
    * Map a database record to a WebsiteCrawlResult
    */
-  private static mapFromDatabaseRecord(record: CrawlStorageRecord): WebsiteCrawlResult {
+  private static mapFromDatabaseRecord(record: any): WebsiteCrawlResult {
     return {
       success: true,
-      pagesCrawled: record.pages_crawled || 0,
-      contentExtracted: record.content_extracted || false,
-      summary: record.summary || "",
-      keywordsFound: record.keywords || [],
-      technologiesDetected: record.extracted_content?.technologies || [],
+      pagesCrawled: 1,
+      contentExtracted: !!record.extracted_content?.data?.length,
+      summary: record.extracted_content?.summary || "",
+      keywordsFound: record.extracted_content?.keywords || [],
+      technologiesDetected: [], // No longer storing technologies
       data: record.extracted_content?.data || [],
       url: record.url,
       id: record.id,
-      strategyId: record.strategy_id
+      strategyId: record.project_id
     };
   }
 }
