@@ -1,51 +1,15 @@
 
 /**
  * Scraper client for FireCrawl API
+ * Handles the communication with FireCrawl API for website scraping
  */
 import FirecrawlApp from "@mendable/firecrawl-js";
-import { processApiResponse } from "./content-processor";
-
-/**
- * Define types for the FirecrawlApp responses to properly handle them
- */
-interface ErrorResponse {
-  success: false;
-  error: string;
-}
-
-interface SuccessResponse<T = any> {
-  success: true;
-  data?: T;
-  markdown?: string;
-  html?: string;
-  metadata?: any;
-  id?: string;
-}
-
-// Custom type for ActionsResult since it's referenced in ScrapeResponse
-interface ActionsResult {
-  screenshots?: string[];
-  scrapes?: Array<{url: string, html: string}>;
-}
-
-// Union type for response handling
-type FirecrawlResponse = ErrorResponse | SuccessResponse | string;
-
-/**
- * Custom type for our application's scrape response
- */
-export interface ScrapeResponse {
-  success: boolean;
-  data?: any;
-  error?: string;
-  id?: string;
-}
 
 /**
  * Type for supported formats in Firecrawl
  */
 type FirecrawlFormat = "markdown" | "html" | "rawHtml" | "content" | "links" | 
-                       "screenshot" | "screenshot@fullPage" | "extract" | "json" | "changeTracking";
+                       "screenshot" | "screenshot@fullPage" | "json";
 
 /**
  * Interface for scraping options
@@ -55,12 +19,56 @@ interface ScrapeOptions {
   formats?: FirecrawlFormat[];
 }
 
+/**
+ * Structure for the API response when successful
+ */
+interface ScrapeSuccessResponse {
+  success: true;
+  data?: {
+    markdown?: string;
+    html?: string;
+    metadata?: Record<string, any>;
+    [key: string]: any;
+  };
+  id?: string;
+}
+
+/**
+ * Structure for the API response when failed
+ */
+interface ScrapeErrorResponse {
+  success: false;
+  error: string;
+}
+
+/**
+ * Union type for all possible API responses
+ */
+type FirecrawlApiResponse = ScrapeSuccessResponse | ScrapeErrorResponse | string;
+
+/**
+ * Our standardized response type for the application
+ */
+export interface ScrapeResponse {
+  success: boolean;
+  data?: {
+    markdown: string;
+    html: string;
+    metadata: Record<string, any>;
+  };
+  error?: string;
+  id?: string;
+}
+
+/**
+ * ScraperClient handles website scraping operations via FireCrawl API
+ */
 export class ScraperClient {
   private static apiKey: string | null = null;
 
   /**
    * Set the API key for the scraper
-   * @param apiKey API key to use
+   * @param apiKey FireCrawl API key
    */
   static setApiKey(apiKey: string): void {
     this.apiKey = apiKey;
@@ -87,7 +95,7 @@ export class ScraperClient {
    * @param url URL to scrape
    * @param apiKey FireCrawl API key
    * @param options Optional parameters
-   * @returns Response from the API with additional processing
+   * @returns Standardized response with data or error
    */
   static async scrapeWithApiKey(
     url: string,
@@ -111,110 +119,7 @@ export class ScraperClient {
       
       console.log(`Raw scrape response for ${url}:`, response);
       
-      // Type guard function to check if response is an ErrorResponse
-      function isErrorResponse(resp: unknown): resp is ErrorResponse {
-        return resp !== null && 
-               typeof resp === 'object' && 
-               'success' in resp && 
-               (resp as any).success === false;
-      }
-      
-      // Type guard function to check if response is a SuccessResponse
-      function isSuccessResponse(resp: unknown): resp is SuccessResponse {
-        return resp !== null && 
-               typeof resp === 'object' && 
-               'success' in resp && 
-               (resp as any).success === true;
-      }
-      
-      // Handle string response (raw HTML)
-      if (typeof response === 'string') {
-        const stringResponse: string = response;
-        if (stringResponse && stringResponse.trim().length > 0) {
-          return {
-            success: true,
-            data: {
-              html: stringResponse, 
-              markdown: ""
-            }
-          };
-        }
-      }
-      
-      // Handle error response
-      if (isErrorResponse(response)) {
-        return {
-          success: false,
-          error: response.error || "API reported failure"
-        };
-      }
-      
-      // Handle success response but extract direct properties if data is missing
-      if (isSuccessResponse(response)) {
-        // If we have data, use it directly
-        if (response.data) {
-          return {
-            success: true,
-            data: response.data,
-            id: response.id
-          };
-        }
-        
-        // If data is missing but we have direct markdown/html/metadata properties, construct a data object
-        if (response.markdown || response.html || response.metadata) {
-          const constructedData = {
-            markdown: response.markdown || "",
-            html: response.html || "",
-            metadata: response.metadata || {}
-          };
-          
-          return {
-            success: true,
-            data: constructedData,
-            id: response.id
-          };
-        }
-        
-        // Return empty data structure if nothing useful found
-        return {
-          success: true,
-          data: { markdown: "", html: "", metadata: {} },
-          id: response.id
-        };
-      }
-      
-      // Handle unexpected object response by checking for common properties
-      if (response && typeof response === 'object') {
-        // Try to extract any useful data
-        const extractedData: any = {};
-        const anyResponse = response as any;
-        
-        if ('markdown' in anyResponse) extractedData.markdown = anyResponse.markdown || "";
-        if ('html' in anyResponse) extractedData.html = anyResponse.html || "";
-        if ('metadata' in anyResponse) extractedData.metadata = anyResponse.metadata || {};
-        
-        if (Object.keys(extractedData).length > 0) {
-          return {
-            success: true,
-            data: extractedData,
-            id: anyResponse.id
-          };
-        }
-        
-        // If it looks like data itself (no error or success props)
-        if (!('error' in anyResponse) && !('success' in anyResponse)) {
-          return {
-            success: true,
-            data: anyResponse
-          };
-        }
-      }
-      
-      // Fallback for truly unexpected formats
-      return {
-        success: false,
-        error: "Received unexpected response format from API"
-      };
+      return this.processResponse(response, url);
     } catch (error) {
       console.error(`Error scraping URL ${url}:`, error);
       return {
@@ -222,5 +127,133 @@ export class ScraperClient {
         error: error instanceof Error ? error.message : "Unknown error during scraping"
       };
     }
+  }
+
+  /**
+   * Process the raw API response into our standardized format
+   * 
+   * @param response Raw response from the API
+   * @param url The URL that was scraped (for error reporting)
+   * @returns Standardized ScrapeResponse
+   */
+  private static processResponse(response: any, url: string): ScrapeResponse {
+    // Handle string response (raw HTML)
+    if (typeof response === 'string') {
+      const content = response.trim();
+      if (content.length > 0) {
+        return {
+          success: true,
+          data: {
+            markdown: "",  // No markdown in this case
+            html: content,
+            metadata: { sourceURL: url }
+          }
+        };
+      }
+      return {
+        success: false,
+        error: "API returned empty string response"
+      };
+    }
+
+    // Handle explicit error response
+    if (response && !response.success && response.error) {
+      return {
+        success: false,
+        error: response.error
+      };
+    }
+
+    // Handle successful response with data property
+    if (response && response.success && response.data) {
+      // Extract the data from the success response
+      const { markdown = "", html = "", metadata = {} } = response.data;
+      
+      return {
+        success: true,
+        data: {
+          markdown: typeof markdown === 'string' ? markdown : "",
+          html: typeof html === 'string' ? html : "",
+          metadata: metadata || { sourceURL: url }
+        },
+        id: response.id
+      };
+    }
+    
+    // Handle success response with direct properties (not nested under data)
+    if (response && response.success && (response.markdown || response.html)) {
+      return {
+        success: true,
+        data: {
+          markdown: typeof response.markdown === 'string' ? response.markdown : "",
+          html: typeof response.html === 'string' ? response.html : "",
+          metadata: response.metadata || { sourceURL: url }
+        },
+        id: response.id
+      };
+    }
+    
+    // Handle array responses (page data from batch operations)
+    if (response && Array.isArray(response)) {
+      // Combine markdown from all pages
+      const combinedMarkdown = response
+        .filter(item => item && item.markdown)
+        .map(item => item.markdown)
+        .join("\n\n---\n\n");
+      
+      // Get the first page's HTML for preview
+      const firstHtml = response[0]?.html || "";
+      
+      // Collect metadata from the first page
+      const metadata = response[0]?.metadata || { sourceURL: url };
+      
+      return {
+        success: true,
+        data: {
+          markdown: combinedMarkdown,
+          html: firstHtml,
+          metadata
+        }
+      };
+    }
+    
+    // Last attempt to extract useful data from an unexpected format
+    if (response && typeof response === 'object') {
+      const extractedData = {
+        markdown: "",
+        html: "",
+        metadata: { sourceURL: url }
+      };
+      
+      // Try to find markdown content
+      if ('markdown' in response) {
+        extractedData.markdown = typeof response.markdown === 'string' ? response.markdown : "";
+      }
+      
+      // Try to find HTML content
+      if ('html' in response) {
+        extractedData.html = typeof response.html === 'string' ? response.html : "";
+      }
+      
+      // Try to find metadata
+      if ('metadata' in response) {
+        extractedData.metadata = response.metadata || { sourceURL: url };
+      }
+      
+      // If we found any content, consider it a success
+      if (extractedData.markdown || extractedData.html) {
+        return {
+          success: true,
+          data: extractedData,
+          id: response.id
+        };
+      }
+    }
+    
+    // Fallback for any other unexpected response format
+    return {
+      success: false,
+      error: `Received unexpected response format from API: ${typeof response}`
+    };
   }
 }
