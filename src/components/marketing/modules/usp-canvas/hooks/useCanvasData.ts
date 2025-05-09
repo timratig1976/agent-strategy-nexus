@@ -226,7 +226,7 @@ export const useCanvasData = (strategyId?: string) => {
       // Perform the upsert operation with properly typed data
       const { error: upsertError } = await supabase
         .from('usp_canvas')
-        .upsert([{
+        .upsert({
           strategy_id: dbCanvas.strategy_id,
           customer_jobs: dbCanvas.customer_jobs,
           pain_points: dbCanvas.pain_points,
@@ -234,7 +234,7 @@ export const useCanvasData = (strategyId?: string) => {
           differentiators: dbCanvas.differentiators,
           updated_at: dbCanvas.updated_at,
           version: dbCanvas.version
-        }]);
+        });
       
       if (upsertError) {
         console.error("Error saving canvas to database:", upsertError);

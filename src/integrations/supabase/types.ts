@@ -829,6 +829,7 @@ export type Database = {
           id: string
           pain_points: Json | null
           project_id: string
+          strategy_id: string
           updated_at: string
           version: number | null
         }
@@ -840,6 +841,7 @@ export type Database = {
           id?: string
           pain_points?: Json | null
           project_id: string
+          strategy_id: string
           updated_at?: string
           version?: number | null
         }
@@ -851,15 +853,16 @@ export type Database = {
           id?: string
           pain_points?: Json | null
           project_id?: string
+          strategy_id?: string
           updated_at?: string
           version?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "usp_canvas_project_id_fkey"
-            columns: ["project_id"]
+            foreignKeyName: "usp_canvas_strategy_id_fkey"
+            columns: ["strategy_id"]
             isOneToOne: false
-            referencedRelation: "projects"
+            referencedRelation: "strategies"
             referencedColumns: ["id"]
           },
         ]
