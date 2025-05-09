@@ -2,7 +2,7 @@
 /**
  * Scraper client for FireCrawl API
  */
-import FirecrawlApp from "@mendable/firecrawl-js";
+import FirecrawlApp, { ScrapeResponse as FirecrawlScrapeResponse } from "@mendable/firecrawl-js";
 import { processApiResponse } from "./content-processor";
 
 /**
@@ -22,7 +22,8 @@ interface SuccessResponse<T = any> {
   id?: string;
 }
 
-type FirecrawlResponse = ErrorResponse | SuccessResponse;
+// Union type for response handling
+type FirecrawlResponse = ErrorResponse | SuccessResponse | string;
 
 /**
  * Custom type for our application's scrape response
@@ -122,7 +123,7 @@ export class ScraperClient {
       
       // Handle string response (raw HTML)
       if (typeof response === 'string') {
-        const stringResponse = response;
+        const stringResponse: string = response;
         if (stringResponse && stringResponse.trim().length > 0) {
           return {
             success: true,
@@ -180,24 +181,25 @@ export class ScraperClient {
       if (response && typeof response === 'object') {
         // Try to extract any useful data
         const extractedData: any = {};
+        const anyResponse = response as any;
         
-        if ('markdown' in response) extractedData.markdown = (response as any).markdown || "";
-        if ('html' in response) extractedData.html = (response as any).html || "";
-        if ('metadata' in response) extractedData.metadata = (response as any).metadata || {};
+        if ('markdown' in anyResponse) extractedData.markdown = anyResponse.markdown || "";
+        if ('html' in anyResponse) extractedData.html = anyResponse.html || "";
+        if ('metadata' in anyResponse) extractedData.metadata = anyResponse.metadata || {};
         
         if (Object.keys(extractedData).length > 0) {
           return {
             success: true,
             data: extractedData,
-            id: 'id' in response ? (response as any).id : undefined
+            id: 'id' in anyResponse ? anyResponse.id : undefined
           };
         }
         
         // If it looks like data itself (no error or success props)
-        if (!('error' in response) && !('success' in response)) {
+        if (!('error' in anyResponse) && !('success' in anyResponse)) {
           return {
             success: true,
-            data: response
+            data: anyResponse
           };
         }
       }
