@@ -1,3 +1,4 @@
+
 /**
  * Core service for handling website crawling operations
  */
@@ -14,8 +15,7 @@ export async function crawlWebsite(url: string, apiKey: string) {
       },
       body: JSON.stringify({
         url: url,
-        // Removed the "limit" and "scrapeOptions" keys that caused errors
-        format: 'markdown',
+        formats: ['markdown', 'html'], // Changed from format to formats (array)
         timeout: 30000
       }),
     });

@@ -1,4 +1,3 @@
-
 /**
  * API client for FireCrawl API interactions
  */
@@ -24,7 +23,7 @@ export class FirecrawlApiClient {
     try {
       console.log('Testing API key with Firecrawl API');
       
-      // Using the updated request format that matches the API v1 requirements
+      // Using the updated request format with formats as an array
       const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
         method: 'POST',
         headers: {
@@ -33,7 +32,7 @@ export class FirecrawlApiClient {
         },
         body: JSON.stringify({
           url: 'https://example.com',
-          format: 'markdown',
+          formats: ['markdown'], // Changed from format to formats (array)
           timeout: 10000 // Short timeout for testing
         }),
       });
@@ -56,12 +55,10 @@ export class FirecrawlApiClient {
     try {
       console.log('Making initial scrape request to Firecrawl API for URL:', url);
       
-      // Updated request body format based on API error
+      // Updated request body format with formats as an array
       const requestBody = {
         url: url,
-        // Removed "limit" and "scrapeOptions" keys that were causing errors
-        // Only including format here, as it's likely still needed
-        format: 'markdown',
+        formats: ['markdown', 'html'], // Changed from format to formats (array)
         timeout: options?.timeout || 30000
       };
       
