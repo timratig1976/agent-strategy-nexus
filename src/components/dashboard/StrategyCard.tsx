@@ -22,6 +22,9 @@ const StrategyCard = ({ strategy, stateLabels, stateColors }: StrategyCardProps)
     return Math.round((completedTasks / strategy.tasks.length) * 100);
   };
 
+  // Get language code from strategy (default to 'EN' if not specified)
+  const languageCode = strategy.metadata?.language || 'EN';
+
   return (
     <Card className="h-full hover:shadow-lg transition-shadow">
       <CardHeader>
@@ -31,7 +34,12 @@ const StrategyCard = ({ strategy, stateLabels, stateColors }: StrategyCardProps)
             <CardTitle className="mr-2">{strategy.name}</CardTitle>
           </div>
           <div className="flex items-center gap-2">
-            <Globe className="h-4 w-4 text-muted-foreground" aria-label="Language" />
+            <div className="flex items-center">
+              <Globe className="h-4 w-4 text-muted-foreground" aria-label="Language" />
+              <span className="text-xs font-medium ml-1 text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">
+                {languageCode}
+              </span>
+            </div>
             <Badge className={stateColors[strategy.state]}>
               {stateLabels[strategy.state]}
             </Badge>
