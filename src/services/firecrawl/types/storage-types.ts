@@ -8,7 +8,7 @@
  */
 export interface WebsiteCrawlRecord {
   id: string;
-  project_id: string;
+  strategy_id: string;
   url: string;
   status: string;
   extracted_content: {

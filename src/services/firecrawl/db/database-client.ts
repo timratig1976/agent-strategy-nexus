@@ -56,7 +56,7 @@ export class DatabaseClient {
       const { data, error } = await this.db
         .from(this.CRAWLS_TABLE)
         .select('*')
-        .eq('project_id', strategyId)
+        .eq('strategy_id', strategyId)
         .eq('extracted_content->url_type', urlType)
         .order('created_at', { ascending: false })
         .limit(limit);

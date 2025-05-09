@@ -20,7 +20,7 @@ export function mapFromDatabaseRecord(record: WebsiteCrawlRecord, options: Recor
     data: record.extracted_content?.data || [],
     url: record.url,
     id: record.id,
-    strategyId: options.includeStrategyId ? record.project_id : undefined
+    strategyId: options.includeStrategyId ? record.strategy_id : undefined
   };
 }
 
@@ -33,7 +33,7 @@ export function prepareForStorage(
   urlType: 'website' | 'product' = 'website'
 ) {
   return {
-    project_id: strategyId,
+    strategy_id: strategyId,
     url: results.url,
     status: results.status || 'completed',
     extracted_content: {

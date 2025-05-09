@@ -917,32 +917,32 @@ export type Database = {
           created_at: string
           extracted_content: Json
           id: string
-          project_id: string
           status: string | null
+          strategy_id: string
           url: string
         }
         Insert: {
           created_at?: string
           extracted_content: Json
           id?: string
-          project_id: string
           status?: string | null
+          strategy_id: string
           url: string
         }
         Update: {
           created_at?: string
           extracted_content?: Json
           id?: string
-          project_id?: string
           status?: string | null
+          strategy_id?: string
           url?: string
         }
         Relationships: [
           {
-            foreignKeyName: "website_crawls_project_id_fkey"
-            columns: ["project_id"]
+            foreignKeyName: "website_crawls_strategy_id_fkey"
+            columns: ["strategy_id"]
             isOneToOne: false
-            referencedRelation: "projects"
+            referencedRelation: "strategies"
             referencedColumns: ["id"]
           },
         ]
