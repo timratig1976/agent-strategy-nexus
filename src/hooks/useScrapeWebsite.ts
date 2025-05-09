@@ -23,16 +23,24 @@ interface ScrapeResult {
   json?: any;
 }
 
-interface CustomScrapeResponse extends ScrapeResponse {
-  success: boolean;
-  data?: {
+// Define types for successful and error responses separately
+type CustomSuccessResponse = {
+  success: true;
+  data: {
     markdown?: string;
     html?: string;
     metadata?: any;
     json?: any;
   };
-  error?: string;
-}
+};
+
+type CustomErrorResponse = {
+  success: false;
+  error: string;
+};
+
+// Combined type that can be either success or error
+type CustomScrapeResponse = CustomSuccessResponse | CustomErrorResponse;
 
 export const useScrapeWebsite = (options: UseScrapeWebsiteOptions = {}) => {
   const [isLoading, setIsLoading] = useState(false);
