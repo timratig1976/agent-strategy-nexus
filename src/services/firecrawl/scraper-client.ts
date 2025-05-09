@@ -2,8 +2,18 @@
 /**
  * Scraper client for FireCrawl API
  */
-import FirecrawlApp, { ScrapeResponse } from "@mendable/firecrawl-js";
+import FirecrawlApp, { ScrapeResponse as FirecrawlScrapeResponse } from "@mendable/firecrawl-js";
 import { processApiResponse } from "./content-processor";
+
+/**
+ * Custom type for our application's scrape response
+ */
+export interface ScrapeResponse {
+  success: boolean;
+  data?: any;
+  error?: string;
+  id?: string;
+}
 
 /**
  * Type for supported formats in Firecrawl
@@ -65,7 +75,7 @@ export class ScraperClient {
       const app = new FirecrawlApp({ apiKey });
       
       // Set default formats with proper type
-      const formats: FirecrawlFormat[] = options.formats as FirecrawlFormat[] || ['markdown', 'html'];
+      const formats: FirecrawlFormat[] = options.formats || ['markdown', 'html'];
       
       // Execute the scrape operation with timeout
       const result = await app.scrapeUrl(url, { 
@@ -78,13 +88,25 @@ export class ScraperClient {
         dataPresent: result.data ? 'Data present' : 'No data'
       });
       
-      return result;
+      // Convert FirecrawlScrapeResponse to our ScrapeResponse
+      if (result.success) {
+        return {
+          success: true,
+          data: result.data,
+          id: result.id
+        };
+      } else {
+        return {
+          success: false,
+          error: (result as any).error || "Unknown error during scraping"
+        };
+      }
     } catch (error) {
       console.error(`Error scraping URL ${url}:`, error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error during scraping"
-      } as ScrapeResponse;
+      };
     }
   }
 }

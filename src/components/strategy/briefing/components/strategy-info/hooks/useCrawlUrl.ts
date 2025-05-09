@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,7 +51,6 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
     return !!apiKey;
   };
   
-  // Load saved crawl results for the current strategy
   const loadSavedCrawlResults = async (strategyId: string) => {
     try {
       console.log("Loading saved crawl results for strategy:", strategyId);
@@ -186,7 +184,7 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
         technologiesDetected: [],
         data: responseData,
         url: url,
-        id: result.id || undefined,
+        id: result.id,
         strategyId: formValues.id
       };
       

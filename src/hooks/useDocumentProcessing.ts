@@ -55,8 +55,7 @@ export const useDocumentProcessing = (strategyId: string) => {
         .select('url, extracted_content')
         .eq('project_id', strategyId) // Using project_id as that's the column name in website_crawls
         .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+        .limit(1);
       
       if (error) {
         console.error("Error fetching crawl results:", error);
@@ -64,21 +63,23 @@ export const useDocumentProcessing = (strategyId: string) => {
         return null;
       }
       
-      if (!crawlResults) {
+      if (!crawlResults || crawlResults.length === 0) {
         console.log("No website crawl data found for strategy:", strategyId);
         return null;
       }
-
+      
+      const firstResult = crawlResults[0];
+      
       // Extract the markdown content to use with the AI
       let websiteContent = '';
       
       // Add website URL as header
-      websiteContent += `# Website: ${crawlResults.url}\n\n`;
+      websiteContent += `# Website: ${firstResult.url}\n\n`;
       
       // Safely extract the markdown content from the extracted_content field
-      if (crawlResults.extracted_content && typeof crawlResults.extracted_content === 'object') {
+      if (firstResult.extracted_content && typeof firstResult.extracted_content === 'object') {
         // Check if extracted_content has a data array property
-        const extractedContent = crawlResults.extracted_content as { data?: Array<any> };
+        const extractedContent = firstResult.extracted_content as { data?: Array<any> };
         
         if (Array.isArray(extractedContent.data) && extractedContent.data.length > 0) {
           // Check if the first item has a markdown property
