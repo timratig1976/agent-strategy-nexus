@@ -293,16 +293,13 @@ serve(async (req) => {
 
     // Call OpenAI API
     const completion = await openai.createChatCompletion({
-      model: "gpt-4o-mini", // Updated to a supported model
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: system_prompt },
         { role: "user", content: processedUserPrompt }
       ],
       temperature: 0.7,
       max_tokens: 3000
-    }).catch(err => {
-      console.error('OpenAI API error:', err.message || JSON.stringify(err));
-      throw new Error(`OpenAI API error: ${err.message || 'Unknown error'}`);
     });
 
     if (!completion || !completion.data || !completion.data.choices || completion.data.choices.length === 0) {
