@@ -15,7 +15,10 @@ interface ErrorResponse {
 
 interface SuccessResponse<T = any> {
   success: true;
-  data: T;
+  data?: T;
+  markdown?: string;
+  html?: string;
+  metadata?: any;
   id?: string;
 }
 
@@ -119,8 +122,8 @@ export class ScraperClient {
       
       // Handle string response (raw HTML)
       if (typeof response === 'string') {
-        const stringResponse = response as string;
-        if (stringResponse.trim().length > 0) {
+        const stringResponse = response;
+        if (stringResponse && stringResponse.trim().length > 0) {
           return {
             success: true,
             data: {
@@ -139,23 +142,56 @@ export class ScraperClient {
         };
       }
       
-      // Handle success response
+      // Handle success response but extract direct properties if data is missing
       if (isSuccessResponse(response)) {
+        // If we have data, use it directly
+        if (response.data) {
+          return {
+            success: true,
+            data: response.data,
+            id: response.id
+          };
+        }
+        
+        // If data is missing but we have direct markdown/html/metadata properties, construct a data object
+        if (response.markdown || response.html || response.metadata) {
+          const constructedData = {
+            markdown: response.markdown || "",
+            html: response.html || "",
+            metadata: response.metadata || {}
+          };
+          
+          return {
+            success: true,
+            data: constructedData,
+            id: response.id
+          };
+        }
+        
+        // Return empty data structure if nothing useful found
         return {
           success: true,
-          data: response.data,
+          data: { markdown: "", html: "", metadata: {} },
           id: response.id
         };
       }
       
-      // Handle unexpected object response by checking for data property
+      // Handle unexpected object response by checking for common properties
       if (response && typeof response === 'object') {
-        if ('data' in response) {
+        // Try to extract any useful data
+        const extractedData: any = {};
+        
+        if ('markdown' in response) extractedData.markdown = (response as any).markdown || "";
+        if ('html' in response) extractedData.html = (response as any).html || "";
+        if ('metadata' in response) extractedData.metadata = (response as any).metadata || {};
+        
+        if (Object.keys(extractedData).length > 0) {
           return {
             success: true,
-            data: (response as any).data
+            data: extractedData,
+            id: 'id' in response ? (response as any).id : undefined
           };
-        } 
+        }
         
         // If it looks like data itself (no error or success props)
         if (!('error' in response) && !('success' in response)) {
