@@ -57,6 +57,9 @@ const WebsiteAnalysisForm: React.FC<WebsiteAnalysisFormProps> = ({
                 {isLoading ? "Analyzing..." : "Analyze"}
               </Button>
             </div>
+            <p className="text-xs text-muted-foreground">
+              Enter a website URL (e.g., example.com or https://example.com)
+            </p>
           </div>
 
           {error && (

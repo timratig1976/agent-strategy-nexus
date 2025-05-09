@@ -19,15 +19,30 @@ export const useWebsiteCrawler = (initialData?: WebsiteCrawlResult) => {
       return;
     }
     
+    // Add http:// prefix if missing
+    let processedUrl = url;
+    if (!/^https?:\/\//i.test(processedUrl)) {
+      processedUrl = `https://${processedUrl}`;
+    }
+    
     setIsLoading(true);
     setProgress(10);
     setError(null);
     
     try {
+      // Progress simulation
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          const newProgress = prev + 5;
+          return newProgress < 90 ? newProgress : prev;
+        });
+      }, 1000);
+      
       const { data, error } = await supabase.functions.invoke('website-crawler', {
-        body: { url }
+        body: { url: processedUrl }
       });
       
+      clearInterval(progressInterval);
       setProgress(100);
       
       if (error) {
@@ -35,8 +50,15 @@ export const useWebsiteCrawler = (initialData?: WebsiteCrawlResult) => {
       }
       
       if (data) {
+        console.log("Website crawl results:", data);
+        
+        if (data.contentExtracted) {
+          toast.success("Website crawled successfully");
+        } else {
+          toast.info("Website crawled, but limited content was extracted");
+        }
+        
         setResults(data);
-        toast.success("Website crawled successfully");
       }
     } catch (err: any) {
       console.error("Error crawling website:", err);
