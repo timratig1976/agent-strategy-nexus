@@ -39,7 +39,23 @@ export class ResultManager {
         throw error;
       }
       
-      return data as AgentResult;
+      // Map the snake_case database columns to camelCase interface properties
+      if (data) {
+        const result: AgentResult = {
+          id: data.id,
+          agentId: data.agent_id,
+          strategyId: data.strategy_id,
+          content: data.content,
+          createdAt: data.created_at,
+          // Ensure metadata is an object or default to empty object
+          metadata: typeof data.metadata === 'object' && data.metadata !== null 
+            ? data.metadata as Record<string, any> 
+            : {}
+        };
+        return result;
+      }
+      
+      return null;
     } catch (err) {
       console.error("Error in saveAgentResult:", err);
       return null;
