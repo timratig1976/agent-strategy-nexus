@@ -1,5 +1,4 @@
 
-// Update this file if it exists or create a new one if necessary
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { Configuration, OpenAIApi } from 'https://esm.sh/openai@3.2.1'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -52,11 +51,18 @@ serve(async (req) => {
     console.log(`Prompt data fetch result: ${!!promptData}, error: ${!!promptError}`)
 
     if (promptError) {
+      console.error(`Error fetching prompts: ${JSON.stringify(promptError)}`)
       throw new Error(`Error fetching prompts: ${promptError.message}`)
     }
 
-    if (!promptData || !promptData.system_prompt || !promptData.user_prompt) {
+    if (!promptData) {
+      console.error(`No prompts found for module: ${module}`)
       throw new Error(`No prompts found for module: ${module}`)
+    }
+
+    if (!promptData.system_prompt || !promptData.user_prompt) {
+      console.error(`Incomplete prompt data for module: ${module}`)
+      throw new Error(`Incomplete prompt data for module: ${module}`)
     }
 
     // Extract prompts
@@ -82,7 +88,8 @@ serve(async (req) => {
       hasFormData: !!formData, 
       hasEnhancement: !!enhancementText, 
       hasDocumentContent: !!documentContent,
-      hasWebsiteData: !!websiteData
+      hasWebsiteData: !!websiteData,
+      outputLanguage
     })
 
     // Replace placeholders based on the data
@@ -100,10 +107,10 @@ serve(async (req) => {
     }
 
     // Handle website crawl data
-    if (data.websiteData) {
+    if (websiteData) {
       processedUserPrompt = processedUserPrompt.replace(
         /{{#if websiteCrawlData}}([\s\S]*?){{websiteCrawlData}}([\s\S]*?){{\/if}}/g, 
-        `$1${data.websiteData}$2`
+        `$1${websiteData}$2`
       )
     } else {
       // Remove the conditional block if websiteCrawlData is not available
@@ -160,20 +167,28 @@ serve(async (req) => {
 
     // Call OpenAI API
     const completion = await openai.createChatCompletion({
-      model: "gpt-4",
+      model: "gpt-4o-mini", // Updated to a currently supported model
       messages: [
         { role: "system", content: system_prompt },
         { role: "user", content: processedUserPrompt }
       ],
       temperature: 0.7,
       max_tokens: 3000
-    })
+    }).catch(err => {
+      console.error('OpenAI API error:', err.message || JSON.stringify(err));
+      throw new Error(`OpenAI API error: ${err.message || 'Unknown error'}`);
+    });
 
-    const response = completion.data.choices[0].message?.content || ''
+    if (!completion || !completion.data || !completion.data.choices || completion.data.choices.length === 0) {
+      console.error('Invalid response from OpenAI API');
+      throw new Error('Invalid response from OpenAI API');
+    }
+
+    const response = completion.data.choices[0].message?.content || '';
 
     // Return the response
-    const headers = new Headers(corsHeaders)
-    headers.set('Content-Type', 'application/json')
+    const headers = new Headers(corsHeaders);
+    headers.set('Content-Type', 'application/json');
 
     return new Response(
       JSON.stringify({
@@ -189,19 +204,19 @@ serve(async (req) => {
         }
       }),
       { headers }
-    )
+    );
 
   } catch (error) {
-    console.error('Error in marketing-ai function:', error)
+    console.error('Error in marketing-ai function:', error);
     
-    const headers = new Headers(corsHeaders)
-    headers.set('Content-Type', 'application/json')
+    const headers = new Headers(corsHeaders);
+    headers.set('Content-Type', 'application/json');
     
     return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : 'An unknown error occurred' 
       }),
       { status: 500, headers }
-    )
+    );
   }
-})
+});

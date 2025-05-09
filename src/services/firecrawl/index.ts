@@ -1,12 +1,13 @@
 
-/**
- * Main export file for the FirecrawlService module
- */
-export { FirecrawlService } from './FirecrawlService';
-export type { WebsiteCrawlResult, CrawlOptions, CrawlJobResponse, CrawlStatusResponse, CrawlStorageRecord } from './types';
-export { FirecrawlAuthManager } from './auth-manager';
-export { ScraperClient } from './scraper-client';
-export { CrawlerClient } from './crawler-client';
-export { StorageClient } from './storage-client';
+export * from './FirecrawlService';
+export * from './api-client';
+export * from './auth-manager';
 export * from './constants';
+export * from './content-processor';
+export * from './crawler-client';
+export * from './polling-client';
 export * from './response-processor';
+export * from './scraper-client';
+export * from './storage-client';
+export * from './types';
+export * from './utils';

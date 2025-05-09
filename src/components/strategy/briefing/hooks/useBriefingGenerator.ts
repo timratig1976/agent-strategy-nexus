@@ -76,61 +76,68 @@ export const useBriefingGenerator = (strategyId: string) => {
         });
       }, 1000);
       
-      // Generate the briefing content using the AI service
-      const { data: aiResponse, error: aiError, debugInfo } = await MarketingAIService.generateContent<{ rawOutput: string }>(
-        'briefing',
-        'generate',
-        {
-          strategyId: strategyId,
-          formData: formValues,
-          enhancementText: enhancementText || '',
-          documentContent: documentContent || '',
-          websiteData: websiteCrawlData || '',  // Include website crawl data
-          outputLanguage: language as 'english' | 'deutsch'
+      try {
+        // Generate the briefing content using the AI service
+        const { data: aiResponse, error: aiError, debugInfo } = await MarketingAIService.generateContent<{ rawOutput: string }>(
+          'briefing',
+          'generate',
+          {
+            strategyId: strategyId,
+            formData: formValues,
+            enhancementText: enhancementText || '',
+            documentContent: documentContent || '',
+            websiteData: websiteCrawlData || '',
+            outputLanguage: language as 'english' | 'deutsch'
+          }
+        );
+        
+        // Store debug info for monitoring
+        setAiDebugInfo(debugInfo);
+        
+        if (aiError) {
+          clearInterval(progressInterval);
+          setError(aiError);
+          throw new Error(aiError);
         }
-      );
-      
-      // Store debug info for monitoring
-      setAiDebugInfo(debugInfo);
-      
-      if (aiError) {
-        clearInterval(progressInterval);
-        setError(aiError);
-        throw new Error(aiError);
-      }
-      
-      console.log("Generated briefing data:", aiResponse);
+        
+        console.log("Generated briefing data:", aiResponse);
 
-      // Calculate the next version number
-      const nextVersion = briefingHistory.length > 0 ? 
-        ((briefingHistory[0].metadata?.version || 0) as number) + 1 : 1;
-      
-      // Create a timestamp for the generation
-      const currentTime = new Date().toISOString();
-      
-      // Create the agent result to save to the database with null agent_id
-      const newResult = {
-        agent_id: null, // Use null instead of hard-coded IDs
-        strategy_id: strategyId,
-        content: aiResponse?.rawOutput || "",
-        metadata: {
-          type: "briefing",
-          is_final: false,
-          version: nextVersion,
-          generated_at: currentTime
+        // Calculate the next version number
+        const nextVersion = briefingHistory.length > 0 ? 
+          ((briefingHistory[0].metadata?.version || 0) as number) + 1 : 1;
+        
+        // Create a timestamp for the generation
+        const currentTime = new Date().toISOString();
+        
+        // Create the agent result to save to the database with null agent_id
+        const newResult = {
+          agent_id: null, // Use null instead of hard-coded IDs
+          strategy_id: strategyId,
+          content: aiResponse?.rawOutput || "",
+          metadata: {
+            type: "briefing",
+            is_final: false,
+            version: nextVersion,
+            generated_at: currentTime
+          }
+        };
+        
+        // Save the result to the database
+        const savedResult = await saveAgentResult(strategyId, newResult.content, newResult.metadata);
+        
+        // Update local state with the new result
+        if (savedResult) {
+          setBriefingHistory(prev => [savedResult, ...prev]);
         }
-      };
-      
-      // Save the result to the database
-      const savedResult = await saveAgentResult(strategyId, newResult.content, newResult.metadata);
-      
-      // Update local state with the new result
-      if (savedResult) {
-        setBriefingHistory(prev => [savedResult, ...prev]);
+        
+        setProgress(100);
+        toast.success("Briefing generated successfully");
+      } catch (error) {
+        clearInterval(progressInterval);
+        console.error("AI Service error:", error);
+        setError(error instanceof Error ? error.message : "AI service error");
+        throw error;
       }
-      
-      setProgress(100);
-      toast.success("Briefing generated successfully");
       
     } catch (error) {
       console.error("Error generating briefing:", error);

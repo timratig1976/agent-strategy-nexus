@@ -1,11 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { useCallback } from "react";
-import { FirecrawlService } from "@/services/firecrawl";
-
-interface UseDocumentProcessingProps {
-  strategyId: string;
-}
 
 export const useDocumentProcessing = (strategyId: string) => {
   // Function to get document content for AI
@@ -55,9 +50,21 @@ export const useDocumentProcessing = (strategyId: string) => {
       if (!strategyId) return null;
 
       // Get the latest crawl result from the database
-      const crawlResult = await FirecrawlService.getLatestCrawlResult(strategyId);
+      const { data: crawlResults, error } = await supabase
+        .from('strategy_website_crawls')
+        .select('url, data')
+        .eq('strategy_id', strategyId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
       
-      if (!crawlResult || !crawlResult.data || crawlResult.data.length === 0) {
+      if (error) {
+        console.error("Error fetching crawl results:", error);
+        console.log("Retrieved latest website result: not found");
+        return null;
+      }
+      
+      if (!crawlResults || !crawlResults.data || crawlResults.data.length === 0) {
         console.log("No website crawl data found for strategy:", strategyId);
         return null;
       }
@@ -66,11 +73,11 @@ export const useDocumentProcessing = (strategyId: string) => {
       let websiteContent = '';
       
       // Add website URL as header
-      websiteContent += `# Website: ${crawlResult.url}\n\n`;
+      websiteContent += `# Website: ${crawlResults.url}\n\n`;
       
       // Add the markdown content
-      if (crawlResult.data[0].markdown) {
-        websiteContent += crawlResult.data[0].markdown;
+      if (crawlResults.data[0]?.markdown) {
+        websiteContent += crawlResults.data[0].markdown;
       }
       
       return websiteContent;
