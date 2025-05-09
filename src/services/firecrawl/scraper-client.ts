@@ -11,8 +11,87 @@ import { pollForScrapeResult } from './polling-client';
  * Handles the scraping operations with the FireCrawl API
  */
 export class ScraperClient {
+  private static apiKey: string | null = null;
+
   /**
-   * Scrape a website with the specified API key
+   * Set API key for authentication
+   */
+  static setApiKey(apiKey: string): void {
+    this.apiKey = apiKey;
+  }
+
+  /**
+   * Clear API key
+   */
+  static clearApiKey(): void {
+    this.apiKey = null;
+  }
+
+  /**
+   * Get current instance with configured API key
+   */
+  static getInstance(): ScraperClient {
+    if (!this.apiKey) {
+      throw new Error('API key not set. Call ScraperClient.setApiKey() first.');
+    }
+    return new ScraperClient(this.apiKey);
+  }
+
+  /**
+   * Private constructor for singleton pattern
+   */
+  private constructor(private apiKey: string) {}
+
+  /**
+   * Scrape a URL with the current API key
+   */
+  async scrapeUrl(url: string, options: any = {}): Promise<any> {
+    try {
+      console.log('Making scrape request to Firecrawl API for URL:', url);
+      
+      const requestBody = {
+        url: url,
+        formats: options.formats || DEFAULT_FORMATS,
+        timeout: options.timeout || DEFAULT_TIMEOUT,
+        agent: options.agent || undefined
+      };
+      
+      console.log("Request body:", requestBody);
+      
+      // Make the scrape request
+      const response = await fetch(SCRAPE_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
+      
+      if (!response.ok) {
+        // Handle API errors
+        const errorData = await response.json();
+        console.error("FireCrawl API error:", errorData);
+        
+        return {
+          success: false,
+          error: errorData.message || `API returned ${response.status}: ${response.statusText}`
+        };
+      }
+      
+      // Parse the response
+      const scrapeResult = await response.json();
+      console.log("FireCrawl scrape response:", scrapeResult);
+      
+      return { success: true, data: scrapeResult.data };
+    } catch (error) {
+      console.error("Error in API client scrape:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Scrape a website with the specified API key (static method)
    */
   static async scrapeWithApiKey(url: string, apiKey: string, options?: { timeout?: number }): Promise<any> {
     try {
@@ -84,7 +163,6 @@ export class ScraperClient {
         url: url,
         error: "Unexpected response format from Firecrawl API"
       };
-      
     } catch (error) {
       console.error("Error in API client scrape:", error);
       throw error;

@@ -1,3 +1,4 @@
+
 /**
  * FireCrawl API service
  */
@@ -6,6 +7,7 @@ import { ScraperClient } from "./scraper-client";
 import { ContentProcessor } from "./content-processor";
 import { WebsiteCrawlResult } from "./types";
 import { StorageClient } from "./storage-client";
+import { FirecrawlAuthManager } from "./auth-manager";
 
 /**
  * Main FireCrawl API service class that handles website crawling and data processing
@@ -39,6 +41,24 @@ export class FirecrawlService {
   }
 
   /**
+   * Test if an API key is valid
+   * @param apiKey The API key to test
+   * @returns Promise resolving to true if valid, false otherwise
+   */
+  static async testApiKey(apiKey: string): Promise<boolean> {
+    return FirecrawlAuthManager.testApiKey(apiKey);
+  }
+
+  /**
+   * Save an API key to localStorage
+   * @param apiKey The API key to save
+   */
+  static saveApiKey(apiKey: string): void {
+    FirecrawlAuthManager.saveApiKey(apiKey);
+    FirecrawlService.initialize(apiKey);
+  }
+
+  /**
    * Crawl a website and extract its content
    * 
    * @param url The URL of the website to crawl
@@ -57,17 +77,15 @@ export class FirecrawlService {
       // Determine whether this is for a website or product URL
       const urlType = options.urlType === 'productUrl' ? 'product' : 'website';
       
-      // Create an API client instance
-      const apiClient = ScraperClient.getInstance();
+      // Get the API key
+      const apiKey = FirecrawlService.getApiKey();
+      if (!apiKey) {
+        throw new Error("API key not set. Please initialize FirecrawlService first.");
+      }
       
       // Start the scraping operation
-      const response = await apiClient.scrapeUrl(url, {
-        formats: ["markdown"],
-        // Add agent for better navigation
-        agent: {
-          model: "FIRE-1",
-          prompt: `Extract the main content from this ${urlType} page including any important product or company information.`
-        }
+      const response = await ScraperClient.scrapeWithApiKey(url, apiKey, {
+        timeout: options.timeout
       });
       
       console.log("Scrape response received:", response);
@@ -78,7 +96,7 @@ export class FirecrawlService {
       
       // Process the results and extract relevant info
       const processor = new ContentProcessor();
-      const processedResults = processor.processScrapedData(response.data);
+      const processedResults = processor.processScrapedData(response);
       
       // If we have a strategy ID, save the results to the database
       if (strategyId) {

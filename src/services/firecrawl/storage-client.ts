@@ -1,215 +1,166 @@
 
 /**
- * Client for storing crawled website data in the database
+ * Storage client for saving and retrieving FireCrawl data
  */
 
 import { supabase } from "@/integrations/supabase/client";
-import { WebsiteCrawlResult } from './types';
-import { toast } from "sonner";
+import { WebsiteCrawlResult, CrawlStorageRecord } from "./types";
 
 /**
- * Interface for the stored extracted content to ensure type safety
- */
-interface ExtractedContent {
-  data: {
-    markdown: string;
-    metadata?: any;
-  }[];
-  summary: string;
-  pages_crawled: number;
-  keywords: string[];
-  content_extracted: boolean;
-  crawled_at: string;
-  url_type?: 'website' | 'product'; // Add URL type to track source
-}
-
-/**
- * Provides methods for storing and retrieving crawl data in the database
+ * StorageClient handles database operations for crawl results
  */
 export class StorageClient {
+  private static readonly TABLE_NAME = "website_crawl_results";
+  
   /**
-   * Save website crawl results to the database
+   * Save crawl results to the database
+   * 
+   * @param strategyId The ID of the strategy
+   * @param results The results from the crawl operation
+   * @param urlType Whether this is a website or product URL
+   * @returns Promise that resolves when the operation completes
    */
   static async saveCrawlResults(
     strategyId: string, 
-    crawlResults: WebsiteCrawlResult, 
+    results: WebsiteCrawlResult,
     urlType: 'website' | 'product' = 'website'
-  ): Promise<boolean> {
+  ): Promise<void> {
     try {
-      console.log(`Saving ${urlType} crawl results for strategy:`, strategyId);
-      
-      // Create a cleaned and prepared version of the data for storage
-      // Focus only on the markdown content and essential metadata
-      const storageData = {
-        project_id: strategyId,
-        url: crawlResults.url,
-        status: crawlResults.status || 'completed',
-        // Using extracted_content field to store all our data as JSON
-        extracted_content: {
-          data: crawlResults.data.map(page => ({
-            markdown: page.markdown || "",
-            metadata: page.metadata || {}
-          })),
-          summary: crawlResults.summary,
-          pages_crawled: crawlResults.pagesCrawled,
-          keywords: crawlResults.keywordsFound,
-          content_extracted: crawlResults.contentExtracted,
-          crawled_at: new Date().toISOString(),
-          url_type: urlType // Store the URL type to distinguish between website and product
-        }
-      };
-      
-      // Insert into the website_crawls table
-      const { error } = await supabase
-        .from('website_crawls')
-        .insert(storageData);
-      
-      if (error) {
-        console.error("Error saving crawl results to database:", error);
-        return false;
+      if (!strategyId) {
+        console.error("Cannot save crawl results: No strategy ID provided");
+        return;
       }
       
-      console.log(`Successfully saved ${urlType} crawl results to database`);
-      return true;
+      // Prepare the record for storage
+      const record = {
+        strategy_id: strategyId,
+        url: results.url,
+        url_type: urlType,
+        extracted_content: {
+          data: results.data,
+          summary: results.summary
+        },
+        pages_crawled: results.pagesCrawled,
+        keywords: results.keywordsFound,
+        technologies: results.technologiesDetected,
+        content_extracted: results.contentExtracted,
+        summary: results.summary,
+        crawled_at: new Date().toISOString()
+      };
+      
+      // Insert into the database
+      const { error } = await supabase
+        .from(this.TABLE_NAME)
+        .insert(record);
+      
+      if (error) {
+        console.error("Error saving crawl results:", error);
+      } else {
+        console.log(`${urlType} crawl results saved for strategy ${strategyId}`);
+      }
     } catch (err) {
-      console.error("Failed to save crawl results:", err);
-      toast.error("Failed to save crawl results to database");
-      return false;
+      console.error("Error in saveCrawlResults:", err);
     }
   }
   
   /**
-   * Get the most recent website crawl result for a strategy
+   * Get the latest crawl result for a strategy
+   * 
+   * @param strategyId The ID of the strategy
+   * @param urlType Whether this is a website or product URL
+   * @returns The latest crawl result or null if none found
    */
   static async getLatestCrawlResult(
-    strategyId: string, 
+    strategyId: string,
     urlType: 'website' | 'product' = 'website'
   ): Promise<WebsiteCrawlResult | null> {
     try {
-      console.log(`Retrieving latest ${urlType} crawl result for strategy:`, strategyId);
+      if (!strategyId) {
+        console.error("Cannot get crawl results: No strategy ID provided");
+        return null;
+      }
       
-      // Query the database for the latest crawl result for this strategy and URL type
+      // Query for the latest result
       const { data, error } = await supabase
-        .from('website_crawls')
+        .from(this.TABLE_NAME)
         .select('*')
-        .eq('project_id', strategyId)
-        .filter('extracted_content->url_type', 'eq', urlType) // Filter by URL type
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+        .eq('strategy_id', strategyId)
+        .eq('url_type', urlType)
+        .order('crawled_at', { ascending: false })
+        .limit(1);
       
       if (error) {
-        console.error("Error retrieving crawl results:", error);
+        console.error("Error fetching crawl results:", error);
         return null;
       }
       
-      if (!data) {
-        console.log(`No ${urlType} crawl results found for strategy:`, strategyId);
-        return null;
+      if (data && data.length > 0) {
+        return this.mapFromDatabaseRecord(data[0]);
       }
       
-      // Safely extract and process the extracted_content data
-      const extractedContent = this.parseExtractedContent(data.extracted_content);
-      
-      console.log("Found crawl result:", data.id, "with", extractedContent.data?.length || 0, "pages");
-      
-      // Transform the database record back into WebsiteCrawlResult format
-      // Only include markdown data as requested
-      const crawlResult: WebsiteCrawlResult = {
-        success: true,
-        pagesCrawled: extractedContent.pages_crawled || 0,
-        contentExtracted: extractedContent.content_extracted || false,
-        summary: extractedContent.summary || "",
-        keywordsFound: extractedContent.keywords || [],
-        technologiesDetected: [], // Removed technologies as per request
-        data: extractedContent.data || [],
-        url: data.url,
-        id: data.id,
-        status: data.status
-      };
-      
-      return crawlResult;
+      return null;
     } catch (err) {
-      console.error("Failed to retrieve crawl results:", err);
+      console.error("Error in getLatestCrawlResult:", err);
       return null;
     }
   }
   
   /**
-   * Get all website crawl results for a strategy
+   * Get all crawl results for a strategy
+   * 
+   * @param strategyId The ID of the strategy
+   * @param urlType Whether this is a website or product URL
+   * @returns Array of crawl results or empty array if none found
    */
   static async getAllCrawlResults(
     strategyId: string,
     urlType: 'website' | 'product' = 'website'
   ): Promise<WebsiteCrawlResult[]> {
     try {
-      // Query the database for all crawl results for this strategy and URL type
-      const { data, error } = await supabase
-        .from('website_crawls')
-        .select('*')
-        .eq('project_id', strategyId)
-        .filter('extracted_content->url_type', 'eq', urlType) // Filter by URL type
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error(`Error retrieving all ${urlType} crawl results:`, error);
+      if (!strategyId) {
+        console.error("Cannot get crawl results: No strategy ID provided");
         return [];
       }
       
-      // Transform all database records into WebsiteCrawlResult format
-      return (data || []).map(record => {
-        // Safely extract and process the extracted_content data
-        const extractedContent = this.parseExtractedContent(record.extracted_content);
-        
-        return {
-          success: true,
-          pagesCrawled: extractedContent.pages_crawled || 0,
-          contentExtracted: extractedContent.content_extracted || false,
-          summary: extractedContent.summary || "",
-          keywordsFound: extractedContent.keywords || [],
-          technologiesDetected: [],
-          data: extractedContent.data || [],
-          url: record.url,
-          id: record.id,
-          status: record.status
-        };
-      });
+      // Query for all results
+      const { data, error } = await supabase
+        .from(this.TABLE_NAME)
+        .select('*')
+        .eq('strategy_id', strategyId)
+        .eq('url_type', urlType)
+        .order('crawled_at', { ascending: false });
+      
+      if (error) {
+        console.error("Error fetching crawl results:", error);
+        return [];
+      }
+      
+      if (data && data.length > 0) {
+        return data.map(record => this.mapFromDatabaseRecord(record));
+      }
+      
+      return [];
     } catch (err) {
-      console.error(`Failed to retrieve all ${urlType} crawl results:`, err);
+      console.error("Error in getAllCrawlResults:", err);
       return [];
     }
   }
-
+  
   /**
-   * Helper method to safely parse the extracted_content JSON field
-   * This handles the type casting safely
+   * Map a database record to a WebsiteCrawlResult
    */
-  private static parseExtractedContent(jsonData: any): ExtractedContent {
-    // Default empty values
-    const defaultContent: ExtractedContent = {
-      data: [],
-      summary: "",
-      pages_crawled: 0,
-      keywords: [],
-      content_extracted: false,
-      crawled_at: new Date().toISOString(),
-      url_type: 'website'
-    };
-
-    // If jsonData is not an object or is null/undefined, return defaults
-    if (!jsonData || typeof jsonData !== 'object') {
-      return defaultContent;
-    }
-
-    // Create a properly typed object by merging with defaults
+  private static mapFromDatabaseRecord(record: CrawlStorageRecord): WebsiteCrawlResult {
     return {
-      data: Array.isArray(jsonData.data) ? jsonData.data : defaultContent.data,
-      summary: typeof jsonData.summary === 'string' ? jsonData.summary : defaultContent.summary,
-      pages_crawled: typeof jsonData.pages_crawled === 'number' ? jsonData.pages_crawled : defaultContent.pages_crawled,
-      keywords: Array.isArray(jsonData.keywords) ? jsonData.keywords : defaultContent.keywords,
-      content_extracted: !!jsonData.content_extracted,
-      crawled_at: typeof jsonData.crawled_at === 'string' ? jsonData.crawled_at : defaultContent.crawled_at,
-      url_type: jsonData.url_type || defaultContent.url_type
+      success: true,
+      pagesCrawled: record.pages_crawled || 0,
+      contentExtracted: record.content_extracted || false,
+      summary: record.summary || "",
+      keywordsFound: record.keywords || [],
+      technologiesDetected: record.extracted_content?.technologies || [],
+      data: record.extracted_content?.data || [],
+      url: record.url,
+      id: record.id,
+      strategyId: record.strategy_id
     };
   }
 }
