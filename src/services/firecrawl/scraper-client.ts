@@ -12,7 +12,14 @@ export class ScraperClient {
    */
   static setApiKey(apiKey: string): void {
     this.apiKey = apiKey;
-    console.log("Scraper client API key set");
+    console.log("Scraper client API key set successfully");
+    
+    // Store the API key in local storage for persistence
+    try {
+      localStorage.setItem('firecrawl_api_key', apiKey);
+    } catch (error) {
+      console.error("Failed to store API key in local storage:", error);
+    }
   }
 
   /**
@@ -21,6 +28,36 @@ export class ScraperClient {
   static clearApiKey(): void {
     this.apiKey = null;
     console.log("Scraper client API key cleared");
+    
+    // Remove from local storage
+    try {
+      localStorage.removeItem('firecrawl_api_key');
+    } catch (error) {
+      console.error("Failed to remove API key from local storage:", error);
+    }
+  }
+
+  /**
+   * Get the stored API key
+   */
+  static getApiKey(): string | null {
+    // Try to get from memory first
+    if (this.apiKey) {
+      return this.apiKey;
+    }
+    
+    // If not in memory, try to get from local storage
+    try {
+      const storedKey = localStorage.getItem('firecrawl_api_key');
+      if (storedKey) {
+        this.apiKey = storedKey;
+        console.log("Retrieved API key from local storage");
+      }
+    } catch (error) {
+      console.error("Failed to retrieve API key from local storage:", error);
+    }
+    
+    return this.apiKey;
   }
 
   /**

@@ -62,8 +62,8 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
           <ApiKeyManager onApiKeyValidated={onApiKeyValidated} />
         </Card>
         
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
             <div>
               <label htmlFor="companyName" className="text-sm font-medium">
                 Company Name
@@ -92,25 +92,9 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
               previewResults={websitePreviewResults}
               crawlingUrl={crawlingUrl}
               hasApiKey={hasApiKey}
+              crawlStatus={crawlingUrl === 'websiteUrl' ? "Crawling website..." : undefined}
             />
-          </div>
-          
-          <div>
-            <label htmlFor="productDescription" className="text-sm font-medium">
-              Product / Service Description
-            </label>
-            <Textarea
-              id="productDescription"
-              name="productDescription"
-              value={localFormValues.productDescription || ""}
-              onChange={handleInputChange}
-              placeholder="Describe your product or service"
-              className="mt-1 resize-none"
-              rows={4}
-            />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
             <UrlField
               id="productUrl"
               name="productUrl"
@@ -125,21 +109,38 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
               previewResults={productPreviewResults}
               crawlingUrl={crawlingUrl}
               hasApiKey={hasApiKey}
+              crawlStatus={crawlingUrl === 'productUrl' ? "Crawling product..." : undefined}
             />
-            
+
             <div>
               <label htmlFor="additionalInfo" className="text-sm font-medium">
                 Additional Information
               </label>
-              <Input
+              <Textarea
                 id="additionalInfo"
                 name="additionalInfo"
                 value={localFormValues.additionalInfo || ""}
                 onChange={handleInputChange}
                 placeholder="Any other relevant information"
-                className="mt-1"
+                className="mt-1 resize-none h-[38px]"
+                rows={1}
               />
             </div>
+          </div>
+          
+          <div className="space-y-2">
+            <label htmlFor="productDescription" className="text-sm font-medium">
+              Product / Service Description
+            </label>
+            <Textarea
+              id="productDescription"
+              name="productDescription"
+              value={localFormValues.productDescription || ""}
+              onChange={handleInputChange}
+              placeholder="Describe your product or service"
+              className="mt-1 resize-none"
+              rows={4}
+            />
           </div>
           
           <Button

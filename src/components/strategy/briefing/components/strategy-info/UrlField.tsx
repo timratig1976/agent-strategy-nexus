@@ -42,58 +42,63 @@ const UrlField: React.FC<UrlFieldProps> = ({
       <Label htmlFor={id} className="text-right">
         {label}
       </Label>
-      <div className="flex items-center gap-2">
-        <div className="flex-grow">
-          <Input
-            id={id}
-            name={name}
-            value={value || ""}
-            onChange={onChange}
-            placeholder={`Enter ${label.toLowerCase()}`}
-            className="mt-1"
-          />
-        </div>
-        
-        {/* Always show Crawl button */}
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={onCrawl} 
-          disabled={isCrawling || !value || !hasApiKey}
-          className="flex gap-1 whitespace-nowrap mt-1"
-        >
-          {isCrawling && (crawlingUrl === name) ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              {crawlStatus || "Crawling..."}
-            </>
-          ) : (
-            <>
-              <ArrowRight className="h-4 w-4" />
-              Crawl
-            </>
-          )}
-        </Button>
-        
-        {/* Show View Data button when results are available */}
-        {hasData && (
+      <div className="flex flex-col space-y-2">
+        <div className="flex items-center gap-2">
+          <div className="flex-grow">
+            <Input
+              id={id}
+              name={name}
+              value={value || ""}
+              onChange={onChange}
+              placeholder={`Enter ${label.toLowerCase()}`}
+              className="mt-1"
+            />
+          </div>
+          
+          {/* Always show Crawl button */}
           <Button 
-            size="sm" 
+            type="button" 
             variant="outline" 
-            onClick={() => setShowPreview(true)}
-            className="text-xs flex gap-1 items-center mt-1"
+            onClick={onCrawl} 
+            disabled={isCrawling || !value || !hasApiKey}
+            className="flex gap-1 whitespace-nowrap mt-1 min-w-20"
+            size="sm"
           >
-            <Eye className="h-3.5 w-3.5" /> View Data
+            {isCrawling && (crawlingUrl === name) ? (
+              <>
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Crawling...
+              </>
+            ) : (
+              <>
+                <ArrowRight className="h-3 w-3" />
+                Crawl
+              </>
+            )}
           </Button>
-        )}
-        
-        {/* Show the dialog button when data is available */}
-        {hasData && (
-          <CrawlDataDialog 
-            crawlResult={previewResults} 
-            title={`${label} Crawl Data`} 
-          />
-        )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Show View Data button when results are available */}
+          {hasData && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => setShowPreview(true)}
+              className="text-xs flex gap-1 items-center"
+            >
+              <Eye className="h-3 w-3" /> View Data
+            </Button>
+          )}
+          
+          {/* Show the dialog button when data is available */}
+          {hasData && (
+            <CrawlDataDialog 
+              crawlResult={previewResults} 
+              title={`${label} Crawl Data`} 
+            />
+          )}
+        </div>
       </div>
       
       {isCrawling && (crawlingUrl === name) && (

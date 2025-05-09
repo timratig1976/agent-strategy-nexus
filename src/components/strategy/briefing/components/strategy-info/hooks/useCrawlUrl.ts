@@ -1,220 +1,198 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { WebsiteCrawlResult, FirecrawlService } from "@/services/firecrawl";
+import { ScraperClient } from "@/services/firecrawl/scraper-client";
+import { WebsiteCrawlResult } from "@/services/firecrawl";
 import { StrategyFormValues } from "@/components/strategy-form";
 
-export type CrawlUrlType = 'websiteUrl' | 'productUrl';
-
-export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
+export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) => {
   const [crawlingUrl, setCrawlingUrl] = useState<string | null>(null);
-  const [crawlProgress, setCrawlProgress] = useState(0);
+  const [crawlProgress, setCrawlProgress] = useState<number>(0);
   const [websitePreviewResults, setWebsitePreviewResults] = useState<WebsiteCrawlResult | null>(null);
   const [productPreviewResults, setProductPreviewResults] = useState<WebsiteCrawlResult | null>(null);
-  const [showWebsitePreview, setShowWebsitePreview] = useState(false);
-  const [showProductPreview, setShowProductPreview] = useState(false);
-  const [hasApiKey, setHasApiKey] = useState(false);
-  const [crawlStatus, setCrawlStatus] = useState<string>("");
-  const [loadingStoredData, setLoadingStoredData] = useState<boolean>(false);
+  const [showWebsitePreview, setShowWebsitePreview] = useState<boolean>(false);
+  const [showProductPreview, setShowProductPreview] = useState<boolean>(false);
+  const [hasApiKey, setHasApiKey] = useState<boolean>(false);
 
-  // Check for API key and update state
+  // Check if we have an API key on mount
+  useEffect(() => {
+    checkApiKey();
+    
+    // Load saved crawl results if we have a strategy ID
+    if (formValues.id) {
+      console.log("Strategy ID detected:", formValues.id, "loading saved crawl data");
+      loadSavedCrawlResults(formValues.id);
+    }
+  }, [formValues.id]);
+
+  // Check if we have a valid API key
   const checkApiKey = () => {
-    const apiKey = FirecrawlService.getApiKey();
-    console.log(`API key check result: ${!!apiKey}`);
+    const apiKey = ScraperClient.getApiKey();
+    console.log("API key check result:", !!apiKey);
     setHasApiKey(!!apiKey);
     return !!apiKey;
   };
   
-  useEffect(() => {
-    checkApiKey();
-  }, []);
-
-  // Load the latest crawl results from the database
-  const loadSavedCrawlResults = async () => {
-    if (!formValues.id) {
-      console.log("No strategy ID available for loading crawl results");
-      return;
-    }
-    
-    setLoadingStoredData(true);
+  // Load saved crawl results for the current strategy
+  const loadSavedCrawlResults = async (strategyId: string) => {
     try {
-      console.log(`Loading saved crawl results for strategy: ${formValues.id}`);
+      console.log("Loading saved crawl results for strategy:", strategyId);
       
-      // Load website URL crawl results
-      if (formValues.websiteUrl) {
-        console.log(`Attempting to load website crawl results for URL: ${formValues.websiteUrl}`);
-        const websiteResults = await FirecrawlService.getLatestCrawlResult(formValues.id);
-        
-        if (websiteResults && websiteResults.success) {
-          console.log(`Found saved website crawl results:`, websiteResults);
-          setWebsitePreviewResults(websiteResults);
-          // Make the View Data button visible but don't show the preview
-          setShowWebsitePreview(false);
-        } else {
-          console.log("No saved website crawl results found");
-        }
+      const { data: websiteData, error: websiteError } = await supabase
+        .from('crawl_results')
+        .select('*')
+        .eq('strategy_id', strategyId)
+        .eq('url_type', 'websiteUrl')
+        .order('created_at', { ascending: false })
+        .limit(1);
+      
+      if (websiteError) {
+        console.error("Error loading website crawl results:", websiteError);
+      } else if (websiteData && websiteData.length > 0) {
+        console.log("Found saved website crawl result:", websiteData[0]);
+        // Convert from DB format to WebsiteCrawlResult
+        const websiteResult = {
+          success: true,
+          data: {
+            markdown: websiteData[0].content_markdown,
+            html: websiteData[0].content_html,
+            metadata: websiteData[0].metadata || {}
+          }
+        };
+        setWebsitePreviewResults(websiteResult as WebsiteCrawlResult);
       }
       
-      // Load product URL crawl results
-      if (formValues.productUrl) {
-        console.log(`Attempting to load product crawl results for URL: ${formValues.productUrl}`);
-        const productResults = await FirecrawlService.getLatestCrawlResult(formValues.id, 'product');
-        
-        if (productResults && productResults.success) {
-          console.log(`Found saved product crawl results:`, productResults);
-          setProductPreviewResults(productResults);
-          // Make the View Data button visible but don't show the preview
-          setShowProductPreview(false);
-        } else {
-          console.log("No saved product crawl results found");
-        }
+      const { data: productData, error: productError } = await supabase
+        .from('crawl_results')
+        .select('*')
+        .eq('strategy_id', strategyId)
+        .eq('url_type', 'productUrl')
+        .order('created_at', { ascending: false })
+        .limit(1);
+      
+      if (productError) {
+        console.error("Error loading product crawl results:", productError);
+      } else if (productData && productData.length > 0) {
+        console.log("Found saved product crawl result:", productData[0]);
+        // Convert from DB format to WebsiteCrawlResult
+        const productResult = {
+          success: true,
+          data: {
+            markdown: productData[0].content_markdown,
+            html: productData[0].content_html,
+            metadata: productData[0].metadata || {}
+          }
+        };
+        setProductPreviewResults(productResult as WebsiteCrawlResult);
       }
-    } catch (err) {
-      console.error("Error loading saved crawl results:", err);
-    } finally {
-      setLoadingStoredData(false);
+    } catch (error) {
+      console.error("Error loading saved crawl results:", error);
     }
   };
 
-  // Load saved crawl results when the component mounts or form values ID changes
-  useEffect(() => {
-    if (formValues.id) {
-      console.log(`Strategy ID detected: ${formValues.id}, loading saved crawl data`);
-      loadSavedCrawlResults();
-    }
-  }, [formValues.id]);
-
   // Handle crawling a URL
-  const handleCrawl = async (urlType: CrawlUrlType) => {
+  const handleCrawl = async (urlType: 'websiteUrl' | 'productUrl'): Promise<{ success: boolean }> => {
+    // Get the URL to crawl
     const url = formValues[urlType];
-    
     if (!url) {
-      toast.error("Please enter a URL to crawl");
+      toast.error(`Please enter a ${urlType === 'websiteUrl' ? 'website' : 'product'} URL`);
       return { success: false };
     }
 
-    if (!/^https?:\/\//i.test(url)) {
-      toast.error("Please enter a valid URL starting with http:// or https://");
+    // Check if we have an API key
+    const apiKey = ScraperClient.getApiKey();
+    if (!apiKey) {
+      toast.error("Please enter a valid Firecrawl API key");
       return { success: false };
     }
 
-    // Check for API key
-    if (!checkApiKey()) {
-      toast.error("Please set your FireCrawl API key first");
-      return { success: false };
-    }
-
-    setCrawlingUrl(urlType);
-    setCrawlProgress(10);
-    setCrawlStatus("initializing");
-    
-    if (urlType === 'websiteUrl') {
-      setShowWebsitePreview(false);
-      setWebsitePreviewResults(null);
-    } else {
-      setShowProductPreview(false);
-      setProductPreviewResults(null);
-    }
-    
     try {
-      const url = formValues[urlType]; // Get the URL from the form values
-      if (!url) {
-        toast.error("Please enter a URL to crawl");
+      // Start crawling
+      setCrawlingUrl(urlType);
+      setCrawlProgress(10);
+      
+      // Simulate progress while crawling
+      const progressInterval = setInterval(() => {
+        setCrawlProgress(prev => {
+          const newProgress = prev + Math.random() * 10;
+          return newProgress >= 90 ? 90 : newProgress;
+        });
+      }, 1000);
+      
+      // Crawl the URL
+      const result = await ScraperClient.scrapeWithApiKey(url, apiKey);
+      
+      // Stop the progress simulation
+      clearInterval(progressInterval);
+      
+      if (!result.success) {
+        console.error("Crawl failed:", result.error);
+        toast.error(`Failed to crawl: ${result.error || "Unknown error"}`);
+        setCrawlProgress(0);
+        setCrawlingUrl(null);
         return { success: false };
       }
 
-      toast.info(`Crawling ${urlType === 'websiteUrl' ? 'website' : 'product'} URL...`);
-      
-      // More realistic progress simulation with status updates
-      let progressValue = 10;
-      const progressInterval = setInterval(() => {
-        // Update status message based on progress
-        if (progressValue <= 20) {
-          setCrawlStatus("initializing");
-        } else if (progressValue <= 40) {
-          setCrawlStatus("scraping");
-        } else if (progressValue <= 60) {
-          setCrawlStatus("processing");
-        } else if (progressValue <= 90) {
-          setCrawlStatus("analyzing");
-        }
-        
-        // Increment progress, but slow down as we get higher
-        setCrawlProgress(prev => {
-          if (prev < 30) return prev + 5;
-          if (prev < 60) return prev + 3;
-          if (prev < 80) return prev + 1;
-          return prev;
-        });
-        
-        progressValue += 5;
-        if (progressValue >= 90) {
-          clearInterval(progressInterval);
-        }
-      }, 1500);
-      
-      console.log(`Starting crawl for ${urlType}: ${url} with strategy ID: ${formValues.id}`);
-      
-      // Pass the strategy ID and URL type to save the results to the database
-      const crawlResult = await FirecrawlService.crawlWebsite(
-        url, 
-        { timeout: 60000, urlType }, // Pass URL type to distinguish between website and product
-        formValues.id // Pass the strategy ID for database storage
-      );
-      
-      clearInterval(progressInterval);
+      // Set the final progress
       setCrawlProgress(100);
-      setCrawlStatus("completed");
       
-      if (crawlResult) {
-        console.log(`${urlType} crawl results:`, crawlResult);
-        
-        // Set the appropriate preview results based on URL type
-        if (urlType === 'websiteUrl') {
-          setWebsitePreviewResults(crawlResult);
-          setShowWebsitePreview(true);
-        } else {
-          setProductPreviewResults(crawlResult);
-          setShowProductPreview(true);
-        }
-        
-        // Save crawl results to the database but don't modify additional info
-        const { error: saveError } = await supabase.rpc(
-          'upsert_strategy_metadata',
-          {
-            strategy_id_param: formValues.id,
-            company_name_param: formValues.companyName || "", 
-            website_url_param: urlType === 'websiteUrl' ? url : formValues.websiteUrl || "",
-            product_description_param: formValues.productDescription || "",
-            product_url_param: urlType === 'productUrl' ? url : formValues.productUrl || "",
-            additional_info_param: formValues.additionalInfo || ""
-          }
-        );
-        
-        if (saveError) {
-          console.error("Error saving crawl results:", saveError);
-          toast.error("Failed to save crawl results");
-        } else {
-          toast.success(`${urlType === 'websiteUrl' ? 'website' : 'product'} URL crawled successfully`);
-        }
-
-        return {
-          success: true,
-          data: crawlResult,
-          urlType
-        };
+      // Set the preview results based on the URL type
+      if (urlType === 'websiteUrl') {
+        setWebsitePreviewResults(result as WebsiteCrawlResult);
+      } else {
+        setProductPreviewResults(result as WebsiteCrawlResult);
       }
-    } catch (err: any) {
-      console.error(`Error crawling ${urlType}:`, err);
-      toast.error(err.message || `Failed to crawl ${urlType === 'websiteUrl' ? 'website' : 'product'} URL`);
-      setCrawlStatus("failed");
-    } finally {
+      
+      // Save the results to the database
+      if (formValues.id) {
+        await saveCrawlResults(formValues.id, urlType, url, result);
+      }
+
+      // Show a success message
+      toast.success(`${urlType === 'websiteUrl' ? 'Website' : 'Product'} crawled successfully`);
+      
+      // Reset the progress and crawling state
       setCrawlingUrl(null);
-      setCrawlProgress(100);
+      setCrawlProgress(0);
+      
+      return { success: true };
+    } catch (error) {
+      console.error("Error crawling URL:", error);
+      toast.error(`Error crawling URL: ${error}`);
+      setCrawlingUrl(null);
+      setCrawlProgress(0);
+      return { success: false };
     }
-    
-    return { success: false };
+  };
+
+  // Save crawl results to the database
+  const saveCrawlResults = async (strategyId: string, urlType: string, url: string, result: any) => {
+    try {
+      console.log(`Saving ${urlType} crawl results for strategy ${strategyId}`);
+      
+      // Prepare the data to save
+      const data = {
+        strategy_id: strategyId,
+        url: url,
+        url_type: urlType,
+        content_markdown: result.data?.markdown || "",
+        content_html: result.data?.html || "",
+        metadata: result.data?.metadata || {}
+      };
+      
+      // Save to the database
+      const { error } = await supabase.from('crawl_results').insert(data);
+      
+      if (error) {
+        console.error("Error saving crawl results:", error);
+        throw error;
+      }
+      
+      console.log(`${urlType} crawl results saved successfully`);
+    } catch (error) {
+      console.error("Error saving crawl results:", error);
+      throw error;
+    }
   };
 
   return {
@@ -228,9 +206,6 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
     setShowProductPreview,
     handleCrawl,
     hasApiKey,
-    checkApiKey,
-    crawlStatus,
-    loadSavedCrawlResults,
-    loadingStoredData
+    checkApiKey
   };
-}
+};
