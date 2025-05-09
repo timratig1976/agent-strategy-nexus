@@ -1,6 +1,5 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { Configuration, OpenAIApi } from 'https://esm.sh/openai@4.26.0'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 
@@ -128,9 +127,12 @@ Please provide:
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
+  // Handle CORS preflight requests - this must be the first thing we check
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { 
+      status: 204,
+      headers: corsHeaders 
+    });
   }
 
   try {
@@ -285,12 +287,6 @@ serve(async (req) => {
     console.log('System prompt length:', system_prompt.length);
     console.log('Processed user prompt length:', processedUserPrompt.length);
 
-    // Create OpenAI configuration
-    const configuration = new Configuration({
-      apiKey: OPENAI_API_KEY,
-    });
-    const openai = new OpenAIApi(configuration);
-
     // Call OpenAI API with proper error handling
     try {
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -327,8 +323,8 @@ serve(async (req) => {
       const responseContent = completion.choices[0].message?.content || '';
 
       // Return the response
-      const headers = new Headers(corsHeaders);
-      headers.set('Content-Type', 'application/json');
+      const responseHeaders = new Headers(corsHeaders);
+      responseHeaders.set('Content-Type', 'application/json');
 
       return new Response(
         JSON.stringify({
@@ -344,7 +340,10 @@ serve(async (req) => {
             promptSource
           }
         }),
-        { headers }
+        { 
+          status: 200,
+          headers: responseHeaders 
+        }
       );
     } catch (apiError) {
       console.error("OpenAI API call failed:", apiError);
