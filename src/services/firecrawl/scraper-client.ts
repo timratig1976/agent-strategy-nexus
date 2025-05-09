@@ -140,15 +140,19 @@ export class ScraperClient {
         }
       }
       
-      // If response is a string (could be HTML or other content)
-      if (typeof response === 'string' && response.length > 0) {
-        return {
-          success: true,
-          data: {
-            html: response, 
-            markdown: ""
-          }
-        };
+      // Fix: Check if response is a string with content
+      // This is where the error was occurring - need to ensure response is a string before checking length
+      if (typeof response === 'string') {
+        const stringResponse = response;
+        if (stringResponse.length > 0) {
+          return {
+            success: true,
+            data: {
+              html: stringResponse, 
+              markdown: ""
+            }
+          };
+        }
       }
       
       // Fallback error for truly unexpected formats
