@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -6,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { FirecrawlService } from "@/services/firecrawl";
 
-interface ApiKeyManagerProps {
+export interface ApiKeyManagerProps {
   onApiKeyValidated?: () => void;
 }
 

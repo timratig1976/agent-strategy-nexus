@@ -6,6 +6,7 @@ import { RefreshCw } from "lucide-react";
 import { AIResultEditor } from "@/components/marketing/shared/AIResultEditor";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BriefingResultCardProps } from "./types";
+import { AgentResult } from "@/types/marketing";
 
 const BriefingResultCard: React.FC<BriefingResultCardProps> = ({
   latestBriefing,
@@ -13,6 +14,14 @@ const BriefingResultCard: React.FC<BriefingResultCardProps> = ({
   generateBriefing,
   saveAgentResult
 }) => {
+  // Create a wrapper function to adapt the AIResultEditor's expected function signature
+  const handleSaveContent = (updatedContent: AgentResult): Promise<boolean> => {
+    // Extract content from the AgentResult and pass it to the original saveAgentResult
+    saveAgentResult(updatedContent.content);
+    // Return a resolved promise to satisfy the Promise<boolean> return type
+    return Promise.resolve(true);
+  };
+
   return (
     <Card className="h-full">
       <CardHeader>
@@ -49,7 +58,7 @@ const BriefingResultCard: React.FC<BriefingResultCardProps> = ({
             description="Fine-tune the AI-generated content"
             originalContent={latestBriefing}
             contentField="content"
-            onSave={saveAgentResult}
+            onSave={handleSaveContent}
           />
         ) : (
           <div className="p-6 text-center border rounded-md bg-muted/20">
