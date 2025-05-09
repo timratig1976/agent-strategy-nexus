@@ -23,9 +23,29 @@ export class FirecrawlApiClient {
   static async testApiKey(apiKey: string): Promise<boolean> {
     try {
       console.log('Testing API key with Firecrawl API');
-      // A simple test request to verify the API key
-      const testResponse = await this.crawlWithApiKey('https://example.com', apiKey);
-      return testResponse.success;
+      
+      // Using the updated request format that matches the API v1 requirements
+      const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          url: 'https://example.com',
+          format: 'markdown',
+          timeout: 10000 // Short timeout for testing
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Firecrawl test API error:", errorData);
+        return false;
+      }
+      
+      const result = await response.json();
+      return !!result.id; // If we got an ID, the API key is valid
     } catch (error) {
       console.error('Error testing API key:', error);
       return false;
