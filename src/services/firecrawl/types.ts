@@ -24,7 +24,7 @@ export interface WebsiteCrawlResult {
   contentExtracted: boolean;
   summary: string;
   keywordsFound: string[];
-  technologiesDetected: string[];
+  technologiesDetected: string[]; // Keeping this for backward compatibility but we won't populate it
   data: any[];
   url: string;
   id?: string;
@@ -66,12 +66,13 @@ export interface CrawlStorageRecord {
   url: string;
   status: string;
   extracted_content: {
-    data: any[];
-    metadata?: any;
+    data: {
+      markdown: string;
+      metadata?: any;
+    }[];
   };
   pages_crawled: number;
   keywords: string[];
-  technologies: string[];
   content_extracted: boolean;
   summary: string;
   crawled_at: string;
