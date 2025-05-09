@@ -28,11 +28,20 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyValidated }) => {
       toast.error("Please enter an API key");
       return;
     }
+    
+    // Check if the API key has the correct format
+    if (!apiKey.startsWith('fc-')) {
+      toast.error("Invalid API key format. Firecrawl API keys start with 'fc-'");
+      return;
+    }
 
     setIsValidating(true);
     try {
+      console.log("Validating API key:", apiKey.substring(0, 5) + "...");
       const isValid = await FirecrawlService.testApiKey(apiKey);
+      
       if (isValid) {
+        console.log("API key validation successful");
         FirecrawlService.saveApiKey(apiKey);
         setHasValidKey(true);
         toast.success("API key validated and saved successfully");
@@ -42,11 +51,12 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyValidated }) => {
           onApiKeyValidated();
         }
       } else {
+        console.log("API key validation failed");
         toast.error("Invalid API key. Please check and try again.");
       }
     } catch (error) {
       console.error("Error validating API key:", error);
-      toast.error("Failed to validate API key");
+      toast.error("Failed to validate API key. Please check your internet connection.");
     } finally {
       setIsValidating(false);
     }
@@ -90,7 +100,8 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyValidated }) => {
       )}
       
       <p className="text-xs text-muted-foreground">
-        Get your Firecrawl API key from <a href="https://firecrawl.dev" target="_blank" rel="noopener noreferrer" className="underline">Firecrawl.dev</a>
+        Get your Firecrawl API key from <a href="https://firecrawl.dev" target="_blank" rel="noopener noreferrer" className="underline">Firecrawl.dev</a>. 
+        Firecrawl API keys start with 'fc-'.
       </p>
     </div>
   );

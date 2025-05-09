@@ -13,6 +13,11 @@ export class FirecrawlAuthManager {
    */
   static async testApiKey(apiKey: string): Promise<boolean> {
     try {
+      if (!apiKey || !apiKey.trim() || !apiKey.startsWith('fc-')) {
+        console.log("Invalid API key format");
+        return false;
+      }
+
       // Make a simple request to validate the API key
       const response = await fetch('https://api.firecrawl.dev/v1/auth/validate', {
         method: 'GET',
@@ -22,7 +27,23 @@ export class FirecrawlAuthManager {
         }
       });
       
-      return response.ok;
+      // Log the response for debugging
+      console.log("API key validation response:", response.status, response.statusText);
+      
+      // Check if the response is successful and contains valid data
+      if (response.ok) {
+        try {
+          const data = await response.json();
+          console.log("Validation response data:", data);
+          return true;
+        } catch (e) {
+          // If we can't parse JSON but the response was OK, still consider it valid
+          console.log("Could not parse response JSON, but status was OK");
+          return true;
+        }
+      }
+      
+      return false;
     } catch (error) {
       console.error("Error validating API key:", error);
       return false;
