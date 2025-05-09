@@ -84,7 +84,7 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
               <p className="text-sm text-amber-700 mb-3">
                 To use the website crawler feature, please set your Firecrawl API key.
               </p>
-              <ApiKeyManager onValidated={onApiKeyValidated} />
+              <ApiKeyManager onApiKeyValidated={onApiKeyValidated} />
             </div>
           )}
           
@@ -262,3 +262,4 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
 };
 
 export default StrategyForm;
+
