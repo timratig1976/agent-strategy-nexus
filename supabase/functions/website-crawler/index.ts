@@ -26,16 +26,22 @@ serve(async (req) => {
       throw new Error("URL is required");
     }
     
+    console.log(`Starting to crawl URL: ${url}`);
+    
+    // Normalize the URL - add https:// if missing
+    const normalizedUrl = url.match(/^https?:\/\//) ? url : `https://${url}`;
+    console.log(`Normalized URL: ${normalizedUrl}`);
+    
     // Call the crawler service to fetch website data
-    const crawlResult = await crawlWebsite(url, FIRECRAWL_API_KEY);
-    console.log("Crawl completed successfully");
+    const crawlResult = await crawlWebsite(normalizedUrl, FIRECRAWL_API_KEY);
+    console.log("Raw crawl result received, checking content quality");
     
     // Check if we have substantial content
     if (!hasSubstantialContent(crawlResult)) {
       console.log("No substantial content was extracted from the website. Using enhanced fallback.");
       
       // Try to extract any metadata or information from the response
-      const enhancedResults = enhanceEmptyResults(crawlResult, url);
+      const enhancedResults = enhanceEmptyResults(crawlResult, normalizedUrl);
       
       return new Response(JSON.stringify(enhancedResults), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -43,23 +49,21 @@ serve(async (req) => {
     }
 
     // Process and enrich the data
+    console.log(`Processing data from ${crawlResult.data?.length || 0} pages`);
+    
     const processedData = {
       success: true,
-      pagesCrawled: 1,
+      pagesCrawled: crawlResult.data?.length || 0,
       contentExtracted: true,
-      summary: extractSummary([{ content: crawlResult.data.content }]),
-      keywordsFound: extractKeywords([{ content: crawlResult.data.content }]),
-      technologiesDetected: detectTechnologies([{ html: crawlResult.data.html }]),
-      data: [
-        {
-          url: url,
-          content: crawlResult.data.content,
-          html: crawlResult.data.html
-        }
-      ],
+      summary: extractSummary(crawlResult.data),
+      keywordsFound: extractKeywords(crawlResult.data),
+      technologiesDetected: detectTechnologies(crawlResult.data),
+      data: crawlResult.data || [],
       id: crawlResult.id || null,
-      url: url
+      url: normalizedUrl
     };
+    
+    console.log("Data processing complete, returning result");
 
     return new Response(JSON.stringify(processedData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

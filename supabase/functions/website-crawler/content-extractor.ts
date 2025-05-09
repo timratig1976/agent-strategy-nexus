@@ -12,9 +12,11 @@ export function extractSummary(data: any[]): string {
   
   // Prioritize content from index/home page if available
   const homePage = data.find(page => 
-    page.url.endsWith('/') || 
-    page.url.endsWith('/index.html') || 
-    !page.url.includes('/')
+    (page.url && (
+      page.url.endsWith('/') || 
+      page.url.endsWith('/index.html') || 
+      !page.url.includes('/')
+    ))
   ) || data[0];
   
   if (homePage?.content) {
@@ -24,7 +26,7 @@ export function extractSummary(data: any[]): string {
   
   // If no suitable home page, combine content from first few pages
   for (let i = 0; i < Math.min(3, data.length); i++) {
-    if (data[i].content) {
+    if (data[i] && data[i].content) {
       combinedContent += data[i].content + ' ';
       if (combinedContent.length > 300) break;
     }
@@ -32,6 +34,11 @@ export function extractSummary(data: any[]): string {
   
   if (combinedContent) {
     return combinedContent.substring(0, 300) + "...";
+  }
+  
+  // If we have a title but no content, use that
+  if (homePage?.title) {
+    return `Website titled "${homePage.title}" was found, but no meaningful content could be extracted.`;
   }
   
   return "Content was extracted but no meaningful summary could be generated.";
@@ -59,6 +66,11 @@ export function extractKeywords(data: any[]): string[] {
       const description = page.metadata.description.toLowerCase();
       extractCommonWords(description, 5).forEach(word => keywords.add(word));
     }
+    
+    // Extract from title
+    if (page.title) {
+      extractCommonWords(page.title.toLowerCase(), 3).forEach(word => keywords.add(word));
+    }
   });
   
   // If not enough keywords found, extract common words from content
@@ -67,7 +79,7 @@ export function extractKeywords(data: any[]): string[] {
     
     // Combine content from up to first 5 pages
     for (let i = 0; i < Math.min(5, data.length); i++) {
-      if (data[i].content) {
+      if (data[i] && data[i].content) {
         combinedText += data[i].content.toLowerCase() + ' ';
       }
     }
@@ -88,21 +100,29 @@ export function detectTechnologies(data: any[]): string[] {
   const technologies = new Set<string>();
   const techSignatures: Record<string, string[]> = {
     'WordPress': ['wp-content', 'wp-includes', 'wordpress', 'wp-'],
-    'React': ['react', 'reactjs', 'jsx', '_jsx'],
-    'Angular': ['ng-', 'angular', 'ngController'],
-    'Vue.js': ['vue', 'nuxt', 'vuejs'],
-    'Bootstrap': ['bootstrap', 'btn-primary'],
-    'Shopify': ['shopify', 'myshopify'],
-    'Wix': ['wix', 'wixsite'],
-    'Squarespace': ['squarespace'],
-    'Google Analytics': ['analytics', 'gtag', 'ga.js', 'google-analytics'],
-    'jQuery': ['jquery'],
-    'Cloudflare': ['cloudflare'],
-    'Next.js': ['next/static', '__next'],
-    'Gatsby': ['gatsby-'],
-    'Tailwind CSS': ['tailwind'],
+    'React': ['react', 'reactjs', 'jsx', '_jsx', 'react-dom'],
+    'Angular': ['ng-', 'angular', 'ngController', 'ng-app'],
+    'Vue.js': ['vue', 'nuxt', 'vuejs', 'v-for', 'v-if'],
+    'Bootstrap': ['bootstrap', 'btn-primary', 'container-fluid'],
+    'Shopify': ['shopify', 'myshopify', 'shopify-section'],
+    'Wix': ['wix', 'wixsite', '_wixCssImports'],
+    'Squarespace': ['squarespace', 'static.squarespace'],
+    'Google Analytics': ['analytics', 'gtag', 'ga.js', 'google-analytics', 'UA-'],
+    'Google Tag Manager': ['gtm.js', 'googletagmanager'],
+    'jQuery': ['jquery', '$("', '$(\'', '$.'],
+    'Cloudflare': ['cloudflare', 'cdnjs.cloudflare'],
+    'Next.js': ['next/static', '__next', '_next', 'NextPage'],
+    'Gatsby': ['gatsby-', '__gatsby'],
+    'Tailwind CSS': ['tailwind', 'tw-'],
     'Material UI': ['mui-', 'material-ui'],
     'Webflow': ['webflow'],
+    'Font Awesome': ['fontawesome', 'fa-'],
+    'TypeScript': ['typescript', 'ts-'],
+    'PHP': ['php', '.php'],
+    'WordPress WooCommerce': ['woocommerce', 'wc-'],
+    'Elementor': ['elementor'],
+    'Hubspot': ['hubspot', 'hs-'],
+    'Mailchimp': ['mailchimp', 'mc-'],
   };
   
   // Search for technology signatures in HTML
@@ -116,6 +136,15 @@ export function detectTechnologies(data: any[]): string[] {
         }
       });
     }
+    
+    // Look for URLs that indicate technologies
+    if (page.url) {
+      const url = page.url.toLowerCase();
+      if (url.includes('/wp-content/')) technologies.add('WordPress');
+      if (url.includes('/wp-admin/')) technologies.add('WordPress');
+      if (url.includes('/wp-includes/')) technologies.add('WordPress');
+      if (url.includes('myshopify.com')) technologies.add('Shopify');
+    }
   });
   
   return Array.from(technologies);
@@ -125,12 +154,17 @@ export function detectTechnologies(data: any[]): string[] {
  * Extracts common words from text
  */
 export function extractCommonWords(text: string, count: number): string[] {
+  if (!text) return [];
+  
   // Remove common stop words
   const stopWords = new Set([
     'a', 'an', 'the', 'and', 'or', 'but', 'is', 'are', 'was', 'were', 'be', 'been',
     'being', 'in', 'on', 'at', 'to', 'for', 'with', 'by', 'about', 'of', 'this',
     'that', 'these', 'those', 'it', 'its', 'we', 'our', 'they', 'their', 'he', 'she',
-    'his', 'her', 'you', 'your'
+    'his', 'her', 'you', 'your', 'has', 'have', 'had', 'not', 'no', 'do', 'does', 
+    'did', 'can', 'could', 'will', 'would', 'should', 'shall', 'may', 'might', 
+    'must', 'as', 'from', 'when', 'where', 'why', 'how', 'what', 'who', 'whom',
+    'which', 'whose', 'if', 'then', 'than', 'so'
   ]);
   
   // Extract words and count frequency
@@ -139,7 +173,7 @@ export function extractCommonWords(text: string, count: number): string[] {
   
   words.forEach(word => {
     const cleaned = word.toLowerCase();
-    if (!stopWords.has(cleaned) && cleaned.length > 2) {
+    if (!stopWords.has(cleaned) && cleaned.length > 2 && !(/^\d+$/.test(cleaned))) {
       wordCount[cleaned] = (wordCount[cleaned] || 0) + 1;
     }
   });
@@ -150,4 +184,3 @@ export function extractCommonWords(text: string, count: number): string[] {
     .slice(0, count)
     .map(([word]) => word);
 }
-
