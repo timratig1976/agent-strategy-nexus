@@ -59,15 +59,15 @@ export class FirecrawlService {
     try {
       console.log('Making initial crawl request to Firecrawl API for URL:', url);
       
-      // Build request options - REMOVED javascript and waitUntil keys
+      // Build request options - Using markdown format only
       const requestOptions: CrawlOptions = {
         limit: options?.limit || 10,
-        formats: options?.formats || ['markdown', 'html'],
+        formats: options?.formats || ['markdown'],
         timeout: options?.timeout || 30000
       };
       
-      // Make initial POST request to start the crawl
-      const response = await fetch('https://api.firecrawl.dev/v1/crawl', {
+      // Make initial POST request to start the crawl - Using /scrape endpoint
+      const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,7 +79,6 @@ export class FirecrawlService {
           scrapeOptions: {
             formats: requestOptions.formats,
             timeout: requestOptions.timeout
-            // Removed javascript and waitUntil keys that were causing the error
           }
         }),
       });
@@ -110,8 +109,8 @@ export class FirecrawlService {
         throw new Error('No crawl ID returned from Firecrawl API');
       }
       
-      // Begin polling for results
-      const resultUrl = `https://api.firecrawl.dev/v1/crawl/${initialResponse.id}`;
+      // Begin polling for results - Using /scrape endpoint
+      const resultUrl = `https://api.firecrawl.dev/v1/scrape/${initialResponse.id}`;
       console.log("Polling for crawl results from:", resultUrl);
       
       // Polling configuration

@@ -7,7 +7,8 @@ export async function crawlWebsite(url: string, apiKey: string) {
   
   try {
     // Make the API call to Firecrawl REST API with enhanced browser rendering
-    const response = await fetch('https://api.firecrawl.dev/v1/crawl', {
+    // Using /scrape endpoint instead of /crawl
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -17,9 +18,8 @@ export async function crawlWebsite(url: string, apiKey: string) {
         url: url,
         limit: 10, // Limit pages for faster response
         scrapeOptions: {
-          formats: ['markdown', 'html'],
+          formats: ['markdown'], // Only use markdown format
           timeout: 30000, // 30s timeout
-          // Removed javascript and waitUntil which are not supported
           renderOptions: {
             // Enhanced rendering options for JS-heavy sites
             waitForSelector: 'body',
@@ -41,7 +41,7 @@ export async function crawlWebsite(url: string, apiKey: string) {
     
     // If we have an ID, start polling for results
     if (result.id) {
-      const resultUrl = `https://api.firecrawl.dev/v1/crawl/${result.id}`;
+      const resultUrl = `https://api.firecrawl.dev/v1/scrape/${result.id}`;
       console.log("Polling for results from:", resultUrl);
       
       // Maximum number of retries and delay between attempts

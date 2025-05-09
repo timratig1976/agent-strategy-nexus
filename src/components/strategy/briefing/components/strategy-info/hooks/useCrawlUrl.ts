@@ -104,17 +104,16 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
         }
         
         // Save crawl results to the database but don't modify additional info
+        // Don't auto-fill form fields with content from crawled sites
         const { error: saveError } = await supabase.rpc(
           'upsert_strategy_metadata',
           {
             strategy_id_param: formValues.id,
-            company_name_param: urlType === 'websiteUrl' ? 
-              (crawlResult.summary || formValues.companyName) : formValues.companyName,
-            website_url_param: urlType === 'websiteUrl' ? url : formValues.websiteUrl,
-            product_description_param: urlType === 'productUrl' ? 
-              (crawlResult.summary || formValues.productDescription) : formValues.productDescription,
-            product_url_param: urlType === 'productUrl' ? url : formValues.productUrl,
-            additional_info_param: formValues.additionalInfo
+            company_name_param: formValues.companyName || "", // Keep original values
+            website_url_param: urlType === 'websiteUrl' ? url : formValues.websiteUrl || "",
+            product_description_param: formValues.productDescription || "", // Keep original values
+            product_url_param: urlType === 'productUrl' ? url : formValues.productUrl || "",
+            additional_info_param: formValues.additionalInfo || ""
           }
         );
         
