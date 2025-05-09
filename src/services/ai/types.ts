@@ -8,6 +8,7 @@ export interface AIServiceResponse<T = any> {
   debugInfo?: {
     requestData?: any;
     responseData?: any;
+    error?: any; // Added missing error property
   };
 }
 

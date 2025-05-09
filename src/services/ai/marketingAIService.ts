@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { AgentCoreService } from "./agentCoreService";
-import { AIServiceResponse } from "./types";
+import type { AIServiceResponse } from "./types";
 
 // Define the class interface with proper static method declarations (Best Practice #2)
 export interface MarketingAIServiceStatic {
@@ -11,16 +11,10 @@ export interface MarketingAIServiceStatic {
     data: Record<string, any>,
     options?: { outputLanguage?: string }
   ): Promise<AIServiceResponse<T>>;
-  
-  // Added static method declarations that will be attached later
-  getStrategyMetadata: Function;
-  updateStrategyMetadata: Function;
-  generateUspCanvasProfile: Function;
-  generateUspCanvasValueMap: Function;
 }
 
 // Implement the MarketingAIService class with its core functionality
-export class MarketingAIService implements MarketingAIServiceStatic {
+export class MarketingAIService {
   /**
    * Generate content using AI with robust error handling and fallbacks
    * @param module The module name
@@ -83,6 +77,3 @@ export class MarketingAIService implements MarketingAIServiceStatic {
     }
   }
 }
-
-// Declare static methods properly using TypeScript's declaration merging (Best Practice #2)
-// These properties will be assigned in marketingAIService.ts main file

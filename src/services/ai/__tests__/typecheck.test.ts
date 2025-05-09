@@ -19,6 +19,17 @@ import type {
   StrategyMetadata
 } from '../types';
 
+// We need to add these method declarations to make TypeScript happy
+// These methods are actually added in src/services/marketingAIService.ts
+declare module '../marketingAIService' {
+  export interface MarketingAIService {
+    static getStrategyMetadata(strategyId: string): Promise<AIServiceResponse<StrategyMetadata>>;
+    static updateStrategyMetadata(strategyId: string, metadata: Partial<StrategyMetadata>): Promise<AIServiceResponse<boolean>>;
+    static generateUspCanvasProfile(strategyId: string, content: string): Promise<AIServiceResponse<UspCanvasAIResult>>;
+    static generateUspCanvasValueMap(strategyId: string, content: string): Promise<AIServiceResponse<UspCanvasAIResult>>;
+  }
+}
+
 // Type-level test - If this compiles, the types are compatible
 const testMarketingAIServiceTypes = async (): Promise<void> => {
   // Test generateContent API

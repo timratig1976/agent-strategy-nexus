@@ -1,7 +1,7 @@
 
 import { MarketingAIService } from './ai/marketingAIService';
 import { RPCService } from './ai/rpcService';
-import { generateUspCanvasProfile, generateUspCanvasValueMap, UspCanvasService } from './ai/uspCanvasService';
+import { UspCanvasService } from './ai/uspCanvasService';
 import type { 
   AIServiceResponse, 
   AIPrompt, 
@@ -36,13 +36,13 @@ export type {
   StrategyMetadata
 };
 
-// Add methods to the MarketingAIService class to maintain backward compatibility
+// Add methods to the MarketingAIService for backward compatibility
 // These will delegate to the appropriate service classes
 
-// Add RPC methods to MarketingAIService for backward compatibility (Best Practice #2)
-(MarketingAIService as any).getStrategyMetadata = RPCService.getStrategyMetadata;
-(MarketingAIService as any).updateStrategyMetadata = RPCService.updateStrategyMetadata;
+// Add RPC methods to MarketingAIService for backward compatibility
+MarketingAIService.getStrategyMetadata = RPCService.getStrategyMetadata;
+MarketingAIService.updateStrategyMetadata = RPCService.updateStrategyMetadata;
 
-// Add USP Canvas methods to MarketingAIService for backward compatibility (Best Practice #2)
-(MarketingAIService as any).generateUspCanvasProfile = generateUspCanvasProfile;
-(MarketingAIService as any).generateUspCanvasValueMap = generateUspCanvasValueMap;
+// Add USP Canvas methods to MarketingAIService for backward compatibility
+MarketingAIService.generateUspCanvasProfile = UspCanvasService.generateUspCanvasProfile;
+MarketingAIService.generateUspCanvasValueMap = UspCanvasService.generateUspCanvasValueMap;
