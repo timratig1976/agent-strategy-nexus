@@ -63,8 +63,10 @@ export const useCanvasData = (strategyId?: string) => {
               customerJobs.push({
                 id: String(job.id),
                 content: String(job.content),
-                priority: job.priority as 'low' | 'medium' | 'high',
-                isAIGenerated: job.isAIGenerated || false
+                priority: job.priority === 'low' || job.priority === 'medium' || job.priority === 'high' 
+                  ? job.priority 
+                  : 'medium',
+                isAIGenerated: Boolean(job.isAIGenerated || false)
               });
             }
           });
@@ -78,8 +80,10 @@ export const useCanvasData = (strategyId?: string) => {
               customerPains.push({
                 id: String(pain.id),
                 content: String(pain.content),
-                severity: pain.severity as 'low' | 'medium' | 'high',
-                isAIGenerated: pain.isAIGenerated || false
+                severity: pain.severity === 'low' || pain.severity === 'medium' || pain.severity === 'high'
+                  ? pain.severity
+                  : 'medium',
+                isAIGenerated: Boolean(pain.isAIGenerated || false)
               });
             }
           });
@@ -93,8 +97,10 @@ export const useCanvasData = (strategyId?: string) => {
               customerGains.push({
                 id: String(gain.id),
                 content: String(gain.content),
-                importance: gain.importance as 'low' | 'medium' | 'high',
-                isAIGenerated: gain.isAIGenerated || false
+                importance: gain.importance === 'low' || gain.importance === 'medium' || gain.importance === 'high'
+                  ? gain.importance
+                  : 'medium',
+                isAIGenerated: Boolean(gain.isAIGenerated || false)
               });
             }
           });
@@ -107,26 +113,38 @@ export const useCanvasData = (strategyId?: string) => {
             if (typeof item === 'object' && item !== null) {
               // Check if it's a product service
               if ('relatedJobIds' in item) {
+                const relatedJobIds: string[] = Array.isArray(item.relatedJobIds) 
+                  ? item.relatedJobIds.map(id => String(id)) 
+                  : [];
+                
                 productServices.push({
                   id: String(item.id),
                   content: String(item.content),
-                  relatedJobIds: Array.isArray(item.relatedJobIds) ? item.relatedJobIds : []
+                  relatedJobIds
                 });
               }
               // Check if it's a pain reliever
               else if ('relatedPainIds' in item) {
+                const relatedPainIds: string[] = Array.isArray(item.relatedPainIds)
+                  ? item.relatedPainIds.map(id => String(id))
+                  : [];
+                
                 painRelievers.push({
                   id: String(item.id),
                   content: String(item.content),
-                  relatedPainIds: Array.isArray(item.relatedPainIds) ? item.relatedPainIds : []
+                  relatedPainIds
                 });
               }
               // Check if it's a gain creator
               else if ('relatedGainIds' in item) {
+                const relatedGainIds: string[] = Array.isArray(item.relatedGainIds)
+                  ? item.relatedGainIds.map(id => String(id))
+                  : [];
+                
                 gainCreators.push({
                   id: String(item.id),
                   content: String(item.content),
-                  relatedGainIds: Array.isArray(item.relatedGainIds) ? item.relatedGainIds : []
+                  relatedGainIds
                 });
               }
             }
