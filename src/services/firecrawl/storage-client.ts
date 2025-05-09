@@ -93,8 +93,9 @@ export class StorageClient {
         return null;
       }
       
-      // Use explicit typing and type assertion to prevent deep type inference
-      const response = await supabase
+      // Break the complex type inference chain by executing the query without type inference
+      // and then explicitly casting the result
+      const query = supabase
         .from(this.TABLE_NAME)
         .select('*')
         .eq('project_id', strategyId)
@@ -102,7 +103,10 @@ export class StorageClient {
         .order('created_at', { ascending: false })
         .limit(1);
         
-      // Manually extract data and error to avoid type issues
+      // Execute query as any to bypass type inference
+      const response = await (query as any);
+        
+      // Manually extract data and error with explicit typing
       const data = response.data as WebsiteCrawlRecord[] | null;
       const error = response.error;
       
@@ -139,15 +143,19 @@ export class StorageClient {
         return [];
       }
       
-      // Use explicit typing and type assertion to prevent deep type inference
-      const response = await supabase
+      // Break the complex type inference chain by executing the query without type inference
+      // and then explicitly casting the result
+      const query = supabase
         .from(this.TABLE_NAME)
         .select('*')
         .eq('project_id', strategyId)
         .eq('extracted_content->url_type', urlType)
         .order('created_at', { ascending: false });
         
-      // Manually extract data and error to avoid type issues
+      // Execute query as any to bypass type inference
+      const response = await (query as any);
+        
+      // Manually extract data and error with explicit typing
       const data = response.data as WebsiteCrawlRecord[] | null;
       const error = response.error;
       
