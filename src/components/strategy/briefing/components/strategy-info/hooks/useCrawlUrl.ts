@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -154,15 +155,18 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
         });
       }, 1000);
       
-      // Crawl the URL
+      // Crawl the URL with more detailed response handling
+      console.log(`Starting crawl for ${urlType}: ${url}`);
       const result = await ScraperClient.scrapeWithApiKey(url, apiKey);
+      console.log(`Crawl result for ${urlType}:`, result);
       
       // Stop the progress simulation
       clearInterval(progressInterval);
       
       if (!result.success) {
-        console.error("Crawl failed:", result.error);
-        toast.error(`Failed to crawl: ${result.error || "Unknown error"}`);
+        const errorMessage = result.error || "Unknown error during scraping";
+        console.error(`Crawl failed for ${urlType}:`, errorMessage);
+        toast.error(`Failed to crawl: ${errorMessage}`);
         setCrawlProgress(0);
         setCrawlingUrl(null);
         return { success: false };
@@ -171,8 +175,17 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
       // Set the final progress
       setCrawlProgress(100);
       
+      // Check if we have actual data in the response
+      if (!result.data) {
+        console.error(`Crawl succeeded but no data returned for ${urlType}`);
+        toast.error("Crawl succeeded but no data was returned");
+        setCrawlProgress(0);
+        setCrawlingUrl(null);
+        return { success: false };
+      }
+      
       // Create response data array, handling potential undefined result.data
-      const responseData = result.data ? [result.data] : [];
+      const responseData = result.data ? (Array.isArray(result.data) ? result.data : [result.data]) : [];
       
       // Prepare WebsiteCrawlResult from the raw result
       const crawlResult: WebsiteCrawlResult = {
@@ -223,7 +236,7 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
       console.log(`Saving ${urlType} crawl results for strategy ${strategyId}`);
       
       // Create a safe data array from result
-      const responseData = result.data ? [result.data] : [];
+      const responseData = result.data ? (Array.isArray(result.data) ? result.data : [result.data]) : [];
       
       // Prepare the data to save in the website_crawls table
       const data = {

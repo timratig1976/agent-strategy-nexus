@@ -95,6 +95,7 @@ export class FirecrawlService {
       }
       
       // Start the scraping operation
+      console.log(`Calling ScraperClient.scrapeWithApiKey for ${url}`);
       const response = await ScraperClient.scrapeWithApiKey(url, apiKey, {
         timeout: options.timeout
       });
@@ -103,6 +104,23 @@ export class FirecrawlService {
       
       if (!response.success) {
         throw new Error(response.error || "Failed to crawl website");
+      }
+      
+      // If we don't have data, create a minimal successful result
+      if (!response.data) {
+        console.log("No data in response, creating minimal result");
+        const minimalResult: WebsiteCrawlResult = {
+          success: true,
+          error: "No content extracted from website",
+          data: [],
+          pagesCrawled: 0,
+          contentExtracted: false,
+          summary: "No content could be extracted from the website.",
+          keywordsFound: [],
+          technologiesDetected: [],
+          url: url
+        };
+        return minimalResult;
       }
       
       // Process the results and extract relevant info

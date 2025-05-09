@@ -99,6 +99,8 @@ export class ScraperClient {
         timeout: options.timeout || 30000 // 30 seconds default timeout
       }) as FirecrawlResponse;
       
+      console.log(`Raw result from scraping ${url}:`, result);
+      
       // Safely log the response without causing type errors
       console.log(`Scrape response received for ${url}:`, {
         success: result.success,
@@ -106,16 +108,23 @@ export class ScraperClient {
       });
       
       // Convert to our ScrapeResponse
-      if (result.success && 'data' in result) {
+      if ('success' in result && result.success === true && 'data' in result) {
         return {
           success: true,
           data: result.data,
           id: result.id
         };
-      } else {
+      } else if ('success' in result && result.success === false && 'error' in result) {
         return {
           success: false,
-          error: !result.success && 'error' in result ? result.error : "Unknown error during scraping"
+          error: result.error
+        };
+      } else {
+        // Handle unexpected response format
+        console.error("Received unexpected response format:", result);
+        return {
+          success: false,
+          error: "Received unexpected response format from API"
         };
       }
     } catch (error) {
