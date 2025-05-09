@@ -1,115 +1,84 @@
 
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UspCanvas } from "../types";
+import { PieChart } from "@/components/ui/chart";
+import { CircleAlert, CircleCheck } from "lucide-react";
 
 interface ValueMapSummaryProps {
   canvas: UspCanvas;
 }
 
 const ValueMapSummary: React.FC<ValueMapSummaryProps> = ({ canvas }) => {
-  // Calculate how many product services have related jobs
-  const productsWithRelatedJobs = canvas.productServices.filter(
-    product => product.relatedJobIds && product.relatedJobIds.length > 0
-  );
-  
-  // Calculate how many pain relievers have related pains
-  const relieversWithRelatedPains = canvas.painRelievers.filter(
-    reliever => reliever.relatedPainIds && reliever.relatedPainIds.length > 0
-  );
-  
-  // Calculate how many gain creators have related gains
-  const creatorsWithRelatedGains = canvas.gainCreators.filter(
-    creator => creator.relatedGainIds && creator.relatedGainIds.length > 0
-  );
+  // Data for the pie chart
+  const chartData = {
+    labels: ['Products & Services', 'Pain Relievers', 'Gain Creators'],
+    datasets: [
+      {
+        label: 'Count',
+        data: [
+          canvas.productServices.length,
+          canvas.painRelievers.length, 
+          canvas.gainCreators.length
+        ],
+        backgroundColor: ['#3b82f6', '#ef4444', '#10b981'],
+        borderColor: ['#2563eb', '#dc2626', '#059669'],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  // Count total items and connections
+  const totalItems = canvas.productServices.length + canvas.painRelievers.length + canvas.gainCreators.length;
+  const totalConnections = 
+    canvas.productServices.reduce((total, item) => total + item.relatedJobIds.length, 0) +
+    canvas.painRelievers.reduce((total, item) => total + item.relatedPainIds.length, 0) +
+    canvas.gainCreators.reduce((total, item) => total + item.relatedGainIds.length, 0);
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <h3 className="font-semibold mb-4">Value Map</h3>
+    <Card className="h-full">
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2">
+          Value Map Summary
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {totalItems > 0 ? (
+          <div className="h-52">
+            <PieChart data={chartData} />
+          </div>
+        ) : (
+          <div className="h-52 flex items-center justify-center">
+            <div className="text-center text-muted-foreground">
+              <CircleAlert className="mx-auto h-10 w-10 text-amber-500 mb-2" />
+              <p>No value map data available</p>
+            </div>
+          </div>
+        )}
         
-        <div className="space-y-6">
-          {/* Products & Services Summary */}
-          <div>
-            <h4 className="text-sm font-medium text-indigo-700 mb-2">Products & Services</h4>
-            <div className="space-y-2">
-              {canvas.productServices.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No products or services defined</p>
-              ) : (
-                <>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Total:</span>
-                    <span className="text-sm font-medium">{canvas.productServices.length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Connected to jobs:</span>
-                    <span className="text-sm font-medium">{productsWithRelatedJobs.length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Unconnected:</span>
-                    <span className="text-sm font-medium">
-                      {canvas.productServices.length - productsWithRelatedJobs.length}
-                    </span>
-                  </div>
-                </>
-              )}
-            </div>
+        <div className="grid grid-cols-2 gap-4 pt-4">
+          <div className="bg-blue-50 rounded-lg p-3 text-center">
+            <div className="text-2xl font-bold text-blue-700">{totalItems}</div>
+            <div className="text-xs text-blue-600">Total Elements</div>
           </div>
           
-          {/* Pain Relievers Summary */}
-          <div>
-            <h4 className="text-sm font-medium text-rose-700 mb-2">Pain Relievers</h4>
-            <div className="space-y-2">
-              {canvas.painRelievers.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No pain relievers defined</p>
-              ) : (
-                <>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Total:</span>
-                    <span className="text-sm font-medium">{canvas.painRelievers.length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Connected to pains:</span>
-                    <span className="text-sm font-medium">{relieversWithRelatedPains.length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Unconnected:</span>
-                    <span className="text-sm font-medium">
-                      {canvas.painRelievers.length - relieversWithRelatedPains.length}
-                    </span>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-          
-          {/* Gain Creators Summary */}
-          <div>
-            <h4 className="text-sm font-medium text-emerald-700 mb-2">Gain Creators</h4>
-            <div className="space-y-2">
-              {canvas.gainCreators.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No gain creators defined</p>
-              ) : (
-                <>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Total:</span>
-                    <span className="text-sm font-medium">{canvas.gainCreators.length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Connected to gains:</span>
-                    <span className="text-sm font-medium">{creatorsWithRelatedGains.length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Unconnected:</span>
-                    <span className="text-sm font-medium">
-                      {canvas.gainCreators.length - creatorsWithRelatedGains.length}
-                    </span>
-                  </div>
-                </>
-              )}
-            </div>
+          <div className="bg-purple-50 rounded-lg p-3 text-center">
+            <div className="text-2xl font-bold text-purple-700">{totalConnections}</div>
+            <div className="text-xs text-purple-600">Total Connections</div>
           </div>
         </div>
+        
+        {totalItems > 0 ? (
+          <div className="flex items-center gap-2 text-sm text-green-600">
+            <CircleCheck className="h-4 w-4" />
+            <span>Value map contains data</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-sm text-amber-600">
+            <CircleAlert className="h-4 w-4" />
+            <span>Value map needs to be populated</span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -1,116 +1,109 @@
 
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UspCanvas } from "../types";
-import { ArrowUp, ArrowDown } from "lucide-react";
+import { CircleCheck, CircleAlert } from "lucide-react";
 
 interface CustomerProfileSummaryProps {
   canvas: UspCanvas;
 }
 
 const CustomerProfileSummary: React.FC<CustomerProfileSummaryProps> = ({ canvas }) => {
-  // Group jobs by priority
+  // Count items by priority/severity/importance
   const jobsByPriority = {
-    high: canvas.customerJobs.filter(job => job.priority === 'high'),
-    medium: canvas.customerJobs.filter(job => job.priority === 'medium'),
-    low: canvas.customerJobs.filter(job => job.priority === 'low')
+    high: canvas.customerJobs.filter(job => job.priority === 'high').length,
+    medium: canvas.customerJobs.filter(job => job.priority === 'medium').length,
+    low: canvas.customerJobs.filter(job => job.priority === 'low').length,
   };
   
-  // Group pains by severity
   const painsBySeverity = {
-    high: canvas.customerPains.filter(pain => pain.severity === 'high'),
-    medium: canvas.customerPains.filter(pain => pain.severity === 'medium'),
-    low: canvas.customerPains.filter(pain => pain.severity === 'low')
+    high: canvas.customerPains.filter(pain => pain.severity === 'high').length,
+    medium: canvas.customerPains.filter(pain => pain.severity === 'medium').length,
+    low: canvas.customerPains.filter(pain => pain.severity === 'low').length,
   };
   
-  // Group gains by importance
   const gainsByImportance = {
-    high: canvas.customerGains.filter(gain => gain.importance === 'high'),
-    medium: canvas.customerGains.filter(gain => gain.importance === 'medium'),
-    low: canvas.customerGains.filter(gain => gain.importance === 'low')
+    high: canvas.customerGains.filter(gain => gain.importance === 'high').length,
+    medium: canvas.customerGains.filter(gain => gain.importance === 'medium').length,
+    low: canvas.customerGains.filter(gain => gain.importance === 'low').length,
   };
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <h3 className="font-semibold mb-4">Customer Profile</h3>
-        
-        <div className="space-y-6">
-          {/* Jobs Summary */}
-          <div>
-            <h4 className="text-sm font-medium text-blue-700 mb-2">Customer Jobs</h4>
-            <div className="space-y-2">
-              {canvas.customerJobs.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No customer jobs defined</p>
-              ) : (
-                <>
-                  <div className="flex items-center space-x-2">
-                    <ArrowUp className="h-4 w-4 text-red-600" />
-                    <span className="text-sm font-medium">High Priority: {jobsByPriority.high.length}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="h-4 w-4">•</span>
-                    <span className="text-sm">Medium Priority: {jobsByPriority.medium.length}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <ArrowDown className="h-4 w-4 text-green-600" />
-                    <span className="text-sm">Low Priority: {jobsByPriority.low.length}</span>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
+    <Card className="h-full">
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2">
+          Customer Profile Summary
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="space-y-4">
+          <h3 className="font-medium text-sm">Customer Jobs ({canvas.customerJobs.length})</h3>
           
-          {/* Pains Summary */}
-          <div>
-            <h4 className="text-sm font-medium text-red-700 mb-2">Customer Pains</h4>
-            <div className="space-y-2">
-              {canvas.customerPains.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No customer pains defined</p>
-              ) : (
-                <>
-                  <div className="flex items-center space-x-2">
-                    <ArrowUp className="h-4 w-4 text-red-600" />
-                    <span className="text-sm font-medium">High Severity: {painsBySeverity.high.length}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="h-4 w-4">•</span>
-                    <span className="text-sm">Medium Severity: {painsBySeverity.medium.length}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <ArrowDown className="h-4 w-4 text-green-600" />
-                    <span className="text-sm">Low Severity: {painsBySeverity.low.length}</span>
-                  </div>
-                </>
-              )}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-blue-50 rounded-lg p-2 text-center">
+              <div className="text-lg font-semibold text-blue-700">{jobsByPriority.high}</div>
+              <div className="text-xs text-blue-600">High Priority</div>
             </div>
-          </div>
-          
-          {/* Gains Summary */}
-          <div>
-            <h4 className="text-sm font-medium text-green-700 mb-2">Customer Gains</h4>
-            <div className="space-y-2">
-              {canvas.customerGains.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No customer gains defined</p>
-              ) : (
-                <>
-                  <div className="flex items-center space-x-2">
-                    <ArrowUp className="h-4 w-4 text-red-600" />
-                    <span className="text-sm font-medium">High Importance: {gainsByImportance.high.length}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="h-4 w-4">•</span>
-                    <span className="text-sm">Medium Importance: {gainsByImportance.medium.length}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <ArrowDown className="h-4 w-4 text-green-600" />
-                    <span className="text-sm">Low Importance: {gainsByImportance.low.length}</span>
-                  </div>
-                </>
-              )}
+            <div className="bg-blue-50 rounded-lg p-2 text-center">
+              <div className="text-lg font-semibold text-blue-700">{jobsByPriority.medium}</div>
+              <div className="text-xs text-blue-600">Medium Priority</div>
+            </div>
+            <div className="bg-blue-50 rounded-lg p-2 text-center">
+              <div className="text-lg font-semibold text-blue-700">{jobsByPriority.low}</div>
+              <div className="text-xs text-blue-600">Low Priority</div>
             </div>
           </div>
         </div>
+        
+        <div className="space-y-4">
+          <h3 className="font-medium text-sm">Customer Pains ({canvas.customerPains.length})</h3>
+          
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-red-50 rounded-lg p-2 text-center">
+              <div className="text-lg font-semibold text-red-700">{painsBySeverity.high}</div>
+              <div className="text-xs text-red-600">High Severity</div>
+            </div>
+            <div className="bg-red-50 rounded-lg p-2 text-center">
+              <div className="text-lg font-semibold text-red-700">{painsBySeverity.medium}</div>
+              <div className="text-xs text-red-600">Medium Severity</div>
+            </div>
+            <div className="bg-red-50 rounded-lg p-2 text-center">
+              <div className="text-lg font-semibold text-red-700">{painsBySeverity.low}</div>
+              <div className="text-xs text-red-600">Low Severity</div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="space-y-4">
+          <h3 className="font-medium text-sm">Customer Gains ({canvas.customerGains.length})</h3>
+          
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-green-50 rounded-lg p-2 text-center">
+              <div className="text-lg font-semibold text-green-700">{gainsByImportance.high}</div>
+              <div className="text-xs text-green-600">High Importance</div>
+            </div>
+            <div className="bg-green-50 rounded-lg p-2 text-center">
+              <div className="text-lg font-semibold text-green-700">{gainsByImportance.medium}</div>
+              <div className="text-xs text-green-600">Medium Importance</div>
+            </div>
+            <div className="bg-green-50 rounded-lg p-2 text-center">
+              <div className="text-lg font-semibold text-green-700">{gainsByImportance.low}</div>
+              <div className="text-xs text-green-600">Low Importance</div>
+            </div>
+          </div>
+        </div>
+        
+        {canvas.customerJobs.length === 0 && canvas.customerPains.length === 0 && canvas.customerGains.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-4 border border-dashed rounded-md border-gray-300">
+            <CircleAlert className="h-10 w-10 text-amber-500 mb-2" />
+            <p className="text-sm text-muted-foreground text-center">No customer profile data available</p>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-sm text-green-600">
+            <CircleCheck className="h-4 w-4" />
+            <span>Customer profile complete</span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
