@@ -1,20 +1,15 @@
 
 /**
- * Constants for FireCrawl service
+ * Constants for FireCrawl API
  */
 
-// API Endpoints
-export const SCRAPE_ENDPOINT = 'https://api.firecrawl.dev/v1/scrape';
-export const CRAWL_ENDPOINT = 'https://api.firecrawl.dev/v1/crawl';
+// Base endpoints
+export const API_BASE_URL = "https://api.firecrawl.dev/v1";
+export const SCRAPE_ENDPOINT = `${API_BASE_URL}/scrape`;
+export const CRAWL_ENDPOINT = `${API_BASE_URL}/crawl`;
 
 // Default options
-export const DEFAULT_FORMATS = ['markdown', 'html'];
 export const DEFAULT_TIMEOUT = 30000; // 30 seconds
-export const TEST_TIMEOUT = 10000; // 10 seconds for API test
-
-// Polling configuration
-export const DEFAULT_POLL_INTERVAL = 3000; // 3 seconds
-export const MAX_POLL_ATTEMPTS = 10;
-
-// Storage keys
-export const API_KEY_STORAGE_KEY = 'firecrawl_api_key';
+export const DEFAULT_FORMATS = ["markdown", "html"];
+export const DEFAULT_DEPTH = 2;
+export const DEFAULT_MAX_PAGES = 50;

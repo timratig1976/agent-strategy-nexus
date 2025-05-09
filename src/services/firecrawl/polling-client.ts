@@ -1,134 +1,69 @@
 
 /**
- * Polling client for long-running FireCrawl operations
+ * Polling client for FireCrawl API long-running jobs
  */
+import { CRAWL_ENDPOINT } from "./constants";
 
 /**
- * Poll for the result of a scrape operation
- */
-export async function pollForScrapeResult(
-  jobId: string,
-  apiKey: string,
-  originalUrl: string,
-  resultUrl: string,
-  maxAttempts = 10
-): Promise<any> {
-  let attempts = 0;
-  const pollInterval = 2000; // 2 seconds between polls
-  
-  console.log(`Polling for scrape result with job ID: ${jobId}`);
-  
-  while (attempts < maxAttempts) {
-    console.log(`Poll attempt ${attempts + 1} of ${maxAttempts}`);
-    
-    try {
-      const response = await fetch(resultUrl, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Error polling for scrape result:", errorData);
-        throw new Error(errorData.message || `API returned ${response.status}: ${response.statusText}`);
-      }
-      
-      const result = await response.json();
-      console.log("Poll result:", result);
-      
-      // Check if the job is completed
-      if (result.status === "completed" || result.status === "completed_with_errors" || result.status === "failed") {
-        return {
-          success: result.status !== "failed",
-          data: result.data,
-          url: originalUrl,
-          id: jobId,
-          status: result.status
-        };
-      }
-      
-      // Wait for the polling interval
-      await new Promise(resolve => setTimeout(resolve, pollInterval));
-      attempts++;
-    } catch (error) {
-      console.error("Error during polling:", error);
-      attempts++;
-      
-      // Wait before retrying
-      await new Promise(resolve => setTimeout(resolve, pollInterval));
-    }
-  }
-  
-  // If we've reached the maximum number of attempts, return a timeout error
-  return {
-    success: false,
-    error: "Polling for scrape result timed out",
-    url: originalUrl
-  };
-}
-
-/**
- * Poll for the result of a crawl operation
- * Fixed signature to match the caller in crawler-client.ts
+ * Poll for crawl job completion
+ * @param jobId The job ID to poll for
+ * @param apiKey The FireCrawl API key
+ * @param maxAttempts Maximum number of polling attempts (default 30)
+ * @param interval Polling interval in milliseconds (default 2000)
+ * @returns Promise that resolves with the crawl result
  */
 export async function pollForCrawlCompletion(
-  jobId: string,
-  apiKey: string,
-  maxAttempts = 15
+  jobId: string, 
+  apiKey: string, 
+  maxAttempts = 30, 
+  interval = 2000
 ): Promise<any> {
-  let attempts = 0;
-  const pollInterval = 3000; // 3 seconds between polls
-  const resultUrl = `https://api.firecrawl.dev/v1/crawl/${jobId}`;
+  console.log(`Starting polling for job ${jobId}`);
+  const resultUrl = `${CRAWL_ENDPOINT}/${jobId}`;
   
-  console.log(`Polling for crawl completion with job ID: ${jobId}`);
-  
-  while (attempts < maxAttempts) {
-    console.log(`Poll attempt ${attempts + 1} of ${maxAttempts}`);
+  return new Promise((resolve, reject) => {
+    let attempts = 0;
     
-    try {
-      const response = await fetch(resultUrl, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
+    const checkStatus = async () => {
+      try {
+        attempts++;
+        
+        if (attempts > maxAttempts) {
+          return reject(new Error(`Max polling attempts (${maxAttempts}) reached for job ${jobId}`));
         }
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Error polling for crawl completion:", errorData);
-        throw new Error(errorData.message || `API returned ${response.status}: ${response.statusText}`);
+        
+        const response = await fetch(resultUrl, {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+          }
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`API error: ${errorData.message || response.statusText}`);
+        }
+        
+        const statusResult = await response.json();
+        
+        // Check if the job has completed or failed
+        if (statusResult.status === 'completed' || statusResult.status === 'completed_with_errors') {
+          console.log(`Crawl job ${jobId} completed with status: ${statusResult.status}`);
+          return resolve(statusResult);
+        } else if (statusResult.status === 'failed' || statusResult.status === 'timeout') {
+          console.error(`Crawl job ${jobId} failed with status: ${statusResult.status}`);
+          return reject(new Error(`Job ${jobId} failed with status: ${statusResult.status}`));
+        }
+        
+        console.log(`Crawl job ${jobId} still in progress, polling again (attempt ${attempts}/${maxAttempts})`);
+        setTimeout(checkStatus, interval);
+        
+      } catch (error) {
+        console.error(`Error polling crawl job ${jobId}:`, error);
+        reject(error);
       }
-      
-      const result = await response.json();
-      
-      // Check if the job is completed
-      if (result.status === "completed" || result.status === "completed_with_errors" || result.status === "failed") {
-        return result;
-      }
-      
-      // Log progress
-      console.log(`Crawl progress: ${result.completed || 0}/${result.total || '?'} pages`);
-      
-      // Wait for the polling interval
-      await new Promise(resolve => setTimeout(resolve, pollInterval));
-      attempts++;
-    } catch (error) {
-      console.error("Error during polling:", error);
-      attempts++;
-      
-      // Wait before retrying
-      await new Promise(resolve => setTimeout(resolve, pollInterval));
-    }
-  }
-  
-  // If we've reached the maximum number of attempts, return a timeout error
-  return {
-    success: false,
-    error: "Polling for crawl completion timed out",
-    status: "timeout"
-  };
+    };
+    
+    // Start polling
+    setTimeout(checkStatus, interval);
+  });
 }

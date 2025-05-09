@@ -1,174 +1,71 @@
 
 /**
- * Process and transform content from the Firecrawl API response
+ * Content processor for FireCrawl API responses
  */
-
 import { WebsiteCrawlResult } from "./types";
+import { ScrapeResponse } from "./types/scraper-types";
+export { processApiResponse } from './processors/response-processor';
 
 /**
- * ContentProcessor class for handling data transformation
+ * Processes crawled content and formats the output
  */
 export class ContentProcessor {
   /**
-   * Process the scraped data from the Firecrawl API
-   * 
-   * @param rawData Raw data from the API
-   * @returns WebsiteCrawlResult with processed content
+   * Process the scraped data into a consistent output format
+   * @param response The raw scraper response
+   * @returns WebsiteCrawlResult with formatted data
    */
-  processScrapedData(rawData: any): WebsiteCrawlResult {
-    // Safety check
-    if (!rawData || !rawData.success) {
-      console.error("Error processing scraped data: Invalid or unsuccessful response", rawData);
+  processScrapedData(response: ScrapeResponse): WebsiteCrawlResult {
+    if (!response.success || !response.data) {
       return {
         success: false,
-        error: rawData?.error || "Invalid scrape response",
-        data: [],
         pagesCrawled: 0,
         contentExtracted: false,
-        summary: "Failed to extract content from the website.",
+        summary: "Failed to extract content from website.",
         keywordsFound: [],
         technologiesDetected: [],
-        url: rawData?.url || ""
-      };
-    }
-
-    console.log("Processing scraped data from Firecrawl API");
-
-    try {
-      // Handle different response formats
-      const dataObject = rawData.data || {};
-      
-      // Extract markdown content
-      let markdownContent = "";
-      
-      if (dataObject.markdown) {
-        // Direct markdown content
-        markdownContent = dataObject.markdown;
-      } else if (Array.isArray(dataObject) && dataObject.length > 0) {
-        // Array of pages with markdown
-        markdownContent = dataObject
-          .filter(page => page?.markdown)
-          .map(page => page.markdown)
-          .join("\n\n---\n\n");
-      }
-
-      // Extract metadata
-      const metadata = dataObject.metadata || rawData.metadata || {};
-      
-      // Generate a basic summary if none was provided
-      const summary = this.generateSummary(markdownContent, metadata);
-      
-      // Extract keywords from content
-      const keywords = this.extractKeywords(markdownContent, metadata);
-
-      // Create a standardized result object
-      const result: WebsiteCrawlResult = {
-        success: true,
-        data: Array.isArray(dataObject) ? dataObject : [dataObject],
-        pagesCrawled: rawData.total || 1,
-        contentExtracted: !!markdownContent,
-        summary,
-        keywordsFound: keywords,
-        technologiesDetected: [],
-        url: metadata.sourceURL || rawData.url || ""
-      };
-
-      console.log("Processed crawl results:", {
-        url: result.url,
-        pagesCrawled: result.pagesCrawled,
-        contentExtracted: result.contentExtracted,
-        summaryLength: result.summary?.length || 0,
-        keywordsCount: result.keywordsFound?.length || 0
-      });
-
-      return result;
-    } catch (error) {
-      console.error("Error processing scraped data:", error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to process scraped data",
         data: [],
-        pagesCrawled: 0,
-        contentExtracted: false,
-        summary: "Failed to process content from the website.",
-        keywordsFound: [],
-        technologiesDetected: [],
-        url: rawData?.url || ""
+        url: "unknown",
+        error: response.error || "No data returned from scrape operation"
       };
     }
-  }
 
-  /**
-   * Generate a summary from the markdown content
-   */
-  private generateSummary(content: string, metadata: any): string {
-    // If content is too short, generate a basic summary from metadata
-    if (!content || content.length < 200) {
-      if (metadata.title || metadata.description) {
-        return `Website titled "${metadata.title || 'Untitled'}" with description: ${metadata.description || 'No description available.'}}`;
-      }
-      return "Limited content was extracted from this website.";
-    }
-
-    // Take the first few paragraphs as a summary (up to ~500 chars)
-    const paragraphs = content.split('\n\n');
-    let summary = '';
-    
-    for (const para of paragraphs) {
-      if (para.trim() && !para.startsWith('#') && !para.startsWith('![')) {
-        summary += para + ' ';
-        if (summary.length > 500) break;
-      }
-    }
-    
-    return summary.trim() || "Content was extracted but no suitable summary could be generated.";
-  }
-
-  /**
-   * Extract keywords from the content
-   */
-  private extractKeywords(content: string, metadata: any): string[] {
-    const keywords: string[] = [];
-    
-    // Use metadata keywords if available
-    if (metadata.keywords) {
-      if (typeof metadata.keywords === 'string') {
-        keywords.push(...metadata.keywords.split(',').map((k: string) => k.trim()));
-      } else if (Array.isArray(metadata.keywords)) {
-        keywords.push(...metadata.keywords);
-      }
-    }
-    
-    // If no keywords, extract from content
-    if (keywords.length === 0 && content) {
-      // Find words that appear frequently
-      const words = content.toLowerCase()
-        .replace(/[^\w\s]/g, '')
-        .split(/\s+/)
-        .filter(w => w.length > 3);
-      
-      const wordFreq: Record<string, number> = {};
-      words.forEach(word => {
-        wordFreq[word] = (wordFreq[word] || 0) + 1;
+    // Extract keywords from the markdown content
+    const keywordSet = new Set<string>();
+    if (response.data.markdown) {
+      // Extract potential keywords from headings and important text
+      const headingMatches = response.data.markdown.match(/#{1,6}\s+([^\n]+)/g) || [];
+      headingMatches.forEach(match => {
+        const keyword = match.replace(/#{1,6}\s+/, "").trim();
+        if (keyword.length > 2) keywordSet.add(keyword.toLowerCase());
       });
-      
-      // Get top keywords
-      const sortedWords = Object.entries(wordFreq)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 8)
-        .map(([word]) => word);
-      
-      keywords.push(...sortedWords);
-    }
-    
-    return [...new Set(keywords)]; // Remove duplicates
-  }
-}
 
-/**
- * Helper function to process API response
- */
-export function processApiResponse(response: any): WebsiteCrawlResult {
-  const processor = new ContentProcessor();
-  return processor.processScrapedData(response);
+      // Extract emphasized text as keywords
+      const emphasisMatches = response.data.markdown.match(/(\*\*|__|\*|_)([^*_]+)\1/g) || [];
+      emphasisMatches.forEach(match => {
+        const keyword = match.replace(/(\*\*|__|\*|_)/g, "").trim();
+        if (keyword.length > 2) keywordSet.add(keyword.toLowerCase());
+      });
+    }
+
+    // Get source URL from metadata or default to unknown
+    const sourceURL = response.data.metadata?.sourceURL || "unknown";
+    
+    // Create a summary from the first 150 characters of the markdown content
+    const summary = response.data.markdown 
+      ? `${response.data.markdown.substring(0, 150)}...` 
+      : "Content extracted successfully";
+
+    return {
+      success: true,
+      pagesCrawled: 1,
+      contentExtracted: true,
+      summary,
+      keywordsFound: Array.from(keywordSet).slice(0, 10), // Limit to top 10 keywords
+      technologiesDetected: [],
+      data: [response.data],
+      url: sourceURL,
+      id: response.id
+    };
+  }
 }

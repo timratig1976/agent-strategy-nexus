@@ -4,7 +4,7 @@
  */
 
 import { ScraperClient } from "./scraper-client";
-import { ContentProcessor, processApiResponse } from "./content-processor";
+import { ContentProcessor } from "./content-processor";
 import { WebsiteCrawlResult } from "./types";
 import { StorageClient } from "./storage-client";
 import { FirecrawlAuthManager } from "./auth-manager";
