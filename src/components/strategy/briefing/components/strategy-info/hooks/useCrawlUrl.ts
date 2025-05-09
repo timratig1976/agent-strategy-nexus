@@ -173,6 +173,9 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
       // Set the final progress
       setCrawlProgress(100);
       
+      // Create response data array, handling potential undefined result.data
+      const responseData = result.data ? [result.data] : [];
+      
       // Prepare WebsiteCrawlResult from the raw result
       const crawlResult: WebsiteCrawlResult = {
         success: true,
@@ -181,7 +184,7 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
         summary: "Website content extracted successfully",
         keywordsFound: [],
         technologiesDetected: [],
-        data: result.data ? [result.data] : [],
+        data: responseData,
         url: url,
         id: result.id || undefined,
         strategyId: formValues.id
@@ -209,7 +212,7 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
       return { success: true };
     } catch (error) {
       console.error("Error crawling URL:", error);
-      toast.error(`Error crawling URL: ${error}`);
+      toast.error(`Error crawling URL: ${error instanceof Error ? error.message : String(error)}`);
       setCrawlingUrl(null);
       setCrawlProgress(0);
       return { success: false };
@@ -221,13 +224,16 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
     try {
       console.log(`Saving ${urlType} crawl results for strategy ${strategyId}`);
       
+      // Create a safe data array from result
+      const responseData = result.data ? [result.data] : [];
+      
       // Prepare the data to save in the website_crawls table
       const data = {
         project_id: strategyId,
         url: url,
         status: 'completed',
         extracted_content: {
-          data: result.data ? [result.data] : [],
+          data: responseData,
           summary: "Website content extracted successfully",
           keywords: [],
           url_type: urlType === 'websiteUrl' ? 'website' : 'product'

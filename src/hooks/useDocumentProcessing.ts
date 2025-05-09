@@ -50,7 +50,6 @@ export const useDocumentProcessing = (strategyId: string) => {
       if (!strategyId) return null;
 
       // Get the latest crawl result from the database
-      // Using the correct table name 'website_crawls' instead of 'strategy_website_crawls'
       const { data: crawlResults, error } = await supabase
         .from('website_crawls')
         .select('url, extracted_content')
@@ -76,12 +75,17 @@ export const useDocumentProcessing = (strategyId: string) => {
       // Add website URL as header
       websiteContent += `# Website: ${crawlResults.url}\n\n`;
       
-      // Extract the markdown content from the extracted_content field
-      if (crawlResults.extracted_content && 
-          Array.isArray(crawlResults.extracted_content.data) && 
-          crawlResults.extracted_content.data.length > 0) {
-        if (crawlResults.extracted_content.data[0]?.markdown) {
-          websiteContent += crawlResults.extracted_content.data[0].markdown;
+      // Safely extract the markdown content from the extracted_content field
+      if (crawlResults.extracted_content && typeof crawlResults.extracted_content === 'object') {
+        // Check if extracted_content has a data array property
+        const extractedContent = crawlResults.extracted_content as { data?: Array<any> };
+        
+        if (Array.isArray(extractedContent.data) && extractedContent.data.length > 0) {
+          // Check if the first item has a markdown property
+          const firstItem = extractedContent.data[0];
+          if (firstItem && typeof firstItem === 'object' && 'markdown' in firstItem) {
+            websiteContent += firstItem.markdown;
+          }
         }
       }
       

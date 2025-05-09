@@ -6,11 +6,17 @@ import FirecrawlApp, { ScrapeResponse } from "@mendable/firecrawl-js";
 import { processApiResponse } from "./content-processor";
 
 /**
+ * Type for supported formats in Firecrawl
+ */
+type FirecrawlFormat = "markdown" | "html" | "rawHtml" | "content" | "links" | 
+                       "screenshot" | "screenshot@fullPage" | "extract" | "json" | "changeTracking";
+
+/**
  * Interface for scraping options
  */
 interface ScrapeOptions {
   timeout?: number;
-  formats?: string[];
+  formats?: FirecrawlFormat[];
 }
 
 export class ScraperClient {
@@ -22,6 +28,14 @@ export class ScraperClient {
    */
   static setApiKey(apiKey: string): void {
     this.apiKey = apiKey;
+  }
+
+  /**
+   * Get the API key for the scraper
+   * @returns The API key or null if not set
+   */
+  static getApiKey(): string | null {
+    return this.apiKey;
   }
 
   /**
@@ -50,18 +64,18 @@ export class ScraperClient {
       // Create a FirecrawlApp instance with the provided API key
       const app = new FirecrawlApp({ apiKey });
       
-      // Set default formats if not provided
-      const formats = options.formats || ['markdown', 'html'];
+      // Set default formats with proper type
+      const formats: FirecrawlFormat[] = options.formats as FirecrawlFormat[] || ['markdown', 'html'];
       
       // Execute the scrape operation with timeout
       const result = await app.scrapeUrl(url, { 
         formats,
         timeout: options.timeout || 30000 // 30 seconds default timeout
-      }) as ScrapeResponse;
+      });
       
       console.log(`Scrape response received for ${url}:`, {
         success: result.success,
-        dataLength: result.data ? 'Data present' : 'No data'
+        dataPresent: result.data ? 'Data present' : 'No data'
       });
       
       return result;
@@ -70,7 +84,7 @@ export class ScraperClient {
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error during scraping"
-      };
+      } as ScrapeResponse;
     }
   }
 }
