@@ -42,6 +42,11 @@ type CustomErrorResponse = {
 // Combined type that can be either success or error
 type CustomScrapeResponse = CustomSuccessResponse | CustomErrorResponse;
 
+// Type guard function to check if the response is an error
+function isErrorResponse(response: CustomScrapeResponse): response is CustomErrorResponse {
+  return response.success === false;
+}
+
 export const useScrapeWebsite = (options: UseScrapeWebsiteOptions = {}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -74,8 +79,8 @@ export const useScrapeWebsite = (options: UseScrapeWebsiteOptions = {}) => {
       // Scrape the URL
       const scrapeResult = await app.scrapeUrl(url, scrapeOptions) as CustomScrapeResponse;
 
-      if (!scrapeResult.success) {
-        // Type guard ensures TypeScript knows this is CustomErrorResponse
+      // Use the type guard to properly handle error cases
+      if (isErrorResponse(scrapeResult)) {
         throw new Error(`Failed to scrape: ${scrapeResult.error}`);
       }
 
