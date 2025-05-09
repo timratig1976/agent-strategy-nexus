@@ -228,7 +228,7 @@ serve(async (req) => {
       // Replace formData.X placeholders
       Object.entries(formData).forEach(([key, value]) => {
         const regex = new RegExp(`{{formData\\.${key}}}`, 'g');
-        processedUserPrompt = processedUserPrompt.replace(regex, value as string || '');
+        processedUserPrompt = processedUserPrompt.replace(regex, value || '');
       });
     }
 
@@ -293,7 +293,7 @@ serve(async (req) => {
 
     // Call OpenAI API
     const completion = await openai.createChatCompletion({
-      model: "gpt-4o-mini", // Updated to a currently supported model
+      model: "gpt-4o-mini", // Updated to a supported model
       messages: [
         { role: "system", content: system_prompt },
         { role: "user", content: processedUserPrompt }
