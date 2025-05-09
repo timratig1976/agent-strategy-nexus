@@ -1,17 +1,16 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { MarketingAIService } from "@/services/marketingAIService";
 import { StrategyFormValues } from "@/components/strategy-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useBriefingHistory } from "./useBriefingHistory";
 import { useAgentResultSaver } from "./useAgentResultSaver";
 import { useDocumentProcessing } from "@/hooks/useDocumentProcessing";
+import { useAgentGeneration } from "@/hooks/useAgentGeneration";
+import { useAgentResults } from "@/hooks/useAgentResults";
+import { AgentCoreService } from "@/services/ai/agentCoreService";
 
 export const useBriefingGenerator = (strategyId: string) => {
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [progress, setProgress] = useState<number>(0);
-  const [aiDebugInfo, setAiDebugInfo] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   
   const { 
@@ -20,8 +19,6 @@ export const useBriefingGenerator = (strategyId: string) => {
     fetchBriefingHistory 
   } = useBriefingHistory(strategyId);
   
-  const { saveAgentResult } = useAgentResultSaver();
-  
   // Use the document processing hook to get document content
   const { 
     getDocumentContentForAI, 
@@ -29,15 +26,23 @@ export const useBriefingGenerator = (strategyId: string) => {
     ensurePromptsExist 
   } = useDocumentProcessing(strategyId);
 
+  // Use our new agent generation hook
+  const {
+    isGenerating,
+    progress,
+    debugInfo: aiDebugInfo,
+    generateContent
+  } = useAgentGeneration({
+    strategyId,
+    module: 'briefing'
+  });
+
   // Function to generate AI briefing with progress updates
   const generateBriefing = async (
     formValues: StrategyFormValues, 
     enhancementText?: string
   ): Promise<void> => {
     try {
-      setIsGenerating(true);
-      setProgress(10);
-      setAiDebugInfo(null); // Reset debug info
       setError(null); // Reset error state
       
       console.log("Generating briefing for strategy ID:", strategyId, "with values:", formValues);
@@ -75,55 +80,17 @@ export const useBriefingGenerator = (strategyId: string) => {
         console.log("Briefing prompts are available.");
       }
       
-      // Simulate progress updates
-      const progressInterval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 1000);
-      
       try {
-        // Generate the briefing content using the AI service
-        const { data: aiResponse, error: aiError, debugInfo } = await MarketingAIService.generateContent<{ rawOutput: string }>(
-          'briefing',
-          'generate',
-          {
-            strategyId: strategyId,
-            formData: formValues,
-            enhancementText: enhancementText || '',
-            documentContent: documentContent || '',
-            websiteData: websiteCrawlData || '',
-            outputLanguage: language as 'english' | 'deutsch'
-          }
-        );
-        
-        // Store debug info for monitoring
-        setAiDebugInfo(debugInfo);
+        // Generate the briefing content using our new hook
+        const { data: aiResponse, error: aiError } = await generateContent<{ rawOutput: string }>({
+          formData: formValues,
+          enhancementText: enhancementText || '',
+          documentContent: documentContent || '',
+          websiteData: websiteCrawlData || '',
+          outputLanguage: language as 'english' | 'deutsch'
+        });
         
         if (aiError) {
-          clearInterval(progressInterval);
-          
-          // If we get a "No prompts found" error, try installing default prompts and re-run
-          if (aiError.includes("No prompts found for module")) {
-            console.log("No prompts found. Attempting to create default prompts and retry...");
-            
-            const retryPromptCreation = await ensurePromptsExist('briefing');
-            
-            if (retryPromptCreation) {
-              console.log("Default prompts created. Retrying briefing generation...");
-              // Clear this interval first to prevent having multiple
-              clearInterval(progressInterval);
-              
-              // Retry the generation (recursive call, but should only happen once)
-              generateBriefing(formValues, enhancementText);
-              return;
-            }
-          }
-          
           setError(aiError);
           throw new Error(aiError);
         }
@@ -150,18 +117,21 @@ export const useBriefingGenerator = (strategyId: string) => {
           }
         };
         
-        // Save the result to the database
-        const savedResult = await saveAgentResult(strategyId, newResult.content, newResult.metadata);
+        // Save the result to the database using AgentCoreService
+        const savedResult = await AgentCoreService.saveAgentResult(
+          strategyId, 
+          newResult.content, 
+          newResult.metadata, 
+          null
+        );
         
         // Update local state with the new result
         if (savedResult) {
           setBriefingHistory(prev => [savedResult, ...prev]);
         }
         
-        setProgress(100);
         toast.success("Briefing generated successfully");
       } catch (error) {
-        clearInterval(progressInterval);
         console.error("AI Service error:", error);
         setError(error instanceof Error ? error.message : "AI service error");
         throw error;
@@ -172,8 +142,6 @@ export const useBriefingGenerator = (strategyId: string) => {
       toast.error("Failed to generate briefing: " + 
         (error instanceof Error ? error.message : "Unknown error"));
       setError(error instanceof Error ? error.message : "Unknown error");
-    } finally {
-      setIsGenerating(false);
     }
   };
 

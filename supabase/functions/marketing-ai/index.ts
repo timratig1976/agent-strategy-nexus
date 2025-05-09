@@ -57,13 +57,73 @@ Bitte schreibe alle Antworten auf Deutsch.
 {{/if}}`
   },
   persona: {
-    system_prompt: `You are an expert marketing strategist specializing in persona development.`,
-    user_prompt: `Based on the briefing content, create detailed buyer personas.
+    system_prompt: `You are an expert marketing strategist specializing in persona development.
+
+Your task is to create detailed buyer personas based on the marketing briefing and any additional information provided.
+
+For each persona, include:
+1. A realistic name and brief description
+2. Demographic information (age, gender, income, education, occupation, location)
+3. Goals and objectives they are trying to achieve
+4. Pain points and challenges they face
+5. Behavioral traits and habits
+6. Media consumption preferences and channels
+7. Decision-making factors that influence their purchase decisions
+
+Create 2-3 distinct personas that represent the primary customer segments for this business.
+Format each persona in a clear, structured way that makes it easy to understand the different types of customers.`,
+    user_prompt: `Based on the briefing content, create detailed buyer personas:
+
 {{briefingContent}}
 
 {{#if enhancementText}}
 Additional guidance: {{enhancementText}}
-{{/if}}`
+{{/if}}
+
+Please create 2-3 distinct, detailed buyer personas that represent the key customer segments for this business. For each persona include:
+- Name and short description
+- Demographics (age, gender, income, location, etc.)
+- Goals and aspirations
+- Pain points and challenges
+- Behavioral traits
+- Media preferences and channels
+- Decision-making factors`
+  },
+  usp_canvas: {
+    system_prompt: `You are an expert marketing strategist specializing in value proposition and USP development.
+
+Your task is to analyze the marketing briefing and persona information to develop a comprehensive USP Canvas with:
+1. Customer Jobs - What tasks and goals customers are trying to accomplish
+2. Customer Pains - Problems, frustrations, and challenges customers face
+3. Customer Gains - Benefits and positive outcomes customers seek
+4. Products & Services - What the business offers to customers
+5. Pain Relievers - How products/services alleviate customer pains
+6. Gain Creators - How products/services create customer gains
+
+Format your output as structured sections with clear bullet points for each category.`,
+    user_prompt: `Based on the provided information, create a USP Canvas that identifies:
+
+{{#if briefingContent}}
+Briefing Information:
+{{briefingContent}}
+{{/if}}
+
+{{#if personaContent}}
+Persona Information:
+{{personaContent}}
+{{/if}}
+
+{{#if enhancementText}}
+Additional guidance: {{enhancementText}}
+{{/if}}
+
+Please provide:
+1. Customer Jobs - Key tasks and goals customers want to accomplish
+2. Customer Pains - Main problems and challenges customers face
+3. Customer Gains - Desired benefits and positive outcomes
+4. Products & Services - What the business offers
+5. Pain Relievers - How the offerings solve customer problems
+6. Gain Creators - How the offerings deliver benefits`
   }
 }
 
@@ -74,6 +134,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Marketing AI function called");
+    
     // Verify OpenAI API key is available
     if (!OPENAI_API_KEY || OPENAI_API_KEY === '') {
       throw new Error('Missing OPENAI_API_KEY environment variable')
@@ -94,8 +156,8 @@ serve(async (req) => {
       options = {}
     } = requestData
 
-    console.log(`Processing request for module: ${module}, action: ${action}`)
-    console.log(`Data includes: ${Object.keys(data || {}).join(', ')}`)
+    console.log(`Processing request for module: ${module}, action: ${action}`);
+    console.log(`Data includes: ${Object.keys(data || {}).join(', ')}`);
 
     // Get the prompts from the database for the specified module
     const { data: promptData, error: promptError } = await supabase
@@ -104,23 +166,26 @@ serve(async (req) => {
       .eq('module', module)
       .maybeSingle()
 
-    console.log(`Prompt data fetch result: ${!!promptData}, error: ${!!promptError}`)
+    console.log(`Prompt data fetch result: ${!!promptData}, error: ${!!promptError}`);
     
     // Initialize prompts - either from database or defaults
     let system_prompt = '';
     let user_prompt = '';
+    let promptSource = 'none';
 
     // Check if we got prompts from the database
     if (promptData && promptData.system_prompt && promptData.user_prompt) {
       // Use database prompts
       system_prompt = promptData.system_prompt;
       user_prompt = promptData.user_prompt;
+      promptSource = 'database';
       console.log(`Using database prompts for module: ${module}`);
     } else {
       // Check if we have default prompts for this module
       if (DEFAULT_PROMPTS[module]) {
         system_prompt = DEFAULT_PROMPTS[module].system_prompt;
         user_prompt = DEFAULT_PROMPTS[module].user_prompt;
+        promptSource = 'default';
         console.log(`Using default fallback prompts for module: ${module}`);
       } else {
         // No prompts found in database or defaults
@@ -262,6 +327,7 @@ serve(async (req) => {
           response_tokens: completion.data.usage?.completion_tokens,
           prompt_tokens: completion.data.usage?.prompt_tokens,
           total_tokens: completion.data.usage?.total_tokens,
+          promptSource
         }
       }),
       { headers }
