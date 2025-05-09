@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,11 +39,12 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
     try {
       console.log("Loading saved crawl results for strategy:", strategyId);
       
+      // Query the website_crawls table for the website URL crawl
       const { data: websiteData, error: websiteError } = await supabase
-        .from('crawl_results')
+        .from('website_crawls')
         .select('*')
-        .eq('strategy_id', strategyId)
-        .eq('url_type', 'websiteUrl')
+        .eq('project_id', strategyId)
+        .eq('extracted_content->url_type', 'website')
         .order('created_at', { ascending: false })
         .limit(1);
       
@@ -51,22 +53,27 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
       } else if (websiteData && websiteData.length > 0) {
         console.log("Found saved website crawl result:", websiteData[0]);
         // Convert from DB format to WebsiteCrawlResult
-        const websiteResult = {
+        const websiteResult: WebsiteCrawlResult = {
           success: true,
-          data: {
-            markdown: websiteData[0].content_markdown,
-            html: websiteData[0].content_html,
-            metadata: websiteData[0].metadata || {}
-          }
+          pagesCrawled: 1,
+          contentExtracted: true,
+          summary: websiteData[0].extracted_content?.summary || "",
+          keywordsFound: websiteData[0].extracted_content?.keywords || [],
+          technologiesDetected: [],
+          data: websiteData[0].extracted_content?.data || [],
+          url: websiteData[0].url,
+          id: websiteData[0].id,
+          strategyId
         };
-        setWebsitePreviewResults(websiteResult as WebsiteCrawlResult);
+        setWebsitePreviewResults(websiteResult);
       }
       
+      // Query the website_crawls table for the product URL crawl
       const { data: productData, error: productError } = await supabase
-        .from('crawl_results')
+        .from('website_crawls')
         .select('*')
-        .eq('strategy_id', strategyId)
-        .eq('url_type', 'productUrl')
+        .eq('project_id', strategyId)
+        .eq('extracted_content->url_type', 'product')
         .order('created_at', { ascending: false })
         .limit(1);
       
@@ -75,15 +82,19 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
       } else if (productData && productData.length > 0) {
         console.log("Found saved product crawl result:", productData[0]);
         // Convert from DB format to WebsiteCrawlResult
-        const productResult = {
+        const productResult: WebsiteCrawlResult = {
           success: true,
-          data: {
-            markdown: productData[0].content_markdown,
-            html: productData[0].content_html,
-            metadata: productData[0].metadata || {}
-          }
+          pagesCrawled: 1,
+          contentExtracted: true,
+          summary: productData[0].extracted_content?.summary || "",
+          keywordsFound: productData[0].extracted_content?.keywords || [],
+          technologiesDetected: [],
+          data: productData[0].extracted_content?.data || [],
+          url: productData[0].url,
+          id: productData[0].id,
+          strategyId
         };
-        setProductPreviewResults(productResult as WebsiteCrawlResult);
+        setProductPreviewResults(productResult);
       }
     } catch (error) {
       console.error("Error loading saved crawl results:", error);
@@ -136,11 +147,25 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
       // Set the final progress
       setCrawlProgress(100);
       
+      // Prepare WebsiteCrawlResult from the raw result
+      const crawlResult: WebsiteCrawlResult = {
+        success: true,
+        pagesCrawled: 1,
+        contentExtracted: true,
+        summary: "Website content extracted successfully",
+        keywordsFound: [],
+        technologiesDetected: [],
+        data: result.data ? [result.data] : [],
+        url: url,
+        id: result.id || undefined,
+        strategyId: formValues.id
+      };
+      
       // Set the preview results based on the URL type
       if (urlType === 'websiteUrl') {
-        setWebsitePreviewResults(result as WebsiteCrawlResult);
+        setWebsitePreviewResults(crawlResult);
       } else {
-        setProductPreviewResults(result as WebsiteCrawlResult);
+        setProductPreviewResults(crawlResult);
       }
       
       // Save the results to the database
@@ -170,18 +195,21 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
     try {
       console.log(`Saving ${urlType} crawl results for strategy ${strategyId}`);
       
-      // Prepare the data to save
+      // Prepare the data to save in the website_crawls table
       const data = {
-        strategy_id: strategyId,
+        project_id: strategyId,
         url: url,
-        url_type: urlType,
-        content_markdown: result.data?.markdown || "",
-        content_html: result.data?.html || "",
-        metadata: result.data?.metadata || {}
+        status: 'completed',
+        extracted_content: {
+          data: result.data ? [result.data] : [],
+          summary: "Website content extracted successfully",
+          keywords: [],
+          url_type: urlType === 'websiteUrl' ? 'website' : 'product'
+        }
       };
       
       // Save to the database
-      const { error } = await supabase.from('crawl_results').insert(data);
+      const { error } = await supabase.from('website_crawls').insert(data);
       
       if (error) {
         console.error("Error saving crawl results:", error);
