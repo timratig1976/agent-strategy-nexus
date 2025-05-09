@@ -20,10 +20,10 @@ const WebsiteCrawlerResults = ({ results }: WebsiteCrawlerResultsProps) => {
       .map(word => word.trim())
       .filter(word => word.length > 0);
 
-  // Generate a summary from the crawl data
+  // Use summary from results
   const summary = results.summary || 
     results.data?.[0]?.content?.substring(0, 200) + "..." || 
-    "Content extracted from website. Review the data for insights about the company and its products.";
+    "Content extracted from website.";
 
   // Extract technologiesDetected or create empty array
   const technologiesDetected = results.technologiesDetected || [];
@@ -31,9 +31,8 @@ const WebsiteCrawlerResults = ({ results }: WebsiteCrawlerResultsProps) => {
   // Calculate pagesCrawled from data
   const pagesCrawled = results.pagesCrawled || results.data?.length || 0;
 
-  // Determine if content was successfully extracted
-  const contentExtracted = results.contentExtracted !== undefined ? 
-    results.contentExtracted : (results.data && results.data.length > 0);
+  // For error handling
+  const hasError = results.error || !results.success;
 
   const handleAdoptContent = (content: string) => {
     setAdoptedContent((prev) => [...prev, content]);
@@ -58,12 +57,12 @@ const WebsiteCrawlerResults = ({ results }: WebsiteCrawlerResultsProps) => {
       <Card>
         <CardContent className="pt-6">
           <div className="space-y-4">
-            {!contentExtracted && (
-              <div className="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-md flex items-start space-x-2 mb-4">
+            {hasError && (
+              <div className="bg-destructive/10 border border-destructive/30 text-destructive p-3 rounded-md flex items-start space-x-2 mb-4">
                 <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium">Limited Content Extraction</p>
-                  <p className="text-sm mt-1">The crawler was unable to extract content from this website. This could be due to JavaScript rendering, content protection, or other technical limitations.</p>
+                  <p className="font-medium">Error Occurred</p>
+                  <p className="text-sm mt-1">{results.error || "An error occurred during the crawl process."}</p>
                 </div>
               </div>
             )}
@@ -129,12 +128,12 @@ const WebsiteCrawlerResults = ({ results }: WebsiteCrawlerResultsProps) => {
                   <span className="font-medium">{pagesCrawled}</span>
                 </li>
                 <li className="flex items-center justify-between py-1">
-                  <span className="text-muted-foreground">Content Extraction:</span>
+                  <span className="text-muted-foreground">Status:</span>
                   <Badge 
-                    variant={contentExtracted ? "secondary" : "outline"} 
-                    className={contentExtracted ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}
+                    variant={results.success ? "secondary" : "outline"} 
+                    className={results.success ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}
                   >
-                    {contentExtracted ? "Successful" : "Limited"}
+                    {results.success ? "Success" : "Error"}
                   </Badge>
                 </li>
               </ul>

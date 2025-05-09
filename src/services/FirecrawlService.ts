@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 interface CrawlOptions {
@@ -18,13 +17,7 @@ export interface WebsiteCrawlResult {
   id?: string | null;
   url: string;
   status?: string;
-  protectedSite?: boolean;
-}
-
-interface CrawlErrorResponse {
-  success: false;
-  error: string;
-  details?: any[];
+  error?: string;
 }
 
 export class FirecrawlService {
@@ -90,38 +83,53 @@ export class FirecrawlService {
       });
       
       if (!response.ok) {
-        const errorData = await response.json() as CrawlErrorResponse;
+        // If the API returns an error, log it and return it directly
+        const errorData = await response.json();
         console.error("FireCrawl API error:", errorData);
         
-        // Return a fallback result when the API fails
-        return this.createFallbackResult(url, errorData);
+        return {
+          success: false,
+          pagesCrawled: 0,
+          contentExtracted: false,
+          summary: `Error: ${errorData.message || response.statusText}`,
+          keywordsFound: [],
+          technologiesDetected: [],
+          data: [],
+          url: url,
+          error: errorData.message || `API returned ${response.status}: ${response.statusText}`
+        };
       }
       
-      const result = await response.json();
+      const apiResponse = await response.json();
       console.log("FireCrawl crawl completed successfully");
       
-      // Process and enhance the API response
-      return this.processApiResponse(result, url);
+      // Process the API response - Now we trust the API results
+      return this.processApiResponse(apiResponse, url);
     } catch (error) {
       console.error("Error crawling website:", error);
-      return this.createFallbackResult(url, { success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+      // Return the error directly instead of using a fallback
+      return {
+        success: false,
+        pagesCrawled: 0,
+        contentExtracted: false,
+        summary: `Error: ${error instanceof Error ? error.message : 'Unknown error occurred during crawl'}`,
+        keywordsFound: [],
+        technologiesDetected: [],
+        data: [],
+        url: url,
+        error: error instanceof Error ? error.message : 'Unknown error occurred during crawl'
+      };
     }
   }
   
   private static processApiResponse(apiResponse: any, url: string): WebsiteCrawlResult {
-    // Check if we have substantial content
-    const hasContent = this.hasSubstantialContent(apiResponse);
+    // Always trust the API response and consider it to have valid content
     
-    if (!hasContent) {
-      console.log("No substantial content was extracted. Using enhanced fallback.");
-      return this.enhanceEmptyResults(apiResponse, url);
-    }
-    
-    // Process the data
+    // Process the data regardless of content "quality"
     const processedData: WebsiteCrawlResult = {
       success: true,
       pagesCrawled: apiResponse.data?.length || 0,
-      contentExtracted: true,
+      contentExtracted: true, // We now assume content is always extracted
       summary: this.extractSummary(apiResponse.data),
       keywordsFound: this.extractKeywords(apiResponse.data),
       technologiesDetected: this.detectTechnologies(apiResponse.data),
@@ -133,128 +141,9 @@ export class FirecrawlService {
     return processedData;
   }
   
-  private static hasSubstantialContent(crawlResult: any): boolean {
-    if (!crawlResult || !crawlResult.data || !Array.isArray(crawlResult.data)) {
-      return false;
-    }
-    
-    return crawlResult.data.some((page: any) => {
-      // Check for substantial HTML content
-      if (page.html && page.html.length > 500) {
-        const hasStructuredContent = page.html.includes('<div') && 
-                                    page.html.includes('<p') && 
-                                    page.html.length > 1000;
-        return hasStructuredContent;
-      }
-      
-      // Check for substantial markdown content
-      if (page.content && page.content.trim().length > 200) {
-        const lowerContent = page.content.toLowerCase();
-        const isErrorPage = lowerContent.includes('access denied') || 
-                           lowerContent.includes('404') || 
-                           lowerContent.includes('not found');
-        return !isErrorPage;
-      }
-      
-      return false;
-    });
-  }
+  // Content extraction methods remain the same but we don't use hasSubstantialContent check anymore
   
-  private static createFallbackResult(url: string, error: any): WebsiteCrawlResult {
-    console.log("Creating fallback result for URL:", url);
-    console.error("Original error:", error);
-    
-    return {
-      success: false,
-      pagesCrawled: 0,
-      contentExtracted: false,
-      summary: `Could not extract content from ${url}. The site may be protected against crawling or there might be a connection issue.`,
-      keywordsFound: [],
-      technologiesDetected: ["Unknown"],
-      data: [],
-      url: url,
-      protectedSite: true
-    };
-  }
-  
-  private static enhanceEmptyResults(crawlResult: any, url: string): WebsiteCrawlResult {
-    try {
-      // Try to extract domain info
-      let domain = url;
-      try {
-        const urlObj = new URL(url);
-        domain = urlObj.hostname;
-      } catch (e) {
-        console.error("Error parsing URL in enhance function:", e);
-      }
-      
-      // Extract company name from domain
-      const domainParts = domain.split('.');
-      const possibleCompanyName = domainParts.length >= 2 ? 
-        domainParts[domainParts.length - 2].charAt(0).toUpperCase() + 
-        domainParts[domainParts.length - 2].slice(1) : 
-        domain;
-      
-      // Try to get any partial data that might be available
-      let partialData = [];
-      if (crawlResult && crawlResult.data && Array.isArray(crawlResult.data)) {
-        partialData = crawlResult.data;
-      }
-      
-      // Detect technologies from partial data
-      const detectedTechnologies = ["Website Protection"];
-      if (partialData.length > 0 && partialData[0].html) {
-        const htmlContent = partialData[0].html.toLowerCase();
-        
-        // Basic technology detection
-        if (htmlContent.includes('react') || htmlContent.includes('react-dom')) {
-          detectedTechnologies.push("React");
-        }
-        if (htmlContent.includes('wordpress') || htmlContent.includes('wp-content')) {
-          detectedTechnologies.push("WordPress");
-        }
-      }
-      
-      // Extract title and description if available
-      let title = possibleCompanyName + " Website";
-      let description = "";
-      if (partialData.length > 0) {
-        if (partialData[0].title) {
-          title = partialData[0].title;
-        }
-        
-        if (partialData[0].metadata && partialData[0].metadata.description) {
-          description = partialData[0].metadata.description;
-        }
-      }
-      
-      // Extract keywords
-      const keywords = [possibleCompanyName, title, domain];
-      
-      // Build summary
-      const summary = description ? 
-        `The website ${domain} appears to be protected against web crawling. From the meta description we found: "${description}"` :
-        `The website ${domain} appears to be protected against crawling or uses technology that prevents content extraction.`;
-      
-      return {
-        success: true,
-        pagesCrawled: partialData.length || 1,
-        contentExtracted: false,
-        summary: summary,
-        keywordsFound: [...new Set(keywords)],
-        technologiesDetected: [...new Set(detectedTechnologies)],
-        data: partialData,
-        id: crawlResult?.id || null,
-        url: url,
-        protectedSite: true
-      };
-    } catch (e) {
-      console.error("Error enhancing empty results:", e);
-      return this.createFallbackResult(url, e);
-    }
-  }
-  
-  // Content extraction methods
+  // Extract summary from crawled data
   private static extractSummary(data: any[]): string {
     if (!data || data.length === 0) return "No content was extracted from the website.";
     
