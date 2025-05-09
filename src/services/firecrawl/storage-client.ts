@@ -93,18 +93,18 @@ export class StorageClient {
         return null;
       }
       
-      // Extract the data from the extracted_content JSON field and type cast it
-      const extractedContent = data.extracted_content as ExtractedContent;
+      // Safely extract and process the extracted_content data
+      const extractedContent = this.parseExtractedContent(data.extracted_content);
       
       // Transform the database record back into WebsiteCrawlResult format
       const crawlResult: WebsiteCrawlResult = {
         success: true,
-        pagesCrawled: extractedContent?.pages_crawled || 0,
-        contentExtracted: extractedContent?.content_extracted || false,
-        summary: extractedContent?.summary || "",
-        keywordsFound: extractedContent?.keywords || [],
-        technologiesDetected: extractedContent?.technologies || [],
-        data: extractedContent?.data || [],
+        pagesCrawled: extractedContent.pages_crawled || 0,
+        contentExtracted: extractedContent.content_extracted || false,
+        summary: extractedContent.summary || "",
+        keywordsFound: extractedContent.keywords || [],
+        technologiesDetected: extractedContent.technologies || [],
+        data: extractedContent.data || [],
         url: data.url,
         id: data.id,
         status: data.status
@@ -135,17 +135,17 @@ export class StorageClient {
       
       // Transform all database records into WebsiteCrawlResult format
       return (data || []).map(record => {
-        // Type cast the extracted content to our interface
-        const extractedContent = record.extracted_content as ExtractedContent;
+        // Safely extract and process the extracted_content data
+        const extractedContent = this.parseExtractedContent(record.extracted_content);
         
         return {
           success: true,
-          pagesCrawled: extractedContent?.pages_crawled || 0,
-          contentExtracted: extractedContent?.content_extracted || false,
-          summary: extractedContent?.summary || "",
-          keywordsFound: extractedContent?.keywords || [],
-          technologiesDetected: extractedContent?.technologies || [],
-          data: extractedContent?.data || [],
+          pagesCrawled: extractedContent.pages_crawled || 0,
+          contentExtracted: extractedContent.content_extracted || false,
+          summary: extractedContent.summary || "",
+          keywordsFound: extractedContent.keywords || [],
+          technologiesDetected: extractedContent.technologies || [],
+          data: extractedContent.data || [],
           url: record.url,
           id: record.id,
           status: record.status
@@ -155,5 +155,40 @@ export class StorageClient {
       console.error("Failed to retrieve all crawl results:", err);
       return [];
     }
+  }
+
+  /**
+   * Helper method to safely parse the extracted_content JSON field
+   * This handles the type casting safely
+   */
+  private static parseExtractedContent(jsonData: any): ExtractedContent {
+    // Default empty values
+    const defaultContent: ExtractedContent = {
+      data: [],
+      summary: "",
+      pages_crawled: 0,
+      keywords: [],
+      technologies: [],
+      content_extracted: false,
+      crawled_at: new Date().toISOString(),
+      metadata: {}
+    };
+
+    // If jsonData is not an object or is null/undefined, return defaults
+    if (!jsonData || typeof jsonData !== 'object') {
+      return defaultContent;
+    }
+
+    // Create a properly typed object by merging with defaults
+    return {
+      data: Array.isArray(jsonData.data) ? jsonData.data : defaultContent.data,
+      summary: typeof jsonData.summary === 'string' ? jsonData.summary : defaultContent.summary,
+      pages_crawled: typeof jsonData.pages_crawled === 'number' ? jsonData.pages_crawled : defaultContent.pages_crawled,
+      keywords: Array.isArray(jsonData.keywords) ? jsonData.keywords : defaultContent.keywords,
+      technologies: Array.isArray(jsonData.technologies) ? jsonData.technologies : defaultContent.technologies,
+      content_extracted: !!jsonData.content_extracted,
+      crawled_at: typeof jsonData.crawled_at === 'string' ? jsonData.crawled_at : defaultContent.crawled_at,
+      metadata: typeof jsonData.metadata === 'object' && jsonData.metadata !== null ? jsonData.metadata : defaultContent.metadata
+    };
   }
 }

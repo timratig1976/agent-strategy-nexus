@@ -94,7 +94,7 @@ export function detectTechnologies(pageData: any): string[] {
       technologies.add("Bulma");
     
     // JavaScript libraries
-    if (htmlLower.includes('jquery') || htmlLower.includes('$("') || htmlLower.includes('$(\'')) 
+    if (htmlLower.includes('jquery') || htmlLower.includes('$(\"') || htmlLower.includes('$(\'')) 
       technologies.add("jQuery");
     
     if (htmlLower.includes('lodash') || htmlLower.includes('_.')) 
