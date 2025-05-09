@@ -14,7 +14,7 @@ export interface MarketingAIServiceStatic {
 }
 
 // Implement the MarketingAIService class with its core functionality
-export class MarketingAIService implements MarketingAIServiceStatic {
+export class MarketingAIService {
   /**
    * Generate content using AI with robust error handling and fallbacks
    * @param module The module name
