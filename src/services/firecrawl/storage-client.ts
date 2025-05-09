@@ -7,6 +7,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { WebsiteCrawlResult } from "./types";
 
 /**
+ * Interface for database record structure from website_crawls table
+ */
+interface WebsiteCrawlRecord {
+  id: string;
+  project_id: string;
+  url: string;
+  status: string;
+  extracted_content: {
+    data: any[];
+    summary: string;
+    keywords: string[];
+    url_type: 'website' | 'product';
+  };
+  created_at: string;
+}
+
+/**
  * StorageClient handles database operations for crawl results
  */
 export class StorageClient {
@@ -76,22 +93,18 @@ export class StorageClient {
         return null;
       }
       
-      // Use a proper type assertion that doesn't cause infinite type instantiation
-      interface QueryResult {
-        data: any[] | null;
-        error: any;
-      }
-      
-      // Query for the latest result from website_crawls table
-      const result: QueryResult = await supabase
+      // Use explicit typing and type assertion to prevent deep type inference
+      const response = await supabase
         .from(this.TABLE_NAME)
         .select('*')
         .eq('project_id', strategyId)
         .eq('extracted_content->url_type', urlType)
         .order('created_at', { ascending: false })
         .limit(1);
-      
-      const { data, error } = result;
+        
+      // Manually extract data and error to avoid type issues
+      const data = response.data as WebsiteCrawlRecord[] | null;
+      const error = response.error;
       
       if (error) {
         console.error("Error fetching crawl results:", error);
@@ -126,21 +139,17 @@ export class StorageClient {
         return [];
       }
       
-      // Use a proper type assertion that doesn't cause infinite type instantiation
-      interface QueryResult {
-        data: any[] | null;
-        error: any;
-      }
-      
-      // Query for all results
-      const result: QueryResult = await supabase
+      // Use explicit typing and type assertion to prevent deep type inference
+      const response = await supabase
         .from(this.TABLE_NAME)
         .select('*')
         .eq('project_id', strategyId)
         .eq('extracted_content->url_type', urlType)
         .order('created_at', { ascending: false });
-      
-      const { data, error } = result;
+        
+      // Manually extract data and error to avoid type issues
+      const data = response.data as WebsiteCrawlRecord[] | null;
+      const error = response.error;
       
       if (error) {
         console.error("Error fetching crawl results:", error);
@@ -148,7 +157,7 @@ export class StorageClient {
       }
       
       if (data && data.length > 0) {
-        return data.map((record: any) => this.mapFromDatabaseRecord(record));
+        return data.map((record) => this.mapFromDatabaseRecord(record));
       }
       
       return [];
@@ -161,7 +170,7 @@ export class StorageClient {
   /**
    * Map a database record to a WebsiteCrawlResult
    */
-  private static mapFromDatabaseRecord(record: any): WebsiteCrawlResult {
+  private static mapFromDatabaseRecord(record: WebsiteCrawlRecord): WebsiteCrawlResult {
     return {
       success: true,
       pagesCrawled: 1,
