@@ -36,6 +36,7 @@ const StrategyBoardPage = () => {
           <StrategyBoard 
             strategyId={id || ''} 
             agentResults={agentResults} 
+            currentStage={strategy?.state}
           />
         )}
       </div>

@@ -12,24 +12,34 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, FileText, User, Star, BarChart2, MessageSquare } from "lucide-react";
+import { AgentResult, StrategyState } from "@/types/marketing";
+import { getStateLabel } from "@/utils/strategyUtils";
 
-// Custom node components will be imported here
-import { useNavigate } from 'react-router-dom';
+// Custom node components
+import StageNode from './nodes/StageNode';
+import ResultNode from './nodes/ResultNode';
 
 interface StrategyBoardProps {
   strategyId: string;
-  agentResults?: any[];
+  agentResults?: AgentResult[];
+  currentStage?: StrategyState;
 }
 
 const StrategyBoard: React.FC<StrategyBoardProps> = ({
   strategyId,
-  agentResults = []
+  agentResults = [],
+  currentStage
 }) => {
-  const navigate = useNavigate();
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Define custom node types
+  const nodeTypes: NodeTypes = {
+    stageNode: StageNode,
+    resultNode: ResultNode
+  };
 
   // Set up initial nodes and edges based on strategy data
   useEffect(() => {
@@ -38,60 +48,202 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
     const generateNodesAndEdges = async () => {
       setIsLoading(true);
       
-      // Example: Simple nodes for visualization
-      // In a real implementation, these would be generated from actual strategy data
-      const initialNodes: Node[] = [
-        {
-          id: 'briefing',
-          type: 'default',
-          data: { label: 'Strategy Briefing' },
-          position: { x: 250, y: 100 },
-          style: { background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '8px', padding: '10px', width: 200 }
-        },
-        {
-          id: 'persona',
-          type: 'default',
-          data: { label: 'Target Persona' },
-          position: { x: 250, y: 250 },
-          style: { background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '8px', padding: '10px', width: 200 }
-        },
-        {
-          id: 'usp-canvas',
-          type: 'default',
-          data: { label: 'USP Canvas' },
-          position: { x: 500, y: 175 },
-          style: { background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '8px', padding: '10px', width: 200 }
-        },
-        {
-          id: 'funnel',
-          type: 'default',
-          data: { label: 'Marketing Funnel' },
-          position: { x: 750, y: 100 },
-          style: { background: '#fdf2f8', border: '1px solid #fbcfe8', borderRadius: '8px', padding: '10px', width: 200 }
-        },
-        {
-          id: 'ads',
-          type: 'default',
-          data: { label: 'Ad Campaign' },
-          position: { x: 750, y: 250 },
-          style: { background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: '8px', padding: '10px', width: 200 }
-        },
-      ];
+      // Get final results for each stage
+      const briefingResult = agentResults.find(r => 
+        r.metadata?.is_final === true && (!r.metadata?.type || r.metadata?.type === 'briefing')
+      );
       
-      const initialEdges: Edge[] = [
-        { id: 'e1-2', source: 'briefing', target: 'persona', animated: true },
-        { id: 'e1-3', source: 'persona', target: 'usp-canvas', animated: true },
-        { id: 'e3-4', source: 'usp-canvas', target: 'funnel', animated: true },
-        { id: 'e4-5', source: 'usp-canvas', target: 'ads', animated: true },
-      ];
+      const personaResult = agentResults.find(r => 
+        r.metadata?.is_final === true && r.metadata?.type === 'persona'
+      );
+      
+      const uspResult = agentResults.find(r => 
+        r.metadata?.is_final === true && r.metadata?.type === 'pain_gains'
+      );
+      
+      const funnelResult = agentResults.find(r => 
+        r.metadata?.is_final === true && r.metadata?.type === 'funnel'
+      );
+      
+      const adResult = agentResults.find(r => 
+        r.metadata?.is_final === true && r.metadata?.type === 'ads'
+      );
 
-      setNodes(initialNodes);
-      setEdges(initialEdges);
+      // Define stages in order
+      const stages: StrategyState[] = ['briefing', 'persona', 'pain_gains', 'funnel', 'ads'];
+      
+      // Create nodes for each stage
+      const stageNodes: Node[] = stages.map((stage, index) => {
+        const isCurrentStage = currentStage === stage;
+        const xPos = 100 + index * 200;
+        
+        return {
+          id: `stage-${stage}`,
+          type: 'stageNode',
+          data: { 
+            label: getStateLabel(stage),
+            icon: getStageIcon(stage),
+            isCurrentStage,
+            completed: isStageCompleted(stage, currentStage),
+          },
+          position: { x: xPos, y: 100 },
+          style: { 
+            width: 150, 
+            height: 80,
+          }
+        };
+      });
+      
+      // Create result nodes where available
+      const resultNodes: Node[] = [];
+      
+      if (briefingResult) {
+        resultNodes.push({
+          id: `result-briefing`,
+          type: 'resultNode',
+          data: { 
+            label: 'Briefing Summary',
+            content: truncateContent(briefingResult.content, 100),
+            type: 'briefing',
+            result: briefingResult
+          },
+          position: { x: 100, y: 250 },
+          style: { width: 180, height: 160 }
+        });
+      }
+      
+      if (personaResult) {
+        resultNodes.push({
+          id: `result-persona`,
+          type: 'resultNode',
+          data: { 
+            label: 'Target Persona',
+            content: truncateContent(personaResult.content, 100),
+            type: 'persona',
+            result: personaResult
+          },
+          position: { x: 300, y: 250 },
+          style: { width: 180, height: 160 }
+        });
+      }
+      
+      if (uspResult) {
+        resultNodes.push({
+          id: `result-usp`,
+          type: 'resultNode',
+          data: { 
+            label: 'USP Canvas',
+            content: truncateContent(uspResult.content, 100),
+            type: 'pain_gains',
+            result: uspResult
+          },
+          position: { x: 500, y: 250 },
+          style: { width: 180, height: 160 }
+        });
+      }
+      
+      if (funnelResult) {
+        resultNodes.push({
+          id: `result-funnel`,
+          type: 'resultNode',
+          data: { 
+            label: 'Marketing Funnel',
+            content: truncateContent(funnelResult.content, 100),
+            type: 'funnel',
+            result: funnelResult
+          },
+          position: { x: 700, y: 250 },
+          style: { width: 180, height: 160 }
+        });
+      }
+      
+      if (adResult) {
+        resultNodes.push({
+          id: `result-ads`,
+          type: 'resultNode',
+          data: { 
+            label: 'Ad Campaign',
+            content: truncateContent(adResult.content, 100),
+            type: 'ads',
+            result: adResult
+          },
+          position: { x: 900, y: 250 },
+          style: { width: 180, height: 160 }
+        });
+      }
+      
+      // Connect stage nodes with edges
+      const stageEdges: Edge[] = [];
+      for (let i = 0; i < stages.length - 1; i++) {
+        stageEdges.push({
+          id: `edge-${i}-${i+1}`,
+          source: `stage-${stages[i]}`,
+          target: `stage-${stages[i+1]}`,
+          animated: currentStage === stages[i+1], // Animate the edge to the current stage
+          style: { 
+            stroke: '#888',
+            strokeWidth: 2
+          }
+        });
+      }
+      
+      // Connect stage nodes to their result nodes
+      const resultEdges: Edge[] = [];
+      resultNodes.forEach(node => {
+        const type = node.data.type;
+        resultEdges.push({
+          id: `edge-${type}-result`,
+          source: `stage-${type}`,
+          target: node.id,
+          type: 'smoothstep',
+          style: { stroke: '#bbb' }
+        });
+      });
+
+      setNodes([...stageNodes, ...resultNodes]);
+      setEdges([...stageEdges, ...resultEdges]);
       setIsLoading(false);
     };
 
     generateNodesAndEdges();
-  }, [strategyId, agentResults]);
+  }, [strategyId, agentResults, currentStage]);
+
+  // Helper function to truncate content
+  const truncateContent = (content: string, maxLength: number): string => {
+    if (!content) return '';
+    return content.length > maxLength
+      ? content.substring(0, maxLength) + '...'
+      : content;
+  };
+
+  // Helper function to check if a stage is completed
+  const isStageCompleted = (stage: StrategyState, currentStage?: StrategyState): boolean => {
+    if (!currentStage) return false;
+    
+    const stages: StrategyState[] = ['briefing', 'persona', 'pain_gains', 'funnel', 'ads'];
+    const currentIndex = stages.indexOf(currentStage);
+    const stageIndex = stages.indexOf(stage);
+    
+    return stageIndex < currentIndex;
+  };
+
+  // Helper function to get icon for a stage
+  const getStageIcon = (stage: StrategyState) => {
+    switch (stage) {
+      case 'briefing':
+        return <FileText size={20} />;
+      case 'persona':
+        return <User size={20} />;
+      case 'pain_gains':
+        return <Star size={20} />;
+      case 'funnel':
+        return <BarChart2 size={20} />;
+      case 'ads':
+        return <MessageSquare size={20} />;
+      default:
+        return null;
+    }
+  };
 
   const handleExport = () => {
     // This will be implemented to export the board as PNG or PDF
@@ -116,6 +268,7 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
         defaultViewport={{ x: 0, y: 0, zoom: 1 }}
         minZoom={0.2}
         maxZoom={4}
+        nodeTypes={nodeTypes}
       >
         <Controls />
         <MiniMap nodeBorderRadius={8} />
