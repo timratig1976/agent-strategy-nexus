@@ -72,13 +72,13 @@ const StrategyCard = ({ strategy, stateLabels, stateColors }: StrategyCardProps)
               className="text-xs text-blue-600 hover:text-blue-800 flex items-center"
             >
               <ExternalLink className="h-3 w-3 mr-1" /> 
-              Initial Data
+              Strategy Data
             </Link>
             <Link 
-              to={`/strategy-details/${strategy.id}`} 
-              className="text-xs text-muted-foreground flex items-center"
+              to={`/strategy-details/${strategy.id}?tab=${strategy.state}`} 
+              className="text-xs text-muted-foreground hover:text-blue-600 flex items-center"
             >
-              View Details <ArrowRight className="ml-1 h-3 w-3" />
+              Go to {stateLabels[strategy.state]} <ArrowRight className="ml-1 h-3 w-3" />
             </Link>
           </div>
         </div>
