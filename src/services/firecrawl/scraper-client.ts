@@ -101,29 +101,46 @@ export class ScraperClient {
       
       console.log(`Raw scrape response for ${url}:`, response);
       
-      // Direct handling of response without attempting type coercion first
-      // Check if we have a successful response with data structure we expect
-      if (response && typeof response === 'object' && 'success' in response) {
-        if (response.success === true) {
-          return {
-            success: true,
-            data: (response as any).data,
-            id: (response as any).id
-          };
-        } else {
-          return {
-            success: false,
-            error: (response as ErrorResponse).error || "API reported failure"
-          };
-        }
-      } 
+      // Type guard function to check if response is an ErrorResponse
+      function isErrorResponse(resp: any): resp is ErrorResponse {
+        return resp && typeof resp === 'object' && 'success' in resp && resp.success === false;
+      }
       
-      // If we get here, we have an unexpected response format
-      console.log("Got unexpected response format:", response);
+      // Type guard function to check if response is a SuccessResponse
+      function isSuccessResponse(resp: any): resp is SuccessResponse {
+        return resp && typeof resp === 'object' && 'success' in resp && resp.success === true;
+      }
       
-      // Handle cases where we still get usable data in an unexpected format
+      // Handle string response (raw HTML)
+      if (typeof response === 'string' && response.trim().length > 0) {
+        return {
+          success: true,
+          data: {
+            html: response, 
+            markdown: ""
+          }
+        };
+      }
+      
+      // Handle error response
+      if (isErrorResponse(response)) {
+        return {
+          success: false,
+          error: response.error || "API reported failure"
+        };
+      }
+      
+      // Handle success response
+      if (isSuccessResponse(response)) {
+        return {
+          success: true,
+          data: response.data,
+          id: response.id
+        };
+      }
+      
+      // Handle unexpected object response by checking for data property
       if (response && typeof response === 'object') {
-        // Check if the response itself contains the data we need
         if ('data' in response) {
           return {
             success: true,
@@ -131,7 +148,7 @@ export class ScraperClient {
           };
         } 
         
-        // If the response itself looks like data (not error response)
+        // If it looks like data itself (no error or success props)
         if (!('error' in response) && !('success' in response)) {
           return {
             success: true,
@@ -140,21 +157,7 @@ export class ScraperClient {
         }
       }
       
-      // Fix: Check if response is a string with content
-      if (typeof response === 'string') {
-        // Use the response directly without assigning to an intermediate variable
-        if (response.length > 0) {
-          return {
-            success: true,
-            data: {
-              html: response, 
-              markdown: ""
-            }
-          };
-        }
-      }
-      
-      // Fallback error for truly unexpected formats
+      // Fallback for truly unexpected formats
       return {
         success: false,
         error: "Received unexpected response format from API"
