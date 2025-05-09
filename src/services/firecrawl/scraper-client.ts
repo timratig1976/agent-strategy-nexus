@@ -141,14 +141,13 @@ export class ScraperClient {
       }
       
       // Fix: Check if response is a string with content
-      // This is where the error was occurring - need to ensure response is a string before checking length
       if (typeof response === 'string') {
-        const stringResponse = response;
-        if (stringResponse.length > 0) {
+        // Use the response directly without assigning to an intermediate variable
+        if (response.length > 0) {
           return {
             success: true,
             data: {
-              html: stringResponse, 
+              html: response, 
               markdown: ""
             }
           };
