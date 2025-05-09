@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { UspCanvas, CustomerJob, CustomerPain, CustomerGain, ProductService, PainReliever, GainCreator } from '../types';
 import { supabase } from '@/integrations/supabase/client';
@@ -188,10 +187,10 @@ export const useCanvasData = (strategyId?: string) => {
       console.log("Saving USP canvas to database for strategy:", strategyId);
 
       // Prepare the data for saving according to the database schema
-      // Changed from upsert to insert with onConflict to fix TypeScript error
+      // Fix TypeScript error by passing an array of objects and using upsert
       const { error } = await supabase
         .from('usp_canvas')
-        .insert({
+        .upsert([{
           project_id: strategyId,
           customer_jobs: canvas.customerJobs,
           pain_points: canvas.customerPains,
@@ -202,9 +201,7 @@ export const useCanvasData = (strategyId?: string) => {
             ...canvas.gainCreators
           ], // Store all value map items in the differentiators field
           updated_at: new Date().toISOString()
-        })
-        .onConflict('project_id')
-        .merge();
+        }]);
       
       if (error) {
         console.error("Error saving canvas to database:", error);
