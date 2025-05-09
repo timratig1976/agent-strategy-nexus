@@ -33,14 +33,14 @@ const PersonaAIForm: React.FC<PersonaAIFormProps> = ({ strategyId, briefingConte
     
     try {
       const response = await MarketingAIService.generateContent(
-        'persona', // No longer need to append _de for German
+        'persona',
         'generate',
         {
           strategyId,
           briefingContent,
           enhancementText
         },
-        { outputLanguage } // Pass language as parameter
+        { outputLanguage }
       );
       
       if (response.error) {

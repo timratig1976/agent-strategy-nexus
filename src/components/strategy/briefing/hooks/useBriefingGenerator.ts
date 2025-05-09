@@ -9,6 +9,7 @@ import { useDocumentProcessing } from "@/hooks/useDocumentProcessing";
 import { useAgentGeneration } from "@/hooks/useAgentGeneration";
 import { useAgentResults } from "@/hooks/useAgentResults";
 import { AgentCoreService } from "@/services/ai/agentCoreService";
+import { AgentResult } from "@/types/marketing";
 
 export const useBriefingGenerator = (strategyId: string) => {
   const [error, setError] = useState<string | null>(null);
@@ -105,29 +106,25 @@ export const useBriefingGenerator = (strategyId: string) => {
         const currentTime = new Date().toISOString();
         
         // Create the agent result to save to the database with null agent_id
-        const newResult = {
-          agent_id: null, // Use null instead of hard-coded IDs
-          strategy_id: strategyId,
-          content: aiResponse?.rawOutput || "",
-          metadata: {
-            type: "briefing",
-            is_final: false,
-            version: nextVersion,
-            generated_at: currentTime
-          }
+        const newResultContent = aiResponse?.rawOutput || "";
+        const newResultMetadata = {
+          type: "briefing",
+          is_final: false,
+          version: nextVersion,
+          generated_at: currentTime
         };
         
         // Save the result to the database using AgentCoreService
         const savedResult = await AgentCoreService.saveAgentResult(
           strategyId, 
-          newResult.content, 
-          newResult.metadata, 
+          newResultContent, 
+          newResultMetadata, 
           null
         );
         
         // Update local state with the new result
         if (savedResult) {
-          setBriefingHistory(prev => [savedResult, ...prev]);
+          setBriefingHistory(prev => [savedResult as AgentResult, ...prev]);
         }
         
         toast.success("Briefing generated successfully");

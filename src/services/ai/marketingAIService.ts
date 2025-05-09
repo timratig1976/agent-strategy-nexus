@@ -1,5 +1,4 @@
 
-import { corsHeaders } from "@/constants";
 import { supabase } from "@/integrations/supabase/client";
 import { AgentCoreService } from "./agentCoreService";
 
@@ -20,7 +19,8 @@ export class MarketingAIService {
   static async generateContent<T = any>(
     module: string,
     action: string,
-    data: Record<string, any>
+    data: Record<string, any>,
+    options?: { outputLanguage?: string }
   ): Promise<AIServiceResponse<T>> {
     try {
       console.log(`Generating content for ${module}/${action} with data:`, data);
@@ -36,7 +36,8 @@ export class MarketingAIService {
         body: {
           module,
           action,
-          data
+          data,
+          options
         }
       });
 

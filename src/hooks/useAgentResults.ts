@@ -64,7 +64,7 @@ export const useAgentResults = (options: UseAgentResultsOptions) => {
           strategyId: item.strategy_id,
           content: item.content,
           createdAt: item.created_at,
-          metadata: item.metadata || {}
+          metadata: item.metadata as Record<string, any> || {}
         }));
         
         setResults(mappedResults);
@@ -100,8 +100,8 @@ export const useAgentResults = (options: UseAgentResultsOptions) => {
     
     if (result) {
       // Update local state with new result at the beginning
-      setResults(prev => [result, ...prev]);
-      return result;
+      setResults(prev => [result as AgentResult, ...prev]);
+      return result as AgentResult;
     }
     
     return null;

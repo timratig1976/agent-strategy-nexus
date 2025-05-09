@@ -75,11 +75,7 @@ export const useAgentPrompt = (module: string) => {
   // Save prompt to database
   const savePrompt = useCallback(async (): Promise<boolean> => {
     if (!module || !systemPrompt.trim() || !userPrompt.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Module name, system prompt, and user prompt are required",
-        variant: "destructive",
-      });
+      toast.error("Module name, system prompt, and user prompt are required");
       return false;
     }
 
@@ -120,18 +116,11 @@ export const useAgentPrompt = (module: string) => {
       }
 
       setPromptSource('database');
-      toast({
-        title: "Success",
-        description: "Prompt saved successfully",
-      });
+      toast.success("Prompt saved successfully");
       return true;
     } catch (error: any) {
       console.error("Error saving prompt:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save prompt: " + error.message,
-        variant: "destructive",
-      });
+      toast.error("Failed to save prompt: " + error.message);
       return false;
     } finally {
       setIsSaving(false);
@@ -142,20 +131,13 @@ export const useAgentPrompt = (module: string) => {
   const resetToDefault = useCallback(async () => {
     if (!module) return;
     
-    const defaultTemplate = AgentCoreService.DEFAULT_PROMPT_TEMPLATES[module];
-    if (defaultTemplate) {
-      setSystemPrompt(defaultTemplate.system_prompt);
-      setUserPrompt(defaultTemplate.user_prompt);
-      toast({
-        title: "Reset Successful",
-        description: "Prompts reset to default template",
-      });
+    const defaultTemplates = AgentCoreService.getDefaultPromptTemplates?.(module);
+    if (defaultTemplates) {
+      setSystemPrompt(defaultTemplates.system_prompt);
+      setUserPrompt(defaultTemplates.user_prompt);
+      toast.success("Prompts reset to default template");
     } else {
-      toast({
-        title: "Reset Failed",
-        description: "No default template found for this module",
-        variant: "destructive",
-      });
+      toast.error("No default template found for this module");
     }
   }, [module]);
 
