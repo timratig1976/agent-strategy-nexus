@@ -1,6 +1,6 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { Configuration, OpenAIApi } from 'https://esm.sh/openai@3.2.1'
+import { Configuration, OpenAIApi } from 'https://esm.sh/openai@4.26.0'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 
@@ -140,12 +140,6 @@ serve(async (req) => {
     if (!OPENAI_API_KEY || OPENAI_API_KEY === '') {
       throw new Error('Missing OPENAI_API_KEY environment variable')
     }
-
-    // Initialize OpenAI API
-    const configuration = new Configuration({
-      apiKey: OPENAI_API_KEY,
-    })
-    const openai = new OpenAIApi(configuration)
 
     // Get request body
     const requestData = await req.json()
@@ -291,45 +285,71 @@ serve(async (req) => {
     console.log('System prompt length:', system_prompt.length);
     console.log('Processed user prompt length:', processedUserPrompt.length);
 
-    // Call OpenAI API
-    const completion = await openai.createChatCompletion({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: system_prompt },
-        { role: "user", content: processedUserPrompt }
-      ],
-      temperature: 0.7,
-      max_tokens: 3000
+    // Create OpenAI configuration
+    const configuration = new Configuration({
+      apiKey: OPENAI_API_KEY,
     });
+    const openai = new OpenAIApi(configuration);
 
-    if (!completion || !completion.data || !completion.data.choices || completion.data.choices.length === 0) {
-      console.error('Invalid response from OpenAI API');
-      throw new Error('Invalid response from OpenAI API');
-    }
-
-    const response = completion.data.choices[0].message?.content || '';
-
-    // Return the response
-    const headers = new Headers(corsHeaders);
-    headers.set('Content-Type', 'application/json');
-
-    return new Response(
-      JSON.stringify({
-        result: {
-          rawOutput: response
+    // Call OpenAI API with proper error handling
+    try {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
         },
-        debugInfo: {
-          system_prompt,
-          user_prompt: processedUserPrompt,
-          response_tokens: completion.data.usage?.completion_tokens,
-          prompt_tokens: completion.data.usage?.prompt_tokens,
-          total_tokens: completion.data.usage?.total_tokens,
-          promptSource
-        }
-      }),
-      { headers }
-    );
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: system_prompt },
+            { role: "user", content: processedUserPrompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 3000
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error("OpenAI API error status:", response.status);
+        console.error("OpenAI API error response:", errorData);
+        throw new Error(`OpenAI API error: ${response.status} - ${errorData}`);
+      }
+      
+      const completion = await response.json();
 
+      if (!completion || !completion.choices || completion.choices.length === 0) {
+        console.error('Invalid response from OpenAI API');
+        throw new Error('Invalid response from OpenAI API');
+      }
+
+      const responseContent = completion.choices[0].message?.content || '';
+
+      // Return the response
+      const headers = new Headers(corsHeaders);
+      headers.set('Content-Type', 'application/json');
+
+      return new Response(
+        JSON.stringify({
+          result: {
+            rawOutput: responseContent
+          },
+          debugInfo: {
+            system_prompt,
+            user_prompt: processedUserPrompt,
+            response_tokens: completion.usage?.completion_tokens,
+            prompt_tokens: completion.usage?.prompt_tokens,
+            total_tokens: completion.usage?.total_tokens,
+            promptSource
+          }
+        }),
+        { headers }
+      );
+    } catch (apiError) {
+      console.error("OpenAI API call failed:", apiError);
+      throw new Error(`OpenAI API call failed: ${apiError.message || JSON.stringify(apiError)}`);
+    }
   } catch (error) {
     console.error('Error in marketing-ai function:', error);
     
