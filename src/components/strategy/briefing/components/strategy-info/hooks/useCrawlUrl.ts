@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -155,9 +154,19 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
         });
       }, 1000);
       
-      // Crawl the URL with more detailed response handling
-      console.log(`Starting crawl for ${urlType}: ${url}`);
-      const result = await ScraperClient.scrapeWithApiKey(url, apiKey);
+      // Determine the database URL type
+      const dbUrlType = urlType === 'websiteUrl' ? 'website' : 'product';
+      
+      // Crawl the URL with more detailed response handling and pass the strategy ID
+      console.log(`Starting crawl for ${urlType}: ${url} with strategy ID: ${formValues.id || 'none'}`);
+      const result = await ScraperClient.scrapeWithApiKey(
+        url, 
+        apiKey, 
+        {}, 
+        formValues.id, 
+        dbUrlType
+      );
+      
       console.log(`Crawl result for ${urlType}:`, result);
       
       // Stop the progress simulation
@@ -184,9 +193,6 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
         return { success: false };
       }
       
-      // Create response data array, handling potential undefined result.data
-      const responseData = result.data ? (Array.isArray(result.data) ? result.data : [result.data]) : [];
-      
       // Prepare WebsiteCrawlResult from the raw result
       const crawlResult: WebsiteCrawlResult = {
         success: true,
@@ -195,7 +201,7 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
         summary: "Website content extracted successfully",
         keywordsFound: [],
         technologiesDetected: [],
-        data: responseData,
+        data: [result.data],
         url: url,
         id: result.id,
         strategyId: formValues.id
@@ -206,11 +212,6 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
         setWebsitePreviewResults(crawlResult);
       } else {
         setProductPreviewResults(crawlResult);
-      }
-      
-      // Save the results to the database
-      if (formValues.id) {
-        await saveCrawlResults(formValues.id, urlType, url, result);
       }
 
       // Show a success message
@@ -227,42 +228,6 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
       setCrawlingUrl(null);
       setCrawlProgress(0);
       return { success: false };
-    }
-  };
-
-  // Save crawl results to the database
-  const saveCrawlResults = async (strategyId: string, urlType: string, url: string, result: any) => {
-    try {
-      console.log(`Saving ${urlType} crawl results for strategy ${strategyId}`);
-      
-      // Create a safe data array from result
-      const responseData = result.data ? (Array.isArray(result.data) ? result.data : [result.data]) : [];
-      
-      // Prepare the data to save in the website_crawls table
-      const data = {
-        project_id: strategyId,
-        url: url,
-        status: 'completed',
-        extracted_content: {
-          data: responseData,
-          summary: "Website content extracted successfully",
-          keywords: [],
-          url_type: urlType === 'websiteUrl' ? 'website' : 'product'
-        }
-      };
-      
-      // Save to the database
-      const { error } = await supabase.from('website_crawls').insert(data);
-      
-      if (error) {
-        console.error("Error saving crawl results:", error);
-        throw error;
-      }
-      
-      console.log(`${urlType} crawl results saved successfully`);
-    } catch (error) {
-      console.error("Error saving crawl results:", error);
-      throw error;
     }
   };
 

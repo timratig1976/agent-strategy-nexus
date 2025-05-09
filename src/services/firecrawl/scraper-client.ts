@@ -1,9 +1,10 @@
 
 /**
  * Scraper client for FireCrawl API
- * Handles the communication with FireCrawl API for website scraping
+ * Handles communication with the FireCrawl API for website scraping
  */
 import FirecrawlApp from "@mendable/firecrawl-js";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Type for supported formats in Firecrawl
@@ -20,11 +21,11 @@ interface ScrapeOptions {
 }
 
 /**
- * Structure for the API response when successful
+ * Structure for API success response
  */
 interface ScrapeSuccessResponse {
   success: true;
-  data?: {
+  data: {
     markdown?: string;
     html?: string;
     metadata?: Record<string, any>;
@@ -34,7 +35,7 @@ interface ScrapeSuccessResponse {
 }
 
 /**
- * Structure for the API response when failed
+ * Structure for API error response
  */
 interface ScrapeErrorResponse {
   success: false;
@@ -42,9 +43,20 @@ interface ScrapeErrorResponse {
 }
 
 /**
- * Union type for all possible API responses
+ * Type guard for success response
  */
-type FirecrawlApiResponse = ScrapeSuccessResponse | ScrapeErrorResponse | string;
+function isSuccessResponse(response: any): response is ScrapeSuccessResponse {
+  return response && 
+         response.success === true && 
+         (response.data !== undefined || response.markdown !== undefined || response.html !== undefined);
+}
+
+/**
+ * Type guard for error response
+ */
+function isErrorResponse(response: any): response is ScrapeErrorResponse {
+  return response && response.success === false && typeof response.error === 'string';
+}
 
 /**
  * Our standardized response type for the application
@@ -90,17 +102,75 @@ export class ScraperClient {
   }
 
   /**
+   * Save crawl results to the database
+   * @param url The URL that was scraped
+   * @param strategyId The strategy ID
+   * @param response The scrape response
+   * @param urlType The type of URL (website or product)
+   * @returns Promise that resolves when saved
+   */
+  private static async saveCrawlResult(
+    url: string,
+    strategyId: string | undefined,
+    response: any,
+    urlType: 'website' | 'product' = 'website'
+  ): Promise<void> {
+    if (!strategyId) {
+      console.log("No strategy ID provided, skipping database save");
+      return;
+    }
+
+    // Extract markdown and metadata
+    const processedResponse = this.processResponse(response, url);
+    if (!processedResponse.success || !processedResponse.data) {
+      console.error("Cannot save invalid response to database");
+      return;
+    }
+
+    try {
+      console.log(`Saving ${urlType} crawl result for strategy ${strategyId}`);
+
+      const data = {
+        project_id: strategyId,
+        url: url,
+        status: 'completed',
+        extracted_content: {
+          data: [processedResponse.data],
+          summary: "Website content extracted successfully",
+          keywords: [],
+          url_type: urlType
+        }
+      };
+
+      // Save to the database
+      const { error } = await supabase.from('website_crawls').insert(data);
+      
+      if (error) {
+        console.error("Error saving crawl results:", error);
+      } else {
+        console.log(`${urlType} crawl result saved successfully`);
+      }
+    } catch (error) {
+      console.error("Error in saveCrawlResult:", error);
+    }
+  }
+
+  /**
    * Scrape a URL using an explicitly provided API key
    * 
    * @param url URL to scrape
    * @param apiKey FireCrawl API key
    * @param options Optional parameters
+   * @param strategyId Optional strategy ID to save results
+   * @param urlType Type of URL (website or product)
    * @returns Standardized response with data or error
    */
   static async scrapeWithApiKey(
     url: string,
     apiKey: string,
-    options: ScrapeOptions = {}
+    options: ScrapeOptions = {},
+    strategyId?: string,
+    urlType: 'website' | 'product' = 'website'
   ): Promise<ScrapeResponse> {
     try {
       console.log(`Scraping URL: ${url} with options:`, options);
@@ -119,7 +189,14 @@ export class ScraperClient {
       
       console.log(`Raw scrape response for ${url}:`, response);
       
-      return this.processResponse(response, url);
+      const processedResponse = this.processResponse(response, url);
+      
+      // If we have a strategy ID, save the results to the database
+      if (strategyId && processedResponse.success) {
+        await this.saveCrawlResult(url, strategyId, response, urlType);
+      }
+      
+      return processedResponse;
     } catch (error) {
       console.error(`Error scraping URL ${url}:`, error);
       return {
@@ -156,55 +233,18 @@ export class ScraperClient {
       };
     }
 
-    // Handle explicit error response
-    if (response && !response.success && response.error) {
-      return {
-        success: false,
-        error: response.error
-      };
-    }
-
-    // Handle successful response with data property
-    if (response && response.success && response.data) {
-      // Extract the data from the success response
-      const { markdown = "", html = "", metadata = {} } = response.data;
-      
-      return {
-        success: true,
-        data: {
-          markdown: typeof markdown === 'string' ? markdown : "",
-          html: typeof html === 'string' ? html : "",
-          metadata: metadata || { sourceURL: url }
-        },
-        id: response.id
-      };
-    }
-    
-    // Handle success response with direct properties (not nested under data)
-    if (response && response.success && (response.markdown || response.html)) {
-      return {
-        success: true,
-        data: {
-          markdown: typeof response.markdown === 'string' ? response.markdown : "",
-          html: typeof response.html === 'string' ? response.html : "",
-          metadata: response.metadata || { sourceURL: url }
-        },
-        id: response.id
-      };
-    }
-    
-    // Handle array responses (page data from batch operations)
-    if (response && Array.isArray(response)) {
-      // Combine markdown from all pages
+    // Handle array response (batch results)
+    if (Array.isArray(response)) {
+      // Extract markdown from all items
       const combinedMarkdown = response
-        .filter(item => item && item.markdown)
+        .filter(item => item && typeof item.markdown === 'string')
         .map(item => item.markdown)
         .join("\n\n---\n\n");
-      
-      // Get the first page's HTML for preview
+        
+      // Get HTML from first item or empty string
       const firstHtml = response[0]?.html || "";
       
-      // Collect metadata from the first page
+      // Get metadata from first item or create default
       const metadata = response[0]?.metadata || { sourceURL: url };
       
       return {
@@ -217,43 +257,33 @@ export class ScraperClient {
       };
     }
     
-    // Last attempt to extract useful data from an unexpected format
-    if (response && typeof response === 'object') {
-      const extractedData = {
-        markdown: "",
-        html: "",
-        metadata: { sourceURL: url }
+    // Handle well-formed success response
+    if (isSuccessResponse(response)) {
+      const data = response.data || response;
+      
+      return {
+        success: true,
+        data: {
+          markdown: typeof data.markdown === 'string' ? data.markdown : "",
+          html: typeof data.html === 'string' ? data.html : "",
+          metadata: data.metadata || { sourceURL: url }
+        },
+        id: response.id
       };
-      
-      // Try to find markdown content
-      if ('markdown' in response) {
-        extractedData.markdown = typeof response.markdown === 'string' ? response.markdown : "";
-      }
-      
-      // Try to find HTML content
-      if ('html' in response) {
-        extractedData.html = typeof response.html === 'string' ? response.html : "";
-      }
-      
-      // Try to find metadata
-      if ('metadata' in response) {
-        extractedData.metadata = response.metadata || { sourceURL: url };
-      }
-      
-      // If we found any content, consider it a success
-      if (extractedData.markdown || extractedData.html) {
-        return {
-          success: true,
-          data: extractedData,
-          id: response.id
-        };
-      }
     }
     
-    // Fallback for any other unexpected response format
+    // Handle error response
+    if (isErrorResponse(response)) {
+      return {
+        success: false,
+        error: response.error
+      };
+    }
+    
+    // Handle unexpected response format
     return {
       success: false,
-      error: `Received unexpected response format from API: ${typeof response}`
+      error: `Received unexpected response format from API: ${JSON.stringify(response)}`
     };
   }
 }
