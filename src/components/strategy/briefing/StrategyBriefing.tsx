@@ -26,7 +26,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   const [hasFinalBriefing, setHasFinalBriefing] = useState<boolean>(false);
   
   // Use our custom hook for form state management
-  const { formValues, saveStrategyMetadata } = useStrategyMetadata(strategy.id);
+  const { formValues, saveStrategyMetadata: saveMetadata } = useStrategyMetadata(strategy.id);
   
   // Use our custom hook for saving agent results
   const { saveAgentResult: saveAgentResultToDb } = useAgentResultSaver();
@@ -123,6 +123,12 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   const handleGenerateBriefing = (enhancementText?: string): void => {
     console.log("Generating briefing with enhancement:", enhancementText);
     generateBriefing(formValues, enhancementText);
+  };
+
+  // Wrap the saveStrategyMetadata function to make it return void instead of boolean
+  const saveStrategyMetadata = async (values: any): Promise<void> => {
+    await saveMetadata(values);
+    // Void return type, no need to return anything
   };
 
   // Determine which content to show on the left side
