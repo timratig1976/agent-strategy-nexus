@@ -102,24 +102,33 @@ export class ScraperClient {
       console.log(`Raw scrape response for ${url}:`, response);
       
       // Type guard function to check if response is an ErrorResponse
-      function isErrorResponse(resp: any): resp is ErrorResponse {
-        return resp && typeof resp === 'object' && 'success' in resp && resp.success === false;
+      function isErrorResponse(resp: unknown): resp is ErrorResponse {
+        return resp !== null && 
+               typeof resp === 'object' && 
+               'success' in resp && 
+               (resp as any).success === false;
       }
       
       // Type guard function to check if response is a SuccessResponse
-      function isSuccessResponse(resp: any): resp is SuccessResponse {
-        return resp && typeof resp === 'object' && 'success' in resp && resp.success === true;
+      function isSuccessResponse(resp: unknown): resp is SuccessResponse {
+        return resp !== null && 
+               typeof resp === 'object' && 
+               'success' in resp && 
+               (resp as any).success === true;
       }
       
       // Handle string response (raw HTML)
-      if (typeof response === 'string' && response.trim().length > 0) {
-        return {
-          success: true,
-          data: {
-            html: response, 
-            markdown: ""
-          }
-        };
+      if (typeof response === 'string') {
+        const stringResponse = response as string;
+        if (stringResponse.trim().length > 0) {
+          return {
+            success: true,
+            data: {
+              html: stringResponse, 
+              markdown: ""
+            }
+          };
+        }
       }
       
       // Handle error response
