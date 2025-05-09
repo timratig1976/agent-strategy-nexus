@@ -23,6 +23,17 @@ interface ScrapeResult {
   json?: any;
 }
 
+interface CustomScrapeResponse extends ScrapeResponse {
+  success: boolean;
+  data?: {
+    markdown?: string;
+    html?: string;
+    metadata?: any;
+    json?: any;
+  };
+  error?: string;
+}
+
 export const useScrapeWebsite = (options: UseScrapeWebsiteOptions = {}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -53,7 +64,7 @@ export const useScrapeWebsite = (options: UseScrapeWebsiteOptions = {}) => {
       };
 
       // Scrape the URL
-      const scrapeResult = await app.scrapeUrl(url, scrapeOptions) as ScrapeResponse;
+      const scrapeResult = await app.scrapeUrl(url, scrapeOptions) as CustomScrapeResponse;
 
       if (!scrapeResult.success) {
         throw new Error(`Failed to scrape: ${scrapeResult.error}`);

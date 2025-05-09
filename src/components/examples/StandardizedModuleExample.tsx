@@ -1,12 +1,12 @@
 
 import React, { useState } from 'react';
-import { TabbedContent } from '@/components/ui/tabbed-content';
-import { ComponentContainer } from '@/components/ui/component-container';
-import { DataList, DataListHeader, DataListItem, DataListEmpty, DataListFooter } from '@/components/ui/data-list';
-import { ContentCard } from '@/components/ui/content-card';
-import { StatusIndicator } from '@/components/ui/status-indicator';
-import { CollapsiblePanel } from '@/components/ui/collapsible-panel';
-import { FormField } from '@/components/ui/form-field';
+import TabbedContent from '@/components/ui/tabbed-content';
+import ComponentContainer from '@/components/ui/component-container';
+import DataList, { DataListHeader, DataListItem, DataListEmpty, DataListFooter } from '@/components/ui/data-list';
+import ContentCard from '@/components/ui/content-card';
+import StatusIndicator from '@/components/ui/status-indicator';
+import CollapsiblePanel from '@/components/ui/collapsible-panel';
+import FormField from '@/components/ui/form-field';
 import { useToggle } from '@/hooks/useToggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
