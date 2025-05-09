@@ -191,7 +191,7 @@ export const useCanvasData = (strategyId?: string) => {
       const { error } = await supabase
         .from('usp_canvas')
         .upsert({
-          project_id: strategyId, // Using project_id instead of strategy_id
+          project_id: strategyId, // This is the correct field name in the database
           customer_jobs: canvas.customerJobs,
           pain_points: canvas.customerPains,
           gains: canvas.customerGains,
