@@ -4,10 +4,25 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { Search, Eye, AlertTriangle, Loader2 } from "lucide-react";
-import { UrlFieldProps } from "./types";
+import { Loader2, ArrowRight } from "lucide-react";
 import CrawlPreview from "./CrawlPreview";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import CrawlDataDialog from "./CrawlDataDialog";
+
+interface UrlFieldProps {
+  id: string;
+  name: string;
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onCrawl: () => void;
+  isCrawling: boolean;
+  crawlProgress: number;
+  showPreview: boolean;
+  setShowPreview: (show: boolean) => void;
+  previewResults: any;
+  crawlingUrl: string | null;
+  hasApiKey: boolean;
+}
 
 const UrlField: React.FC<UrlFieldProps> = ({
   id,
@@ -22,101 +37,65 @@ const UrlField: React.FC<UrlFieldProps> = ({
   setShowPreview,
   previewResults,
   crawlingUrl,
-  hasApiKey,
-  crawlStatus // New prop for crawl status
+  hasApiKey
 }) => {
-  const isProductUrl = name === 'productUrl';
-  
-  const handleCrawlClick = async () => {
-    await onCrawl();
-  };
-
-  // Return human-readable status message
-  const getStatusMessage = (status: string | undefined) => {
-    switch (status) {
-      case "initializing":
-        return "Initializing crawl...";
-      case "scraping":
-        return "Scraping website content...";
-      case "processing":
-        return "Processing data...";
-      case "analyzing":
-        return "Analyzing website structure...";
-      case "completed":
-        return "Crawl completed!";
-      case "failed":
-        return "Crawl failed";
-      case "timeout":
-        return "Crawl taking longer than expected";
-      default:
-        return "Crawling...";
-    }
-  };
-
   return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
-      <div className="flex gap-2">
-        <Input 
-          id={id}
-          name={name}
-          value={value || ''}
-          onChange={onChange}
-          placeholder={`https://example.com${isProductUrl ? '/product' : ''}`}
-          className="flex-1"
-        />
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          onClick={handleCrawlClick}
-          disabled={crawlingUrl !== null || !hasApiKey}
-          title={hasApiKey ? 
-            `Crawl ${isProductUrl ? 'product page' : 'website'} for information` : 
-            "API key required to crawl"}
-        >
-          {isCrawling ? (
-            <div className="animate-spin">
-              <Search className="h-4 w-4" />
-            </div>
-          ) : (
-            <Search className="h-4 w-4" />
-          )}
-        </Button>
-        {previewResults && crawlingUrl === null && (
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => setShowPreview(!showPreview)}
-            title={showPreview ? "Hide preview" : "Show preview"}
+    <div className="space-y-1">
+      <Label htmlFor={id} className="text-right">
+        {label}
+      </Label>
+      <div className="flex items-center gap-2">
+        <div className="flex-grow">
+          <Input
+            id={id}
+            name={name}
+            value={value || ""}
+            onChange={onChange}
+            placeholder={`Enter ${label.toLowerCase()}`}
+            className="mt-1"
+          />
+        </div>
+        
+        {/* Crawl button */}
+        {hasApiKey && (
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onCrawl} 
+            disabled={isCrawling || !value}
+            className="flex gap-1 whitespace-nowrap mt-1"
           >
-            <Eye className="h-4 w-4" />
+            {isCrawling && (crawlingUrl === name) ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Crawling...
+              </>
+            ) : (
+              <>
+                <ArrowRight className="h-4 w-4" />
+                Crawl
+              </>
+            )}
           </Button>
         )}
+        
+        {/* Show View Data button only when preview results are available */}
+        {previewResults && !isCrawling && (
+          <CrawlDataDialog 
+            crawlResult={previewResults} 
+            title={`${label} Crawl Data`} 
+          />
+        )}
       </div>
-      {!hasApiKey && (
-        <Alert variant="warning" className="py-2">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription className="text-xs">
-            FireCrawl API key required. Click "Set FireCrawl API Key" at the top of the form.
-          </AlertDescription>
-        </Alert>
+      
+      {isCrawling && (crawlingUrl === name) && (
+        <Progress value={crawlProgress} className="h-1 mt-1" />
       )}
-      {isCrawling && (
-        <div className="space-y-1">
-          <div className="flex justify-between items-center text-xs">
-            <span className="text-muted-foreground">{getStatusMessage(crawlStatus)}</span>
-            <span className="text-muted-foreground">{crawlProgress}%</span>
-          </div>
-          <Progress value={crawlProgress} className="h-1 mt-1" />
-        </div>
-      )}
-      {previewResults && (
+      
+      {showPreview && previewResults && (
         <CrawlPreview 
           results={previewResults} 
-          show={showPreview} 
-          source={isProductUrl ? 'product' : 'website'} 
+          onClose={() => setShowPreview(false)} 
         />
       )}
     </div>

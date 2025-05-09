@@ -77,6 +77,8 @@ export class StorageClient {
    */
   static async getLatestCrawlResult(strategyId: string): Promise<WebsiteCrawlResult | null> {
     try {
+      console.log("Retrieving latest crawl result for strategy:", strategyId);
+      
       // Query the database for the latest crawl result for this strategy
       const { data, error } = await supabase
         .from('website_crawls')
@@ -92,11 +94,14 @@ export class StorageClient {
       }
       
       if (!data) {
+        console.log("No crawl results found for strategy:", strategyId);
         return null;
       }
       
       // Safely extract and process the extracted_content data
       const extractedContent = this.parseExtractedContent(data.extracted_content);
+      
+      console.log("Found crawl result:", data.id, "with", extractedContent.data?.length || 0, "pages");
       
       // Transform the database record back into WebsiteCrawlResult format
       // Only include markdown data as requested

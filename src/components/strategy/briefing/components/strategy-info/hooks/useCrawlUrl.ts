@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,8 +13,8 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
   const [productPreviewResults, setProductPreviewResults] = useState<WebsiteCrawlResult | null>(null);
   const [showWebsitePreview, setShowWebsitePreview] = useState(false);
   const [showProductPreview, setShowProductPreview] = useState(false);
-  const [hasApiKey, setHasApiKey] = useState(!!FirecrawlService.getApiKey());
-  const [crawlStatus, setCrawlStatus] = useState<string>(""); // Track the crawl status
+  const [hasApiKey, setHasApiKey] = useState(false);
+  const [crawlStatus, setCrawlStatus] = useState<string>(""); 
   const [loadingStoredData, setLoadingStoredData] = useState<boolean>(false);
 
   // Check for API key and update state
@@ -25,22 +24,25 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
     return !!apiKey;
   };
   
+  // Load the latest crawl results from the database on component mount
+  useEffect(() => {
+    checkApiKey();
+  }, []);
+
   // Load the latest crawl results from the database
   const loadSavedCrawlResults = async () => {
     if (!formValues.id) return;
     
     setLoadingStoredData(true);
     try {
+      console.log("Attempting to load saved crawl results for strategy:", formValues.id);
       // Check for website URL crawl results
       const websiteResults = await FirecrawlService.getLatestCrawlResult(formValues.id);
       if (websiteResults && websiteResults.success) {
+        console.log("Found saved website crawl results:", websiteResults);
         setWebsitePreviewResults(websiteResults);
         setShowWebsitePreview(true);
-        console.log("Loaded saved website crawl results:", websiteResults);
       }
-      
-      // In a more advanced implementation, you might want to check if the URL matches
-      // the current URL in the form, but for simplicity we'll just load the latest
     } catch (err) {
       console.error("Error loading saved crawl results:", err);
     } finally {
@@ -48,13 +50,14 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
     }
   };
 
-  // Load saved crawl results when the component mounts
+  // Load saved crawl results when the component mounts or form values ID changes
   useEffect(() => {
     if (formValues.id) {
       loadSavedCrawlResults();
     }
   }, [formValues.id]);
 
+  // Handle crawling a URL
   const handleCrawl = async (urlType: CrawlUrlType) => {
     const url = formValues[urlType];
     
@@ -87,6 +90,17 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
     }
     
     try {
+      const url = formValues[urlType]; // Get the URL from the form values
+      if (!url) {
+        toast.error("Please enter a URL to crawl");
+        return { success: false };
+      }
+
+      if (!checkApiKey()) {
+        toast.error("Please set your FireCrawl API key first");
+        return { success: false };
+      }
+
       toast.info(`Crawling ${urlType === 'websiteUrl' ? 'website' : 'product'} URL...`);
       
       // More realistic progress simulation with status updates
@@ -134,8 +148,10 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
         // Set the appropriate preview results based on URL type
         if (urlType === 'websiteUrl') {
           setWebsitePreviewResults(crawlResult);
+          setShowWebsitePreview(true);
         } else {
           setProductPreviewResults(crawlResult);
+          setShowProductPreview(true);
         }
         
         // Save crawl results to the database but don't modify additional info
@@ -156,21 +172,14 @@ export function useCrawlUrl(formValues: StrategyFormValues & { id?: string }) {
           console.error("Error saving crawl results:", saveError);
           toast.error("Failed to save crawl results");
         } else {
-          toast.success(`${urlType === 'websiteUrl' ? 'Website' : 'Product'} URL crawled successfully`);
-          
-          // Show the appropriate preview
-          if (urlType === 'websiteUrl') {
-            setShowWebsitePreview(true);
-          } else {
-            setShowProductPreview(true);
-          }
-
-          return {
-            success: true,
-            data: crawlResult,
-            urlType
-          };
+          toast.success(`${urlType === 'websiteUrl' ? 'website' : 'product'} URL crawled successfully`);
         }
+
+        return {
+          success: true,
+          data: crawlResult,
+          urlType
+        };
       }
     } catch (err: any) {
       console.error(`Error crawling ${urlType}:`, err);

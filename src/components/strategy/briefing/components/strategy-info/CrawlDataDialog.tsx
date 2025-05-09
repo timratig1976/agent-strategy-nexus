@@ -16,20 +16,20 @@ const CrawlDataDialog: React.FC<CrawlDataDialogProps> = ({
   crawlResult, 
   title = "Website Crawl Data"
 }) => {
-  if (!crawlResult) return null;
+  if (!crawlResult || !crawlResult.data || crawlResult.data.length === 0) {
+    return null;
+  }
 
-  const markdownContent = crawlResult.data && crawlResult.data.length > 0 
-    ? crawlResult.data[0].markdown || "No markdown content available" 
-    : "No data available";
-
-  const metadata = crawlResult.data && crawlResult.data.length > 0 && crawlResult.data[0].metadata 
+  const markdownContent = crawlResult.data[0].markdown || "No markdown content available";
+  
+  const metadata = crawlResult.data[0].metadata 
     ? crawlResult.data[0].metadata 
     : {};
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button size="sm" variant="ghost" className="text-xs flex gap-1 items-center">
+        <Button size="sm" variant="outline" className="text-xs flex gap-1 items-center mt-1">
           <Eye className="h-3.5 w-3.5" /> View Data
         </Button>
       </DialogTrigger>
@@ -85,7 +85,7 @@ const CrawlDataDialog: React.FC<CrawlDataDialogProps> = ({
         <div className="text-xs text-muted-foreground mt-2">
           <p>Pages Crawled: {crawlResult.pagesCrawled}</p>
           <p>URL: {crawlResult.url}</p>
-          <p>Status: {crawlResult.status}</p>
+          <p>Status: {crawlResult.status || "completed"}</p>
         </div>
       </DialogContent>
     </Dialog>
