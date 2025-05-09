@@ -72,14 +72,31 @@ export const useUspCanvas = (strategyId?: string) => {
       console.log("Setting canvas data from database:", canvasData);
       setCanvas(canvasData);
       
-      // Initialize the sub-hooks with the loaded data
-      customerProfile.setCustomerJobs(canvasData.customerJobs);
-      customerProfile.setCustomerPains(canvasData.customerPains);
-      customerProfile.setCustomerGains(canvasData.customerGains);
+      // Initialize the customer profile data with the loaded data
+      if (canvasData.customerJobs && canvasData.customerJobs.length > 0) {
+        customerProfile.customerJobs = canvasData.customerJobs;
+      }
       
-      valueMap.setProductServices(canvasData.productServices);
-      valueMap.setPainRelievers(canvasData.painRelievers);
-      valueMap.setGainCreators(canvasData.gainCreators);
+      if (canvasData.customerPains && canvasData.customerPains.length > 0) {
+        customerProfile.customerPains = canvasData.customerPains;
+      }
+      
+      if (canvasData.customerGains && canvasData.customerGains.length > 0) {
+        customerProfile.customerGains = canvasData.customerGains;
+      }
+      
+      // Initialize the value map data with the loaded data
+      if (canvasData.productServices && canvasData.productServices.length > 0) {
+        valueMap.productServices = canvasData.productServices;
+      }
+      
+      if (canvasData.painRelievers && canvasData.painRelievers.length > 0) {
+        valueMap.painRelievers = canvasData.painRelievers;
+      }
+      
+      if (canvasData.gainCreators && canvasData.gainCreators.length > 0) {
+        valueMap.gainCreators = canvasData.gainCreators;
+      }
     }
   }, [canvasData]);
 

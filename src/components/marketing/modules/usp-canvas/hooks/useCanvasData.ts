@@ -49,12 +49,12 @@ export const useCanvasData = (strategyId?: string) => {
         
         // Map the database structure to our UspCanvas type
         const canvas: UspCanvas = {
-          customerJobs: data.customer_jobs || [],
-          customerPains: data.pain_points || [],
-          customerGains: data.gains || [],
-          productServices: data.products || [],
-          painRelievers: data.pain_relievers || [],
-          gainCreators: data.gain_creators || []
+          customerJobs: data.customer_jobs ? Array.isArray(data.customer_jobs) ? data.customer_jobs : [] : [],
+          customerPains: data.pain_points ? Array.isArray(data.pain_points) ? data.pain_points : [] : [],
+          customerGains: data.gains ? Array.isArray(data.gains) ? data.gains : [] : [],
+          productServices: data.products ? Array.isArray(data.products) ? data.products : [] : [],
+          painRelievers: data.pain_relievers ? Array.isArray(data.pain_relievers) ? data.pain_relievers : [] : [],
+          gainCreators: data.gain_creators ? Array.isArray(data.gain_creators) ? data.gain_creators : [] : []
         };
         
         setCanvasData(canvas);
@@ -94,8 +94,6 @@ export const useCanvasData = (strategyId?: string) => {
           pain_relievers: canvas.painRelievers,
           gain_creators: canvas.gainCreators,
           updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'strategy_id'
         });
       
       if (error) {

@@ -4,13 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { RefreshCcw } from 'lucide-react';
+import { CanvasHistoryEntry } from '../../types';
 
 interface HistoryTabProps {
-  canvasSaveHistory: Array<{
-    timestamp: number;
-    data: any;
-    isFinal?: boolean;
-  }>;
+  canvasSaveHistory: CanvasHistoryEntry[];
   refreshData?: () => void;
 }
 
