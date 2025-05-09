@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -27,8 +28,8 @@ serve(async (req) => {
     }
 
     console.log("Crawling website:", url);
-
-    // Make API call to Firecrawl with correct parameters according to v1 API
+    
+    // Make API call to Firecrawl with optimized parameters for better content extraction
     const response = await fetch('https://api.firecrawl.dev/v1/crawl', {
       method: 'POST',
       headers: {
@@ -37,10 +38,14 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         url: url,
-        limit: 20, // Increased page limit for better content extraction
+        limit: 25,
         scrapeOptions: {
-          formats: ['markdown', 'html']
-        }
+          formats: ['markdown', 'html'],
+          includeLinks: true,
+          followLinks: true,
+        },
+        includeRobots: false,
+        followRedirects: true
       }),
     });
 
@@ -53,14 +58,17 @@ serve(async (req) => {
 
     const crawlResult = await response.json();
     console.log("Crawl completed successfully");
-
-    // Check if any content was actually extracted
+    
+    // Improved content extraction check - make sure we have actual usable content
     const hasContent = crawlResult.data && 
                       crawlResult.data.length > 0 && 
-                      crawlResult.data.some(page => page.content && page.content.trim().length > 0);
+                      crawlResult.data.some(page => 
+                        (page.content && page.content.trim().length > 30) || 
+                        (page.html && page.html.length > 100)
+                      );
 
     if (!hasContent) {
-      console.log("No content was extracted from the website. Using enhanced fallback.");
+      console.log("No substantial content was extracted from the website. Using enhanced fallback.");
       
       // Try to extract any metadata or information from the response
       const enhancedResults = enhanceEmptyResults(crawlResult, url);
@@ -70,7 +78,7 @@ serve(async (req) => {
       });
     }
 
-    // Process and enrich the data
+    // Process and enrich the data with improved content extraction
     const enrichedResult = {
       ...crawlResult,
       pagesCrawled: crawlResult.data?.length || 0,
@@ -86,18 +94,22 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in website crawler function:', error);
     
-    // Always return sample data if there's an error
-    // This ensures the frontend always gets a valid response even if the API fails
-    const sampleData = generateSampleData(req);
-    return new Response(JSON.stringify(sampleData), {
+    // Return a more informative error response for debugging
+    const errorResponse = {
+      success: false,
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    };
+
+    return new Response(JSON.stringify(errorResponse), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      // Return 200 so frontend doesn't show an error when we're returning fallback data
-      status: 200
+      status: 500
     });
   }
 });
 
-// New function to enhance empty results
+// Enhanced empty results function with better domain extraction
 function enhanceEmptyResults(crawlResult: any, url: string): any {
   try {
     // Try to extract domain info
@@ -142,19 +154,39 @@ function enhanceEmptyResults(crawlResult: any, url: string): any {
   }
 }
 
-// Helper functions for data extraction and processing
+// Helper functions for data extraction and processing with improved extraction logic
 
 function extractSummary(data: any[]): string {
   if (!data || data.length === 0) return "No content was extracted from the website.";
   
-  // Get the main page content and create a summary
-  const mainPage = data[0];
-  if (mainPage.content) {
-    // Take first 200 characters as a simple summary
-    return mainPage.content.substring(0, 300) + "...";
+  // Get the main page content and create a better summary
+  let combinedContent = '';
+  
+  // Prioritize content from index/home page if available
+  const homePage = data.find(page => 
+    page.url.endsWith('/') || 
+    page.url.endsWith('/index.html') || 
+    !page.url.includes('/')
+  ) || data[0];
+  
+  if (homePage?.content) {
+    // Take first 300 characters as a summary
+    return homePage.content.substring(0, 300) + "...";
   }
   
-  return "Content was extracted but no summary could be generated.";
+  // If no suitable home page, combine content from first few pages
+  for (let i = 0; i < Math.min(3, data.length); i++) {
+    if (data[i].content) {
+      combinedContent += data[i].content + ' ';
+      if (combinedContent.length > 300) break;
+    }
+  }
+  
+  if (combinedContent) {
+    return combinedContent.substring(0, 300) + "...";
+  }
+  
+  return "Content was extracted but no meaningful summary could be generated.";
 }
 
 function extractKeywords(data: any[]): string[] {
@@ -170,12 +202,26 @@ function extractKeywords(data: any[]): string[] {
         .filter((kw: string) => kw && kw.length > 2)
         .forEach((kw: string) => keywords.add(kw));
     }
+    
+    // Also look for meta description
+    if (page.metadata && page.metadata.description) {
+      const description = page.metadata.description.toLowerCase();
+      extractCommonWords(description, 5).forEach(word => keywords.add(word));
+    }
   });
   
-  // If no keywords found, extract common words from content
-  if (keywords.size === 0 && data[0] && data[0].content) {
-    const text = data[0].content.toLowerCase();
-    const commonWords = extractCommonWords(text, 10);
+  // If not enough keywords found, extract common words from content
+  if (keywords.size < 5) {
+    let combinedText = '';
+    
+    // Combine content from up to first 5 pages
+    for (let i = 0; i < Math.min(5, data.length); i++) {
+      if (data[i].content) {
+        combinedText += data[i].content.toLowerCase() + ' ';
+      }
+    }
+    
+    const commonWords = extractCommonWords(combinedText, 10);
     commonWords.forEach(word => keywords.add(word));
   }
   
@@ -187,17 +233,22 @@ function detectTechnologies(data: any[]): string[] {
   
   const technologies = new Set<string>();
   const techSignatures: Record<string, string[]> = {
-    'WordPress': ['wp-content', 'wp-includes', 'wordpress'],
-    'React': ['react', 'reactjs', 'jsx'],
-    'Angular': ['ng-', 'angular'],
-    'Vue.js': ['vue', 'nuxt'],
-    'Bootstrap': ['bootstrap'],
+    'WordPress': ['wp-content', 'wp-includes', 'wordpress', 'wp-'],
+    'React': ['react', 'reactjs', 'jsx', '_jsx'],
+    'Angular': ['ng-', 'angular', 'ngController'],
+    'Vue.js': ['vue', 'nuxt', 'vuejs'],
+    'Bootstrap': ['bootstrap', 'btn-primary'],
     'Shopify': ['shopify', 'myshopify'],
-    'Wix': ['wix'],
+    'Wix': ['wix', 'wixsite'],
     'Squarespace': ['squarespace'],
-    'Google Analytics': ['analytics', 'gtag', 'ga.js'],
+    'Google Analytics': ['analytics', 'gtag', 'ga.js', 'google-analytics'],
     'jQuery': ['jquery'],
     'Cloudflare': ['cloudflare'],
+    'Next.js': ['next/static', '__next'],
+    'Gatsby': ['gatsby-'],
+    'Tailwind CSS': ['tailwind'],
+    'Material UI': ['mui-', 'material-ui'],
+    'Webflow': ['webflow'],
   };
   
   // Search for technology signatures in HTML
@@ -241,60 +292,4 @@ function extractCommonWords(text: string, count: number): string[] {
     .sort((a, b) => b[1] - a[1])
     .slice(0, count)
     .map(([word]) => word);
-}
-
-// Generate sample data when real crawling fails or for development
-function generateSampleData(req: Request): any {
-  let url = "example.com";
-  
-  try {
-    const body = JSON.parse(new TextDecoder().decode(req.body || new Uint8Array()));
-    if (body.url) {
-      url = body.url;
-      // Extract domain from URL
-      try {
-        const urlObj = new URL(url);
-        url = urlObj.hostname;
-      } catch (e) {
-        // Keep url as is if parsing fails
-        console.error("Error parsing URL:", e);
-      }
-    }
-  } catch (e) {
-    console.error("Error parsing request body:", e);
-  }
-
-  return {
-    success: true,
-    status: "completed",
-    completed: 5,
-    total: 5,
-    creditsUsed: 1,
-    expiresAt: new Date(Date.now() + 86400000).toISOString(),
-    pagesCrawled: 5,
-    contentExtracted: true,
-    summary: `This is a sample website analysis for ${url}. The website appears to be about business solutions and marketing services. It features information about company products, services, and contact details.`,
-    keywordsFound: ["marketing", "business", "solutions", "services", "digital", "analytics", "strategy", "growth"],
-    technologiesDetected: ["WordPress", "Google Analytics", "Bootstrap"],
-    data: [
-      {
-        url: url,
-        title: "Sample Page Title",
-        content: `This is sample content extracted from the website ${url}. In a real implementation, this would be actual content from the crawled pages. The company appears to provide business solutions and marketing services to help companies grow and expand their digital presence.`,
-        metadata: {
-          description: "Sample meta description for business solutions website",
-          keywords: "business,marketing,solutions,digital,strategy"
-        }
-      },
-      {
-        url: `${url}/about`,
-        title: "About Page",
-        content: "About page content would appear here. Information about the company, its mission, vision, and team would be displayed.",
-        metadata: {
-          description: "About our company and team",
-          keywords: "about,company,team,mission"
-        }
-      }
-    ]
-  };
 }
