@@ -5,7 +5,7 @@
 import FirecrawlApp from "@mendable/firecrawl-js";
 import { FirecrawlFormat, ScrapeOptions, ScrapeResponse } from "../types/scraper-types";
 import { processApiResponse } from "../processors/response-processor";
-import { ScraperDbService } from "../db/scraper-db";
+import { StorageService } from "../db/storage-service";
 
 /**
  * ScraperApiClient handles direct API communication with FireCrawl
@@ -101,7 +101,23 @@ export class ScraperApiClient {
       
       // If we have a strategy ID, save the results to the database
       if (strategyId && processedResponse.success) {
-        await ScraperDbService.saveCrawlResult(url, strategyId, processedResponse, urlType);
+        console.log(`Saving scrape results to database for strategy: ${strategyId}, url type: ${urlType}`);
+        
+        // Convert the response to a WebsiteCrawlResult format
+        const crawlResult = {
+          success: true,
+          pagesCrawled: 1,
+          contentExtracted: true,
+          summary: "Website content extracted successfully",
+          keywordsFound: [],
+          technologiesDetected: [],
+          data: [processedResponse.data],
+          url,
+          id: processedResponse.id
+        };
+        
+        // Save using the storage service
+        await StorageService.saveCrawlResults(strategyId, crawlResult, urlType);
       }
       
       return processedResponse;

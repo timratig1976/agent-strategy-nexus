@@ -5,8 +5,9 @@
  * This is a facade that coordinates the underlying modules
  */
 import { ScraperApiClient } from "./api/scraper-api-client";
-import { ScraperDbService } from "./db/scraper-db";
+import { StorageService } from "./db/storage-service";
 import { ScrapeOptions, ScrapeResponse } from "./types/scraper-types";
+import { WebsiteCrawlResult } from "./types";
 
 /**
  * ScraperClient handles website scraping operations via FireCrawl API
@@ -57,20 +58,18 @@ export class ScraperClient {
   }
 
   /**
-   * Save crawl results to the database (proxy method for backward compatibility)
-   * @param url The URL that was scraped
+   * Save crawl results to the database
    * @param strategyId The strategy ID
-   * @param response The scrape response
+   * @param results The crawl results to save
    * @param urlType The type of URL (website or product)
-   * @returns Promise that resolves when saved
+   * @returns Promise that resolves with success status
    */
-  static async saveCrawlResult(
-    url: string,
-    strategyId: string | undefined,
-    response: any,
+  static async saveCrawlResults(
+    strategyId: string, 
+    results: WebsiteCrawlResult,
     urlType: 'website' | 'product' = 'website'
-  ): Promise<void> {
-    return ScraperDbService.saveCrawlResult(url, strategyId, response, urlType);
+  ): Promise<boolean> {
+    return StorageService.saveCrawlResults(strategyId, results, urlType);
   }
 }
 

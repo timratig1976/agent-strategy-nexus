@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
-import { ScraperClient } from "@/services/firecrawl/scraper-client";
+import { FirecrawlService } from "@/services/firecrawl";
 import { WebsiteCrawlResult } from "@/services/firecrawl";
 import { StrategyFormValues } from "@/components/strategy-form";
 
@@ -26,7 +26,7 @@ export const useCrawlHandler = (
     }
 
     // Check if we have an API key
-    const apiKey = ScraperClient.getApiKey();
+    const apiKey = FirecrawlService.getApiKey();
     if (!apiKey) {
       toast.error("Please enter a valid Firecrawl API key");
       return { success: false };
@@ -48,23 +48,22 @@ export const useCrawlHandler = (
       // Determine the database URL type
       const dbUrlType = urlType === 'websiteUrl' ? 'website' : 'product';
       
-      // Crawl the URL with more detailed response handling and pass the strategy ID
+      // Perform the crawl with FirecrawlService, passing strategy ID for database storage
       console.log(`Starting crawl for ${urlType}: ${url} with strategy ID: ${formValues.id || 'none'}`);
-      const result = await ScraperClient.scrapeWithApiKey(
+      
+      const crawlResult = await FirecrawlService.crawlWebsite(
         url, 
-        apiKey, 
-        {}, 
-        formValues.id, 
-        dbUrlType
+        { urlType }, 
+        formValues.id
       );
       
-      console.log(`Crawl result for ${urlType}:`, result);
+      console.log(`Crawl result for ${urlType}:`, crawlResult);
       
       // Stop the progress simulation
       clearInterval(progressInterval);
       
-      if (!result.success) {
-        const errorMessage = result.error || "Unknown error during scraping";
+      if (!crawlResult.success) {
+        const errorMessage = crawlResult.error || "Unknown error during crawling";
         console.error(`Crawl failed for ${urlType}:`, errorMessage);
         toast.error(`Failed to crawl: ${errorMessage}`);
         setCrawlProgress(0);
@@ -74,29 +73,6 @@ export const useCrawlHandler = (
 
       // Set the final progress
       setCrawlProgress(100);
-      
-      // Check if we have actual data in the response
-      if (!result.data) {
-        console.error(`Crawl succeeded but no data returned for ${urlType}`);
-        toast.error("Crawl succeeded but no data was returned");
-        setCrawlProgress(0);
-        setCrawlingUrl(null);
-        return { success: false };
-      }
-      
-      // Prepare WebsiteCrawlResult from the raw result
-      const crawlResult: WebsiteCrawlResult = {
-        success: true,
-        pagesCrawled: 1,
-        contentExtracted: true,
-        summary: "Website content extracted successfully",
-        keywordsFound: [],
-        technologiesDetected: [],
-        data: [result.data],
-        url: url,
-        id: result.id,
-        strategyId: formValues.id
-      };
       
       // Set the preview results based on the URL type
       if (urlType === 'websiteUrl') {
@@ -109,8 +85,10 @@ export const useCrawlHandler = (
       toast.success(`${urlType === 'websiteUrl' ? 'Website' : 'Product'} crawled successfully`);
       
       // Reset the progress and crawling state
-      setCrawlingUrl(null);
-      setCrawlProgress(0);
+      setTimeout(() => {
+        setCrawlingUrl(null);
+        setCrawlProgress(0);
+      }, 1000);
       
       return { success: true };
     } catch (error) {
