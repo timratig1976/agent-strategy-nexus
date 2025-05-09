@@ -18,35 +18,25 @@ export class FirecrawlAuthManager {
         return false;
       }
 
-      // Use a simple endpoint that should exist and require authentication
-      // Instead of v1/auth/validate which is returning 404
-      const response = await fetch('https://api.firecrawl.dev/v1/user/credits', {
-        method: 'GET',
+      // Make a request to the Firecrawl API to check if the key is valid
+      const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({
+          url: 'https://example.com',
+          formats: ['markdown'],
+          timeout: 5000 // Short timeout for validation
+        })
       });
       
       // Log the response for debugging
       console.log("API key validation response:", response.status, response.statusText);
       
       // Any 2xx status code should indicate success
-      if (response.status >= 200 && response.status < 300) {
-        console.log("API key appears valid (status code indicates success)");
-        return true;
-      }
-      
-      // Specific handling for common error cases
-      if (response.status === 401 || response.status === 403) {
-        console.log("API key rejected by server (unauthorized)");
-        return false;
-      }
-      
-      // For other status codes, log them but still consider the key potentially valid
-      // if we at least got a response from the API
-      console.log("Unexpected status code during validation:", response.status);
-      return false;
+      return response.status >= 200 && response.status < 300;
     } catch (error) {
       console.error("Error validating API key:", error);
       return false;

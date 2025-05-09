@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FirecrawlService } from "@/services/firecrawl";
-import { CheckCircle, AlertCircle } from "lucide-react";
+import { CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface ApiKeyManagerProps {
@@ -47,9 +47,12 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyValidated }) => {
     setIsSaving(true);
 
     try {
+      console.log("Testing API key:", apiKey.substring(0, 5) + "...");
       const isValid = await FirecrawlService.testApiKey(apiKey);
+      console.log("API key validation result:", isValid);
       
       if (isValid) {
+        console.log("API key validated successfully, saving");
         FirecrawlService.saveApiKey(apiKey);
         setIsValidated(true);
         setHasExistingKey(true);
@@ -60,6 +63,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyValidated }) => {
           onApiKeyValidated();
         }
       } else {
+        console.log("API key validation failed");
         setValidationError("API key validation failed. Please check your key and try again.");
         toast.error("API key validation failed");
       }
@@ -96,7 +100,12 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyValidated }) => {
           disabled={isSaving || (isValidated && apiKey === FirecrawlService.getApiKey())}
           variant="outline"
         >
-          {isSaving ? "Validating..." : hasExistingKey ? "Update" : "Save"}
+          {isSaving ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Validating...
+            </>
+          ) : hasExistingKey ? "Update" : "Save"}
         </Button>
         {hasExistingKey && (
           <Button 
