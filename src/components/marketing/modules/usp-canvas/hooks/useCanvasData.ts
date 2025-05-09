@@ -1,158 +1,18 @@
 
 import { useState, useEffect } from 'react';
-import { UspCanvas, CustomerJob, CustomerPain, CustomerGain, ProductService, PainReliever, GainCreator } from '../types';
-import { supabase } from '@/integrations/supabase/client';
+import { UspCanvas } from '../types';
 import { toast } from 'sonner';
-import { Json } from '@/integrations/supabase/types';
-
-// Helper types for database operations
-type DbUspCanvas = {
-  strategy_id: string;
-  customer_jobs: Json;
-  pain_points: Json;
-  gains: Json;
-  differentiators: Json;
-  updated_at: string;
-  version?: number;
-};
+import { useLocalCanvasStorage } from './useLocalCanvasStorage';
+import { CanvasRepository } from './db/canvasRepository';
 
 export const useCanvasData = (strategyId?: string) => {
   const [canvasData, setCanvasData] = useState<UspCanvas | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSaved, setIsSaved] = useState<boolean>(false);
 
-  // Convert application model to database model
-  const mapCanvasToDbFormat = (canvas: UspCanvas, strategyId: string): DbUspCanvas => {
-    return {
-      strategy_id: strategyId,
-      customer_jobs: canvas.customerJobs as unknown as Json,
-      pain_points: canvas.customerPains as unknown as Json,
-      gains: canvas.customerGains as unknown as Json,
-      differentiators: [
-        ...canvas.productServices,
-        ...canvas.painRelievers,
-        ...canvas.gainCreators
-      ] as unknown as Json,
-      updated_at: new Date().toISOString(),
-      version: 1 // Default version
-    };
-  };
-
-  // Convert database model to application model
-  const mapDbToCanvas = (dbData: any): UspCanvas => {
-    const customerJobs: CustomerJob[] = [];
-    const customerPains: CustomerPain[] = [];
-    const customerGains: CustomerGain[] = [];
-    const productServices: ProductService[] = [];
-    const painRelievers: PainReliever[] = [];
-    const gainCreators: GainCreator[] = [];
-    
-    // Process customer jobs safely
-    if (dbData.customer_jobs && Array.isArray(dbData.customer_jobs)) {
-      dbData.customer_jobs.forEach((job: any) => {
-        if (typeof job === 'object' && job !== null && 
-            'id' in job && 'content' in job && 'priority' in job) {
-          customerJobs.push({
-            id: String(job.id),
-            content: String(job.content),
-            priority: job.priority === 'low' || job.priority === 'medium' || job.priority === 'high' 
-              ? job.priority 
-              : 'medium',
-            isAIGenerated: Boolean(job.isAIGenerated || false)
-          });
-        }
-      });
-    }
-    
-    // Process customer pains safely
-    if (dbData.pain_points && Array.isArray(dbData.pain_points)) {
-      dbData.pain_points.forEach((pain: any) => {
-        if (typeof pain === 'object' && pain !== null && 
-            'id' in pain && 'content' in pain && 'severity' in pain) {
-          customerPains.push({
-            id: String(pain.id),
-            content: String(pain.content),
-            severity: pain.severity === 'low' || pain.severity === 'medium' || pain.severity === 'high'
-              ? pain.severity
-              : 'medium',
-            isAIGenerated: Boolean(pain.isAIGenerated || false)
-          });
-        }
-      });
-    }
-    
-    // Process customer gains safely
-    if (dbData.gains && Array.isArray(dbData.gains)) {
-      dbData.gains.forEach((gain: any) => {
-        if (typeof gain === 'object' && gain !== null && 
-            'id' in gain && 'content' in gain && 'importance' in gain) {
-          customerGains.push({
-            id: String(gain.id),
-            content: String(gain.content),
-            importance: gain.importance === 'low' || gain.importance === 'medium' || gain.importance === 'high'
-              ? gain.importance
-              : 'medium',
-            isAIGenerated: Boolean(gain.isAIGenerated || false)
-          });
-        }
-      });
-    }
-    
-    // Process differentiators safely (if they contain product services)
-    if (dbData.differentiators && Array.isArray(dbData.differentiators)) {
-      // Try to extract product services, pain relievers, and gain creators from differentiators
-      dbData.differentiators.forEach((item: any) => {
-        if (typeof item === 'object' && item !== null) {
-          // Check if it's a product service
-          if ('relatedJobIds' in item) {
-            const relatedJobIds: string[] = Array.isArray(item.relatedJobIds) 
-              ? item.relatedJobIds.map((id: any) => String(id)) 
-              : [];
-            
-            productServices.push({
-              id: String(item.id),
-              content: String(item.content),
-              relatedJobIds
-            });
-          }
-          // Check if it's a pain reliever
-          else if ('relatedPainIds' in item) {
-            const relatedPainIds: string[] = Array.isArray(item.relatedPainIds)
-              ? item.relatedPainIds.map((id: any) => String(id))
-              : [];
-            
-            painRelievers.push({
-              id: String(item.id),
-              content: String(item.content),
-              relatedPainIds
-            });
-          }
-          // Check if it's a gain creator
-          else if ('relatedGainIds' in item) {
-            const relatedGainIds: string[] = Array.isArray(item.relatedGainIds)
-              ? item.relatedGainIds.map((id: any) => String(id))
-              : [];
-            
-            gainCreators.push({
-              id: String(item.id),
-              content: String(item.content),
-              relatedGainIds
-            });
-          }
-        }
-      });
-    }
-
-    // Create the canvas with the extracted data
-    return {
-      customerJobs,
-      customerPains,
-      customerGains,
-      productServices,
-      painRelievers,
-      gainCreators
-    };
-  };
+  // Use local storage hook to manage local cache
+  const { canvasSaveHistory, saveToLocalStorage } = useLocalCanvasStorage(strategyId);
 
   // Fetch the canvas data from the database
   const fetchCanvasData = async () => {
@@ -162,52 +22,20 @@ export const useCanvasData = (strategyId?: string) => {
     setError(null);
     
     try {
-      console.log("Fetching USP canvas data for strategy:", strategyId);
-      
-      // First check if there's any data in localStorage for quick loading
-      const localData = localStorage.getItem(`usp_canvas_${strategyId}`);
-      if (localData) {
-        try {
-          const parsedData = JSON.parse(localData);
-          if (parsedData.canvas) {
-            setCanvasData(parsedData.canvas);
-          }
-        } catch (err) {
-          console.error("Error parsing local canvas data:", err);
-        }
-      }
-      
       // Try to fetch from database if available
-      const { data, error: fetchError } = await supabase
-        .from('usp_canvas')
-        .select('*')
-        .eq('strategy_id', strategyId)  // Use strategy_id instead of project_id
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const { canvas, error: fetchError } = await CanvasRepository.fetchCanvasData(strategyId);
       
       if (fetchError) {
-        console.error("Error fetching canvas data:", fetchError);
-        setError("Failed to load canvas data from the database");
-      } else if (data) {
-        console.log("Canvas data retrieved from database:", data);
-        
-        // Map data to canvas structure
-        const canvas = mapDbToCanvas(data);
+        setError(fetchError);
+      } else if (canvas) {
         setCanvasData(canvas);
         
         // Update local storage with the latest data
-        localStorage.setItem(`usp_canvas_${strategyId}`, JSON.stringify({
-          canvas,
-          history: [{
-            timestamp: Date.now(),
-            data: canvas
-          }]
-        }));
+        saveToLocalStorage(canvas);
       }
     } catch (err) {
-      console.error("Exception fetching canvas data:", err);
-      setError("An error occurred while loading canvas data");
+      console.error("Exception in fetchCanvasData:", err);
+      setError("An unexpected error occurred while loading canvas data");
     } finally {
       setIsLoading(false);
     }
@@ -218,37 +46,57 @@ export const useCanvasData = (strategyId?: string) => {
     if (!strategyId) return false;
     
     try {
-      console.log("Saving USP canvas to database for strategy:", strategyId);
-
-      // Convert our canvas to the database format using the helper function
-      const dbCanvas = mapCanvasToDbFormat(canvas, strategyId);
+      const { success, error: saveError } = await CanvasRepository.saveCanvasData(strategyId, canvas);
       
-      // Perform the upsert operation with properly typed data
-      const { error: upsertError } = await supabase
-        .from('usp_canvas')
-        .upsert({
-          strategy_id: dbCanvas.strategy_id,
-          customer_jobs: dbCanvas.customer_jobs,
-          pain_points: dbCanvas.pain_points,
-          gains: dbCanvas.gains,
-          differentiators: dbCanvas.differentiators,
-          updated_at: dbCanvas.updated_at,
-          version: dbCanvas.version
-        });
-      
-      if (upsertError) {
-        console.error("Error saving canvas to database:", upsertError);
-        toast.error("Failed to save canvas to database");
+      if (!success) {
+        toast.error(saveError || "Failed to save canvas to database");
         return false;
       }
       
       toast.success("Canvas saved to database");
+      setIsSaved(true);
       return true;
     } catch (err) {
-      console.error("Exception saving canvas to database:", err);
+      console.error("Exception in saveCanvasToDatabase:", err);
       toast.error("An error occurred while saving canvas");
       return false;
     }
+  };
+
+  // Save canvas wrapper that combines local and database storage
+  const saveCanvas = (canvas: UspCanvas) => {
+    // First save to localStorage
+    const localSuccess = saveToLocalStorage(canvas);
+    
+    // Then save to the database if local storage was successful
+    if (localSuccess) {
+      saveCanvasToDatabase(canvas);
+    }
+    
+    return localSuccess;
+  };
+  
+  // Save final version combining local and database storage
+  const saveFinalVersion = (canvas: UspCanvas) => {
+    // Validate that there's content to save
+    if (
+      canvas.customerJobs.length === 0 &&
+      canvas.customerPains.length === 0 &&
+      canvas.customerGains.length === 0
+    ) {
+      toast.error("Cannot save final version with empty canvas. Please add content first.");
+      return false;
+    }
+    
+    // Save to localStorage with final flag
+    const localSuccess = saveToLocalStorage(canvas, true);
+    
+    // Save to database as well if local storage was successful
+    if (localSuccess) {
+      saveCanvasToDatabase(canvas);
+    }
+    
+    return localSuccess;
   };
 
   // Load data when component mounts or strategyId changes
@@ -261,6 +109,11 @@ export const useCanvasData = (strategyId?: string) => {
     isLoading,
     error,
     fetchCanvasData,
-    saveCanvasToDatabase
+    saveCanvasToDatabase,
+    saveCanvas,
+    saveFinalVersion,
+    canvasSaveHistory,
+    isSaved,
+    setIsSaved
   };
 };
