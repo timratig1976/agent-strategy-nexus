@@ -50,13 +50,14 @@ export const useDocumentProcessing = (strategyId: string) => {
       if (!strategyId) return null;
 
       // Get the latest crawl result from the database
+      // Using the correct table name 'website_crawls' instead of 'strategy_website_crawls'
       const { data: crawlResults, error } = await supabase
-        .from('strategy_website_crawls')
-        .select('url, data')
-        .eq('strategy_id', strategyId)
+        .from('website_crawls')
+        .select('url, extracted_content')
+        .eq('project_id', strategyId) // Using project_id as that's the column name in website_crawls
         .order('created_at', { ascending: false })
         .limit(1)
-        .maybeSingle();
+        .single();
       
       if (error) {
         console.error("Error fetching crawl results:", error);
@@ -64,7 +65,7 @@ export const useDocumentProcessing = (strategyId: string) => {
         return null;
       }
       
-      if (!crawlResults || !crawlResults.data || crawlResults.data.length === 0) {
+      if (!crawlResults) {
         console.log("No website crawl data found for strategy:", strategyId);
         return null;
       }
@@ -75,9 +76,13 @@ export const useDocumentProcessing = (strategyId: string) => {
       // Add website URL as header
       websiteContent += `# Website: ${crawlResults.url}\n\n`;
       
-      // Add the markdown content
-      if (crawlResults.data[0]?.markdown) {
-        websiteContent += crawlResults.data[0].markdown;
+      // Extract the markdown content from the extracted_content field
+      if (crawlResults.extracted_content && 
+          Array.isArray(crawlResults.extracted_content.data) && 
+          crawlResults.extracted_content.data.length > 0) {
+        if (crawlResults.extracted_content.data[0]?.markdown) {
+          websiteContent += crawlResults.extracted_content.data[0].markdown;
+        }
       }
       
       return websiteContent;
