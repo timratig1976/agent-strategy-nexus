@@ -1,40 +1,17 @@
 
 /**
  * Storage client for saving and retrieving FireCrawl data
+ * @deprecated Use StorageService from db/storage-service.ts instead
  */
 
-import { supabase } from "@/integrations/supabase/client";
 import { WebsiteCrawlResult } from "./types";
-import { SupabaseClient } from "@supabase/supabase-js";
-
-/**
- * Interface for database record structure from website_crawls table
- */
-interface WebsiteCrawlRecord {
-  id: string;
-  project_id: string;
-  url: string;
-  status: string;
-  extracted_content: {
-    data: any[];
-    summary: string;
-    keywords: string[];
-    url_type: 'website' | 'product';
-  };
-  created_at: string;
-}
+import { StorageService } from "./db/storage-service";
 
 /**
  * StorageClient handles database operations for crawl results
+ * @deprecated This class is kept for backward compatibility. Use StorageService instead.
  */
 export class StorageClient {
-  private static readonly TABLE_NAME = "website_crawls";
-  
-  // Simplified Supabase client to avoid deep type inference
-  private static get db(): SupabaseClient<any> {
-    return supabase as SupabaseClient<any>;
-  }
-  
   /**
    * Save crawl results to the database
    * 
@@ -48,42 +25,7 @@ export class StorageClient {
     results: WebsiteCrawlResult,
     urlType: 'website' | 'product' = 'website'
   ): Promise<void> {
-    try {
-      if (!strategyId) {
-        console.error("Cannot save crawl results: No strategy ID provided");
-        return;
-      }
-      
-      console.log(`Saving ${urlType} crawl results to database for strategy ${strategyId}`);
-      console.log(`Results summary: ${results.summary?.substring(0, 50)}...`);
-      
-      // Prepare the record for storage
-      const record = {
-        project_id: strategyId, // Using project_id as it exists in website_crawls table
-        url: results.url,
-        status: results.status || 'completed',
-        extracted_content: {
-          data: results.data,
-          summary: results.summary,
-          keywords: results.keywordsFound,
-          url_type: urlType
-        }
-      };
-      
-      // Insert into the database using the website_crawls table
-      const { error, data } = await this.db
-        .from(this.TABLE_NAME)
-        .insert(record)
-        .select();
-      
-      if (error) {
-        console.error("Error saving crawl results:", error);
-      } else {
-        console.log(`${urlType} crawl results saved successfully with ID: ${data?.[0]?.id}`);
-      }
-    } catch (err) {
-      console.error("Error in saveCrawlResults:", err);
-    }
+    await StorageService.saveCrawlResults(strategyId, results, urlType);
   }
   
   /**
@@ -97,42 +39,7 @@ export class StorageClient {
     strategyId: string,
     urlType: 'website' | 'product' = 'website'
   ): Promise<WebsiteCrawlResult | null> {
-    try {
-      if (!strategyId) {
-        console.error("Cannot get crawl results: No strategy ID provided");
-        return null;
-      }
-      
-      console.log(`Getting latest ${urlType} crawl result for strategy ${strategyId}`);
-      
-      // Use the simplified client and bypass type inference
-      const { data, error } = await this.db
-        .from(this.TABLE_NAME)
-        .select('*')
-        .eq('project_id', strategyId)
-        .eq('extracted_content->url_type', urlType)
-        .order('created_at', { ascending: false })
-        .limit(1);
-      
-      if (error) {
-        console.error("Error fetching crawl results:", error);
-        return null;
-      }
-      
-      // Manually cast data to our expected record type
-      const records = data as WebsiteCrawlRecord[] | null;
-      
-      if (records && records.length > 0) {
-        console.log(`Found ${urlType} crawl result with ID: ${records[0].id}`);
-        return this.mapFromDatabaseRecord(records[0]);
-      }
-      
-      console.log(`No ${urlType} crawl results found for strategy ${strategyId}`);
-      return null;
-    } catch (err) {
-      console.error("Error in getLatestCrawlResult:", err);
-      return null;
-    }
+    return StorageService.getLatestCrawlResult(strategyId, urlType);
   }
   
   /**
@@ -146,56 +53,6 @@ export class StorageClient {
     strategyId: string,
     urlType: 'website' | 'product' = 'website'
   ): Promise<WebsiteCrawlResult[]> {
-    try {
-      if (!strategyId) {
-        console.error("Cannot get crawl results: No strategy ID provided");
-        return [];
-      }
-      
-      // Use the simplified client and bypass type inference
-      const { data, error } = await this.db
-        .from(this.TABLE_NAME)
-        .select('*')
-        .eq('project_id', strategyId)
-        .eq('extracted_content->url_type', urlType)
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error("Error fetching crawl results:", error);
-        return [];
-      }
-      
-      // Manually cast data to our expected record type
-      const records = data as WebsiteCrawlRecord[] | null;
-      
-      if (records && records.length > 0) {
-        console.log(`Found ${records.length} ${urlType} crawl results for strategy ${strategyId}`);
-        return records.map((record) => this.mapFromDatabaseRecord(record));
-      }
-      
-      console.log(`No ${urlType} crawl results found for strategy ${strategyId}`);
-      return [];
-    } catch (err) {
-      console.error("Error in getAllCrawlResults:", err);
-      return [];
-    }
-  }
-  
-  /**
-   * Map a database record to a WebsiteCrawlResult
-   */
-  private static mapFromDatabaseRecord(record: WebsiteCrawlRecord): WebsiteCrawlResult {
-    return {
-      success: true,
-      pagesCrawled: 1,
-      contentExtracted: !!record.extracted_content?.data?.length,
-      summary: record.extracted_content?.summary || "",
-      keywordsFound: record.extracted_content?.keywords || [],
-      technologiesDetected: [], // No longer storing technologies
-      data: record.extracted_content?.data || [],
-      url: record.url,
-      id: record.id,
-      strategyId: record.project_id
-    };
+    return StorageService.getAllCrawlResults(strategyId, urlType);
   }
 }

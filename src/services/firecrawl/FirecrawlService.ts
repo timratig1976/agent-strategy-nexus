@@ -6,7 +6,7 @@
 import { ScraperClient } from "./scraper-client";
 import { ContentProcessor } from "./content-processor";
 import { WebsiteCrawlResult } from "./types";
-import { StorageClient } from "./storage-client";
+import { StorageService } from "./db/storage-service";
 import { FirecrawlAuthManager } from "./auth-manager";
 
 /**
@@ -129,7 +129,7 @@ export class FirecrawlService {
       // If we have a strategy ID, save the results to the database
       if (strategyId) {
         console.log(`Saving crawl results to database for strategy: ${strategyId}, url type: ${urlType}`);
-        await StorageClient.saveCrawlResults(strategyId, processedResults, urlType as 'website' | 'product');
+        await StorageService.saveCrawlResults(strategyId, processedResults, urlType as 'website' | 'product');
       }
       
       return processedResults;
@@ -162,7 +162,7 @@ export class FirecrawlService {
     urlType: 'website' | 'product' = 'website'
   ): Promise<WebsiteCrawlResult | null> {
     console.log(`Getting latest crawl result for strategy: ${strategyId}, url type: ${urlType}`);
-    const result = await StorageClient.getLatestCrawlResult(strategyId, urlType);
+    const result = await StorageService.getLatestCrawlResult(strategyId, urlType);
     console.log(`Retrieved latest ${urlType} result:`, result ? "found" : "not found");
     return result;
   }
@@ -177,6 +177,6 @@ export class FirecrawlService {
     strategyId: string,
     urlType: 'website' | 'product' = 'website'
   ): Promise<WebsiteCrawlResult[]> {
-    return StorageClient.getAllCrawlResults(strategyId, urlType);
+    return StorageService.getAllCrawlResults(strategyId, urlType);
   }
 }
