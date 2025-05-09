@@ -62,70 +62,68 @@ const StrategyForm: React.FC<StrategyFormProps> = ({
           <ApiKeyManager onApiKeyValidated={onApiKeyValidated} />
         </Card>
         
-        <div className="grid grid-cols-1 gap-4">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-            <div>
-              <label htmlFor="companyName" className="text-sm font-medium">
-                Company Name
-              </label>
-              <Input
-                id="companyName"
-                name="companyName"
-                value={localFormValues.companyName || ""}
-                onChange={handleInputChange}
-                placeholder="Enter company name"
-                className="mt-1"
-              />
-            </div>
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="companyName" className="text-sm font-medium">
+              Company Name
+            </label>
+            <Input
+              id="companyName"
+              name="companyName"
+              value={localFormValues.companyName || ""}
+              onChange={handleInputChange}
+              placeholder="Enter company name"
+              className="mt-1"
+            />
+          </div>
             
-            <UrlField
-              id="websiteUrl"
-              name="websiteUrl"
-              label="Website URL"
-              value={localFormValues.websiteUrl || ""}
-              onChange={handleInputChange}
-              onCrawl={onCrawlWebsite}
-              isCrawling={!!crawlingUrl}
-              crawlProgress={crawlProgress}
-              showPreview={showWebsitePreview}
-              setShowPreview={setShowWebsitePreview}
-              previewResults={websitePreviewResults}
-              crawlingUrl={crawlingUrl}
-              hasApiKey={hasApiKey}
-              crawlStatus={crawlingUrl === 'websiteUrl' ? "Crawling website..." : undefined}
-            />
+          <UrlField
+            id="websiteUrl"
+            name="websiteUrl"
+            label="Website URL"
+            value={localFormValues.websiteUrl || ""}
+            onChange={handleInputChange}
+            onCrawl={onCrawlWebsite}
+            isCrawling={!!crawlingUrl}
+            crawlProgress={crawlProgress}
+            showPreview={showWebsitePreview}
+            setShowPreview={setShowWebsitePreview}
+            previewResults={websitePreviewResults}
+            crawlingUrl={crawlingUrl}
+            hasApiKey={hasApiKey}
+            crawlStatus={crawlingUrl === 'websiteUrl' ? "Crawling website..." : undefined}
+          />
 
-            <UrlField
-              id="productUrl"
-              name="productUrl"
-              label="Product URL"
-              value={localFormValues.productUrl || ""}
-              onChange={handleInputChange}
-              onCrawl={onCrawlProduct}
-              isCrawling={!!crawlingUrl}
-              crawlProgress={crawlProgress}
-              showPreview={showProductPreview}
-              setShowPreview={setShowProductPreview}
-              previewResults={productPreviewResults}
-              crawlingUrl={crawlingUrl}
-              hasApiKey={hasApiKey}
-              crawlStatus={crawlingUrl === 'productUrl' ? "Crawling product..." : undefined}
-            />
+          <UrlField
+            id="productUrl"
+            name="productUrl"
+            label="Product URL"
+            value={localFormValues.productUrl || ""}
+            onChange={handleInputChange}
+            onCrawl={onCrawlProduct}
+            isCrawling={!!crawlingUrl}
+            crawlProgress={crawlProgress}
+            showPreview={showProductPreview}
+            setShowPreview={setShowProductPreview}
+            previewResults={productPreviewResults}
+            crawlingUrl={crawlingUrl}
+            hasApiKey={hasApiKey}
+            crawlStatus={crawlingUrl === 'productUrl' ? "Crawling product..." : undefined}
+          />
 
-            <div>
-              <label htmlFor="additionalInfo" className="text-sm font-medium">
-                Additional Information
-              </label>
-              <Textarea
-                id="additionalInfo"
-                name="additionalInfo"
-                value={localFormValues.additionalInfo || ""}
-                onChange={handleInputChange}
-                placeholder="Any other relevant information"
-                className="mt-1 resize-none h-[38px]"
-                rows={1}
-              />
-            </div>
+          <div>
+            <label htmlFor="additionalInfo" className="text-sm font-medium">
+              Additional Information
+            </label>
+            <Textarea
+              id="additionalInfo"
+              name="additionalInfo"
+              value={localFormValues.additionalInfo || ""}
+              onChange={handleInputChange}
+              placeholder="Any other relevant information"
+              className="mt-1 resize-none h-[38px]"
+              rows={1}
+            />
           </div>
           
           <div className="space-y-2">
