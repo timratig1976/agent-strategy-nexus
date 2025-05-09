@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { UspCanvas } from '../types';
+import { UspCanvas, CustomerJob, CustomerPain, CustomerGain, ProductService, PainReliever, GainCreator } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -36,7 +36,7 @@ export const useCanvasData = (strategyId?: string) => {
       const { data, error } = await supabase
         .from('usp_canvas')
         .select('*')
-        .eq('strategy_id', strategyId)
+        .eq('project_id', strategyId) // Using project_id as it matches our strategy_id
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -47,14 +47,100 @@ export const useCanvasData = (strategyId?: string) => {
       } else if (data) {
         console.log("Canvas data retrieved from database:", data);
         
-        // Map the database structure to our UspCanvas type
+        // Convert JSON data to our typed objects with proper type safety
+        const customerJobs: CustomerJob[] = [];
+        const customerPains: CustomerPain[] = [];
+        const customerGains: CustomerGain[] = [];
+        const productServices: ProductService[] = [];
+        const painRelievers: PainReliever[] = [];
+        const gainCreators: GainCreator[] = [];
+        
+        // Process customer jobs safely
+        if (data.customer_jobs && Array.isArray(data.customer_jobs)) {
+          data.customer_jobs.forEach(job => {
+            if (typeof job === 'object' && job !== null && 
+                'id' in job && 'content' in job && 'priority' in job) {
+              customerJobs.push({
+                id: String(job.id),
+                content: String(job.content),
+                priority: job.priority as 'low' | 'medium' | 'high',
+                isAIGenerated: job.isAIGenerated || false
+              });
+            }
+          });
+        }
+        
+        // Process customer pains safely
+        if (data.pain_points && Array.isArray(data.pain_points)) {
+          data.pain_points.forEach(pain => {
+            if (typeof pain === 'object' && pain !== null && 
+                'id' in pain && 'content' in pain && 'severity' in pain) {
+              customerPains.push({
+                id: String(pain.id),
+                content: String(pain.content),
+                severity: pain.severity as 'low' | 'medium' | 'high',
+                isAIGenerated: pain.isAIGenerated || false
+              });
+            }
+          });
+        }
+        
+        // Process customer gains safely
+        if (data.gains && Array.isArray(data.gains)) {
+          data.gains.forEach(gain => {
+            if (typeof gain === 'object' && gain !== null && 
+                'id' in gain && 'content' in gain && 'importance' in gain) {
+              customerGains.push({
+                id: String(gain.id),
+                content: String(gain.content),
+                importance: gain.importance as 'low' | 'medium' | 'high',
+                isAIGenerated: gain.isAIGenerated || false
+              });
+            }
+          });
+        }
+        
+        // Process differentiators safely (if they contain product services)
+        if (data.differentiators && Array.isArray(data.differentiators)) {
+          // Try to extract product services, pain relievers, and gain creators from differentiators
+          data.differentiators.forEach(item => {
+            if (typeof item === 'object' && item !== null) {
+              // Check if it's a product service
+              if ('relatedJobIds' in item) {
+                productServices.push({
+                  id: String(item.id),
+                  content: String(item.content),
+                  relatedJobIds: Array.isArray(item.relatedJobIds) ? item.relatedJobIds : []
+                });
+              }
+              // Check if it's a pain reliever
+              else if ('relatedPainIds' in item) {
+                painRelievers.push({
+                  id: String(item.id),
+                  content: String(item.content),
+                  relatedPainIds: Array.isArray(item.relatedPainIds) ? item.relatedPainIds : []
+                });
+              }
+              // Check if it's a gain creator
+              else if ('relatedGainIds' in item) {
+                gainCreators.push({
+                  id: String(item.id),
+                  content: String(item.content),
+                  relatedGainIds: Array.isArray(item.relatedGainIds) ? item.relatedGainIds : []
+                });
+              }
+            }
+          });
+        }
+
+        // Create the canvas with the extracted data
         const canvas: UspCanvas = {
-          customerJobs: data.customer_jobs ? Array.isArray(data.customer_jobs) ? data.customer_jobs : [] : [],
-          customerPains: data.pain_points ? Array.isArray(data.pain_points) ? data.pain_points : [] : [],
-          customerGains: data.gains ? Array.isArray(data.gains) ? data.gains : [] : [],
-          productServices: data.products ? Array.isArray(data.products) ? data.products : [] : [],
-          painRelievers: data.pain_relievers ? Array.isArray(data.pain_relievers) ? data.pain_relievers : [] : [],
-          gainCreators: data.gain_creators ? Array.isArray(data.gain_creators) ? data.gain_creators : [] : []
+          customerJobs,
+          customerPains,
+          customerGains,
+          productServices,
+          painRelievers,
+          gainCreators
         };
         
         setCanvasData(canvas);
@@ -82,17 +168,20 @@ export const useCanvasData = (strategyId?: string) => {
     
     try {
       console.log("Saving USP canvas to database for strategy:", strategyId);
-      
+
+      // Prepare the data for saving according to the database schema
       const { error } = await supabase
         .from('usp_canvas')
         .upsert({
-          strategy_id: strategyId,
+          project_id: strategyId, // Using project_id instead of strategy_id
           customer_jobs: canvas.customerJobs,
           pain_points: canvas.customerPains,
           gains: canvas.customerGains,
-          products: canvas.productServices,
-          pain_relievers: canvas.painRelievers,
-          gain_creators: canvas.gainCreators,
+          differentiators: [
+            ...canvas.productServices,
+            ...canvas.painRelievers, 
+            ...canvas.gainCreators
+          ], // Store all value map items in the differentiators field
           updated_at: new Date().toISOString()
         });
       
