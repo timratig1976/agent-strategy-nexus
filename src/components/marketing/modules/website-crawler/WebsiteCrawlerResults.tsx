@@ -4,8 +4,8 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { CheckCircle, AlertTriangle } from "lucide-react";
-import { WebsiteCrawlResult } from "./types";
+import { CheckCircle, AlertTriangle, ExternalLink } from "lucide-react";
+import { WebsiteCrawlResult } from "@/services/FirecrawlService";
 
 interface WebsiteCrawlerResultsProps {
   results: WebsiteCrawlResult;
@@ -15,21 +15,19 @@ const WebsiteCrawlerResults = ({ results }: WebsiteCrawlerResultsProps) => {
   const [adoptedContent, setAdoptedContent] = useState<string[]>([]);
 
   // Extract keywords from crawl data
-  const keywordsFound = results.keywordsFound || 
-    (results.data?.flatMap(item => item.metadata?.keywords?.split(',') || []) || [])
-      .map(word => word.trim())
-      .filter(word => word.length > 0);
+  const keywordsFound = results.keywordsFound || [];
 
   // Use summary from results
-  const summary = results.summary || 
-    results.data?.[0]?.content?.substring(0, 200) + "..." || 
-    "Content extracted from website.";
+  const summary = results.summary || "No content was extracted from the website.";
 
   // Extract technologiesDetected or create empty array
   const technologiesDetected = results.technologiesDetected || [];
 
   // Calculate pagesCrawled from data
-  const pagesCrawled = results.pagesCrawled || results.data?.length || 0;
+  const pagesCrawled = results.pagesCrawled || 0;
+
+  // Check if we have content
+  const hasContent = results.contentExtracted && results.data && results.data.length > 0;
 
   // For error handling
   const hasError = results.error || !results.success;
@@ -63,6 +61,19 @@ const WebsiteCrawlerResults = ({ results }: WebsiteCrawlerResultsProps) => {
                 <div>
                   <p className="font-medium">Error Occurred</p>
                   <p className="text-sm mt-1">{results.error || "An error occurred during the crawl process."}</p>
+                </div>
+              </div>
+            )}
+            
+            {!hasContent && !hasError && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-700 p-3 rounded-md flex items-start space-x-2 mb-4">
+                <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium">No Content Extracted</p>
+                  <p className="text-sm mt-1">
+                    The website may be protected against crawling or require JavaScript rendering.
+                    Try increasing the timeout or using a different URL.
+                  </p>
                 </div>
               </div>
             )}
@@ -143,7 +154,29 @@ const WebsiteCrawlerResults = ({ results }: WebsiteCrawlerResultsProps) => {
               <div>
                 <h4 className="text-sm font-medium mb-1">Crawl Details</h4>
                 <p className="text-xs text-muted-foreground break-all">ID: {results.id || 'N/A'}</p>
-                <p className="text-xs text-muted-foreground break-all">URL: {results.url}</p>
+                <p className="text-xs text-muted-foreground break-all flex items-center">
+                  URL: {results.url}
+                  <a 
+                    href={results.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="ml-1 inline-flex items-center text-primary hover:text-primary/80"
+                  >
+                    <ExternalLink size={12} />
+                  </a>
+                </p>
+                {results.id && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    <a 
+                      href={`https://api.firecrawl.dev/v1/crawl/${results.id}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:text-primary/80 inline-flex items-center"
+                    >
+                      View API Result <ExternalLink size={12} className="ml-1" />
+                    </a>
+                  </p>
+                )}
               </div>
             )}
           </div>

@@ -1,6 +1,6 @@
 
 import React from "react";
-import { WebsiteCrawlResult } from "@/components/marketing/modules/website-crawler/types";
+import { WebsiteCrawlResult } from "@/services/FirecrawlService";
 import { CrawlPreviewProps } from "./types";
 import { AlertTriangle } from "lucide-react";
 
@@ -9,13 +9,14 @@ const CrawlPreview: React.FC<CrawlPreviewProps> = ({ results, show, source = 'we
 
   // Check if there's an error
   const hasError = results.error || !results.success;
+  const hasContent = results.contentExtracted && results.data && results.data.length > 0;
 
   return (
     <div className="bg-muted/50 p-3 rounded-md text-sm mt-2 max-h-48 overflow-auto">
       <h4 className="font-medium mb-1">{source === 'website' ? 'Website' : 'Product Page'} Crawl Results</h4>
       <p className="text-xs text-muted-foreground mb-2">
         Pages crawled: {results.pagesCrawled || 0} | 
-        Technologies: {(results.technologiesDetected || []).join(', ')}
+        Technologies: {(results.technologiesDetected || []).join(', ') || 'None detected'}
       </p>
       
       {hasError && (
@@ -23,6 +24,15 @@ const CrawlPreview: React.FC<CrawlPreviewProps> = ({ results, show, source = 'we
           <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
           <div className="text-xs">
             Error crawling {source === 'website' ? 'website' : 'product page'}: {results.error}
+          </div>
+        </div>
+      )}
+
+      {!hasContent && !hasError && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 p-2 rounded-md flex items-start space-x-2 mb-2">
+          <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+          <div className="text-xs">
+            No content could be extracted. The website may be protected against crawling or require JavaScript.
           </div>
         </div>
       )}

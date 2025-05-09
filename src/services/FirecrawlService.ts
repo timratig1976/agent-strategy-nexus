@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 
 interface CrawlOptions {
@@ -56,7 +57,7 @@ export class FirecrawlService {
 
   static async crawlWithApiKey(url: string, apiKey: string, options?: CrawlOptions): Promise<WebsiteCrawlResult> {
     try {
-      console.log('Making crawl request to Firecrawl API for URL:', url);
+      console.log('Making initial crawl request to Firecrawl API for URL:', url);
       
       // Build request options
       const requestOptions: CrawlOptions = {
@@ -65,7 +66,7 @@ export class FirecrawlService {
         timeout: options?.timeout || 30000
       };
       
-      // Make direct API call to Firecrawl
+      // Make initial POST request to start the crawl
       const response = await fetch('https://api.firecrawl.dev/v1/crawl', {
         method: 'POST',
         headers: {
@@ -77,13 +78,15 @@ export class FirecrawlService {
           limit: requestOptions.limit,
           scrapeOptions: {
             formats: requestOptions.formats,
-            timeout: requestOptions.timeout
+            timeout: requestOptions.timeout,
+            javascript: true,
+            waitUntil: 'networkidle2'
           }
         }),
       });
       
       if (!response.ok) {
-        // If the API returns an error, log it and return it directly
+        // Handle API errors
         const errorData = await response.json();
         console.error("FireCrawl API error:", errorData);
         
@@ -100,11 +103,37 @@ export class FirecrawlService {
         };
       }
       
-      const apiResponse = await response.json();
-      console.log("FireCrawl crawl completed successfully");
+      // Parse the initial response which contains the crawl ID and result URL
+      const initialResponse = await response.json();
+      console.log("FireCrawl initial response:", initialResponse);
       
-      // Process the API response - Now we trust the API results
-      return this.processApiResponse(apiResponse, url);
+      if (!initialResponse.id) {
+        throw new Error('No crawl ID returned from Firecrawl API');
+      }
+      
+      // Fetch the actual crawl results using the ID from the initial response
+      const resultUrl = `https://api.firecrawl.dev/v1/crawl/${initialResponse.id}`;
+      console.log("Fetching detailed crawl results from:", resultUrl);
+      
+      const detailsResponse = await fetch(resultUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        }
+      });
+      
+      if (!detailsResponse.ok) {
+        const errorData = await detailsResponse.json();
+        console.error("Error fetching crawl details:", errorData);
+        throw new Error(`Failed to fetch crawl details: ${errorData.message || detailsResponse.statusText}`);
+      }
+      
+      // Get the detailed crawl results
+      const detailedResults = await detailsResponse.json();
+      console.log("Detailed crawl results received:", detailedResults);
+      
+      // Process the detailed results
+      return this.processApiResponse(detailedResults, url);
     } catch (error) {
       console.error("Error crawling website:", error);
       // Return the error directly instead of using a fallback
@@ -123,25 +152,25 @@ export class FirecrawlService {
   }
   
   private static processApiResponse(apiResponse: any, url: string): WebsiteCrawlResult {
-    // Always trust the API response and consider it to have valid content
+    // Check if we have valid content in the response
+    const hasData = apiResponse.data && Array.isArray(apiResponse.data) && apiResponse.data.length > 0;
     
     // Process the data regardless of content "quality"
     const processedData: WebsiteCrawlResult = {
       success: true,
       pagesCrawled: apiResponse.data?.length || 0,
-      contentExtracted: true, // We now assume content is always extracted
-      summary: this.extractSummary(apiResponse.data),
-      keywordsFound: this.extractKeywords(apiResponse.data),
-      technologiesDetected: this.detectTechnologies(apiResponse.data),
+      contentExtracted: hasData, // Only true if we actually have data
+      summary: hasData ? this.extractSummary(apiResponse.data) : "No content was extracted from the website.",
+      keywordsFound: hasData ? this.extractKeywords(apiResponse.data) : [],
+      technologiesDetected: hasData ? this.detectTechnologies(apiResponse.data) : [],
       data: apiResponse.data || [],
       id: apiResponse.id || null,
-      url: url
+      url: url,
+      status: apiResponse.status || 'completed'
     };
     
     return processedData;
   }
-  
-  // Content extraction methods remain the same but we don't use hasSubstantialContent check anymore
   
   // Extract summary from crawled data
   private static extractSummary(data: any[]): string {
