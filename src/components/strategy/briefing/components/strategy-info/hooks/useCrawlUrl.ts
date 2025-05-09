@@ -6,6 +6,24 @@ import { ScraperClient } from "@/services/firecrawl/scraper-client";
 import { WebsiteCrawlResult } from "@/services/firecrawl";
 import { StrategyFormValues } from "@/components/strategy-form";
 
+// Define the expected structure of the extracted content from the database
+interface ExtractedContent {
+  summary?: string;
+  keywords?: string[];
+  data?: any[];
+  url_type?: 'website' | 'product';
+}
+
+// Define the database record structure
+interface WebsiteCrawlRecord {
+  id: string;
+  project_id: string;
+  url: string;
+  status: string;
+  extracted_content: ExtractedContent;
+  created_at: string;
+}
+
 export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) => {
   const [crawlingUrl, setCrawlingUrl] = useState<string | null>(null);
   const [crawlProgress, setCrawlProgress] = useState<number>(0);
@@ -52,15 +70,19 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
         console.error("Error loading website crawl results:", websiteError);
       } else if (websiteData && websiteData.length > 0) {
         console.log("Found saved website crawl result:", websiteData[0]);
+        
+        // Safely access properties with type checking
+        const extractedContent = websiteData[0].extracted_content as ExtractedContent;
+        
         // Convert from DB format to WebsiteCrawlResult
         const websiteResult: WebsiteCrawlResult = {
           success: true,
           pagesCrawled: 1,
           contentExtracted: true,
-          summary: websiteData[0].extracted_content?.summary || "",
-          keywordsFound: websiteData[0].extracted_content?.keywords || [],
+          summary: extractedContent?.summary || "",
+          keywordsFound: extractedContent?.keywords || [],
           technologiesDetected: [],
-          data: websiteData[0].extracted_content?.data || [],
+          data: extractedContent?.data || [],
           url: websiteData[0].url,
           id: websiteData[0].id,
           strategyId
@@ -81,15 +103,19 @@ export const useCrawlUrl = (formValues: StrategyFormValues & { id?: string }) =>
         console.error("Error loading product crawl results:", productError);
       } else if (productData && productData.length > 0) {
         console.log("Found saved product crawl result:", productData[0]);
+        
+        // Safely access properties with type checking
+        const extractedContent = productData[0].extracted_content as ExtractedContent;
+        
         // Convert from DB format to WebsiteCrawlResult
         const productResult: WebsiteCrawlResult = {
           success: true,
           pagesCrawled: 1,
           contentExtracted: true,
-          summary: productData[0].extracted_content?.summary || "",
-          keywordsFound: productData[0].extracted_content?.keywords || [],
+          summary: extractedContent?.summary || "",
+          keywordsFound: extractedContent?.keywords || [],
           technologiesDetected: [],
-          data: productData[0].extracted_content?.data || [],
+          data: extractedContent?.data || [],
           url: productData[0].url,
           id: productData[0].id,
           strategyId
