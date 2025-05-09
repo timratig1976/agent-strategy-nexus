@@ -29,7 +29,8 @@ serve(async (req) => {
 
     console.log("Crawling website:", url);
     
-    // Make API call to Firecrawl with optimized parameters for better content extraction
+    // Updated API call to match Firecrawl v1 API requirements
+    // Removed unsupported parameters: includeLinks, followLinks, includeRobots, followRedirects
     const response = await fetch('https://api.firecrawl.dev/v1/crawl', {
       method: 'POST',
       headers: {
@@ -41,11 +42,7 @@ serve(async (req) => {
         limit: 25,
         scrapeOptions: {
           formats: ['markdown', 'html'],
-          includeLinks: true,
-          followLinks: true,
         },
-        includeRobots: false,
-        followRedirects: true
       }),
     });
 
