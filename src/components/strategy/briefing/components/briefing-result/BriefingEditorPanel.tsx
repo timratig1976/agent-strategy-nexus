@@ -95,7 +95,7 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
           </Alert>
         )}
         
-        {/* Special Instructions first */}
+        {/* Special Instructions first with progress bar */}
         <BriefingAIEnhancer 
           enhancementText={enhancementText} 
           setEnhancementText={setEnhancementText}
@@ -103,6 +103,7 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
           onToggleExpand={toggleEnhancerExpanded}
           onSubmit={handleGenerate}
           isGenerating={isGenerating}
+          progress={progress}
         />
         
         {/* Content Editor */}

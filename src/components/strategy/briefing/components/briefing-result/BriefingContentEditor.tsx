@@ -1,6 +1,5 @@
 
 import React from "react";
-import { BriefingProgressBar } from "../../components/BriefingProgressBar";
 import { Textarea } from "@/components/ui/textarea";
 
 interface BriefingContentEditorProps {
@@ -12,41 +11,30 @@ interface BriefingContentEditorProps {
   placeholder?: string;
 }
 
-const BriefingContentEditor: React.FC<BriefingContentEditorProps> = ({ 
-  content, 
-  editedContent, 
-  setEditedContent, 
-  isGenerating, 
-  progress,
-  placeholder = "Generated content will appear here..."
+const BriefingContentEditor: React.FC<BriefingContentEditorProps> = ({
+  content,
+  editedContent,
+  setEditedContent,
+  isGenerating,
+  placeholder = "The AI will generate marketing briefing content here..."
 }) => {
-  // Initialize edited content if it's empty but we have content
+  // Initialize edited content with content if it's empty
   React.useEffect(() => {
     if (content && !editedContent) {
       setEditedContent(content);
     }
   }, [content, editedContent, setEditedContent]);
 
-  if (isGenerating) {
-    return (
-      <div className="relative min-h-[300px] bg-muted/20 rounded-md p-4">
-        <div className="animate-pulse flex flex-col space-y-4">
-          <div className="h-4 bg-muted rounded w-3/4"></div>
-          <div className="h-4 bg-muted rounded w-1/2"></div>
-          <div className="h-4 bg-muted rounded w-5/6"></div>
-        </div>
-        <BriefingProgressBar progress={progress} />
-      </div>
-    );
-  }
-
   return (
-    <Textarea
-      className="min-h-[300px] font-mono text-sm"
-      value={editedContent}
-      onChange={(e) => setEditedContent(e.target.value)}
-      placeholder={placeholder}
-    />
+    <div className="h-full">
+      <Textarea
+        value={editedContent}
+        onChange={(e) => setEditedContent(e.target.value)}
+        placeholder={placeholder}
+        disabled={isGenerating}
+        className="min-h-[300px] h-full font-normal resize-none"
+      />
+    </div>
   );
 };
 
