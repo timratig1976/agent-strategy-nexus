@@ -6,7 +6,6 @@ import FunnelStages from "./components/FunnelStages";
 import { FunnelData, FunnelStage, FunnelStrategyModuleProps, FunnelMetadata, isFunnelMetadata } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Json } from "@/integrations/supabase/types";
 
 // Factory function to break type recursion
 function createInitialFunnelData(): FunnelData {
