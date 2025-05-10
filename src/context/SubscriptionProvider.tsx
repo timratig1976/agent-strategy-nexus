@@ -61,11 +61,21 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (error) throw error;
 
       if (data) {
+        // Ensure the status is one of the allowed values
+        let status: 'active' | 'canceled' | 'incomplete' | 'past_due' | 'trialing';
+        
+        if (['active', 'canceled', 'incomplete', 'past_due', 'trialing'].includes(data.status)) {
+          status = data.status as 'active' | 'canceled' | 'incomplete' | 'past_due' | 'trialing';
+        } else {
+          // Default to active if invalid status is returned
+          status = 'active';
+        }
+        
         setSubscription({
           id: data.id,
           organization_id: data.organization_id,
           tier_id: data.tier_id,
-          status: data.status,
+          status: status,
           current_period_end: data.current_period_end,
           cancel_at_period_end: data.cancel_at_period_end,
         });
@@ -81,42 +91,17 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   const checkoutSubscription = async (priceId: string): Promise<string | null> => {
-    if (!currentOrganization) return null;
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { 
-          organizationId: currentOrganization.id,
-          priceId
-        }
-      });
-
-      if (error) throw error;
-      
-      return data.url;
-    } catch (err) {
-      console.error("Error creating checkout session:", err);
-      setError("Failed to create checkout session");
-      return null;
-    }
+    // Disabled until Stripe keys are provided
+    console.log("Stripe integration is currently disabled. Price ID:", priceId);
+    setError("Stripe integration is not configured yet. Please add your Stripe API keys to Supabase.");
+    return null;
   };
 
   const manageSubscription = async (): Promise<string | null> => {
-    if (!currentOrganization) return null;
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('customer-portal', {
-        body: { organizationId: currentOrganization.id }
-      });
-
-      if (error) throw error;
-      
-      return data.url;
-    } catch (err) {
-      console.error("Error opening customer portal:", err);
-      setError("Failed to open subscription management");
-      return null;
-    }
+    // Disabled until Stripe keys are provided
+    console.log("Stripe subscription management is currently disabled.");
+    setError("Stripe integration is not configured yet. Please add your Stripe API keys to Supabase.");
+    return null;
   };
 
   return (
@@ -134,3 +119,4 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     </SubscriptionContext.Provider>
   );
 };
+

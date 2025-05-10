@@ -51,6 +51,7 @@ export interface SubscriptionTier {
   max_teams: number | null;
   max_members: number | null;
   max_strategies: number | null;
+  stripe_price_id?: string; // Added this field
 }
 
 export interface OrganizationContextType {
@@ -62,3 +63,4 @@ export interface OrganizationContextType {
   loading: boolean;
   error: string | null;
 }
+
