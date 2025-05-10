@@ -21,6 +21,7 @@ import { OrganizationProvider } from "@/context/OrganizationProvider";
 import { SubscriptionProvider } from "@/context/SubscriptionProvider";
 import { Toaster } from "@/components/ui/sonner";
 import StrategyBoardPage from "@/pages/StrategyBoardPage";
+import StrategyOverviewRedirect from "@/pages/StrategyOverviewRedirect";
 
 export default function App() {
   return (
@@ -38,6 +39,8 @@ export default function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/create-strategy" element={<CreateStrategy />} />
             <Route path="/strategy/:id" element={<StrategyOverview />} />
+            {/* Redirect from old route to new route */}
+            <Route path="/strategy-overview/:id" element={<StrategyOverviewRedirect />} />
             <Route path="/strategy/:id/:state" element={<StrategyDetailsWithNav />} />
             <Route path="/strategy-details/:id" element={<StrategyDetails />} />
             <Route path="/strategy-board/:strategyId" element={<StrategyBoardPage />} />
