@@ -146,7 +146,7 @@ export const useAIResults = (strategyId: string) => {
   };
 
   // Handle storing AI results with more robust error handling
-  const handleAIResultsGenerated = (result, debugInfo) => {
+  const handleAIResultsGenerated = (result: any, debugInfo?: any) => {
     console.log('AI results generated callback received:', result);
     
     // Validate result structure before storing

@@ -29,7 +29,7 @@ import {
   GainCreatorNode,
   CanvasSectionNode
 } from './nodes';
-import { RelationshipEdge } from './edges/RelationshipEdge';
+import { RelationshipEdge } from './edges';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Save, Maximize2, Minimize2, ZoomIn, ZoomOut } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
