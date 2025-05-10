@@ -12,19 +12,7 @@ export const useCanvasData = (strategyId?: string) => {
   const [isSaved, setIsSaved] = useState<boolean>(false);
 
   // Use local storage hook to manage local cache
-  const { 
-    canvasSaveHistory, 
-    saveToLocalStorage, 
-    loadError: localStorageError 
-  } = useLocalCanvasStorage(strategyId);
-  
-  // Effect to handle local storage errors
-  useEffect(() => {
-    if (localStorageError) {
-      console.warn("Local storage error:", localStorageError);
-      // Don't show toast for this, just log it
-    }
-  }, [localStorageError]);
+  const { canvasSaveHistory, saveToLocalStorage } = useLocalCanvasStorage(strategyId);
 
   // Fetch the canvas data from the database
   const fetchCanvasData = async () => {
@@ -34,31 +22,20 @@ export const useCanvasData = (strategyId?: string) => {
     setError(null);
     
     try {
-      console.log("Fetching canvas data for strategy:", strategyId);
-      
       // Try to fetch from database if available
       const { canvas, error: fetchError } = await CanvasRepository.fetchCanvasData(strategyId);
       
       if (fetchError) {
-        console.error("Error fetching canvas:", fetchError);
         setError(fetchError);
-        toast.error("Failed to load canvas from database, using local data if available");
-      } 
-      
-      if (canvas) {
-        console.log("Canvas fetched successfully:", canvas);
+      } else if (canvas) {
         setCanvasData(canvas);
         
         // Update local storage with the latest data
         saveToLocalStorage(canvas);
-        setIsSaved(true);
-      } else {
-        console.log("No canvas found in database, checking local storage");
       }
     } catch (err) {
       console.error("Exception in fetchCanvasData:", err);
       setError("An unexpected error occurred while loading canvas data");
-      toast.error("Failed to load canvas data");
     } finally {
       setIsLoading(false);
     }
@@ -69,11 +46,9 @@ export const useCanvasData = (strategyId?: string) => {
     if (!strategyId) return false;
     
     try {
-      console.log("Saving canvas to database:", canvas);
       const { success, error: saveError } = await CanvasRepository.saveCanvasData(strategyId, canvas);
       
       if (!success) {
-        console.error("Error saving canvas to database:", saveError);
         toast.error(saveError || "Failed to save canvas to database");
         return false;
       }
@@ -89,31 +64,25 @@ export const useCanvasData = (strategyId?: string) => {
   };
 
   // Save canvas wrapper that combines local and database storage
-  const saveCanvas = async (canvas: UspCanvas) => {
-    setCanvasData(canvas); // Update local state immediately
-    
+  const saveCanvas = (canvas: UspCanvas) => {
     // First save to localStorage
     const localSuccess = saveToLocalStorage(canvas);
-    if (!localSuccess) {
-      toast.error("Failed to save canvas to local storage");
-    }
     
     // Then save to the database if local storage was successful
     if (localSuccess) {
-      return await saveCanvasToDatabase(canvas);
+      saveCanvasToDatabase(canvas);
     }
     
-    return false;
+    return localSuccess;
   };
   
   // Save final version combining local and database storage
-  const saveFinalVersion = async (canvas: UspCanvas) => {
+  const saveFinalVersion = (canvas: UspCanvas) => {
     // Validate that there's content to save
     if (
-      !canvas || 
-      (canvas.customerJobs.length === 0 &&
+      canvas.customerJobs.length === 0 &&
       canvas.customerPains.length === 0 &&
-      canvas.customerGains.length === 0)
+      canvas.customerGains.length === 0
     ) {
       toast.error("Cannot save final version with empty canvas. Please add content first.");
       return false;
@@ -121,26 +90,18 @@ export const useCanvasData = (strategyId?: string) => {
     
     // Save to localStorage with final flag
     const localSuccess = saveToLocalStorage(canvas, true);
-    if (!localSuccess) {
-      toast.error("Failed to save canvas to local storage");
-    }
-    
-    // Update local state
-    setCanvasData(canvas);
     
     // Save to database as well if local storage was successful
     if (localSuccess) {
-      return await saveCanvasToDatabase(canvas);
+      saveCanvasToDatabase(canvas);
     }
     
-    return false;
+    return localSuccess;
   };
 
   // Load data when component mounts or strategyId changes
   useEffect(() => {
-    if (strategyId) {
-      fetchCanvasData();
-    }
+    fetchCanvasData();
   }, [strategyId]);
 
   return {
@@ -153,7 +114,6 @@ export const useCanvasData = (strategyId?: string) => {
     saveFinalVersion,
     canvasSaveHistory,
     isSaved,
-    setIsSaved,
-    setCanvasData
+    setIsSaved
   };
 };

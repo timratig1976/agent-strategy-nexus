@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -69,8 +68,7 @@ function parseFunnelStage(stage: any): FunnelStage {
 
 // ✅ Finaler Hook
 export function useFunnelData(strategyId: string | undefined) {
-  // Prevent TypeScript deep instantiation by using explicit typing
-  const [funnelData, setFunnelData] = useState<FunnelData>(createInitialFunnelData());
+  const [funnelData, setFunnelData] = useState(() => createInitialFunnelData());
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -79,7 +77,7 @@ export function useFunnelData(strategyId: string | undefined) {
 
     const loadFunnelData = async () => {
       try {
-        // Using any to avoid TypeScript deep instantiation
+        // 🔥 TS2589-Vermeidung: response als any, dann destrukturieren
         const response: any = await supabase
           .from("agent_results")
           .select("id, content, metadata")
@@ -104,7 +102,6 @@ export function useFunnelData(strategyId: string | undefined) {
               : [],
           };
 
-          // Use type assertion instead of generic
           setFunnelData(safeContent as FunnelData);
           setHasChanges(false);
         }

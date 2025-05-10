@@ -14,16 +14,13 @@ export class CanvasRepository {
     try {
       console.log("Fetching USP canvas data for strategy:", strategyId);
       
-      // Using any to avoid TypeScript deep instantiation
-      const response: any = await supabase
+      const { data, error: fetchError } = await supabase
         .from('usp_canvas')
         .select('*')
         .eq('strategy_id', strategyId)
         .order('created_at', { ascending: false })
-        .limit(1);
-      
-      const data = response.data?.[0];
-      const fetchError = response.error;
+        .limit(1)
+        .maybeSingle();
       
       if (fetchError) {
         console.error("Error fetching canvas data:", fetchError);
@@ -58,7 +55,7 @@ export class CanvasRepository {
       const dbCanvas = mapCanvasToDbFormat(canvas, strategyId);
       
       // Perform the upsert operation
-      const response: any = await supabase
+      const { error: upsertError } = await supabase
         .from('usp_canvas')
         .upsert({
           strategy_id: dbCanvas.strategy_id,
@@ -71,8 +68,6 @@ export class CanvasRepository {
           version: dbCanvas.version
         });
       
-      const upsertError = response.error;
-      
       if (upsertError) {
         console.error("Error saving canvas to database:", upsertError);
         return { success: false, error: "Failed to save canvas to database" };
@@ -82,71 +77,6 @@ export class CanvasRepository {
     } catch (err) {
       console.error("Exception saving canvas to database:", err);
       return { success: false, error: "An error occurred while saving canvas" };
-    }
-  }
-  
-  /**
-   * Fetch canvas history for a specific canvas
-   */
-  static async fetchCanvasHistory(canvasId: string): Promise<{
-    history: any[];
-    error: string | null;
-  }> {
-    try {
-      console.log("Fetching canvas history for:", canvasId);
-      
-      // Using any to avoid TypeScript deep instantiation
-      const response: any = await supabase
-        .from('canvas_history')
-        .select('*')
-        .eq('canvas_id', canvasId)
-        .order('created_at', { ascending: false });
-      
-      const data = response.data || [];
-      const fetchError = response.error;
-      
-      if (fetchError) {
-        console.error("Error fetching canvas history:", fetchError);
-        return { history: [], error: "Failed to load canvas history from the database" };
-      } 
-      
-      return { history: data, error: null };
-    } catch (err) {
-      console.error("Exception fetching canvas history:", err);
-      return { history: [], error: "An error occurred while loading canvas history" };
-    }
-  }
-  
-  /**
-   * Save a new canvas history entry
-   */
-  static async saveCanvasHistorySnapshot(canvasId: string, snapshotData: any, metadata: any = {}): Promise<{
-    success: boolean;
-    error: string | null;
-  }> {
-    try {
-      console.log("Saving canvas history snapshot for:", canvasId);
-      
-      // Using any to avoid TypeScript deep instantiation
-      const response: any = await supabase
-        .from('canvas_history')
-        .insert({
-          canvas_id: canvasId,
-          snapshot_data: snapshotData,
-          metadata: metadata
-        });
-      
-      const insertError = response.error;
-      
-      if (insertError) {
-        console.error("Error saving canvas history:", insertError);
-        return { success: false, error: "Failed to save canvas history" };
-      }
-      
-      return { success: true, error: null };
-    } catch (err) {
-      console.error("Exception saving canvas history:", err);
-      return { success: false, error: "An error occurred while saving canvas history" };
     }
   }
 }
