@@ -3,14 +3,17 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CanvasItem, UspCanvas } from '../types';
+import { PostgrestSingleResponse } from '@supabase/supabase-js';
 
-interface CanvasSnapshot {
+// Define types for snapshot data
+export interface CanvasSnapshot {
   customerItems: CanvasItem[];
   valueItems: CanvasItem[];
   timestamp: string;
 }
 
-interface CanvasHistoryRecord {
+// Define history record type that matches database structure
+export interface CanvasHistoryRecord {
   id: string;
   canvas_id: string;
   snapshot_data: CanvasSnapshot;
@@ -43,11 +46,12 @@ export default function useCanvasDatabase(canvasId: string) {
         };
         
         // Insert new snapshot into canvas_history
+        // We need to ensure the data is properly serializable for Supabase
         const { error: insertError } = await supabase
           .from('canvas_history')
           .insert({
             canvas_id: canvasId,
-            snapshot_data: data,
+            snapshot_data: data as any, // Type assertion to avoid TS error with JSON serialization
             metadata
           });
         
@@ -79,7 +83,7 @@ export default function useCanvasDatabase(canvasId: string) {
     try {
       console.log('Loading canvas history from database', { canvasId });
       
-      const { data, error: fetchError } = await supabase
+      const { data, error: fetchError }: PostgrestSingleResponse<any[]> = await supabase
         .from('canvas_history')
         .select('*')
         .eq('canvas_id', canvasId)
@@ -89,8 +93,17 @@ export default function useCanvasDatabase(canvasId: string) {
         throw new Error(`Failed to load canvas history: ${fetchError.message}`);
       }
       
-      console.log('Canvas history loaded successfully', { count: data?.length || 0 });
-      return data as CanvasHistoryRecord[];
+      // Transform the data to ensure type safety
+      const typedData: CanvasHistoryRecord[] = data ? data.map(item => ({
+        id: item.id,
+        canvas_id: item.canvas_id,
+        snapshot_data: item.snapshot_data as CanvasSnapshot,
+        created_at: item.created_at,
+        metadata: item.metadata
+      })) : [];
+      
+      console.log('Canvas history loaded successfully', { count: typedData?.length || 0 });
+      return typedData;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error loading canvas history';
       console.error('Error loading canvas history:', errorMessage);

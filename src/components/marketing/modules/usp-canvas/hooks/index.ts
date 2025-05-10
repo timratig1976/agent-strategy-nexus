@@ -7,6 +7,7 @@ import { useRelationshipHandler } from './useRelationshipHandler';
 import { useAIResults } from './useAIResults';
 import { useAIContentHandler } from './useAIContentHandler';
 import { useNavigation } from './useNavigation';
+import useCanvasDatabase from './useCanvasDatabase';
 // We're keeping useCanvasStorage for backward compatibility but will prioritize database
 
 export {
@@ -18,5 +19,6 @@ export {
   useRelationshipHandler,
   useAIResults,
   useAIContentHandler,
-  useNavigation
+  useNavigation,
+  useCanvasDatabase
 };
