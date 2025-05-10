@@ -2,143 +2,128 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, FileText } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+
+interface FunnelStage {
+  id: string;
+  name: string;
+  touchpoints: {
+    id: string;
+    name: string;
+  }[];
+}
 
 interface FunnelActionPlanProps {
-  funnelData: any;
-  onSaveFunnel: (data: any) => void;
-  onFinalize: () => void;
-  isFinalized: boolean;
-  isLoading: boolean;
+  stages: FunnelStage[];
+  onSave: (actionPlan: Record<string, string>) => void;
+  savedActionPlan?: Record<string, string>;
+  isLoading?: boolean;
 }
 
 const FunnelActionPlan: React.FC<FunnelActionPlanProps> = ({
-  funnelData,
-  onSaveFunnel,
-  onFinalize,
-  isFinalized,
-  isLoading
+  stages,
+  onSave,
+  savedActionPlan = {},
+  isLoading = false,
 }) => {
-  const [showFinalizeConfirm, setShowFinalizeConfirm] = useState(false);
-  
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Loading action plan...</span>
-      </div>
-    );
-  }
-  
-  if (!funnelData) {
+  const [actionPlans, setActionPlans] = useState<Record<string, string>>(savedActionPlan);
+  const [activeTab, setActiveTab] = useState<string>(stages[0]?.id || "");
+
+  const handleTextChange = (stageId: string, text: string) => {
+    setActionPlans({
+      ...actionPlans,
+      [stageId]: text,
+    });
+  };
+
+  const handleSave = () => {
+    onSave(actionPlans);
+    toast.success("Action plans saved successfully");
+  };
+
+  if (stages.length === 0) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Funnel Action Plan</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground text-center py-4">
-            No funnel data available. Please configure your funnel or use the AI Generator first.
+          <p className="text-muted-foreground">
+            Please configure your funnel stages first.
           </p>
         </CardContent>
       </Card>
     );
   }
-  
-  const defaultActionItems = [
-    {
-      title: "Create awareness content",
-      description: "Develop blog posts, social media content, and SEO strategy",
-      timeframe: "Weeks 1-2"
-    },
-    {
-      title: "Set up lead magnet",
-      description: "Create a valuable resource for lead generation",
-      timeframe: "Weeks 2-3"
-    },
-    {
-      title: "Implement email nurture sequence",
-      description: "Develop an email series to move prospects through the funnel",
-      timeframe: "Weeks 3-4"
-    },
-    {
-      title: "Optimize landing pages",
-      description: "Ensure all landing pages are optimized for conversion",
-      timeframe: "Weeks 4-5"
-    },
-    {
-      title: "Set up tracking and analytics",
-      description: "Implement tracking to measure funnel performance",
-      timeframe: "Week 6"
-    }
-  ];
-  
-  const actionItems = funnelData.actionItems || defaultActionItems;
-  
-  return (
-    <div className="space-y-6">
-      {isFinalized && (
-        <Alert className="bg-green-50 border-green-200">
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-600">
-            This funnel strategy has been finalized. You can now proceed to the Ad Campaign stage.
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      {showFinalizeConfirm && !isFinalized && (
-        <Alert className="bg-yellow-50 border-yellow-200">
-          <FileText className="h-4 w-4 text-yellow-600" />
-          <AlertDescription className="text-yellow-600 flex items-center justify-between">
-            <span>Are you sure you want to finalize this funnel strategy? You can still make changes after finalizing.</span>
-            <div className="space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setShowFinalizeConfirm(false)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                variant="default" 
-                size="sm"
-                onClick={onFinalize}
-              >
-                Confirm
-              </Button>
-            </div>
-          </AlertDescription>
-        </Alert>
-      )}
 
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Funnel Implementation Plan</h3>
-        {!isFinalized && !showFinalizeConfirm && (
-          <Button onClick={() => setShowFinalizeConfirm(true)}>
-            Finalize Funnel Strategy
-          </Button>
-        )}
-      </div>
-      
-      <div className="space-y-4">
-        {actionItems.map((item, index) => (
-          <Card key={index} className="border-l-4 border-l-blue-500">
-            <CardContent className="pt-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h4 className="font-medium">{item.title}</h4>
-                  <p className="text-muted-foreground text-sm mt-1">{item.description}</p>
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Funnel Action Plan</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="w-full">
+            {stages.map((stage) => (
+              <TabsTrigger key={stage.id} value={stage.id} className="flex-1">
+                {stage.name}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          {stages.map((stage) => (
+            <TabsContent key={stage.id} value={stage.id} className="space-y-4">
+              <div>
+                <h3 className="text-lg font-medium mb-2">{stage.name} Stage Plan</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Create an action plan for the {stage.name.toLowerCase()} stage of your funnel.
+                </p>
+                
+                <div className="mb-4">
+                  <Textarea
+                    placeholder={`Enter your action plan for the ${stage.name} stage...`}
+                    className="min-h-[200px]"
+                    value={actionPlans[stage.id] || ""}
+                    onChange={(e) => handleTextChange(stage.id, e.target.value)}
+                  />
                 </div>
-                <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                  {item.timeframe}
-                </span>
+                
+                <h4 className="text-sm font-medium mb-2">Touchpoints in this stage:</h4>
+                <ul className="list-disc list-inside mb-4 pl-2">
+                  {stage.touchpoints.length > 0 ? (
+                    stage.touchpoints.map((tp) => (
+                      <li key={tp.id} className="text-sm">{tp.name}</li>
+                    ))
+                  ) : (
+                    <li className="text-sm text-muted-foreground">No touchpoints defined</li>
+                  )}
+                </ul>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+
+        <div className="mt-6">
+          <Button 
+            onClick={handleSave} 
+            disabled={isLoading}
+            className="w-full"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save Action Plan"
+            )}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

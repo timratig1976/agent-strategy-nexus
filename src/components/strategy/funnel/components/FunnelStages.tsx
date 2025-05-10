@@ -2,100 +2,188 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Plus, Trash2, ArrowDown } from "lucide-react";
 
-interface FunnelStagesProps {
-  funnelData: any;
-  onSaveFunnel: (data: any) => void;
-  isLoading: boolean;
+interface TouchPoint {
+  id: string;
+  name: string;
 }
 
-const FunnelStages: React.FC<FunnelStagesProps> = ({
-  funnelData,
-  onSaveFunnel,
-  isLoading
-}) => {
-  const defaultStages = [
-    {
-      id: "awareness",
-      name: "Awareness",
-      description: "Introduce your brand to potential customers",
-      touchpoints: ["Social media content", "Blog posts", "SEO optimization"]
-    },
-    {
-      id: "interest",
-      name: "Interest",
-      description: "Build interest in your products or services",
-      touchpoints: ["Email newsletters", "Webinars", "Detailed content"]
-    },
-    {
-      id: "consideration",
-      name: "Consideration",
-      description: "Help customers evaluate your offering",
-      touchpoints: ["Case studies", "Product demos", "Comparison guides"]
-    },
-    {
-      id: "intent",
-      name: "Intent",
-      description: "Guide customers toward making a decision",
-      touchpoints: ["Special offers", "Free trials", "Consultations"]
-    },
-    {
-      id: "conversion",
-      name: "Conversion",
-      description: "Convert prospects into customers",
-      touchpoints: ["Checkout optimization", "Clear CTAs", "Testimonials"]
-    }
-  ];
+interface FunnelStage {
+  id: string;
+  name: string;
+  touchpoints: TouchPoint[];
+}
 
-  const [stages, setStages] = useState(funnelData?.stages || defaultStages);
+interface FunnelStagesProps {
+  stages: FunnelStage[];
+  onStagesChange: (stages: FunnelStage[]) => void;
+}
 
-  const handleSave = () => {
-    const updatedFunnel = {
-      ...(funnelData || {}),
-      stages,
-      lastUpdated: new Date().toISOString()
+const FunnelStages: React.FC<FunnelStagesProps> = ({ stages, onStagesChange }) => {
+  const [newStageName, setNewStageName] = useState("");
+  const [newTouchpointNames, setNewTouchpointNames] = useState<Record<string, string>>({});
+
+  // Add new funnel stage
+  const handleAddStage = () => {
+    if (!newStageName.trim()) return;
+
+    const newStage: FunnelStage = {
+      id: crypto.randomUUID(),
+      name: newStageName,
+      touchpoints: [],
     };
-    onSaveFunnel(updatedFunnel);
+
+    onStagesChange([...stages, newStage]);
+    setNewStageName("");
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Loading funnel stages...</span>
-      </div>
-    );
-  }
+  // Remove a funnel stage
+  const handleRemoveStage = (stageId: string) => {
+    onStagesChange(stages.filter((stage) => stage.id !== stageId));
+  };
+
+  // Add a touchpoint to a stage
+  const handleAddTouchpoint = (stageId: string) => {
+    const touchpointName = newTouchpointNames[stageId];
+    if (!touchpointName?.trim()) return;
+
+    const updatedStages = stages.map((stage) => {
+      if (stage.id === stageId) {
+        return {
+          ...stage,
+          touchpoints: [
+            ...stage.touchpoints,
+            { id: crypto.randomUUID(), name: touchpointName },
+          ],
+        };
+      }
+      return stage;
+    });
+
+    onStagesChange(updatedStages);
+
+    // Clear the input for this stage
+    setNewTouchpointNames({
+      ...newTouchpointNames,
+      [stageId]: "",
+    });
+  };
+
+  // Remove a touchpoint
+  const handleRemoveTouchpoint = (stageId: string, touchpointId: string) => {
+    const updatedStages = stages.map((stage) => {
+      if (stage.id === stageId) {
+        return {
+          ...stage,
+          touchpoints: stage.touchpoints.filter((tp) => tp.id !== touchpointId),
+        };
+      }
+      return stage;
+    });
+
+    onStagesChange(updatedStages);
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Funnel Stages</h3>
-        <Button onClick={handleSave}>Save Stages</Button>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4">
+    <Card>
+      <CardHeader>
+        <CardTitle>Funnel Stages</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Stage list */}
         {stages.map((stage, index) => (
-          <Card key={stage.id} className="border-l-4" style={{ borderLeftColor: `hsl(${index * 60}, 70%, 50%)` }}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">{stage.name}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-2">{stage.description}</p>
-              <div>
-                <h4 className="text-sm font-medium mb-1">Key Touchpoints:</h4>
-                <ul className="list-disc pl-5 space-y-1">
-                  {stage.touchpoints.map((touchpoint, i) => (
-                    <li key={i} className="text-sm">{touchpoint}</li>
+          <div key={stage.id} className="border rounded-md p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">{stage.name}</h3>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => handleRemoveStage(stage.id)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Touchpoints */}
+            <div className="space-y-2 mb-4">
+              <h4 className="text-sm font-medium text-muted-foreground">Touchpoints</h4>
+              {stage.touchpoints.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No touchpoints added yet.</p>
+              ) : (
+                <ul className="space-y-1">
+                  {stage.touchpoints.map((tp) => (
+                    <li 
+                      key={tp.id} 
+                      className="flex justify-between items-center py-1 px-2 bg-muted/50 rounded-sm"
+                    >
+                      <span>{tp.name}</span>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleRemoveTouchpoint(stage.id, tp.id)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </li>
                   ))}
                 </ul>
+              )}
+            </div>
+
+            {/* Add touchpoint input */}
+            <div className="flex gap-2">
+              <Input 
+                placeholder="Add touchpoint" 
+                value={newTouchpointNames[stage.id] || ""}
+                onChange={(e) => 
+                  setNewTouchpointNames({
+                    ...newTouchpointNames,
+                    [stage.id]: e.target.value,
+                  })
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleAddTouchpoint(stage.id);
+                  }
+                }}
+              />
+              <Button 
+                variant="outline" 
+                onClick={() => handleAddTouchpoint(stage.id)}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Arrow connecting to next stage */}
+            {index < stages.length - 1 && (
+              <div className="flex justify-center my-4">
+                <ArrowDown className="h-6 w-6 text-muted-foreground" />
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </div>
         ))}
-      </div>
-    </div>
+
+        {/* Add new stage input */}
+        <div className="flex gap-2 mt-4">
+          <Input
+            placeholder="Add new funnel stage"
+            value={newStageName}
+            onChange={(e) => setNewStageName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleAddStage();
+              }
+            }}
+          />
+          <Button onClick={handleAddStage}>
+            <Plus className="h-4 w-4 mr-2" /> Add Stage
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

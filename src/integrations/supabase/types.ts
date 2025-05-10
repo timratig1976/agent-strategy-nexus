@@ -1282,6 +1282,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_org_membership: {
+        Args: { user_id_param: string; org_id_param: string }
+        Returns: boolean
+      }
       delete_strategy_document: {
         Args: { document_id_param: string }
         Returns: boolean
