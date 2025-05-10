@@ -27,6 +27,8 @@ export const useAIGenerator = (
   const [generationHistory, setGenerationHistory] = useState<any[]>([]);
   const [rawResponse, setRawResponse] = useState<any>(null);
   const [parseResults, setParseResults] = useState<ParseResults | null>(null);
+  // Add progress state
+  const [progress, setProgress] = useState<number>(0);
 
   const generateResult = useCallback(
     async (enhancementText?: string, formatOptions?: any) => {
@@ -35,6 +37,16 @@ export const useAIGenerator = (
       setDebugInfo(null);
       setRawResponse(null);
       setParseResults(null);
+      setProgress(0);
+
+      // Setup progress simulation
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          // Increase by a random amount up to 85%
+          const newValue = Math.min(prev + Math.random() * 5, 85);
+          return newValue;
+        });
+      }, 1000);
 
       try {
         const result = await generateUspCanvasProfile(
@@ -46,6 +58,9 @@ export const useAIGenerator = (
           formatOptions
         );
 
+        // Clear interval and set to 100% when done
+        clearInterval(progressInterval);
+        setProgress(100);
         setRawResponse(result);
 
         if (result.error) {
@@ -125,6 +140,9 @@ export const useAIGenerator = (
           toast.error('AI Generation Failed: No data received.');
         }
       } catch (e: any) {
+        // Clear interval on error
+        clearInterval(progressInterval);
+        setProgress(0);
         setError(e.message || 'An unexpected error occurred.');
         toast.error(`AI Generation Failed: ${e.message}`);
       } finally {
@@ -146,6 +164,7 @@ export const useAIGenerator = (
     rawResponse,
     parseResults,
     showDebug,
-    setShowDebug
+    setShowDebug,
+    progress // Add progress to returned values
   };
 };
