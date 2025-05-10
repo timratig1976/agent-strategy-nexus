@@ -15,10 +15,12 @@ import { Button } from "@/components/ui/button";
 import { Download, FileText, User, Star, BarChart2, MessageSquare } from "lucide-react";
 import { AgentResult, StrategyState } from "@/types/marketing";
 import { getStateLabel } from "@/utils/strategyUtils";
+import UspCanvasBoard from "@/components/marketing/modules/usp-canvas/visualization/UspCanvasBoard"; 
 
 // Custom node components
 import StageNode from './nodes/StageNode';
 import ResultNode from './nodes/ResultNode';
+import StrategyNode from './nodes/StrategyNode';
 
 interface StrategyBoardProps {
   strategyId: string;
@@ -34,11 +36,18 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  
+  // Get the USP Canvas result specifically
+  const uspCanvasResult = agentResults.find(r => 
+    r.metadata?.is_final === true && r.metadata?.type === 'pain_gains'
+  );
 
   // Define custom node types
   const nodeTypes: NodeTypes = {
     stageNode: StageNode,
-    resultNode: ResultNode
+    resultNode: ResultNode,
+    strategyNode: StrategyNode
   };
 
   // Set up initial nodes and edges based on strategy data
@@ -79,7 +88,7 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
         
         return {
           id: `stage-${stage}`,
-          type: 'stageNode',
+          type: 'strategyNode',
           data: { 
             label: getStateLabel(stage),
             icon: getStageIcon(stage),
@@ -252,9 +261,45 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
     // to capture the board content
     alert("Export feature will download the board as an image");
   };
+  
+  // Handle node click to show details
+  const handleNodeClick = (event: React.MouseEvent, node: Node) => {
+    setSelectedNode(node.id);
+  };
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Loading strategy visualization...</div>;
+  }
+  
+  // If a USP Canvas node is selected and we have canvas data, render the USP Canvas visualization
+  if (selectedNode === 'result-usp' && uspCanvasResult) {
+    try {
+      // Try to parse the USP Canvas data from the result content
+      const uspCanvasData = JSON.parse(uspCanvasResult.content);
+      
+      return (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">USP Canvas Visualization</h2>
+            <Button variant="outline" onClick={() => setSelectedNode(null)}>
+              Back to Overview
+            </Button>
+          </div>
+          
+          {/* If we have valid USP Canvas data, render the board */}
+          {uspCanvasData && (
+            <UspCanvasBoard
+              canvas={uspCanvasData}
+              readOnly={true}
+            />
+          )}
+        </div>
+      );
+    } catch (error) {
+      console.error("Error parsing USP Canvas data:", error);
+      // If there's an error parsing the data, just show the regular board
+      setSelectedNode(null);
+    }
   }
 
   return (
@@ -269,6 +314,7 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
         minZoom={0.2}
         maxZoom={4}
         nodeTypes={nodeTypes}
+        onNodeClick={handleNodeClick}
       >
         <Controls />
         <MiniMap nodeBorderRadius={8} />

@@ -1,15 +1,24 @@
 
 import React from "react";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import UspCanvasOverview from "../UspCanvasOverview";
-import { StoredAIResult } from "../types";
-import { toast } from "sonner";
-import { CanvasTab, AIGeneratorTab, HistoryTab, TabsList } from "./tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UspCanvas, CanvasHistoryEntry, StoredAIResult } from "../types";
+import CanvasTab from "./tabs/CanvasTab";
+import AIGenTab from "./tabs/AIGenTab";
+import HistoryTab from "./tabs/HistoryTab";
+import VisualizationTab from "./tabs/VisualizationTab";
+import { 
+  Activity, 
+  BarChart2, 
+  Clock, 
+  FileStack, 
+  Send,
+  Share2
+} from "lucide-react";
 
 interface UspCanvasModuleTabsProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  canvas: any;
+  canvas: UspCanvas;
   addCustomerJob: (content: string, priority: 'low' | 'medium' | 'high', isAIGenerated?: boolean) => void;
   updateCustomerJob: (id: string, content: string, priority: 'low' | 'medium' | 'high') => void;
   deleteCustomerJob: (id: string) => void;
@@ -40,10 +49,10 @@ interface UspCanvasModuleTabsProps {
   handleAddAIJobs: (jobs: any[]) => void;
   handleAddAIPains: (pains: any[]) => void;
   handleAddAIGains: (gains: any[]) => void;
-  storedAIResult: StoredAIResult;
-  handleAIResultsGenerated: (result: any, debugInfo?: any) => void;
-  canvasSaveHistory: Array<{timestamp: number, data: any}>;
-  refreshData?: () => void;
+  storedAIResult: StoredAIResult | null;
+  handleAIResultsGenerated: (result: any) => void;
+  canvasSaveHistory: CanvasHistoryEntry[];
+  refreshData: () => void;
 }
 
 const UspCanvasModuleTabs: React.FC<UspCanvasModuleTabsProps> = ({
@@ -85,19 +94,28 @@ const UspCanvasModuleTabs: React.FC<UspCanvasModuleTabsProps> = ({
   canvasSaveHistory,
   refreshData
 }) => {
-  const handleTabChange = (value: string) => {
-    // When switching to the overview tab, refresh data if possible
-    if (value === 'overview' && refreshData) {
-      refreshData();
-    }
-    setActiveTab(value);
-  };
-
   return (
-    <Tabs defaultValue="canvas" className="mt-8" onValueChange={handleTabChange}>
-      <TabsList activeTab={activeTab} />
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <TabsList className="grid grid-cols-4 mb-8">
+        <TabsTrigger value="editor" className="flex items-center gap-2">
+          <FileStack className="h-4 w-4" />
+          Editor
+        </TabsTrigger>
+        <TabsTrigger value="visualization" className="flex items-center gap-2">
+          <Share2 className="h-4 w-4" />
+          Visual Board
+        </TabsTrigger>
+        <TabsTrigger value="ai" className="flex items-center gap-2">
+          <Send className="h-4 w-4" />
+          AI Generator
+        </TabsTrigger>
+        <TabsTrigger value="history" className="flex items-center gap-2">
+          <Clock className="h-4 w-4" />
+          History
+        </TabsTrigger>
+      </TabsList>
       
-      <TabsContent value="canvas" className="mt-6 space-y-10">
+      <TabsContent value="editor">
         <CanvasTab 
           canvas={canvas}
           addCustomerJob={addCustomerJob}
@@ -126,17 +144,34 @@ const UspCanvasModuleTabs: React.FC<UspCanvasModuleTabsProps> = ({
           isSaved={isSaved}
         />
       </TabsContent>
-
-      <TabsContent value="overview" className="mt-6">
-        <UspCanvasOverview 
-          canvas={canvas} 
-          briefingContent={briefingContent}
-          personaContent={personaContent}
+      
+      <TabsContent value="visualization">
+        <VisualizationTab 
+          canvas={canvas}
+          onUpdateCanvas={() => saveCanvas()}
+          onAddCustomerJob={addCustomerJob}
+          onUpdateCustomerJob={updateCustomerJob}
+          onDeleteCustomerJob={deleteCustomerJob}
+          onAddCustomerPain={addCustomerPain}
+          onUpdateCustomerPain={updateCustomerPain}
+          onDeleteCustomerPain={deleteCustomerPain}
+          onAddCustomerGain={addCustomerGain}
+          onUpdateCustomerGain={updateCustomerGain}
+          onDeleteCustomerGain={deleteCustomerGain}
+          onAddProductService={addProductService}
+          onUpdateProductService={updateProductService}
+          onDeleteProductService={deleteProductService}
+          onAddPainReliever={addPainReliever}
+          onUpdatePainReliever={updatePainReliever}
+          onDeletePainReliever={deletePainReliever}
+          onAddGainCreator={addGainCreator}
+          onUpdateGainCreator={updateGainCreator}
+          onDeleteGainCreator={deleteGainCreator}
         />
       </TabsContent>
-
-      <TabsContent value="ai-generator" className="mt-6">
-        <AIGeneratorTab
+      
+      <TabsContent value="ai">
+        <AIGenTab
           strategyId={strategyId}
           briefingContent={briefingContent}
           personaContent={personaContent}
@@ -144,14 +179,14 @@ const UspCanvasModuleTabs: React.FC<UspCanvasModuleTabsProps> = ({
           handleAddAIPains={handleAddAIPains}
           handleAddAIGains={handleAddAIGains}
           storedAIResult={storedAIResult}
-          handleAIResultsGenerated={handleAIResultsGenerated}
+          onAIResultsGenerated={handleAIResultsGenerated}
         />
       </TabsContent>
       
-      <TabsContent value="history" className="mt-6">
-        <HistoryTab 
-          canvasSaveHistory={canvasSaveHistory} 
-          refreshData={refreshData}
+      <TabsContent value="history">
+        <HistoryTab
+          canvasSaveHistory={canvasSaveHistory}
+          onRefresh={refreshData}
         />
       </TabsContent>
     </Tabs>
