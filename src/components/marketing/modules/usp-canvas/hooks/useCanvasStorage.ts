@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { UspCanvas, CanvasHistoryEntry } from '../types';
 import { toast } from 'sonner';
+import { v4 as uuidv4 } from 'uuid';
 
 export const useCanvasStorage = (strategyId?: string) => {
   const [canvasSaveHistory, setCanvasSaveHistory] = useState<CanvasHistoryEntry[]>([]);
@@ -15,7 +16,9 @@ export const useCanvasStorage = (strategyId?: string) => {
       if (savedData) {
         try {
           const parsedData = JSON.parse(savedData);
-          setCanvasSaveHistory(parsedData.history || []);
+          if (parsedData.history && Array.isArray(parsedData.history)) {
+            setCanvasSaveHistory(parsedData.history);
+          }
         } catch (error) {
           console.error("Error loading saved canvas data:", error);
         }
@@ -54,11 +57,15 @@ export const useCanvasStorage = (strategyId?: string) => {
       }
       
       // Add current state to history
-      const newHistory = [...canvasSaveHistory, {
+      const newHistoryEntry: CanvasHistoryEntry = {
+        id: uuidv4(),
         timestamp: Date.now(),
         data: canvas,
-        isFinal: true
-      }];
+        isFinal: true,
+        metadata: { source: 'user-save', isFinal: true }
+      };
+      
+      const newHistory: CanvasHistoryEntry[] = [...canvasSaveHistory, newHistoryEntry];
       
       // Save to localStorage
       localStorage.setItem(`usp_canvas_${strategyId}`, JSON.stringify({
@@ -86,10 +93,15 @@ export const useCanvasStorage = (strategyId?: string) => {
     
     try {
       // Add current state to history
-      const newHistory = [...canvasSaveHistory, {
+      const newHistoryEntry: CanvasHistoryEntry = {
+        id: uuidv4(),
         timestamp: Date.now(),
-        data: canvas
-      }];
+        data: canvas,
+        isFinal: false,
+        metadata: { source: 'user-save' }
+      };
+      
+      const newHistory: CanvasHistoryEntry[] = [...canvasSaveHistory, newHistoryEntry];
       
       // Save to localStorage
       localStorage.setItem(`usp_canvas_${strategyId}`, JSON.stringify({

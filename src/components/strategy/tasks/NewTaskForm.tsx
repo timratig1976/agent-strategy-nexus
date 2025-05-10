@@ -24,7 +24,7 @@ const NewTaskForm = ({ strategyId, state, onTaskAdded, onCancel }: NewTaskFormPr
         .insert({
           strategy_id: strategyId,
           title,
-          state,
+          state: state as string, // Cast state to string for database
           is_completed: false
         })
         .select()

@@ -6,6 +6,7 @@ export interface FunnelStage {
   name: string;
   description: string;
   touchPoints?: TouchPoint[];
+  keyMetrics?: string[];
 }
 
 export interface TouchPoint {

@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { UspCanvas, CanvasHistoryEntry } from '../types';
+import { v4 as uuidv4 } from 'uuid';
 
 export const useLocalCanvasStorage = (strategyId?: string) => {
   const [canvasData, setCanvasData] = useState<UspCanvas | null>(null);
@@ -31,15 +32,16 @@ export const useLocalCanvasStorage = (strategyId?: string) => {
     if (!strategyId) return false;
     
     try {
-      // Add current state to history
-      const newHistory = [
-        ...canvasSaveHistory, 
-        {
-          timestamp: Date.now(),
-          data: canvas,
-          isFinal
-        }
-      ];
+      // Add current state to history with proper type
+      const newHistoryEntry: CanvasHistoryEntry = {
+        id: uuidv4(),
+        timestamp: Date.now(),
+        data: canvas,
+        isFinal: !!isFinal,
+        metadata: { source: 'local-storage' }
+      };
+      
+      const newHistory: CanvasHistoryEntry[] = [...canvasSaveHistory, newHistoryEntry];
       
       // Save to localStorage
       localStorage.setItem(`usp_canvas_${strategyId}`, JSON.stringify({
