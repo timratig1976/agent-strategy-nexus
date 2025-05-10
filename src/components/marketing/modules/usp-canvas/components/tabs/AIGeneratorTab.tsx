@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { StoredAIResult, CanvasItem } from "../../types";
 import UspCanvasAIGenerator from "../../UspCanvasAIGenerator";
 import { v4 as uuidv4 } from 'uuid';
+import { toast } from 'sonner';
 
 interface AIGeneratorTabProps {
   canvasId: string;
@@ -51,6 +52,7 @@ const AIGeneratorTab: React.FC<AIGeneratorTabProps> = ({
     
     setCustomerItems(newCustomerItems);
     onSaveCanvas();
+    toast.success(`Added ${jobs.length} jobs to Customer Profile`);
   };
 
   // Handle adding pain items to canvas
@@ -72,6 +74,7 @@ const AIGeneratorTab: React.FC<AIGeneratorTabProps> = ({
     
     setCustomerItems(newCustomerItems);
     onSaveCanvas();
+    toast.success(`Added ${pains.length} pains to Customer Profile`);
   };
 
   // Handle adding gain items to canvas
@@ -93,6 +96,7 @@ const AIGeneratorTab: React.FC<AIGeneratorTabProps> = ({
     
     setCustomerItems(newCustomerItems);
     onSaveCanvas();
+    toast.success(`Added ${gains.length} gains to Customer Profile`);
   };
 
   // Handle AI results generated

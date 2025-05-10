@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { StoredAIResult } from '../types';
 import { toast } from 'sonner';
+import { v4 as uuidv4 } from 'uuid';
 
 export const useAIResults = (strategyId: string) => {
   // Store AI results between tab switches
@@ -31,25 +32,26 @@ export const useAIResults = (strategyId: string) => {
     }
   }, [strategyId]);
 
-  // Handle adding AI-generated elements with duplicate prevention and better uniqueness checking
+  // Handle adding AI-generated Jobs to Canvas
   const handleAddAIJobs = (jobs) => {
     if (!jobs || jobs.length === 0) {
       toast.info("No jobs to add");
-      return;
+      return [];
     }
     
     const newAddedIds = new Set(addedJobIds);
     const uniqueJobs = jobs.filter(job => {
       // Skip invalid items
-      if (!job || !job.content || typeof job.content !== 'string') {
+      if (!job || (!job.content && !job.description)) {
         return false;
       }
       
-      const content = job.content.trim();
-      if (!content) return false;
+      // Use content if available, fall back to description
+      const content = job.content || job.description;
+      if (!content || typeof content !== 'string' || !content.trim()) return false;
       
       // Create a unique identifier based on content and priority
-      const idKey = `${content}-${job.priority}`;
+      const idKey = `${content}-${job.priority || 'medium'}`;
       // Check if this combination already exists
       const isDuplicate = newAddedIds.has(idKey);
       if (!isDuplicate) {
@@ -62,34 +64,38 @@ export const useAIResults = (strategyId: string) => {
     setAddedJobIds(newAddedIds);
     
     if (uniqueJobs.length > 0) {
-      // uniqueJobs.forEach(job => {
-      //   addCustomerJob(job.content, job.priority || 'medium', true);
-      // });
-      toast.success(`Added ${uniqueJobs.length} jobs to canvas`);
-      return uniqueJobs;
+      // Map jobs to format expected by Canvas
+      const formattedJobs = uniqueJobs.map(job => ({
+        id: uuidv4(),
+        content: job.content || job.description,
+        priority: job.priority || 'medium'
+      }));
+      return formattedJobs;
     } else {
       toast.info("All jobs have already been added");
       return [];
     }
   };
 
+  // Handle adding AI-generated Pains to Canvas
   const handleAddAIPains = (pains) => {
     if (!pains || pains.length === 0) {
       toast.info("No pains to add");
-      return;
+      return [];
     }
     
     const newAddedIds = new Set(addedPainIds);
     const uniquePains = pains.filter(pain => {
       // Skip invalid items
-      if (!pain || !pain.content || typeof pain.content !== 'string') {
+      if (!pain || (!pain.content && !pain.description)) {
         return false;
       }
       
-      const content = pain.content.trim();
-      if (!content) return false;
+      // Use content if available, fall back to description
+      const content = pain.content || pain.description;
+      if (!content || typeof content !== 'string' || !content.trim()) return false;
       
-      const idKey = `${content}-${pain.severity}`;
+      const idKey = `${content}-${pain.severity || 'medium'}`;
       const isDuplicate = newAddedIds.has(idKey);
       if (!isDuplicate) {
         newAddedIds.add(idKey);
@@ -101,34 +107,38 @@ export const useAIResults = (strategyId: string) => {
     setAddedPainIds(newAddedIds);
     
     if (uniquePains.length > 0) {
-      // uniquePains.forEach(pain => {
-      //   addCustomerPain(pain.content, pain.severity || 'medium', true);
-      // });
-      toast.success(`Added ${uniquePains.length} pains to canvas`);
-      return uniquePains;
+      // Map pains to format expected by Canvas
+      const formattedPains = uniquePains.map(pain => ({
+        id: uuidv4(),
+        content: pain.content || pain.description,
+        severity: pain.severity || 'medium'
+      }));
+      return formattedPains;
     } else {
       toast.info("All pains have already been added");
       return [];
     }
   };
 
+  // Handle adding AI-generated Gains to Canvas
   const handleAddAIGains = (gains) => {
     if (!gains || gains.length === 0) {
       toast.info("No gains to add");
-      return;
+      return [];
     }
     
     const newAddedIds = new Set(addedGainIds);
     const uniqueGains = gains.filter(gain => {
       // Skip invalid items
-      if (!gain || !gain.content || typeof gain.content !== 'string') {
+      if (!gain || (!gain.content && !gain.description)) {
         return false;
       }
       
-      const content = gain.content.trim();
-      if (!content) return false;
+      // Use content if available, fall back to description
+      const content = gain.content || gain.description;
+      if (!content || typeof content !== 'string' || !content.trim()) return false;
       
-      const idKey = `${content}-${gain.importance}`;
+      const idKey = `${content}-${gain.importance || 'medium'}`;
       const isDuplicate = newAddedIds.has(idKey);
       if (!isDuplicate) {
         newAddedIds.add(idKey);
@@ -140,11 +150,13 @@ export const useAIResults = (strategyId: string) => {
     setAddedGainIds(newAddedIds);
     
     if (uniqueGains.length > 0) {
-      // uniqueGains.forEach(gain => {
-      //   addCustomerGain(gain.content, gain.importance || 'medium', true);
-      // });
-      toast.success(`Added ${uniqueGains.length} gains to canvas`);
-      return uniqueGains;
+      // Map gains to format expected by Canvas
+      const formattedGains = uniqueGains.map(gain => ({
+        id: uuidv4(),
+        content: gain.content || gain.description,
+        importance: gain.importance || 'medium'
+      }));
+      return formattedGains;
     } else {
       toast.info("All gains have already been added");
       return [];
@@ -184,6 +196,7 @@ export const useAIResults = (strategyId: string) => {
 
   return {
     storedAIResult,
+    setStoredAIResult,
     handleAddAIJobs,
     handleAddAIPains,
     handleAddAIGains,

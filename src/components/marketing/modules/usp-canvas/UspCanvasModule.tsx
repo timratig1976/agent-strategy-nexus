@@ -53,6 +53,7 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
   // Add the AI Results hook to store AI-generated content
   const {
     storedAIResult,
+    setStoredAIResult,
     handleAddAIJobs,
     handleAddAIPains,
     handleAddAIGains,
@@ -84,6 +85,17 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     setSelectedValueItems([]);
   }, [canvasState]);
 
+  // Save canvas data with all items
+  const handleSaveCanvas = useCallback(async () => {
+    try {
+      await saveCanvasData();
+      toast.success('Canvas saved successfully');
+    } catch (err) {
+      console.error('Error saving canvas:', err);
+      toast.error('Failed to save canvas');
+    }
+  }, [saveCanvasData]);
+
   // Handle finalize and navigate
   const handleFinalizeAndContinue = useCallback(async () => {
     try {
@@ -113,7 +125,7 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     selectedValueItems,
     setSelectedCustomerItems,
     setSelectedValueItems,
-    saveCanvasData,
+    saveCanvasData: handleSaveCanvas,
     activeTab,
     briefingContent: briefingContent || '',
     personaContent: personaContent || ''

@@ -1,58 +1,61 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
+import { toast } from 'sonner';
 
 interface AIResultsPanelProps {
   title: string;
-  items: any[];
-  onAddItems: (items: any[]) => void;
+  items: Array<any>;
+  onAddItems: (items: Array<any>) => void;
   renderItem: (item: any, index: number) => React.ReactNode;
 }
 
 const AIResultsPanel: React.FC<AIResultsPanelProps> = ({
   title,
-  items = [],
+  items,
   onAddItems,
   renderItem
 }) => {
-  const handleAddAll = () => {
+  const handleAddToCanvas = () => {
     if (items && items.length > 0) {
       onAddItems(items);
+      toast.success(`Added ${items.length} items to canvas`);
+    } else {
+      toast.warning("No items to add");
     }
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg">{title}</CardTitle>
-          {items && items.length > 0 && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleAddAll}
-              className="flex items-center gap-1"
-            >
-              <PlusCircle size={16} />
-              <span>Alle hinzufügen</span>
-            </Button>
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">{title}</CardTitle>
+      </CardHeader>
+      
+      <CardContent className="flex-grow overflow-y-auto">
+        <div className="space-y-3">
+          {items && items.length > 0 ? (
+            items.map((item, index) => renderItem(item, index))
+          ) : (
+            <p className="text-sm text-muted-foreground">No items generated yet.</p>
           )}
         </div>
-      </CardHeader>
-      <CardContent>
-        {items && items.length > 0 ? (
-          <div className="space-y-3">
-            {items.map((item, index) => renderItem(item, index))}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            Noch keine KI-generierten Ergebnisse verfügbar. 
-            Klicken Sie auf "Kundenprofil generieren", um zu beginnen.
-          </div>
-        )}
       </CardContent>
+      
+      {items && items.length > 0 && (
+        <CardFooter>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full"
+            onClick={handleAddToCanvas}
+          >
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Add All to Canvas
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 };
