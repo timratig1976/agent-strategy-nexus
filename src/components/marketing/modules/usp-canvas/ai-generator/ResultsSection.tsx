@@ -35,7 +35,7 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({
           onAddItems={onAddJobs}
           renderItem={(item, index) => (
             <AIResultsItem
-              key={index}
+              key={`job-${index}`}
               item={item}
               ratingProperty="priority"
               ratingLabel="Priorität"
@@ -55,7 +55,7 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({
           onAddItems={onAddPains}
           renderItem={(item, index) => (
             <AIResultsItem
-              key={index}
+              key={`pain-${index}`}
               item={item}
               ratingProperty="severity"
               ratingLabel="Schwere"
@@ -75,7 +75,7 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({
           onAddItems={onAddGains}
           renderItem={(item, index) => (
             <AIResultsItem
-              key={index}
+              key={`gain-${index}`}
               item={item}
               ratingProperty="importance"
               ratingLabel="Wichtigkeit"

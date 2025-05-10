@@ -149,69 +149,64 @@ export const useCanvas = (canvasId?: string) => {
     setIsSaved(false);
   }, []);
 
-  // Apply AI generated content
+  // Apply AI generated content with correct type prefixes
   const applyAIGeneratedContent = useCallback((aiResult: StoredAIResult) => {
     if (!aiResult) return;
 
     const newCustomerItems = [...customerItems];
 
-    // Helper function to add AI items to canvas arrays
-    const addAIItems = (items: any[] | undefined, createItem: (content: string, value: string, isAI: boolean) => CanvasItem) => {
-      if (!items || items.length === 0) return;
-      
-      items.forEach(item => {
-        if (item) {
-          const content = item.description || item.content || item.title;
-          if (!content) return;
-          
-          // Find prop like priority, severity, or importance
-          const valueKey = Object.keys(item).find(key => 
-            ["priority", "severity", "importance"].includes(key)
-          );
-          const value = valueKey && item[valueKey] ? item[valueKey] : 'medium';
-          
-          newCustomerItems.push(createItem(content, value, true));
+    // Add jobs with job- prefix
+    if (aiResult.jobs && aiResult.jobs.length > 0) {
+      aiResult.jobs.forEach(job => {
+        if (job) {
+          const content = job.description || job.content || job.title;
+          if (content) {
+            const priority = job.priority || 'medium';
+            newCustomerItems.push({
+              id: `job-${uuidv4()}`, // Ensure consistent prefix for jobs
+              content,
+              rating: priority as 'low' | 'medium' | 'high',
+              isAIGenerated: true
+            });
+          }
         }
       });
-    };
-
-    // Add jobs
-    if (aiResult.jobs && aiResult.jobs.length > 0) {
-      addAIItems(
-        aiResult.jobs,
-        (content, priority, isAI) => ({
-          id: `job-${Date.now()}-${Math.random()}`,
-          content,
-          rating: priority as 'low' | 'medium' | 'high',
-          isAIGenerated: isAI
-        })
-      );
     }
 
-    // Add pains
+    // Add pains with pain- prefix
     if (aiResult.pains && aiResult.pains.length > 0) {
-      addAIItems(
-        aiResult.pains,
-        (content, severity, isAI) => ({
-          id: `pain-${Date.now()}-${Math.random()}`,
-          content,
-          rating: severity as 'low' | 'medium' | 'high',
-          isAIGenerated: isAI
-        })
-      );
+      aiResult.pains.forEach(pain => {
+        if (pain) {
+          const content = pain.description || pain.content || pain.title;
+          if (content) {
+            const severity = pain.severity || 'medium';
+            newCustomerItems.push({
+              id: `pain-${uuidv4()}`, // Ensure consistent prefix for pains
+              content,
+              rating: severity as 'low' | 'medium' | 'high',
+              isAIGenerated: true
+            });
+          }
+        }
+      });
     }
 
-    // Add gains
+    // Add gains with gain- prefix
     if (aiResult.gains && aiResult.gains.length > 0) {
-      addAIItems(
-        aiResult.gains,
-        (content, importance, isAI) => ({
-          id: `gain-${Date.now()}-${Math.random()}`,
-          content,
-          rating: importance as 'low' | 'medium' | 'high',
-          isAIGenerated: isAI
-        })
-      );
+      aiResult.gains.forEach(gain => {
+        if (gain) {
+          const content = gain.description || gain.content || gain.title;
+          if (content) {
+            const importance = gain.importance || 'medium';
+            newCustomerItems.push({
+              id: `gain-${uuidv4()}`, // Ensure consistent prefix for gains
+              content,
+              rating: importance as 'low' | 'medium' | 'high',
+              isAIGenerated: true
+            });
+          }
+        }
+      });
     }
 
     // Update state with new items
@@ -219,8 +214,9 @@ export const useCanvas = (canvasId?: string) => {
     setIsSaved(false);
     
     // Show success message if any changes were made
-    if (aiResult.jobs?.length || aiResult.pains?.length || aiResult.gains?.length) {
-      toast.success("AI-generated content applied to canvas");
+    const totalItems = (aiResult.jobs?.length || 0) + (aiResult.pains?.length || 0) + (aiResult.gains?.length || 0);
+    if (totalItems > 0) {
+      toast.success(`${totalItems} AI-generated items applied to canvas`);
     }
   }, [customerItems]);
 

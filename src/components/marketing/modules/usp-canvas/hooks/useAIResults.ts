@@ -64,11 +64,11 @@ export const useAIResults = (strategyId: string) => {
     setAddedJobIds(newAddedIds);
     
     if (uniqueJobs.length > 0) {
-      // Map jobs to format expected by Canvas
+      // Map jobs to format expected by Canvas with specific job- prefix
       const formattedJobs = uniqueJobs.map(job => ({
         id: `job-${uuidv4()}`,
         content: job.content || job.description,
-        priority: job.priority || 'medium',
+        rating: job.priority || 'medium',
         isAIGenerated: true
       }));
       return formattedJobs;
@@ -108,11 +108,11 @@ export const useAIResults = (strategyId: string) => {
     setAddedPainIds(newAddedIds);
     
     if (uniquePains.length > 0) {
-      // Map pains to format expected by Canvas
+      // Map pains to format expected by Canvas with specific pain- prefix
       const formattedPains = uniquePains.map(pain => ({
         id: `pain-${uuidv4()}`,
         content: pain.content || pain.description,
-        severity: pain.severity || 'medium',
+        rating: pain.severity || 'medium',
         isAIGenerated: true
       }));
       return formattedPains;
@@ -152,11 +152,11 @@ export const useAIResults = (strategyId: string) => {
     setAddedGainIds(newAddedIds);
     
     if (uniqueGains.length > 0) {
-      // Map gains to format expected by Canvas
+      // Map gains to format expected by Canvas with specific gain- prefix
       const formattedGains = uniqueGains.map(gain => ({
         id: `gain-${uuidv4()}`,
         content: gain.content || gain.description,
-        importance: gain.importance || 'medium',
+        rating: gain.importance || 'medium',
         isAIGenerated: true
       }));
       return formattedGains;

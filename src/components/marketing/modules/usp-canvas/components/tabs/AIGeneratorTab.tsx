@@ -40,10 +40,10 @@ const AIGeneratorTab: React.FC<AIGeneratorTabProps> = ({
     const newCustomerItems = [...customerItems];
     
     jobs.forEach(job => {
-      if (job.content) {
+      if (job.content || job.description) {
         newCustomerItems.push({
-          id: `job-${uuidv4()}`,
-          content: job.content,
+          id: `job-${uuidv4()}`, // Ensure consistent prefix for jobs
+          content: job.content || job.description,
           rating: job.priority || 'medium',
           isAIGenerated: true
         });
@@ -64,10 +64,10 @@ const AIGeneratorTab: React.FC<AIGeneratorTabProps> = ({
     const newCustomerItems = [...customerItems];
     
     pains.forEach(pain => {
-      if (pain.content) {
+      if (pain.content || pain.description) {
         newCustomerItems.push({
-          id: `pain-${uuidv4()}`,
-          content: pain.content,
+          id: `pain-${uuidv4()}`, // Ensure consistent prefix for pains
+          content: pain.content || pain.description,
           rating: pain.severity || 'medium',
           isAIGenerated: true
         });
@@ -88,10 +88,10 @@ const AIGeneratorTab: React.FC<AIGeneratorTabProps> = ({
     const newCustomerItems = [...customerItems];
     
     gains.forEach(gain => {
-      if (gain.content) {
+      if (gain.content || gain.description) {
         newCustomerItems.push({
-          id: `gain-${uuidv4()}`,
-          content: gain.content,
+          id: `gain-${uuidv4()}`, // Ensure consistent prefix for gains
+          content: gain.content || gain.description,
           rating: gain.importance || 'medium',
           isAIGenerated: true
         });
