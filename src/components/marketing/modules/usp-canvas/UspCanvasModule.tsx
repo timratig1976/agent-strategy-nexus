@@ -84,11 +84,11 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     try {
       console.log('Saving canvas with items:', { customerItems, valueItems });
       await saveCanvasData();
-      return true;
+      return Promise.resolve(); // Modified to return Promise<void> instead of Promise<boolean>
     } catch (err) {
       console.error('Error saving canvas:', err);
       toast.error('Failed to save canvas');
-      return false;
+      return Promise.resolve(); // Modified to return Promise<void> instead of Promise<boolean>
     }
   }, [saveCanvasData, customerItems, valueItems]);
 

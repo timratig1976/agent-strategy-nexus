@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProductServices from "./ProductServices";
 import PainRelievers from "./PainRelievers";
 import GainCreators from "./GainCreators";
-import { UspCanvas, ProductService, PainReliever, GainCreator } from "./types";
+import { UspCanvas } from "./types";
 import SectionHeader from "./components/SectionHeader";
 
 interface ValueMapCanvasProps {

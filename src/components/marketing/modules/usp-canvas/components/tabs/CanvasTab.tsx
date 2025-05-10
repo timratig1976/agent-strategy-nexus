@@ -129,7 +129,15 @@ const CanvasTab: React.FC<CanvasTabProps> = ({
       ) : (
         <ValueMapCanvas
           canvas={canvas}
-          customerItems={customerItems}
+          addProductService={() => {}}
+          updateProductService={() => {}}
+          deleteProductService={() => {}}
+          addPainReliever={() => {}}
+          updatePainReliever={() => {}}
+          deletePainReliever={() => {}}
+          addGainCreator={() => {}}
+          updateGainCreator={() => {}}
+          deleteGainCreator={() => {}}
         />
       )}
     </div>
