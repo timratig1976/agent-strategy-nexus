@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { StrategyTask } from "./types";
+import { StrategyTask } from "@/types/marketing";
 
 export const useTaskOperations = (
   tasks: StrategyTask[], 

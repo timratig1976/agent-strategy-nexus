@@ -47,3 +47,20 @@ export function safeJsonAccess<T>(json: Json | undefined | null, key: string, de
   const typedJson = json as Record<string, any>;
   return (key in typedJson && typedJson[key] !== null) ? typedJson[key] as T : defaultValue;
 }
+
+/**
+ * Convert StrategyState enum to string for database operations
+ */
+export function strategyStateToString(state: StrategyState): string {
+  return state.toString();
+}
+
+/**
+ * Safe conversion from JSON to a Record type
+ */
+export function safeJsonToRecord(json: Json | null | undefined): Record<string, any> {
+  if (!json || typeof json !== 'object' || Array.isArray(json)) {
+    return {};
+  }
+  return json as Record<string, any>;
+}

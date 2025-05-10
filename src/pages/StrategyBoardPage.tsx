@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { AgentResult, StrategyState } from "@/types/marketing";
-import { toStrategyState } from '@/utils/typeUtils';
+import { toStrategyState, safeJsonToRecord } from '@/utils/typeUtils';
 
 const StrategyBoardPage = () => {
   const { strategyId } = useParams<{ strategyId: string }>();
@@ -56,7 +56,7 @@ const StrategyBoardPage = () => {
           strategyId: result.strategy_id,
           content: result.content,
           createdAt: result.created_at,
-          metadata: result.metadata ? { ...result.metadata } as Record<string, any> : {}
+          metadata: result.metadata ? safeJsonToRecord(result.metadata) : {}
         }));
         
         setAgentResults(mappedResults);

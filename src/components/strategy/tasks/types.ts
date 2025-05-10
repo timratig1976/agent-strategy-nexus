@@ -20,3 +20,6 @@ export interface TaskItemProps {
   onToggle: (taskId: string, isCompleted: boolean) => void;
   onDelete: (taskId: string) => void;
 }
+
+// Export StrategyTask from here for internal use
+export type { StrategyTask };

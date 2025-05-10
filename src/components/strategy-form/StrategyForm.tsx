@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthProvider";
 import { StrategyState } from "@/types/marketing";
+import { strategyStateToString } from "@/utils/typeUtils";
 import BasicInfoSection from "./BasicInfoSection";
 import CompanySection from "./CompanySection";
 import ProductSection from "./ProductSection";
@@ -56,7 +57,7 @@ const StrategyForm = () => {
           product_url: values.productUrl || "",
           additional_info: values.additionalInfo || "",
           status: 'in_progress',
-          state: StrategyState.BRIEFING,
+          state: strategyStateToString(StrategyState.BRIEFING),
           language: values.language
         })
         .select()
@@ -65,16 +66,14 @@ const StrategyForm = () => {
       if (strategyError) throw strategyError;
       
       // Add initial briefing task
-      const initialTask = {
-        strategy_id: strategy.id,
-        title: "Create AI Briefing",
-        state: StrategyState.BRIEFING,
-        is_completed: false
-      };
-      
       const { error: taskError } = await supabase
         .from('strategy_tasks')
-        .insert(initialTask);
+        .insert({
+          strategy_id: strategy.id,
+          title: "Create AI Briefing",
+          state: strategyStateToString(StrategyState.BRIEFING),
+          is_completed: false
+        });
       
       if (taskError) throw taskError;
       

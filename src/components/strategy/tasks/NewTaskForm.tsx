@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { NewTaskFormProps } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 import { StrategyTask } from "@/types/marketing";
+import { strategyStateToString } from "@/utils/typeUtils";
 
 const NewTaskForm = ({ strategyId, state, onTaskAdded, onCancel }: NewTaskFormProps) => {
   const [title, setTitle] = useState("");
@@ -18,13 +19,16 @@ const NewTaskForm = ({ strategyId, state, onTaskAdded, onCancel }: NewTaskFormPr
     setIsSubmitting(true);
     
     try {
+      // Convert enum to string for database operations
+      const stateStr = strategyStateToString(state);
+      
       // Insert the new task into the database
       const { data, error } = await supabase
         .from('strategy_tasks')
         .insert({
           strategy_id: strategyId,
           title,
-          state: state.toString(),
+          state: stateStr,
           is_completed: false
         })
         .select()

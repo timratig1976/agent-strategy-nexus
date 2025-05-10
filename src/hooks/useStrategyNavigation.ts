@@ -3,7 +3,7 @@ import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { StrategyState } from "@/types/marketing";
-import { getStateLabel } from "@/utils/strategyUtils";
+import { getStateLabel, strategyStateToString } from "@/utils/strategyUtils";
 
 interface UseStrategyNavigationProps {
   strategyId?: string;
@@ -16,12 +16,12 @@ export const useStrategyNavigation = ({ strategyId, onRefetch }: UseStrategyNavi
   /**
    * Navigate to previous state in the strategy flow
    */
-  const navigateToPreviousStep = useCallback(async (currentState: string) => {
+  const navigateToPreviousStep = useCallback(async (currentState: StrategyState | string) => {
     if (!strategyId) return;
     
     try {
       setIsNavigating(true);
-      let previousState: string;
+      let previousState: StrategyState;
       
       // Determine the previous state based on the current state
       switch(currentState) {
@@ -46,7 +46,7 @@ export const useStrategyNavigation = ({ strategyId, onRefetch }: UseStrategyNavi
       // Update the strategy state
       const { error } = await supabase
         .from('strategies')
-        .update({ state: previousState })
+        .update({ state: strategyStateToString(previousState) })
         .eq('id', strategyId)
         .select();
       
@@ -70,12 +70,12 @@ export const useStrategyNavigation = ({ strategyId, onRefetch }: UseStrategyNavi
   /**
    * Navigate to next state in the strategy flow
    */
-  const navigateToNextStep = useCallback(async (currentState: string) => {
+  const navigateToNextStep = useCallback(async (currentState: StrategyState | string) => {
     if (!strategyId) return;
     
     try {
       setIsNavigating(true);
-      let nextState: string;
+      let nextState: StrategyState;
       
       // Determine the next state based on the current state
       switch(currentState) {
@@ -100,7 +100,7 @@ export const useStrategyNavigation = ({ strategyId, onRefetch }: UseStrategyNavi
       // Update the strategy state
       const { error } = await supabase
         .from('strategies')
-        .update({ state: nextState })
+        .update({ state: strategyStateToString(nextState) })
         .eq('id', strategyId)
         .select();
       
