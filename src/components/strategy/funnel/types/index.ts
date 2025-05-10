@@ -1,6 +1,4 @@
 
-import { Json } from "@/integrations/supabase/types";
-
 /**
  * Represents a touchpoint in a funnel stage
  */
@@ -73,3 +71,4 @@ export function isFunnelMetadata(metadata: unknown): metadata is FunnelMetadata 
   
   return (metadata as FunnelMetadata).type === 'funnel';
 }
+
