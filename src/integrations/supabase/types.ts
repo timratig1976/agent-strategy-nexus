@@ -480,6 +480,119 @@ export type Database = {
           },
         ]
       }
+      org_memberships: {
+        Row: {
+          created_at: string
+          id: string
+          is_primary: boolean
+          organization_id: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          organization_id: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          organization_id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_memberships_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          logo_url: string | null
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payment_history: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          id: string
+          organization_id: string
+          payment_date: string | null
+          status: string
+          stripe_invoice_id: string | null
+          subscription_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          id?: string
+          organization_id: string
+          payment_date?: string | null
+          status: string
+          stripe_invoice_id?: string | null
+          subscription_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          id?: string
+          organization_id?: string
+          payment_date?: string | null
+          status?: string
+          stripe_invoice_id?: string | null
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_history_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_history_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       personas: {
         Row: {
           behaviors: string | null
@@ -646,10 +759,12 @@ export type Database = {
           id: string
           language: string
           name: string
+          organization_id: string | null
           product_description: string | null
           product_url: string | null
           state: Database["public"]["Enums"]["strategy_state"]
           status: Database["public"]["Enums"]["strategy_status"]
+          team_id: string | null
           updated_at: string
           user_id: string | null
           website_url: string | null
@@ -662,10 +777,12 @@ export type Database = {
           id?: string
           language?: string
           name: string
+          organization_id?: string | null
           product_description?: string | null
           product_url?: string | null
           state?: Database["public"]["Enums"]["strategy_state"]
           status?: Database["public"]["Enums"]["strategy_status"]
+          team_id?: string | null
           updated_at?: string
           user_id?: string | null
           website_url?: string | null
@@ -678,15 +795,32 @@ export type Database = {
           id?: string
           language?: string
           name?: string
+          organization_id?: string | null
           product_description?: string | null
           product_url?: string | null
           state?: Database["public"]["Enums"]["strategy_state"]
           status?: Database["public"]["Enums"]["strategy_status"]
+          team_id?: string | null
           updated_at?: string
           user_id?: string | null
           website_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "strategies_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "strategies_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       strategy_documents: {
         Row: {
@@ -816,6 +950,169 @@ export type Database = {
             columns: ["strategy_id"]
             isOneToOne: false
             referencedRelation: "strategies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_tiers: {
+        Row: {
+          created_at: string
+          description: string | null
+          features: Json
+          id: string
+          max_members: number | null
+          max_strategies: number | null
+          max_teams: number | null
+          monthly_price_cents: number
+          name: string
+          stripe_price_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          max_members?: number | null
+          max_strategies?: number | null
+          max_teams?: number | null
+          monthly_price_cents: number
+          name: string
+          stripe_price_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          max_members?: number | null
+          max_strategies?: number | null
+          max_teams?: number | null
+          monthly_price_cents?: number
+          name?: string
+          stripe_price_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          organization_id: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          tier_id: string
+          updated_at: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          organization_id: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tier_id: string
+          updated_at?: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          organization_id?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tier_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_memberships: {
+        Row: {
+          created_at: string
+          id: string
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_memberships_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -988,6 +1285,10 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_user_role: {
+        Args: { org_id: string }
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
       insert_strategy_document: {
         Args: {
           strategy_id_param: string
@@ -997,6 +1298,18 @@ export type Database = {
           file_size_param: number
         }
         Returns: string
+      }
+      is_org_admin_or_owner: {
+        Args: { org_id: string }
+        Returns: boolean
+      }
+      is_org_member: {
+        Args: { org_id: string }
+        Returns: boolean
+      }
+      is_team_member: {
+        Args: { team_id: string }
+        Returns: boolean
       }
       update_agent_results_final_status: {
         Args: { strategy_id_param: string; result_type_param: string }
@@ -1037,6 +1350,7 @@ export type Database = {
         | "content_strategy"
       strategy_state: "briefing" | "persona" | "pain_gains" | "funnel" | "ads"
       strategy_status: "draft" | "in_progress" | "completed"
+      user_role: "owner" | "admin" | "member" | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1176,6 +1490,7 @@ export const Constants = {
       ],
       strategy_state: ["briefing", "persona", "pain_gains", "funnel", "ads"],
       strategy_status: ["draft", "in_progress", "completed"],
+      user_role: ["owner", "admin", "member", "viewer"],
     },
   },
 } as const

@@ -1,135 +1,132 @@
 
-import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "@/context/AuthProvider";
+import React from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Menu, X, Settings, LayoutDashboard, LogOut } from "lucide-react";
-import { useState } from "react";
-import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { toast } from "@/components/ui/sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import CompanyLogo from "./CompanyLogo";
+import { useAuth } from "@/context/AuthProvider";
+import { Building, ChevronDown, Home, Settings, LogOut, User, Users } from "lucide-react";
+import { useOrganization } from "@/context/OrganizationProvider";
+import OrganizationSelector from "./organizations/OrganizationSelector";
 
-export default function NavBar() {
-  const { user, signOut } = useAuth();
-  const [open, setOpen] = useState(false);
+const NavBar = () => {
+  const navigate = useNavigate();
   const location = useLocation();
-  const isMobile = useIsMobile();
+  const { user, signOut } = useAuth();
+  const { currentOrganization } = useOrganization();
 
-  // Get the current route for active link highlighting
-  const currentRoute = location.pathname;
-  
-  // Define navigation items
-  const navItems = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  ];
-
-  const handleLogout = async () => {
-    await signOut();
-    toast.success("Successfully logged out");
+  const isActive = (path: string) => {
+    return location.pathname === path;
   };
 
-  const mobileNavigation = (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button size="icon" variant="ghost">
-          <Menu className="h-5 w-5" />
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="left" className="w-[240px] sm:w-[300px]">
-        <div className="flex flex-col h-full">
-          <div className="flex justify-between items-center pb-4 border-b">
-            <span className="font-semibold">Strategy Hub</span>
-            <Button size="icon" variant="ghost" onClick={() => setOpen(false)}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <nav className="flex-1 py-4">
-            <ul className="space-y-1">
-              {navItems.map((item) => (
-                <li key={item.name}>
-                  <Link
-                    to={item.href}
-                    onClick={() => setOpen(false)}
-                    className={cn(
-                      "flex items-center gap-2 block py-2 px-3 rounded-md transition-colors",
-                      currentRoute === item.href
-                        ? "bg-accent text-accent-foreground font-medium"
-                        : "hover:bg-accent/50"
-                    )}
-                  >
-                    {item.icon && <item.icon className="h-4 w-4" />}
-                    {item.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          {user && (
-            <div className="pt-4 border-t">
-              <div className="flex items-center justify-between">
-                <div className="px-3 py-2 text-sm text-muted-foreground">
-                  {user.email}
-                </div>
-                <Button variant="ghost" size="sm" onClick={handleLogout} className="flex items-center gap-2">
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      </SheetContent>
-    </Sheet>
-  );
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate("/auth");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
 
   return (
-    <header className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 w-full border-b">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Link to="/" className="font-semibold text-lg mr-6">
-            Strategy Hub
+    <header className="border-b">
+      <div className="container mx-auto flex h-16 items-center px-4 sm:justify-between sm:space-x-0">
+        <div className="flex items-center gap-4">
+          <Link to="/">
+            <CompanyLogo />
           </Link>
 
-          {!isMobile && (
-            <nav className="hidden ml-6 md:flex items-center gap-4">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={cn(
-                    "px-3 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-2",
-                    currentRoute === item.href
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                  )}
-                >
-                  {item.icon ? <item.icon className="h-4 w-4" /> : null}
-                  {item.name}
+          {user && (
+            <>
+              <div className="hidden md:flex gap-1">
+                <Link to="/">
+                  <Button
+                    variant={isActive("/") ? "secondary" : "ghost"}
+                    size="sm"
+                    className="text-base"
+                  >
+                    <Home className="h-4 w-4 mr-1" />
+                    Home
+                  </Button>
                 </Link>
-              ))}
-            </nav>
+                <Link to="/dashboard">
+                  <Button
+                    variant={isActive("/dashboard") ? "secondary" : "ghost"}
+                    size="sm"
+                    className="text-base"
+                  >
+                    Dashboard
+                  </Button>
+                </Link>
+                <Link to="/marketing-hub">
+                  <Button
+                    variant={isActive("/marketing-hub") ? "secondary" : "ghost"}
+                    size="sm"
+                    className="text-base"
+                  >
+                    Marketing Hub
+                  </Button>
+                </Link>
+              </div>
+            </>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          {!isMobile && user && (
-            <>
-              <Link to="/settings">
-                <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                  <Settings className="h-4 w-4" />
+        {user && (
+          <div className="flex items-center gap-4">
+            <OrganizationSelector />
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1 flex items-center">
+                  <User className="h-4 w-4" />
+                  <span className="hidden md:inline">Account</span>
+                  <ChevronDown className="h-3 w-3 opacity-50" />
                 </Button>
-              </Link>
-              <Button variant="ghost" onClick={handleLogout} size="sm" className="flex items-center gap-2">
-                <LogOut className="h-4 w-4" />
-                Logout
-              </Button>
-            </>
-          )}
-          {isMobile && user ? mobileNavigation : null}
-        </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-1.5 text-sm font-medium">
+                  {user.email}
+                </div>
+                <DropdownMenuSeparator />
+                
+                {currentOrganization && (
+                  <>
+                    <Link to={`/organizations/${currentOrganization.id}/settings`}>
+                      <DropdownMenuItem className="cursor-pointer">
+                        <Building className="mr-2 h-4 w-4" />
+                        <span>Organization</span>
+                      </DropdownMenuItem>
+                    </Link>
+                  </>
+                )}
+                
+                <Link to="/settings">
+                  <DropdownMenuItem className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                </Link>
+                
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </div>
     </header>
   );
-}
+};
+
+export default NavBar;

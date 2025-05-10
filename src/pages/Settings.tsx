@@ -1,8 +1,10 @@
 
+// Update the Settings.tsx page to include organization settings
 import React, { useEffect, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthProvider";
+import { useOrganization } from "@/context/OrganizationProvider";
 import NavBar from "@/components/NavBar";
 import {
   Tabs,
@@ -11,6 +13,8 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { AIPromptSettingsTab, CompanyProfileTab, APIKeysTab } from "@/components/settings";
+import TeamManagement from "@/components/organizations/TeamManagement";
+import { useSearchParams } from "react-router-dom";
 
 type CompanySettings = {
   name: string;
@@ -21,6 +25,10 @@ type CompanySettings = {
 const Settings = () => {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { currentOrganization } = useOrganization();
+  const [searchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(tabFromUrl || "company");
   const [isLoading, setIsLoading] = useState(false);
   const [companySettings, setCompanySettings] = useState<CompanySettings>({
     name: "",
@@ -78,17 +86,27 @@ const Settings = () => {
           </h1>
         </div>
         
-        <Tabs defaultValue="company">
+        <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">
             <TabsTrigger value="company">
               Company Profile
             </TabsTrigger>
+            {currentOrganization && (
+              <TabsTrigger value="teams">
+                Teams
+              </TabsTrigger>
+            )}
             <TabsTrigger value="ai-prompts">
               AI Prompt Settings
             </TabsTrigger>
             <TabsTrigger value="api-keys">
               API Keys
             </TabsTrigger>
+            {currentOrganization && (
+              <TabsTrigger value="billing">
+                Billing
+              </TabsTrigger>
+            )}
           </TabsList>
           
           <TabsContent value="company">
@@ -98,6 +116,12 @@ const Settings = () => {
             />
           </TabsContent>
           
+          {currentOrganization && (
+            <TabsContent value="teams">
+              <TeamManagement />
+            </TabsContent>
+          )}
+          
           <TabsContent value="ai-prompts">
             <AIPromptSettingsTab />
           </TabsContent>
@@ -105,6 +129,22 @@ const Settings = () => {
           <TabsContent value="api-keys">
             <APIKeysTab />
           </TabsContent>
+          
+          {currentOrganization && (
+            <TabsContent value="billing">
+              <div className="text-center py-12">
+                <p className="mb-4">
+                  Manage your subscription and billing settings in the organization settings.
+                </p>
+                <a 
+                  href={`/organizations/${currentOrganization.id}/settings`}
+                  className="text-primary hover:underline"
+                >
+                  Go to Organization Settings
+                </a>
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </>
