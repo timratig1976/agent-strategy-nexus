@@ -21,7 +21,7 @@ export const mapCanvasToSpecificTypes = (
     .map(item => ({
       id: item.id,
       content: item.content,
-      priority: item.rating as 'low' | 'medium' | 'high',
+      priority: item.rating,
       isAIGenerated: item.isAIGenerated || false
     }));
     
@@ -30,7 +30,7 @@ export const mapCanvasToSpecificTypes = (
     .map(item => ({
       id: item.id,
       content: item.content,
-      severity: item.rating as 'low' | 'medium' | 'high',
+      severity: item.rating,
       isAIGenerated: item.isAIGenerated || false
     }));
     
@@ -39,7 +39,7 @@ export const mapCanvasToSpecificTypes = (
     .map(item => ({
       id: item.id,
       content: item.content,
-      importance: item.rating as 'low' | 'medium' | 'high',
+      importance: item.rating,
       isAIGenerated: item.isAIGenerated || false
     }));
   
@@ -110,19 +110,19 @@ export const mapSpecificTypesToCanvas = (
     ...canvas.productServices.map(product => ({
       id: product.id,
       content: product.content,
-      rating: 'medium', // Default rating for value items
+      rating: 'medium' as const, // Using const assertion to ensure type is 'medium'
       isAIGenerated: product.isAIGenerated
     })),
     ...canvas.painRelievers.map(reliever => ({
       id: reliever.id,
       content: reliever.content,
-      rating: 'medium',
+      rating: 'medium' as const,
       isAIGenerated: reliever.isAIGenerated
     })),
     ...canvas.gainCreators.map(creator => ({
       id: creator.id,
       content: creator.content,
-      rating: 'medium',
+      rating: 'medium' as const,
       isAIGenerated: creator.isAIGenerated
     }))
   ];

@@ -10,7 +10,7 @@ interface AIResultsPanelProps {
   items: Array<any>;
   onAddItems: (items: Array<any>) => void;
   onAddSingleItem?: (item: any) => void;
-  renderItem: (item: any, index: number) => React.ReactNode;
+  renderItem: (item: any, index: number) => React.ReactElement;
 }
 
 const AIResultsPanel: React.FC<AIResultsPanelProps> = ({
@@ -43,16 +43,17 @@ const AIResultsPanel: React.FC<AIResultsPanelProps> = ({
         <div className="space-y-3">
           {items && items.length > 0 ? (
             items.map((item, index) => {
-              // If onAddSingleItem is provided, pass a modified renderItem
+              // Ensure renderItem returns a React element
+              const renderedItem = renderItem(item, index);
+              
+              // If onAddSingleItem is provided, clone the element and add the onAddItem prop
               if (onAddSingleItem) {
-                const originalItem = renderItem(item, index);
-                // Clone the element and add the onAddItem prop
-                return React.cloneElement(originalItem, {
+                return React.cloneElement(renderedItem, {
                   key: `item-${index}`,
                   onAddItem: () => onAddSingleItem(item)
                 });
               }
-              return React.cloneElement(renderItem(item, index), { key: `item-${index}` });
+              return React.cloneElement(renderedItem, { key: `item-${index}` });
             })
           ) : (
             <p className="text-sm text-muted-foreground">No items generated yet.</p>

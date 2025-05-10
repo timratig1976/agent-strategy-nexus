@@ -26,18 +26,21 @@ export interface ProductService {
   id: string;
   content: string;
   relatedJobIds: string[];
+  isAIGenerated?: boolean;
 }
 
 export interface PainReliever {
   id: string;
   content: string;
   relatedPainIds: string[];
+  isAIGenerated?: boolean;
 }
 
 export interface GainCreator {
   id: string;
   content: string;
   relatedGainIds: string[];
+  isAIGenerated?: boolean;
 }
 
 export interface UspCanvas {
