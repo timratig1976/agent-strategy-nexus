@@ -24,6 +24,12 @@ interface HistoryEntry {
   };
 }
 
+// Define the type for the Supabase query response
+interface SupabaseQueryResult {
+  data: any[] | null;
+  error: Error | null;
+}
+
 // Helper function to prepare canvas data for storage
 function prepareCanvasDataForStorage(canvasItems: CanvasItem[] = []): any[] {
   return canvasItems.map(item => ({
@@ -46,7 +52,7 @@ export function useCanvasDatabase(canvasId: string) {
       setError(null);
 
       // Create a promise that rejects after a timeout
-      const timeoutPromise = new Promise((_, reject) => {
+      const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('Database operation timed out')), 10000);
       });
 
@@ -112,13 +118,13 @@ export function useCanvasDatabase(canvasId: string) {
     setError(null);
 
     // Create a promise that rejects after a timeout
-    const timeoutPromise = new Promise<any>((_, reject) => {
+    const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error('Database operation timed out')), 10000);
     });
 
     try {
-      // Use Promise.race to implement timeout
-      const result = await Promise.race([
+      // Use Promise.race to implement timeout with proper typing
+      const result = await Promise.race<SupabaseQueryResult | never>([
         supabase
           .from('canvas_history')
           .select('*')
@@ -127,8 +133,14 @@ export function useCanvasDatabase(canvasId: string) {
         timeoutPromise
       ]);
 
+      // We need to check if the result is from the database query (has data property)
+      // or from the timeout promise (doesn't have data property)
+      if ('data' in result && result.data !== null) {
+        return result.data;
+      }
+      
       if ('error' in result && result.error) throw result.error;
-      return result.data || [];
+      return [];
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Unknown error loading canvas history');
       setError(error);
