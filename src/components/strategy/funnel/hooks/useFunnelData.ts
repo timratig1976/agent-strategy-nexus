@@ -29,7 +29,7 @@ type FunnelData = {
   version?: number;
 };
 
-// ✅ Lokale Factory
+// 🛠️ Lokale Factory
 function createInitialFunnelData(): FunnelData {
   return {
     stages: [],
@@ -66,7 +66,7 @@ function parseFunnelStage(stage: any): FunnelStage {
   };
 }
 
-// ✅ Finaler Hook
+// ✅ Haupt-Hook
 export function useFunnelData(strategyId: string | undefined) {
   const [funnelData, setFunnelData] = useState(() => createInitialFunnelData());
   const [isSaving, setIsSaving] = useState(false);
@@ -77,8 +77,10 @@ export function useFunnelData(strategyId: string | undefined) {
 
     const loadFunnelData = async () => {
       try {
-        // 🔥 TS2589-Vermeidung: response als any, dann destrukturieren
-        const response: any = await supabase
+        // 🔥 TS2589-Schutz durch any-casted Supabase-Client
+        const supabaseClient: any = supabase;
+
+        const response = await supabaseClient
           .from("agent_results")
           .select("id, content, metadata")
           .eq("strategy_id", strategyId)
