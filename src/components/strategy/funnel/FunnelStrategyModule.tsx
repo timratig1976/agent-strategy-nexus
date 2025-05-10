@@ -63,7 +63,8 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = () => {
         
         if (finalResult) {
           try {
-            const parsedContent = JSON.parse(finalResult.content);
+            // Explicitly cast parsed content to FunnelData to prevent deep type instantiation
+            const parsedContent = JSON.parse(finalResult.content) as FunnelData;
             setFunnelData(parsedContent);
           } catch (e) {
             console.error("Error parsing funnel data:", e);
