@@ -16,6 +16,7 @@ interface UspCanvasModuleProps {
   onNavigateNext?: () => void;
   prevStageLabel?: string;
   nextStageLabel?: string;
+  defaultActiveTab?: string; // Add this prop to fix the error
 }
 
 const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({ 
@@ -25,7 +26,8 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
   onNavigateBack,
   onNavigateNext,
   prevStageLabel,
-  nextStageLabel
+  nextStageLabel,
+  defaultActiveTab
 }) => {
   const { 
     canvas,
@@ -62,7 +64,7 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     isLoading,
     error,
     refreshCanvasData
-  } = useUspCanvas(strategyId);
+  } = useUspCanvas(strategyId, defaultActiveTab); // Pass defaultActiveTab to useUspCanvas
 
   const {
     storedAIResult,

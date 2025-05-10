@@ -48,7 +48,17 @@ const StrategyBoardPage = () => {
       if (resultsError) throw resultsError;
       
       if (results) {
-        setAgentResults(results as AgentResult[]);
+        // Map the database results to the AgentResult type
+        const mappedResults: AgentResult[] = results.map(result => ({
+          id: result.id,
+          agentId: result.agent_id || "",
+          strategyId: result.strategy_id,
+          content: result.content,
+          createdAt: result.created_at,
+          metadata: result.metadata || {}
+        }));
+        
+        setAgentResults(mappedResults);
       }
       
     } catch (error) {
