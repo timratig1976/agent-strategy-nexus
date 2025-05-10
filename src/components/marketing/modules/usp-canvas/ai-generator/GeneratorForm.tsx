@@ -41,7 +41,7 @@ const GeneratorForm: React.FC<FormProps> = ({
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-xl">AI Value Proposition Generator</CardTitle>
+        <CardTitle className="text-xl">Customer Profile Generator</CardTitle>
         <CardDescription>
           Generate customer jobs, pains, and gains based on your marketing briefing and target audience.
         </CardDescription>
