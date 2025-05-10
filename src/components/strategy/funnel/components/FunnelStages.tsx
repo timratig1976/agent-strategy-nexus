@@ -23,7 +23,7 @@ const FunnelStages: React.FC<FunnelStagesProps> = ({ stages, onStagesChange }) =
       name: newStageName,
       description: "",
       keyMetrics: [],
-      touchpoints: []
+      touchPoints: []
     };
     
     onStagesChange([...stages, newStage]);
@@ -50,14 +50,16 @@ const FunnelStages: React.FC<FunnelStagesProps> = ({ stages, onStagesChange }) =
     
     const newTouchpoint: TouchPoint = {
       id: uuidv4(),
-      name: touchpointName
+      name: touchpointName,
+      stageId: stageId,
+      channelType: "default" // Adding required properties
     };
     
     const updatedStages = stages.map(stage => {
       if (stage.id === stageId) {
         return {
           ...stage,
-          touchpoints: [...(stage.touchpoints || []), newTouchpoint]
+          touchPoints: [...(stage.touchPoints || []), newTouchpoint]
         };
       }
       return stage;
@@ -72,7 +74,7 @@ const FunnelStages: React.FC<FunnelStagesProps> = ({ stages, onStagesChange }) =
       if (stage.id === stageId) {
         return {
           ...stage,
-          touchpoints: stage.touchpoints.filter(tp => tp.id !== touchpointId)
+          touchPoints: (stage.touchPoints || []).filter(tp => tp.id !== touchpointId)
         };
       }
       return stage;
@@ -197,9 +199,9 @@ const StageItem: React.FC<StageItemProps> = ({
       {/* Touchpoints */}
       <div className="space-y-2 mb-4">
         <label className="text-sm font-medium">Touchpoints</label>
-        {stage.touchpoints && stage.touchpoints.length > 0 ? (
+        {stage.touchPoints && stage.touchPoints.length > 0 ? (
           <div className="space-y-2">
-            {stage.touchpoints.map((touchpoint) => (
+            {stage.touchPoints.map((touchpoint) => (
               <div key={touchpoint.id} className="flex items-center justify-between bg-muted p-2 rounded">
                 <span>{touchpoint.name}</span>
                 <Button 

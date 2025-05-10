@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NewTaskFormProps } from "./types";
 import { supabase } from "@/integrations/supabase/client";
-import { StrategyTask } from "@/types/marketing";
+import { StrategyTask, StrategyState } from "@/types/marketing";
 
 const NewTaskForm = ({ strategyId, state, onTaskAdded, onCancel }: NewTaskFormProps) => {
   const [title, setTitle] = useState("");
@@ -18,13 +18,18 @@ const NewTaskForm = ({ strategyId, state, onTaskAdded, onCancel }: NewTaskFormPr
     setIsSubmitting(true);
     
     try {
+      // Ensure we're using a valid StrategyState value as expected by the database
+      const validState = Object.values(StrategyState).includes(state as StrategyState) 
+        ? state 
+        : StrategyState.BRIEFING;
+        
       // Insert the new task into the database
       const { data, error } = await supabase
         .from('strategy_tasks')
         .insert({
           strategy_id: strategyId,
           title,
-          state: state as string, // Cast state to string for database
+          state: validState,
           is_completed: false
         })
         .select()

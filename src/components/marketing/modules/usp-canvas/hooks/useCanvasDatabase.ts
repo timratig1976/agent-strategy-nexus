@@ -1,8 +1,17 @@
 
 import { useState } from 'react';
-import { UspCanvas, CanvasHistoryEntry } from '../types';
+import { UspCanvas } from '../types';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from 'sonner';
+
+// Define a simplified history entry type to avoid circular references
+export interface CanvasHistoryEntry {
+  id: string;
+  timestamp: number;
+  isFinal: boolean;
+  metadata: Record<string, any>;
+  data: UspCanvas;
+}
 
 export const useCanvasDatabase = (strategyId: string) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);

@@ -1,11 +1,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { UspCanvas, CanvasHistoryEntry, StoredAIResult } from "./types";
+import { UspCanvas, StoredAIResult } from "./types";
 import { useCanvas } from "./hooks/useCanvas";
 import { useCanvasItems } from "./hooks/useCanvasItems";
 import { useValueMapItems } from "./hooks/useValueMapItems";
-import { useCanvasDatabase } from "./hooks/useCanvasDatabase";
+import { useCanvasDatabase, CanvasHistoryEntry } from "./hooks/useCanvasDatabase";
 
 export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "editor") => {
   // Main canvas state and utilities

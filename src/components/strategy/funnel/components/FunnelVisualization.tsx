@@ -66,7 +66,7 @@ const FunnelVisualization: React.FC<FunnelVisualizationProps> = ({
                   }}
                 >
                   <h3 className="font-medium">{stage.name}</h3>
-                  <p className="text-xs opacity-80">{stage.touchpoints.length} touchpoints</p>
+                  <p className="text-xs opacity-80">{stage.touchPoints?.length || 0} touchpoints</p>
                 </div>
                 {index < stages.length - 1 && (
                   <div 

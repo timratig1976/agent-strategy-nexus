@@ -1,19 +1,19 @@
 
 // Define types for the funnel strategy module
 
+export interface TouchPoint {
+  id: string;
+  name: string;
+  stageId: string;
+  channelType: string;
+}
+
 export interface FunnelStage {
   id: string;
   name: string;
   description: string;
   touchPoints?: TouchPoint[];
   keyMetrics?: string[];
-}
-
-export interface TouchPoint {
-  id: string;
-  name: string;
-  stageId: string;
-  channelType: string;
 }
 
 export interface FunnelData {
@@ -42,3 +42,6 @@ export function isFunnelMetadata(obj: any): obj is FunnelMetadata {
     'is_final' in obj
   );
 }
+
+// Re-export from the new types to maintain backward compatibility
+export * from './types/index';

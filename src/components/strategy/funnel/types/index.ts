@@ -7,6 +7,8 @@ import { Json } from "@/integrations/supabase/types";
 export interface TouchPoint {
   id: string;
   name: string;
+  stageId: string;
+  channelType: string;
 }
 
 /**
@@ -17,7 +19,7 @@ export interface FunnelStage {
   name: string;
   description: string;
   keyMetrics: string[];
-  touchpoints: TouchPoint[];
+  touchPoints: TouchPoint[];
 }
 
 /**

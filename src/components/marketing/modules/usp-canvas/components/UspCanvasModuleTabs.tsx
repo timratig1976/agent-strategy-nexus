@@ -1,7 +1,8 @@
 
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UspCanvas, CanvasHistoryEntry, StoredAIResult } from "../types";
+import { UspCanvas, StoredAIResult } from "../types";
+import { CanvasHistoryEntry } from "../hooks/useCanvasDatabase";
 import CanvasTab from "./tabs/CanvasTab";
 import AIGenTab from "./tabs/AIGenTab";
 import HistoryTab from "./tabs/HistoryTab";

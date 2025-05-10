@@ -93,11 +93,11 @@ const FunnelActionPlan: React.FC<FunnelActionPlanProps> = ({
                 />
               </div>
               
-              {stage.touchpoints && stage.touchpoints.length > 0 && (
+              {stage.touchPoints && stage.touchPoints.length > 0 && (
                 <div>
                   <h4 className="text-sm font-medium mb-2">Touchpoints to Consider:</h4>
                   <ul className="list-disc list-inside text-sm space-y-1">
-                    {stage.touchpoints.map(touchpoint => (
+                    {stage.touchPoints.map(touchpoint => (
                       <li key={touchpoint.id}>{touchpoint.name}</li>
                     ))}
                   </ul>
