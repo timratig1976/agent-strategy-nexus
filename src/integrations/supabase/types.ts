@@ -649,6 +649,36 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       projects: {
         Row: {
           company_name: string
@@ -1255,6 +1285,20 @@ export type Database = {
       delete_strategy_document: {
         Args: { document_id_param: string }
         Returns: boolean
+      }
+      get_org_member_profiles: {
+        Args: { org_id: string }
+        Returns: {
+          id: string
+          user_id: string
+          organization_id: string
+          role: string
+          is_primary: boolean
+          email: string
+          display_name: string
+          avatar_url: string
+          created_at: string
+        }[]
       }
       get_strategy_documents: {
         Args: { strategy_id_param: string }

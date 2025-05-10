@@ -21,6 +21,16 @@ export interface Team {
   updated_at: string;
 }
 
+export interface Profile {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  display_name: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface OrganizationMember {
   id: string;
   user_id: string;
@@ -28,6 +38,8 @@ export interface OrganizationMember {
   role: UserRole;
   is_primary: boolean;
   email?: string;
+  display_name?: string;
+  avatar_url?: string;
   created_at: string;
   updated_at: string;
 }
@@ -51,7 +63,7 @@ export interface SubscriptionTier {
   max_teams: number | null;
   max_members: number | null;
   max_strategies: number | null;
-  stripe_price_id?: string; // Added this field
+  stripe_price_id?: string;
 }
 
 export interface OrganizationContextType {
@@ -63,4 +75,3 @@ export interface OrganizationContextType {
   loading: boolean;
   error: string | null;
 }
-
