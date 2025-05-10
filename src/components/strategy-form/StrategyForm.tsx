@@ -56,7 +56,7 @@ const StrategyForm = () => {
           product_url: values.productUrl || "",
           additional_info: values.additionalInfo || "",
           status: 'in_progress',
-          state: 'briefing' as StrategyState,
+          state: StrategyState.BRIEFING,
           language: values.language
         })
         .select()
@@ -68,7 +68,7 @@ const StrategyForm = () => {
       const initialTask = {
         strategy_id: strategy.id,
         title: "Create AI Briefing",
-        state: 'briefing' as StrategyState,
+        state: StrategyState.BRIEFING,
         is_completed: false
       };
       

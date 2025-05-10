@@ -1,22 +1,11 @@
 
-import { StrategyState } from "@/types/marketing";
+import { StrategyState, StrategyTask } from "@/types/marketing";
 
 export interface TaskListProps {
   strategyId: string;
   tasks: StrategyTask[];
   state: StrategyState;
   onTasksChange: (tasks: StrategyTask[]) => void;
-}
-
-export interface StrategyTask {
-  id: string;
-  strategyId: string;
-  title: string;
-  description?: string;
-  state: StrategyState;
-  isCompleted: boolean;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface NewTaskFormProps {

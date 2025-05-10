@@ -61,6 +61,7 @@ export interface FunnelStrategyModuleProps {
     [key: string]: any;
   };
   onNavigateBack?: () => Promise<void>;
+  strategyId?: string;
 }
 
 /**

@@ -15,7 +15,13 @@ const StrategyTasksGrid: React.FC<StrategyTasksGridProps> = ({
   onTasksChange
 }) => {
   // Define the states to display in order
-  const states: StrategyState[] = ['briefing', 'persona', 'pain_gains', 'funnel', 'ads'];
+  const states = [
+    StrategyState.BRIEFING, 
+    StrategyState.PERSONA, 
+    StrategyState.PAIN_GAINS, 
+    StrategyState.FUNNEL, 
+    StrategyState.ADS
+  ];
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">

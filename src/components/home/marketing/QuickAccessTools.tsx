@@ -12,12 +12,12 @@ interface QuickAccessToolsProps {
 
 const QuickAccessTools = ({ handlePhaseSelect, isAuthenticated, dbStatus }: QuickAccessToolsProps) => {
   const tools = [
-    { title: "Persona Development", icon: <Users className="h-4 w-4" />, phase: "persona_development" as MarketingPhase },
-    { title: "Content Strategy", icon: <FileText className="h-4 w-4" />, phase: "content_strategy" as MarketingPhase },
-    { title: "Lead Magnets", icon: <Target className="h-4 w-4" />, phase: "lead_magnets" as MarketingPhase },
-    { title: "Ad Creative Generator", icon: <Megaphone className="h-4 w-4" />, phase: "ad_creative" as MarketingPhase },
-    { title: "USP Generator", icon: <Zap className="h-4 w-4" />, phase: "usp_generator" as MarketingPhase },
-    { title: "Video Ideas", icon: <Film className="h-4 w-4" />, phase: "content_strategy" as MarketingPhase }
+    { title: "Persona Development", icon: <Users className="h-4 w-4" />, phase: MarketingPhase.PERSONA_DEVELOPMENT },
+    { title: "Content Strategy", icon: <FileText className="h-4 w-4" />, phase: MarketingPhase.CONTENT_STRATEGY },
+    { title: "Lead Magnets", icon: <Target className="h-4 w-4" />, phase: MarketingPhase.LEAD_MAGNETS },
+    { title: "Ad Creative Generator", icon: <Megaphone className="h-4 w-4" />, phase: MarketingPhase.AD_CREATIVE },
+    { title: "USP Generator", icon: <Zap className="h-4 w-4" />, phase: MarketingPhase.USP_GENERATOR },
+    { title: "Video Ideas", icon: <Film className="h-4 w-4" />, phase: MarketingPhase.CONTENT_STRATEGY }
   ];
   
   return (

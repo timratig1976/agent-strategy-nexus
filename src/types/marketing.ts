@@ -1,5 +1,5 @@
 
-// Create new types file if it doesn't exist
+// Define marketing-related types for the application
 
 export enum StrategyState {
   BRIEFING = 'briefing',
@@ -8,6 +8,28 @@ export enum StrategyState {
   FUNNEL = 'funnel',
   ADS = 'ads',
   COMPLETED = 'completed'
+}
+
+export enum MarketingPhase {
+  BRIEFING = 'briefing',
+  WEBSITE_ANALYSIS = 'website_analysis',
+  PERSONA_DEVELOPMENT = 'persona_development',
+  USP_CANVAS = 'usp_canvas',
+  USP_GENERATOR = 'usp_generator',
+  CHANNEL_STRATEGY = 'channel_strategy',
+  ROAS_CALCULATOR = 'roas_calculator',
+  CAMPAIGN_IDEAS = 'campaign_ideas',
+  AD_CREATIVE = 'ad_creative',
+  LEAD_MAGNETS = 'lead_magnets',
+  CONTENT_STRATEGY = 'content_strategy'
+}
+
+export enum AgentType {
+  BRIEFING = 'briefing',
+  PERSONA = 'persona',
+  USP = 'usp',
+  FUNNEL = 'funnel',
+  ADS = 'ads'
 }
 
 export interface Strategy {
@@ -22,6 +44,7 @@ export interface Strategy {
   agents?: Agent[];
   results?: AgentResult[];
   tasks?: StrategyTask[];
+  metadata?: Record<string, any>;
 }
 
 export interface Agent {
@@ -47,7 +70,7 @@ export interface StrategyTask {
   strategyId: string;
   title: string;
   description: string;
-  state: string;
+  state: StrategyState | string;
   isCompleted: boolean;
   createdAt: string;
   updatedAt: string;

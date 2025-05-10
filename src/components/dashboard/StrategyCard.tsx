@@ -17,7 +17,7 @@ interface StrategyCardProps {
 const StrategyCard = ({ strategy, stateLabels, stateColors }: StrategyCardProps) => {
   // Calculate progress percentage for a strategy based on completed tasks
   const calculateProgress = (strategy: Strategy): number => {
-    if (strategy.tasks.length === 0) return 0;
+    if (!strategy.tasks || strategy.tasks.length === 0) return 0;
     const completedTasks = strategy.tasks.filter(task => task.isCompleted).length;
     return Math.round((completedTasks / strategy.tasks.length) * 100);
   };
@@ -40,8 +40,8 @@ const StrategyCard = ({ strategy, stateLabels, stateColors }: StrategyCardProps)
                 {languageCode}
               </span>
             </div>
-            <Badge className={stateColors[strategy.state]}>
-              {stateLabels[strategy.state]}
+            <Badge className={stateColors[strategy.state as StrategyState]}>
+              {stateLabels[strategy.state as StrategyState]}
             </Badge>
           </div>
         </div>
@@ -78,7 +78,7 @@ const StrategyCard = ({ strategy, stateLabels, stateColors }: StrategyCardProps)
               to={`/strategy-details/${strategy.id}?tab=${strategy.state}`} 
               className="text-xs text-muted-foreground hover:text-blue-600 flex items-center"
             >
-              Go to {stateLabels[strategy.state]} <ArrowRight className="ml-1 h-3 w-3" />
+              Go to {stateLabels[strategy.state as StrategyState] || 'Dashboard'} <ArrowRight className="ml-1 h-3 w-3" />
             </Link>
           </div>
         </div>

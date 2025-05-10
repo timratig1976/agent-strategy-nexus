@@ -68,42 +68,42 @@ const MarketingFeatured = ({ isAuthenticated, dbStatus }: MarketingFeaturedProps
       description: "Analyze your website's performance, SEO, and user experience to inform your marketing strategy.",
       icon: <Globe className="h-5 w-5 text-amber-500" />,
       color: "border-l-amber-500",
-      phase: 'website_analysis' as MarketingPhase
+      phase: MarketingPhase.WEBSITE_ANALYSIS
     },
     {
       title: "Persona Development",
       description: "Create detailed buyer personas to understand your target audience better.",
       icon: <Users className="h-5 w-5 text-purple-500" />,
       color: "border-l-purple-500",
-      phase: 'persona_development' as MarketingPhase
+      phase: MarketingPhase.PERSONA_DEVELOPMENT
     },
     {
       title: "USP Canvas",
       description: "Develop a unique selling proposition that differentiates your business from competitors.",
       icon: <Sparkles className="h-5 w-5 text-green-500" />,
       color: "border-l-green-500",
-      phase: 'usp_canvas' as MarketingPhase
+      phase: MarketingPhase.USP_CANVAS
     },
     {
       title: "Channel Strategy",
       description: "Determine the optimal mix of marketing channels based on your audience and objectives.",
       icon: <PieChart className="h-5 w-5 text-orange-500" />,
       color: "border-l-orange-500", 
-      phase: 'channel_strategy' as MarketingPhase
+      phase: MarketingPhase.CHANNEL_STRATEGY
     },
     {
       title: "ROAS Calculator",
       description: "Calculate and forecast your Return On Ad Spend for various marketing channels.",
       icon: <LineChart className="h-5 w-5 text-indigo-500" />,
       color: "border-l-indigo-500",
-      phase: 'roas_calculator' as MarketingPhase
+      phase: MarketingPhase.ROAS_CALCULATOR
     },
     {
       title: "Campaign Ideas",
       description: "Generate creative campaign concepts aligned with your brand values and target audience.",
       icon: <Target className="h-5 w-5 text-pink-500" />,
       color: "border-l-pink-500",
-      phase: 'campaign_ideas' as MarketingPhase
+      phase: MarketingPhase.CAMPAIGN_IDEAS
     },
   ];
 

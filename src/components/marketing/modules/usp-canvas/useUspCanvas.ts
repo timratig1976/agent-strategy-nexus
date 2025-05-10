@@ -118,8 +118,9 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
           
           // Safely check if metadata has is_final property
           let isFinal = false;
-          if (result.metadata && typeof result.metadata === 'object') {
-            isFinal = !!result.metadata.is_final;
+          if (result.metadata && typeof result.metadata === 'object' && 
+              'is_final' in (result.metadata as Record<string, any>)) {
+            isFinal = !!(result.metadata as Record<string, any>).is_final;
           }
           
           return {
