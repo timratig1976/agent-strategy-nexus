@@ -8,12 +8,30 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Json } from "@/integrations/supabase/types";
 
-const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy }) => {
-  const [funnelData, setFunnelData] = useState<FunnelData>({
+// Factory function to break type recursion
+function createInitialFunnelData(): FunnelData {
+  return {
     stages: [],
     name: "",
     primaryGoal: "",
-  });
+    leadMagnetType: "",
+    targetAudience: "",
+    mainChannel: "",
+    conversionAction: "",
+    timeframe: "",
+    budget: "",
+    kpis: "",
+    notes: "",
+    actionPlans: {},
+    conversionRates: {},
+    lastUpdated: "",
+    version: 1,
+  };
+}
+
+const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy }) => {
+  // Using lazy initializer to prevent deep type instantiation
+  const [funnelData, setFunnelData] = useState<FunnelData>(() => createInitialFunnelData());
   
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
