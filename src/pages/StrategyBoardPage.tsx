@@ -55,7 +55,7 @@ const StrategyBoardPage = () => {
           strategyId: result.strategy_id,
           content: result.content,
           createdAt: result.created_at,
-          metadata: result.metadata ? { ...result.metadata } as Record<string, any> 
+          metadata: result.metadata ? { ...result.metadata } as Record<string, any> : {}
         }));
         
         setAgentResults(mappedResults);
