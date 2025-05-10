@@ -1,170 +1,131 @@
-
 import { useState, useCallback } from 'react';
-import { generateUspCanvasProfile } from '@/services/ai/uspCanvasService';
 import { StoredAIResult } from '../types';
-import { toast } from 'sonner';
+import { generateUspCanvasProfile } from '@/services/ai/uspCanvasService';
+import { useAgentPrompt } from '@/hooks/useAgentPrompt';
 
-interface ParseResults {
-  jobsFound: number;
-  painsFound: number;
-  gainsFound: number;
-  rawText: string;
-  extractedItems: any;
+interface GenerationOptions {
+  strategyId: string;
+  briefingContent: string;
+  personaContent?: string;
+  onResultsGenerated?: (results: StoredAIResult, debugInfo?: any) => void;
 }
 
 export const useAIGenerator = (
   strategyId: string,
   briefingContent: string,
-  personaContent: string | undefined,
-  onResultsGenerated: (results: StoredAIResult, debugInfo?: any) => void
+  personaContent?: string,
+  onResultsGenerated?: (results: StoredAIResult, debugInfo?: any) => void
 ) => {
-  // Add state for showing debug panel
-  const [showDebug, setShowDebug] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState('jobs');
-  const [generationHistory, setGenerationHistory] = useState<any[]>([]);
   const [rawResponse, setRawResponse] = useState<any>(null);
-  const [parseResults, setParseResults] = useState<ParseResults | null>(null);
-  // Add progress state
+  const [generationHistory, setGenerationHistory] = useState<any[]>([]);
+  const [showDebug, setShowDebug] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
+  const [activeTab] = useState<string>('jobs');
+  const { ensurePromptExists } = useAgentPrompt('usp_canvas');
 
-  const generateResult = useCallback(
-    async (enhancementText?: string, formatOptions?: any) => {
-      setIsGenerating(true);
-      setError(null);
-      setDebugInfo(null);
-      setRawResponse(null);
-      setParseResults(null);
-      setProgress(0);
+  const parseResults = useCallback((rawResponse: any) => {
+    if (!rawResponse || !rawResponse.data) {
+      return {
+        jobsFound: 0,
+        painsFound: 0,
+        gainsFound: 0,
+      };
+    }
 
-      // Setup progress simulation
+    const jobsFound = Array.isArray(rawResponse.data.jobs) ? rawResponse.data.jobs.length : 0;
+    const painsFound = Array.isArray(rawResponse.data.pains) ? rawResponse.data.pains.length : 0;
+    const gainsFound = Array.isArray(rawResponse.data.gains) ? rawResponse.data.gains.length : 0;
+
+    return {
+      jobsFound,
+      painsFound,
+      gainsFound,
+    };
+  }, []);
+
+  const generateResult = useCallback(async () => {
+    setIsGenerating(true);
+    setError(null);
+    setDebugInfo(null);
+    setRawResponse(null);
+    setProgress(0);
+
+    try {
+      // Before proceeding, ensure the prompts exist for this module
+      const promptsExist = await ensurePromptExists();
+      console.log(`Prompt check for usp_canvas: ${promptsExist ? 'Available' : 'Not available'}`);
+
+      // Start progress simulation
       const progressInterval = setInterval(() => {
         setProgress(prev => {
-          // Increase by a random amount up to 85%
-          const newValue = Math.min(prev + Math.random() * 5, 85);
-          return newValue;
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
         });
       }, 1000);
 
-      try {
-        const result = await generateUspCanvasProfile(
-          strategyId,
-          briefingContent,
-          'all',
-          enhancementText,
-          personaContent,
-          formatOptions
-        );
+      // Generate all three profiles
+      const jobsPromise = generateUspCanvasProfile(strategyId, briefingContent, 'jobs', undefined, personaContent);
+      const painsPromise = generateUspCanvasProfile(strategyId, briefingContent, 'pains', undefined, personaContent);
+      const gainsPromise = generateUspCanvasProfile(strategyId, briefingContent, 'gains', undefined, personaContent);
 
-        // Clear interval and set to 100% when done
-        clearInterval(progressInterval);
-        setProgress(100);
-        setRawResponse(result);
+      const [jobsResult, painsResult, gainsResult] = await Promise.all([jobsPromise, painsPromise, gainsPromise]);
 
-        if (result.error) {
-          setError(result.error);
-          setDebugInfo(result.debugInfo);
-          toast.error(`AI Generation Failed: ${result.error}`);
-          return;
-        }
+      clearInterval(progressInterval);
 
-        if (result.data) {
-          // Parse results and set state
-          const { jobs = [], pains = [], gains = [], rawOutput = '' } = result.data;
-          const jobsFound = jobs?.length || 0;
-          const painsFound = pains?.length || 0;
-          const gainsFound = gains?.length || 0;
+      // Combine the results
+      const combinedResult: StoredAIResult = {
+        jobs: jobsResult.data?.jobs || [],
+        pains: painsResult.data?.pains || [],
+        gains: gainsResult.data?.gains || [],
+      };
 
-          // Extract items for validation
-          const extractedItems = {
-            jobs: jobs || [],
-            pains: pains || [],
-            gains: gains || []
-          };
+      // Set raw response and debug info
+      const newGenerationHistory = [
+        {
+          jobs: jobsResult.debugInfo,
+          pains: painsResult.debugInfo,
+          gains: gainsResult.debugInfo,
+        },
+        ...generationHistory,
+      ];
 
-          setParseResults({
-            jobsFound,
-            painsFound,
-            gainsFound,
-            rawText: rawOutput || '',
-            extractedItems
-          });
+      setRawResponse({
+        jobs: jobsResult,
+        pains: painsResult,
+        gains: gainsResult,
+      });
+      setDebugInfo(newGenerationHistory);
+      setGenerationHistory(newGenerationHistory);
 
-          // Validate results - we need at least one item in each category
-          const jobsComplete = jobsFound > 0;
-          const painsComplete = painsFound > 0;
-          const gainsComplete = gainsFound > 0;
-          const isComplete = jobsComplete && painsComplete && gainsComplete;
+      // Notify parent component about the generated results
+      onResultsGenerated?.(combinedResult, newGenerationHistory);
 
-          // Set debug info
-          setDebugInfo({
-            ...result.debugInfo,
-            validationResults: {
-              jobsComplete,
-              painsComplete,
-              gainsComplete,
-              isComplete
-            }
-          });
+      setProgress(100);
+    } catch (e: any) {
+      console.error("Error generating USP Canvas results:", e);
+      setError(e.message || "An error occurred while generating results.");
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [strategyId, briefingContent, personaContent, onResultsGenerated, ensurePromptExists, generationHistory]);
 
-          // Store AI result
-          const storedAIResult: StoredAIResult = {
-            jobs: jobs || [],
-            pains: pains || [],
-            gains: gains || [],
-          };
-          onResultsGenerated(storedAIResult, result.debugInfo);
-          
-          // Add to generation history
-          setGenerationHistory(prevHistory => [
-            ...prevHistory,
-            {
-              timestamp: Date.now(),
-              result: storedAIResult,
-              debugInfo: result.debugInfo
-            }
-          ]);
-          
-          // Show appropriate toast based on completeness
-          if (isComplete) {
-            toast.success('AI Generation Complete!');
-          } else {
-            toast.success('AI Generation Completed with Partial Results', {
-              description: 'Some sections may not have been fully parsed. Check the results.'
-            });
-          }
-        } else {
-          setError('No data received from AI service.');
-          toast.error('AI Generation Failed: No data received.');
-        }
-      } catch (e: any) {
-        // Clear interval on error
-        clearInterval(progressInterval);
-        setProgress(0);
-        setError(e.message || 'An unexpected error occurred.');
-        toast.error(`AI Generation Failed: ${e.message}`);
-      } finally {
-        setIsGenerating(false);
-      }
-    },
-    [strategyId, briefingContent, personaContent, onResultsGenerated]
-  );
-
-  // Return the additional state variables
   return {
     isGenerating,
     error,
     debugInfo,
     activeTab,
-    setActiveTab,
     generateResult,
     generationHistory,
     rawResponse,
     parseResults,
     showDebug,
     setShowDebug,
-    progress // Add progress to returned values
+    progress
   };
 };

@@ -33,14 +33,14 @@ const AIGeneratorLayout: React.FC<AIGeneratorLayoutProps> = ({
     error,
     debugInfo,
     activeTab,
-    setActiveTab,
+    // No longer use setActiveTab since we show all tabs at once
     generateResult,
     generationHistory,
     rawResponse,
     parseResults,
     showDebug,
     setShowDebug,
-    progress // Progress from the hook
+    progress
   } = useAIGenerator(
     strategyId,
     briefingContent,
@@ -77,7 +77,7 @@ const AIGeneratorLayout: React.FC<AIGeneratorLayoutProps> = ({
           onAddPains={onAddPains}
           onAddGains={onAddGains}
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={() => {}} // Pass empty function since we don't need tab switching
         />
       )}
       
@@ -86,8 +86,8 @@ const AIGeneratorLayout: React.FC<AIGeneratorLayoutProps> = ({
           debugInfo={debugInfo}
           parseResults={parseResults}
           rawResponse={rawResponse}
-          showDebug={showDebug} // Add this missing prop
-          generationHistory={generationHistory} // Pass this prop as well for completeness
+          showDebug={showDebug}
+          generationHistory={generationHistory}
         />
       )}
     </div>
