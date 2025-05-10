@@ -63,3 +63,19 @@ export interface StoredAIResult {
   pains?: Array<{ description?: string; title?: string; severity?: string }>;
   gains?: Array<{ description?: string; title?: string; importance?: string }>;
 }
+
+// Add the missing exports referenced in the errors
+export enum CanvasState {
+  CUSTOMER_PROFILE = 'customer_profile',
+  VALUE_MAP = 'value_map',
+  OVERVIEW = 'overview',
+}
+
+export interface CanvasItem {
+  id: string;
+  content: string;
+  rating: 'low' | 'medium' | 'high';
+  isAIGenerated?: boolean;
+}
+
+export type RelationshipType = 'job_to_service' | 'pain_to_reliever' | 'gain_to_creator';

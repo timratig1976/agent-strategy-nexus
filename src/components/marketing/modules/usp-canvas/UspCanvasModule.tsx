@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import UspCanvasModuleTabs from './components/UspCanvasModuleTabs';
 import { useUspCanvas } from './useUspCanvas';
-import { CanvasItem } from './types';
+import { CanvasItem, CanvasState } from './types';
 
 // Known tab values
 const TABS = {

@@ -4,10 +4,13 @@ import { TabsList as ShadcnTabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface TabsListProps {
   activeTab: string;
+  onTabChange: (value: string) => void;
+  onSave: () => Promise<void>;
+  isProcessing: boolean;
   children?: React.ReactNode;
 }
 
-const TabsList: React.FC<TabsListProps> = ({ activeTab, children }) => {
+const TabsList: React.FC<TabsListProps> = ({ activeTab, onTabChange, onSave, isProcessing, children }) => {
   return (
     <ShadcnTabsList className="w-full">
       {children ? (

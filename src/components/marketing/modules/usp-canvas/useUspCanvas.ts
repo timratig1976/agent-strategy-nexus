@@ -6,11 +6,11 @@ import { v4 as uuidv4 } from 'uuid';
 // Import local hooks and types
 import useCanvasDatabase from './hooks/useCanvasDatabase';
 import { useCanvasStorage, useLocalCanvasStorage } from './hooks';
-import { CanvasState, CanvasItem, RelationshipType } from './types';
+import { CanvasState, CanvasItem } from './types';
 
 // Canvas data management hook
 export const useUspCanvas = (canvasId: string) => {
-  const [canvasState, setCanvasState] = useState<CanvasState>('customer_profile');
+  const [canvasState, setCanvasState] = useState<CanvasState>(CanvasState.CUSTOMER_PROFILE);
   const [isProcessing, setIsProcessing] = useState(false);
   const [customerItems, setCustomerItems] = useState<CanvasItem[]>([]);
   const [valueItems, setValueItems] = useState<CanvasItem[]>([]);

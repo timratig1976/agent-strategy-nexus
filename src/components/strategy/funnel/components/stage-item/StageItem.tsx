@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FunnelStage, TouchPoint } from "../../types";
-import { StageControls } from "./StageControls";
+import StageControls from "./StageControls"; // Fix import statement
 import { TouchpointsList } from "./TouchpointsList";
 import { TouchpointForm } from "./TouchpointForm";
 

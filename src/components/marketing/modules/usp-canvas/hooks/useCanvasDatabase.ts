@@ -41,13 +41,16 @@ export function useCanvasDatabase(canvasId: string) {
           metadata: metadata || {}
         };
 
-        // Use explicit table name in RPC call to avoid type errors
+        // Direct table insert instead of RPC
         const { data, error: saveError } = await supabase
-          .rpc('insert_canvas_history', {
-            canvas_id_param: canvasId,
-            snapshot_data_param: historyEntry.snapshot_data,
-            metadata_param: historyEntry.metadata
-          });
+          .from('canvas_history')
+          .insert({
+            canvas_id: canvasId,
+            snapshot_data: historyEntry.snapshot_data,
+            metadata: historyEntry.metadata
+          })
+          .select('id')
+          .single();
 
         if (saveError) throw saveError;
         return data;
@@ -71,11 +74,12 @@ export function useCanvasDatabase(canvasId: string) {
     setError(null);
 
     try {
-      // Use explicit RPC call instead of table access
+      // Direct table query instead of RPC
       const { data, error: loadError } = await supabase
-        .rpc('get_canvas_history', {
-          canvas_id_param: canvasId
-        });
+        .from('canvas_history')
+        .select('*')
+        .eq('canvas_id', canvasId)
+        .order('created_at', { ascending: false });
 
       if (loadError) throw loadError;
       return data || [];
