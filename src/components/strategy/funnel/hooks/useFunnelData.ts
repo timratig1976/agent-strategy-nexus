@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -86,3 +87,85 @@ export function useFunnelData(strategyId: string | undefined) {
           .limit(1)) as any; // 💡 TS2589-Schutz: Kein Typgraph aus Supabase
 
         if (error) throw error;
+
+        if (data && data.length > 0 && data[0].content) {
+          try {
+            const parsedContent = JSON.parse(data[0].content);
+            
+            // Avoid type instantiation errors by not using explicit type annotation
+            const safeContent = {
+              ...createInitialFunnelData(),
+              ...parsedContent,
+              stages: Array.isArray(parsedContent.stages)
+                ? parsedContent.stages.map((stage: any) => parseFunnelStage(stage))
+                : [],
+            };
+            
+            // Use type assertion when setting state to maintain type safety
+            setFunnelData(safeContent as FunnelData);
+            setHasChanges(false);
+          } catch (parseError) {
+            console.error("Failed to parse funnel data:", parseError);
+            toast.error("Failed to parse funnel data");
+          }
+        }
+      } catch (err) {
+        console.error("Error loading funnel data:", err);
+        toast.error("Failed to load funnel data");
+      }
+    };
+
+    loadFunnelData();
+  }, [strategyId]);
+
+  const handleStagesChange = (newStages: FunnelStage[]) => {
+    setFunnelData(prev => ({
+      ...prev,
+      stages: newStages
+    }));
+    setHasChanges(true);
+  };
+
+  const handleSave = async () => {
+    if (!strategyId) {
+      toast.error("Strategy ID is missing");
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const { error } = await supabase
+        .from("agent_results")
+        .insert({
+          strategy_id: strategyId,
+          content: JSON.stringify(funnelData),
+          metadata: {
+            type: "funnel",
+            is_final: true,
+            version: funnelData.version || 1,
+            created_by: "user",
+            updated_at: new Date().toISOString()
+          }
+        });
+
+      if (error) throw error;
+
+      toast.success("Funnel strategy saved successfully");
+      setHasChanges(false);
+    } catch (err) {
+      console.error("Error saving funnel data:", err);
+      toast.error("Failed to save funnel data");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return {
+    funnelData,
+    isSaving,
+    hasChanges,
+    handleStagesChange,
+    handleSave
+  };
+}
