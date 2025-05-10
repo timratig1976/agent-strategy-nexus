@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,39 +9,17 @@ import NavBar from "@/components/NavBar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { OrganizationMember, Team, SubscriptionTier } from "@/types/organization";
-import { Loader2, Users, Building, CreditCard, ExternalLink } from "lucide-react";
+import { Team, SubscriptionTier } from "@/types/organization";
+import { Building, CreditCard, ExternalLink, Loader2, Users } from "lucide-react";
 import { toast } from "sonner";
 import StripeSetup from "@/components/settings/StripeSetup";
+import MemberManagement from "@/components/organizations/MemberManagement";
 
 export default function OrganizationSettings() {
   const { organizationId } = useParams<{ organizationId: string }>();
   const { currentOrganization } = useOrganization();
   const { tier, subscription, checkoutSubscription, manageSubscription } = useSubscription();
-  const [isLoading, setIsLoading] = useState(false);
-  
-  // Fetch members
-  const { data: members, isLoading: isLoadingMembers } = useQuery({
-    queryKey: ['organization-members', organizationId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('org_memberships')
-        .select(`
-          id,
-          user_id,
-          role,
-          is_primary,
-          created_at,
-          updated_at,
-          organization_id
-        `)
-        .eq('organization_id', organizationId || currentOrganization?.id);
-        
-      if (error) throw error;
-      return data as OrganizationMember[];
-    },
-    enabled: !!(organizationId || currentOrganization?.id)
-  });
+  const [isLoading, setIsLoading] = React.useState(false);
   
   // Fetch teams
   const { data: teams, isLoading: isLoadingTeams } = useQuery({
@@ -196,44 +174,7 @@ export default function OrganizationSettings() {
           </TabsContent>
           
           <TabsContent value="members">
-            <Card>
-              <CardHeader>
-                <CardTitle>Organization Members</CardTitle>
-                <CardDescription>
-                  Manage members in your organization
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isLoadingMembers ? (
-                  <div className="flex justify-center py-4">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                  </div>
-                ) : members && members.length > 0 ? (
-                  <div className="rounded-md border">
-                    <div className="grid grid-cols-3 bg-muted p-2 font-medium">
-                      <div>User</div>
-                      <div>Role</div>
-                      <div>Actions</div>
-                    </div>
-                    <div className="divide-y">
-                      {members.map(member => (
-                        <div key={member.id} className="grid grid-cols-3 p-2">
-                          <div>{member.user_id}</div>
-                          <div className="capitalize">{member.role}</div>
-                          <div>
-                            <Button variant="ghost" size="sm">Change Role</Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-4 text-muted-foreground">
-                    No members found
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <MemberManagement />
           </TabsContent>
           
           <TabsContent value="billing">
