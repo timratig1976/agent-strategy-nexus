@@ -1,172 +1,99 @@
 
-import { useState } from 'react';
-import { UspCanvas } from '../types';
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useCallback, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-// Define a simplified history entry type to avoid circular references
-export interface CanvasHistoryEntry {
-  id: string;
-  timestamp: number;
-  isFinal: boolean;
-  metadata: Record<string, any>;
-  data: UspCanvas;
+// Define simpler types to avoid deep nesting
+interface BasicJsonObject {
+  [key: string]: string | number | boolean | null | BasicJsonObject | BasicJsonArray;
 }
 
-export const useCanvasDatabase = (strategyId: string) => {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Fetch canvas data from database
-  const fetchCanvasData = async (): Promise<{ 
-    canvas: UspCanvas | null, 
-    history: CanvasHistoryEntry[] 
-  }> => {
-    try {
-      setIsLoading(true);
+interface BasicJsonArray extends Array<string | number | boolean | null | BasicJsonObject | BasicJsonArray> {}
+
+// Define a simplified history entry to avoid infinite type recursion
+interface CanvasHistoryEntry {
+  id?: string;
+  canvas_id: string;
+  snapshot_data: BasicJsonObject;
+  created_at?: string;
+  metadata?: {
+    description?: string;
+    version?: number;
+    [key: string]: any;
+  };
+}
+
+export function useCanvasDatabase(canvasId: string) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  // Save canvas history snapshot
+  const saveCanvasSnapshot = useCallback(
+    async (snapshotData: BasicJsonObject, metadata?: Record<string, any>) => {
+      if (!canvasId) return null;
+      setLoading(true);
       setError(null);
-      
-      // First, try to get the latest final version of canvas
-      const { data: agentResults, error: resultsError } = await supabase
-        .from('agent_results')
+
+      try {
+        const historyEntry: CanvasHistoryEntry = {
+          canvas_id: canvasId,
+          snapshot_data: snapshotData,
+          metadata: metadata || {}
+        };
+
+        const { data, error: saveError } = await supabase
+          .from('canvas_history')
+          .insert(historyEntry)
+          .select()
+          .single();
+
+        if (saveError) throw saveError;
+        return data;
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error('Unknown error saving canvas snapshot');
+        setError(error);
+        toast.error('Failed to save canvas snapshot');
+        console.error(error);
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [canvasId]
+  );
+
+  // Load canvas history snapshots
+  const loadCanvasHistory = useCallback(async () => {
+    if (!canvasId) return [];
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data, error: loadError } = await supabase
+        .from('canvas_history')
         .select('*')
-        .eq('strategy_id', strategyId)
-        .eq('metadata->type', 'pain_gains')
-        .eq('metadata->is_final', true)
+        .eq('canvas_id', canvasId)
         .order('created_at', { ascending: false });
 
-      if (resultsError) throw resultsError;
-
-      let canvas = null;
-      
-      if (agentResults && agentResults.length > 0) {
-        // We found a final version
-        try {
-          canvas = JSON.parse(agentResults[0].content) as UspCanvas;
-        } catch (e) {
-          console.error("Error parsing canvas data:", e);
-          setError("Failed to parse saved canvas data");
-        }
-      } else {
-        // If no final version found, try to get the latest draft/working version
-        const { data: draftResults, error: draftError } = await supabase
-          .from('agent_results')
-          .select('*')
-          .eq('strategy_id', strategyId)
-          .eq('metadata->type', 'pain_gains')
-          .order('created_at', { ascending: false });
-          
-        if (draftError) throw draftError;
-        
-        if (draftResults && draftResults.length > 0) {
-          try {
-            canvas = JSON.parse(draftResults[0].content) as UspCanvas;
-          } catch (e) {
-            console.error("Error parsing draft canvas data:", e);
-            setError("Failed to parse saved canvas draft");
-          }
-        }
-      }
-      
-      // Load canvas history
-      const history = await loadCanvasSaveHistory();
-      
-      return { canvas, history };
+      if (loadError) throw loadError;
+      return data || [];
     } catch (err) {
-      console.error("Error fetching canvas data:", err);
-      setError("Failed to load canvas data");
-      return { canvas: null, history: [] };
+      const error = err instanceof Error ? err : new Error('Unknown error loading canvas history');
+      setError(error);
+      toast.error('Failed to load canvas history');
+      console.error(error);
+      return [];
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  };
-
-  // Load canvas save history
-  const loadCanvasSaveHistory = async (): Promise<CanvasHistoryEntry[]> => {
-    try {
-      const { data: historyResults, error: historyError } = await supabase
-        .from('agent_results')
-        .select('*')
-        .eq('strategy_id', strategyId)
-        .eq('metadata->type', 'pain_gains')
-        .order('created_at', { ascending: false });
-        
-      if (historyError) throw historyError;
-      
-      if (historyResults) {
-        const history: CanvasHistoryEntry[] = historyResults.map(result => {
-          // Parse the content safely
-          let parsedData: UspCanvas;
-          try {
-            parsedData = JSON.parse(result.content) as UspCanvas;
-          } catch (e) {
-            console.error("Error parsing history entry:", e);
-            parsedData = {
-              customerJobs: [],
-              customerPains: [],
-              customerGains: [],
-              productServices: [],
-              painRelievers: [],
-              gainCreators: []
-            };
-          }
-          
-          // Safely check if metadata has is_final property
-          let isFinal = false;
-          if (result.metadata && typeof result.metadata === 'object' && 
-              'is_final' in (result.metadata as Record<string, any>)) {
-            isFinal = !!(result.metadata as Record<string, any>).is_final;
-          }
-          
-          return {
-            id: result.id,
-            timestamp: new Date(result.created_at).getTime(),
-            data: parsedData,
-            isFinal: isFinal,
-            metadata: result.metadata as Record<string, any>
-          };
-        });
-        
-        return history;
-      }
-      return [];
-    } catch (err) {
-      console.error("Error loading canvas history:", err);
-      return [];
-    }
-  };
-
-  // Save to database
-  const saveToDatabase = async (canvas: UspCanvas, isFinal: boolean = false) => {
-    try {
-      const { error } = await supabase
-        .from('agent_results')
-        .insert({
-          strategy_id: strategyId,
-          content: JSON.stringify(canvas),
-          metadata: {
-            type: 'pain_gains',
-            is_final: isFinal,
-            updated_at: new Date().toISOString()
-          }
-        });
-      
-      if (error) throw error;
-      
-      toast.success(isFinal ? "Canvas saved as final version to database!" : "Canvas saved to database!");
-      return true;
-    } catch (err) {
-      console.error("Error saving canvas to database:", err);
-      toast.error("Failed to save to database");
-      return false;
-    }
-  };
+  }, [canvasId]);
 
   return {
-    fetchCanvasData,
-    loadCanvasSaveHistory,
-    saveToDatabase,
-    isLoading,
-    error
+    loading,
+    error,
+    saveCanvasSnapshot,
+    loadCanvasHistory
   };
-};
+}
+
+export default useCanvasDatabase;

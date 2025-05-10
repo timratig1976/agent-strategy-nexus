@@ -18,9 +18,9 @@ const NewTaskForm = ({ strategyId, state, onTaskAdded, onCancel }: NewTaskFormPr
     setIsSubmitting(true);
     
     try {
-      // Ensure we're using a valid StrategyState value as expected by the database
+      // Ensure we're using a valid state string value that matches what the database expects
       const validState = Object.values(StrategyState).includes(state as StrategyState) 
-        ? state 
+        ? state as string  // Cast to string to match the database column type
         : StrategyState.BRIEFING;
         
       // Insert the new task into the database

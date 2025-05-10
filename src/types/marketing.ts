@@ -75,3 +75,15 @@ export interface StrategyTask {
   createdAt: string;
   updatedAt: string;
 }
+
+// Define database type for strategy_tasks table to avoid type mismatch
+export type StrategyTaskDB = {
+  id: string;
+  strategy_id: string;
+  title: string;
+  description?: string | null;
+  state: string;
+  is_completed: boolean;
+  created_at: string;
+  updated_at: string;
+};

@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FunnelStage, TouchPoint } from "../types";
-import { Plus, Trash2, MoveUp, MoveDown, Plus as PlusCircle } from "lucide-react";
+import { Plus } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
+import { StageItem } from "./stage-item";
 
 interface FunnelStagesProps {
   stages: FunnelStage[];
@@ -52,7 +53,7 @@ const FunnelStages: React.FC<FunnelStagesProps> = ({ stages, onStagesChange }) =
       id: uuidv4(),
       name: touchpointName,
       stageId: stageId,
-      channelType: "default" // Adding required properties
+      channelType: "default"
     };
     
     const updatedStages = stages.map(stage => {
@@ -128,119 +129,6 @@ const FunnelStages: React.FC<FunnelStagesProps> = ({ stages, onStagesChange }) =
         </div>
       </CardContent>
     </Card>
-  );
-};
-
-interface StageItemProps {
-  stage: FunnelStage;
-  index: number;
-  totalStages: number;
-  onRemove: (id: string) => void;
-  onMove: (index: number, direction: 'up' | 'down') => void;
-  onAddTouchpoint: (stageId: string, touchpointName: string) => TouchPoint;
-  onRemoveTouchpoint: (stageId: string, touchpointId: string) => void;
-}
-
-const StageItem: React.FC<StageItemProps> = ({ 
-  stage, 
-  index, 
-  totalStages,
-  onRemove, 
-  onMove,
-  onAddTouchpoint,
-  onRemoveTouchpoint
-}) => {
-  const [newTouchpointName, setNewTouchpointName] = useState("");
-  
-  const handleAddTouchpoint = () => {
-    if (!newTouchpointName.trim()) return;
-    
-    onAddTouchpoint(stage.id, newTouchpointName);
-    setNewTouchpointName("");
-  };
-  
-  return (
-    <div className="border rounded-lg p-4">
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center">
-          <span className="bg-primary text-primary-foreground size-6 flex items-center justify-center rounded mr-2">
-            {index + 1}
-          </span>
-          <h3 className="font-medium text-lg">{stage.name}</h3>
-        </div>
-        <div className="flex items-center space-x-1">
-          <Button 
-            size="icon" 
-            variant="ghost" 
-            onClick={() => onMove(index, 'up')}
-            disabled={index === 0}
-          >
-            <MoveUp className="h-4 w-4" />
-          </Button>
-          <Button 
-            size="icon" 
-            variant="ghost" 
-            onClick={() => onMove(index, 'down')}
-            disabled={index === totalStages - 1}
-          >
-            <MoveDown className="h-4 w-4" />
-          </Button>
-          <Button 
-            size="icon" 
-            variant="ghost" 
-            onClick={() => onRemove(stage.id)}
-            className="text-destructive hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-      
-      {/* Touchpoints */}
-      <div className="space-y-2 mb-4">
-        <label className="text-sm font-medium">Touchpoints</label>
-        {stage.touchPoints && stage.touchPoints.length > 0 ? (
-          <div className="space-y-2">
-            {stage.touchPoints.map((touchpoint) => (
-              <div key={touchpoint.id} className="flex items-center justify-between bg-muted p-2 rounded">
-                <span>{touchpoint.name}</span>
-                <Button 
-                  size="icon" 
-                  variant="ghost" 
-                  onClick={() => onRemoveTouchpoint(stage.id, touchpoint.id)}
-                  className="h-6 w-6 text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-sm text-muted-foreground p-2 bg-muted/50 rounded">
-            No touchpoints added yet
-          </div>
-        )}
-      </div>
-      
-      {/* Add Touchpoint */}
-      <div className="flex items-center space-x-2">
-        <Input
-          placeholder="Add touchpoint (e.g., Social Media Ad, Email Follow-up)"
-          value={newTouchpointName}
-          onChange={(e) => setNewTouchpointName(e.target.value)}
-          className="flex-1 text-sm"
-        />
-        <Button 
-          size="sm" 
-          variant="outline" 
-          onClick={handleAddTouchpoint}
-          disabled={!newTouchpointName.trim()}
-        >
-          <PlusCircle className="mr-1 h-3 w-3" />
-          Add
-        </Button>
-      </div>
-    </div>
   );
 };
 
