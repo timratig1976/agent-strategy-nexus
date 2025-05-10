@@ -11,7 +11,7 @@ import ReactFlow, {
   Panel
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Button } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Download, FileText, User, FlaskConical, BarChart2, MessageSquare } from "lucide-react";
 import { AgentResult, StrategyState } from "@/types/marketing";
 import { getStateLabel } from "@/utils/strategyUtils";

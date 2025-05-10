@@ -93,6 +93,7 @@ const UspCanvasModuleTabs: React.FC<UspCanvasModuleTabsProps> = ({
           valueItems={valueItems}
           selectedCustomerItems={selectedCustomerItems}
           selectedValueItems={selectedValueItems}
+          canvasId={canvasId}
         />
       </TabsContent>
       
