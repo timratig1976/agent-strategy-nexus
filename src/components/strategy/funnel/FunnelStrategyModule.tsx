@@ -70,17 +70,23 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
               stages: Array.isArray(parsedContent.stages) ? parsedContent.stages : [],
               name: typeof parsedContent.name === 'string' ? parsedContent.name : "",
               primaryGoal: typeof parsedContent.primaryGoal === 'string' ? parsedContent.primaryGoal : "",
+              leadMagnetType: typeof parsedContent.leadMagnetType === 'string' ? parsedContent.leadMagnetType : "",
+              targetAudience: typeof parsedContent.targetAudience === 'string' ? parsedContent.targetAudience : "",
+              mainChannel: typeof parsedContent.mainChannel === 'string' ? parsedContent.mainChannel : "",
+              conversionAction: typeof parsedContent.conversionAction === 'string' ? parsedContent.conversionAction : "",
+              timeframe: typeof parsedContent.timeframe === 'string' ? parsedContent.timeframe : "",
+              budget: parsedContent.budget !== undefined ? String(parsedContent.budget) : "",
+              kpis: typeof parsedContent.kpis === 'string' ? parsedContent.kpis : "",
+              notes: typeof parsedContent.notes === 'string' ? parsedContent.notes : "",
+              actionPlans: typeof parsedContent.actionPlans === 'object' && parsedContent.actionPlans !== null 
+                ? parsedContent.actionPlans as Record<string, string> 
+                : {},
+              conversionRates: typeof parsedContent.conversionRates === 'object' && parsedContent.conversionRates !== null 
+                ? parsedContent.conversionRates as Record<string, number> 
+                : {},
+              lastUpdated: typeof parsedContent.lastUpdated === 'string' ? parsedContent.lastUpdated : "",
+              version: typeof parsedContent.version === 'number' ? parsedContent.version : 1,
             };
-            
-            // Add optional properties if they exist
-            if (typeof parsedContent.leadMagnetType === 'string') safeContent.leadMagnetType = parsedContent.leadMagnetType;
-            if (typeof parsedContent.targetAudience === 'string') safeContent.targetAudience = parsedContent.targetAudience;
-            if (typeof parsedContent.mainChannel === 'string') safeContent.mainChannel = parsedContent.mainChannel;
-            if (typeof parsedContent.conversionAction === 'string') safeContent.conversionAction = parsedContent.conversionAction;
-            if (typeof parsedContent.timeframe === 'string') safeContent.timeframe = parsedContent.timeframe;
-            if (parsedContent.budget !== undefined) safeContent.budget = parsedContent.budget as string | number;
-            if (typeof parsedContent.kpis === 'string') safeContent.kpis = parsedContent.kpis;
-            if (typeof parsedContent.notes === 'string') safeContent.notes = parsedContent.notes;
             
             console.log("Loaded funnel data:", safeContent);
             setFunnelData(safeContent);
@@ -111,9 +117,9 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
     setIsSaving(true);
     
     try {
-      // Create metadata with explicit casting to Json type for Supabase compatibility
+      // Create metadata with explicit casting to break the recursive type chain
       const metadata = {
-        type: 'funnel' as const,
+        type: 'funnel',
         is_final: true,
         created_by: 'user',
         updated_at: new Date().toISOString()
