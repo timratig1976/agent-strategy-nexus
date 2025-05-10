@@ -102,6 +102,8 @@ const CanvasTabs = (props: CanvasTabsProps): TabItem[] => {
           setCustomerItems={setCustomerItems}
           setValueItems={setValueItems}
           onSaveCanvas={saveCanvasData}
+          briefingContent={briefingContent}
+          personaContent={personaContent}
         />
       )
     },

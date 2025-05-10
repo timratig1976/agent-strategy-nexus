@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 
 import { useUspCanvas } from './useUspCanvas';
+import { useAIResults } from './hooks/useAIResults';
 import { CanvasState } from './types';
 import TabbedContent from '@/components/ui/tabbed-content';
 import CanvasNavigation from './components/CanvasNavigation';
@@ -48,6 +49,15 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     isLoading,
     error
   } = useUspCanvas(canvasId);
+
+  // Add the AI Results hook to store AI-generated content
+  const {
+    storedAIResult,
+    handleAddAIJobs,
+    handleAddAIPains,
+    handleAddAIGains,
+    handleAIResultsGenerated
+  } = useAIResults(canvasId);
 
   const [activeTab, setActiveTab] = useState(defaultActiveTab);
 

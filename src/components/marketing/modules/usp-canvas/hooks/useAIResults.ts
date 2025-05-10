@@ -32,7 +32,7 @@ export const useAIResults = (strategyId: string) => {
   }, [strategyId]);
 
   // Handle adding AI-generated elements with duplicate prevention and better uniqueness checking
-  const handleAddAIJobs = (jobs, addCustomerJob) => {
+  const handleAddAIJobs = (jobs) => {
     if (!jobs || jobs.length === 0) {
       toast.info("No jobs to add");
       return;
@@ -62,16 +62,18 @@ export const useAIResults = (strategyId: string) => {
     setAddedJobIds(newAddedIds);
     
     if (uniqueJobs.length > 0) {
-      uniqueJobs.forEach(job => {
-        addCustomerJob(job.content, job.priority || 'medium', true);
-      });
+      // uniqueJobs.forEach(job => {
+      //   addCustomerJob(job.content, job.priority || 'medium', true);
+      // });
       toast.success(`Added ${uniqueJobs.length} jobs to canvas`);
+      return uniqueJobs;
     } else {
       toast.info("All jobs have already been added");
+      return [];
     }
   };
 
-  const handleAddAIPains = (pains, addCustomerPain) => {
+  const handleAddAIPains = (pains) => {
     if (!pains || pains.length === 0) {
       toast.info("No pains to add");
       return;
@@ -99,16 +101,18 @@ export const useAIResults = (strategyId: string) => {
     setAddedPainIds(newAddedIds);
     
     if (uniquePains.length > 0) {
-      uniquePains.forEach(pain => {
-        addCustomerPain(pain.content, pain.severity || 'medium', true);
-      });
+      // uniquePains.forEach(pain => {
+      //   addCustomerPain(pain.content, pain.severity || 'medium', true);
+      // });
       toast.success(`Added ${uniquePains.length} pains to canvas`);
+      return uniquePains;
     } else {
       toast.info("All pains have already been added");
+      return [];
     }
   };
 
-  const handleAddAIGains = (gains, addCustomerGain) => {
+  const handleAddAIGains = (gains) => {
     if (!gains || gains.length === 0) {
       toast.info("No gains to add");
       return;
@@ -136,12 +140,14 @@ export const useAIResults = (strategyId: string) => {
     setAddedGainIds(newAddedIds);
     
     if (uniqueGains.length > 0) {
-      uniqueGains.forEach(gain => {
-        addCustomerGain(gain.content, gain.importance || 'medium', true);
-      });
+      // uniqueGains.forEach(gain => {
+      //   addCustomerGain(gain.content, gain.importance || 'medium', true);
+      // });
       toast.success(`Added ${uniqueGains.length} gains to canvas`);
+      return uniqueGains;
     } else {
       toast.info("All gains have already been added");
+      return [];
     }
   };
 
