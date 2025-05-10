@@ -42,7 +42,7 @@ const AIGeneratorTab: React.FC<AIGeneratorTabProps> = ({
     jobs.forEach(job => {
       if (job.content) {
         newCustomerItems.push({
-          id: uuidv4(),
+          id: `job-${uuidv4()}`,
           content: job.content,
           rating: job.priority || 'medium',
           isAIGenerated: true
@@ -51,8 +51,10 @@ const AIGeneratorTab: React.FC<AIGeneratorTabProps> = ({
     });
     
     setCustomerItems(newCustomerItems);
-    onSaveCanvas();
-    toast.success(`Added ${jobs.length} jobs to Customer Profile`);
+    onSaveCanvas().then(() => {
+      toast.success(`Added ${jobs.length} jobs to Customer Profile`);
+      console.log('After adding jobs, customerItems:', newCustomerItems);
+    });
   };
 
   // Handle adding pain items to canvas
@@ -64,7 +66,7 @@ const AIGeneratorTab: React.FC<AIGeneratorTabProps> = ({
     pains.forEach(pain => {
       if (pain.content) {
         newCustomerItems.push({
-          id: uuidv4(),
+          id: `pain-${uuidv4()}`,
           content: pain.content,
           rating: pain.severity || 'medium',
           isAIGenerated: true
@@ -73,8 +75,10 @@ const AIGeneratorTab: React.FC<AIGeneratorTabProps> = ({
     });
     
     setCustomerItems(newCustomerItems);
-    onSaveCanvas();
-    toast.success(`Added ${pains.length} pains to Customer Profile`);
+    onSaveCanvas().then(() => {
+      toast.success(`Added ${pains.length} pains to Customer Profile`);
+      console.log('After adding pains, customerItems:', newCustomerItems);
+    });
   };
 
   // Handle adding gain items to canvas
@@ -86,7 +90,7 @@ const AIGeneratorTab: React.FC<AIGeneratorTabProps> = ({
     gains.forEach(gain => {
       if (gain.content) {
         newCustomerItems.push({
-          id: uuidv4(),
+          id: `gain-${uuidv4()}`,
           content: gain.content,
           rating: gain.importance || 'medium',
           isAIGenerated: true
@@ -95,13 +99,26 @@ const AIGeneratorTab: React.FC<AIGeneratorTabProps> = ({
     });
     
     setCustomerItems(newCustomerItems);
-    onSaveCanvas();
-    toast.success(`Added ${gains.length} gains to Customer Profile`);
+    onSaveCanvas().then(() => {
+      toast.success(`Added ${gains.length} gains to Customer Profile`);
+      console.log('After adding gains, customerItems:', newCustomerItems);
+    });
   };
 
   // Handle AI results generated
   const handleAIResultsGenerated = (results: StoredAIResult) => {
+    console.log("AI results generated:", results);
     setStoredAIResult(results);
+    
+    // Save to localStorage for persistence
+    try {
+      localStorage.setItem(
+        `usp_canvas_${canvasId}_ai_results`, 
+        JSON.stringify({ data: results, timestamp: Date.now() })
+      );
+    } catch (err) {
+      console.error('Error saving AI results:', err);
+    }
   };
 
   return (

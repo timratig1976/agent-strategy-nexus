@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 
 import { useUspCanvas } from './useUspCanvas';
-import { useAIResults } from './hooks/useAIResults';
 import { CanvasState } from './types';
 import TabbedContent from '@/components/ui/tabbed-content';
 import CanvasNavigation from './components/CanvasNavigation';
@@ -50,16 +49,6 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     error
   } = useUspCanvas(canvasId);
 
-  // Add the AI Results hook to store AI-generated content
-  const {
-    storedAIResult,
-    setStoredAIResult,
-    handleAddAIJobs,
-    handleAddAIPains,
-    handleAddAIGains,
-    handleAIResultsGenerated
-  } = useAIResults(canvasId);
-
   const [activeTab, setActiveTab] = useState(defaultActiveTab);
 
   // Handle canvas item selection
@@ -73,6 +62,11 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
       console.error('Canvas error:', error);
     }
   }, [error]);
+  
+  // Debug log canvas state changes
+  useEffect(() => {
+    console.log("Canvas data loaded:", { customerItems, valueItems });
+  }, [customerItems, valueItems]);
 
   // Handle tab changes
   const handleTabChange = useCallback((value: string) => {
@@ -88,13 +82,15 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
   // Save canvas data with all items
   const handleSaveCanvas = useCallback(async () => {
     try {
+      console.log('Saving canvas with items:', { customerItems, valueItems });
       await saveCanvasData();
-      toast.success('Canvas saved successfully');
+      return true;
     } catch (err) {
       console.error('Error saving canvas:', err);
       toast.error('Failed to save canvas');
+      return false;
     }
-  }, [saveCanvasData]);
+  }, [saveCanvasData, customerItems, valueItems]);
 
   // Handle finalize and navigate
   const handleFinalizeAndContinue = useCallback(async () => {
@@ -112,7 +108,7 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     }
   }, [finalizeCanvas, onNavigateNext]);
 
-  // Get tabs configuration - explicitly pass the tabs as TabItem[]
+  // Get tabs configuration
   const tabs = CanvasTabs({
     canvasId,
     canvasState,

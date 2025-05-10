@@ -20,8 +20,12 @@ const AIResultsPanel: React.FC<AIResultsPanelProps> = ({
 }) => {
   const handleAddToCanvas = () => {
     if (items && items.length > 0) {
-      onAddItems(items);
-      toast.success(`Added ${items.length} items to canvas`);
+      // Clone items to ensure we pass clean objects
+      const itemsToAdd = items.map(item => ({...item}));
+      onAddItems(itemsToAdd);
+      
+      console.log(`Adding ${items.length} items to canvas:`, itemsToAdd);
+      // Toast notification is shown by the parent component after save is complete
     } else {
       toast.warning("No items to add");
     }

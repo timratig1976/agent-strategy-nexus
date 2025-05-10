@@ -66,9 +66,10 @@ export const useAIResults = (strategyId: string) => {
     if (uniqueJobs.length > 0) {
       // Map jobs to format expected by Canvas
       const formattedJobs = uniqueJobs.map(job => ({
-        id: uuidv4(),
+        id: `job-${uuidv4()}`,
         content: job.content || job.description,
-        priority: job.priority || 'medium'
+        priority: job.priority || 'medium',
+        isAIGenerated: true
       }));
       return formattedJobs;
     } else {
@@ -109,9 +110,10 @@ export const useAIResults = (strategyId: string) => {
     if (uniquePains.length > 0) {
       // Map pains to format expected by Canvas
       const formattedPains = uniquePains.map(pain => ({
-        id: uuidv4(),
+        id: `pain-${uuidv4()}`,
         content: pain.content || pain.description,
-        severity: pain.severity || 'medium'
+        severity: pain.severity || 'medium',
+        isAIGenerated: true
       }));
       return formattedPains;
     } else {
@@ -152,9 +154,10 @@ export const useAIResults = (strategyId: string) => {
     if (uniqueGains.length > 0) {
       // Map gains to format expected by Canvas
       const formattedGains = uniqueGains.map(gain => ({
-        id: uuidv4(),
+        id: `gain-${uuidv4()}`,
         content: gain.content || gain.description,
-        importance: gain.importance || 'medium'
+        importance: gain.importance || 'medium',
+        isAIGenerated: true
       }));
       return formattedGains;
     } else {
