@@ -2,7 +2,7 @@
 import React from 'react';
 import { Handle, Position } from 'reactflow';
 import { AgentResult } from '@/types/marketing';
-import { FileText, User, Star, BarChart2, MessageSquare } from "lucide-react";
+import { FileText, User, FlaskConical, BarChart2, MessageSquare } from "lucide-react";
 
 interface ResultNodeProps {
   data: {
@@ -25,7 +25,7 @@ const ResultNode: React.FC<ResultNodeProps> = ({ data }) => {
       case 'persona':
         return <User size={16} className="text-purple-500" />;
       case 'pain_gains':
-        return <Star size={16} className="text-amber-500" />;
+        return <FlaskConical size={16} className="text-amber-500" />; // Changed from Star to FlaskConical
       case 'funnel':
         return <BarChart2 size={16} className="text-green-500" />;
       case 'ads':
@@ -47,8 +47,11 @@ const ResultNode: React.FC<ResultNodeProps> = ({ data }) => {
     }
   };
 
+  // For USP Canvas nodes, show a clickable indicator
+  const isUspCanvas = type === 'pain_gains';
+
   return (
-    <div className={`p-3 bg-white rounded-md border ${getBorderColor()} shadow-sm`}>
+    <div className={`p-3 bg-white rounded-md border ${getBorderColor()} shadow-sm relative`}>
       <Handle type="target" position={Position.Top} />
       
       <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100">
@@ -59,6 +62,15 @@ const ResultNode: React.FC<ResultNodeProps> = ({ data }) => {
       <div className="text-xs text-gray-600 h-20 overflow-y-auto">
         {content}
       </div>
+
+      {isUspCanvas && (
+        <div className="absolute bottom-1 right-1">
+          <span className="text-xs text-amber-600 font-medium flex items-center">
+            <span className="w-2 h-2 bg-amber-500 rounded-full mr-1"></span>
+            Click to view canvas
+          </span>
+        </div>
+      )}
     </div>
   );
 };

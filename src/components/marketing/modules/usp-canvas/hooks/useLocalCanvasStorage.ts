@@ -38,7 +38,10 @@ export const useLocalCanvasStorage = (strategyId?: string) => {
         timestamp: Date.now(),
         data: canvas,
         isFinal: !!isFinal,
-        metadata: { source: 'local-storage' }
+        metadata: { 
+          source: 'local-storage',
+          type: 'pain_gains' // Add type for consistency with database records
+        }
       };
       
       const newHistory: CanvasHistoryEntry[] = [...canvasSaveHistory, newHistoryEntry];

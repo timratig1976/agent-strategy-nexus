@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import ReactFlow, {
   Background,
@@ -10,8 +11,8 @@ import ReactFlow, {
   Panel
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Button } from "@/components/ui/button";
-import { Download, FileText, User, Star, BarChart2, MessageSquare } from "lucide-react";
+import { Button } from "@/components/ui/card";
+import { Download, FileText, User, FlaskConical, BarChart2, MessageSquare } from "lucide-react";
 import { AgentResult, StrategyState } from "@/types/marketing";
 import { getStateLabel } from "@/utils/strategyUtils";
 import UspCanvasBoard from "@/components/marketing/modules/usp-canvas/visualization/UspCanvasBoard"; 
@@ -95,7 +96,7 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
           id: `stage-${stage}`,
           type: 'strategyNode',
           data: { 
-            label: getStateLabel(stage),
+            label: stage === StrategyState.PAIN_GAINS ? "USP Canvas" : getStateLabel(stage),
             icon: getStageIcon(stage),
             isCurrentStage,
             completed: isStageCompleted(stage, currentStage),
@@ -249,7 +250,7 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
       case StrategyState.PERSONA:
         return <User size={20} />;
       case StrategyState.PAIN_GAINS:
-        return <Star size={20} />;
+        return <FlaskConical size={20} />;  // Changed from Star to FlaskConical to better represent USP Canvas
       case StrategyState.FUNNEL:
         return <BarChart2 size={20} />;
       case StrategyState.ADS:
