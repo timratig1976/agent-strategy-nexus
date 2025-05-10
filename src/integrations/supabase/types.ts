@@ -310,6 +310,30 @@ export type Database = {
           },
         ]
       }
+      canvas_history: {
+        Row: {
+          canvas_id: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          snapshot_data: Json
+        }
+        Insert: {
+          canvas_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          snapshot_data: Json
+        }
+        Update: {
+          canvas_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          snapshot_data?: Json
+        }
+        Relationships: []
+      }
       channel_strategies: {
         Row: {
           channels: Json | null

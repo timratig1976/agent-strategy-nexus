@@ -26,6 +26,26 @@ interface UspCanvasModuleTabsProps {
   isProcessing: boolean;
 }
 
+interface TabsListProps {
+  activeTab: string;
+  onSave: () => Promise<void>;
+  isProcessing: boolean;
+}
+
+interface CanvasTabProps {
+  canvasState: CanvasState;
+  setCanvasState: (state: CanvasState) => void;
+  customerItems: CanvasItem[];
+  valueItems: CanvasItem[];
+  setCustomerItems: (items: CanvasItem[]) => void;
+  setValueItems: (items: CanvasItem[]) => void;
+  selectedCustomerItems: string[];
+  selectedValueItems: string[];
+  setSelectedCustomerItems: (items: string[]) => void;
+  setSelectedValueItems: (items: string[]) => void;
+  onSaveCanvas: () => Promise<void>;
+}
+
 const UspCanvasModuleTabs: React.FC<UspCanvasModuleTabsProps> = ({
   activeTab,
   onTabChange,
@@ -43,20 +63,10 @@ const UspCanvasModuleTabs: React.FC<UspCanvasModuleTabsProps> = ({
   onSaveCanvas,
   isProcessing
 }) => {
-  // Define history items type properly
-  type HistoryItem = {
-    id: string;
-    canvas_id: string;
-    snapshot_data: any;
-    created_at: string;
-    metadata?: Record<string, any>;
-  };
-
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
       <TabsList 
         activeTab={activeTab} 
-        onTabChange={onTabChange}
         onSave={onSaveCanvas}
         isProcessing={isProcessing}
       />

@@ -64,13 +64,14 @@ export interface StoredAIResult {
   gains?: Array<{ description?: string; title?: string; importance?: string }>;
 }
 
-// Add the missing exports referenced in the errors
+// Canvas states enum
 export enum CanvasState {
   CUSTOMER_PROFILE = 'customer_profile',
   VALUE_MAP = 'value_map',
   OVERVIEW = 'overview',
 }
 
+// Canvas item interface (used for both customer and value items)
 export interface CanvasItem {
   id: string;
   content: string;

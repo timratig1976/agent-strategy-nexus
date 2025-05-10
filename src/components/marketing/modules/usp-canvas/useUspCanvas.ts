@@ -5,8 +5,35 @@ import { v4 as uuidv4 } from 'uuid';
 
 // Import local hooks and types
 import useCanvasDatabase from './hooks/useCanvasDatabase';
-import { useCanvasStorage, useLocalCanvasStorage } from './hooks';
+import { useCanvasStorage } from './hooks';
 import { CanvasState, CanvasItem } from './types';
+
+// Create a simple local storage hook for fallback
+export const useLocalCanvasStorage = () => {
+  // Function to save canvas data to local storage
+  const saveToLocalStorage = (canvasId: string, data: { customerItems: CanvasItem[], valueItems: CanvasItem[] }) => {
+    try {
+      localStorage.setItem(`usp_canvas_${canvasId}`, JSON.stringify(data));
+      return true;
+    } catch (error) {
+      console.error('Failed to save to local storage:', error);
+      return false;
+    }
+  };
+
+  // Function to load canvas data from local storage
+  const loadFromLocalStorage = (canvasId: string) => {
+    try {
+      const data = localStorage.getItem(`usp_canvas_${canvasId}`);
+      return data ? JSON.parse(data) : null;
+    } catch (error) {
+      console.error('Failed to load from local storage:', error);
+      return null;
+    }
+  };
+
+  return { saveToLocalStorage, loadFromLocalStorage };
+};
 
 // Canvas data management hook
 export const useUspCanvas = (canvasId: string) => {
@@ -76,7 +103,7 @@ export const useUspCanvas = (canvasId: string) => {
       
       loadInitialData();
     }
-  }, [canvasId]);
+  }, [canvasId, loadCanvasHistory, loadFromLocalStorage]);
 
   // Save canvas data (to database and local storage)
   const saveCanvasData = useCallback(async () => {
@@ -91,7 +118,7 @@ export const useUspCanvas = (canvasId: string) => {
       };
       
       // Save to database
-      await saveCanvasSnapshot(canvasData as any);
+      await saveCanvasSnapshot(canvasData);
       
       // Also save to local storage as backup
       saveToLocalStorage(canvasId, {
