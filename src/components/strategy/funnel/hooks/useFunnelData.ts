@@ -11,8 +11,8 @@ import {
 } from "../types";
 
 export function useFunnelData(strategyId: string | undefined) {
-  // Remove explicit type annotation to prevent TypeScript from deeply instantiating the type
-  const [funnelData, setFunnelData] = useState(() => createInitialFunnelData());
+  // Temporarily use any type to bypass TypeScript's deep instantiation error
+  const [funnelData, setFunnelData] = useState<any>({});
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -31,7 +31,11 @@ export function useFunnelData(strategyId: string | undefined) {
           .limit(1);
 
         if (error) throw error;
-        if (!data || data.length === 0) return;
+        if (!data || data.length === 0) {
+          // Initialize with empty data if nothing found
+          setFunnelData(createInitialFunnelData());
+          return;
+        }
 
         const dbResult = data[0];
 
@@ -63,8 +67,8 @@ export function useFunnelData(strategyId: string | undefined) {
               version: Number(rawContent.version || 1),
             };
 
-            // Type assertion at the set call is safer than in-variable declaration
-            setFunnelData(safeContent as FunnelData);
+            // Set without type assertion since we're using any
+            setFunnelData(safeContent);
             setHasChanges(false);
           } catch (e) {
             console.error("Failed to parse funnel content:", e);
@@ -118,6 +122,13 @@ export function useFunnelData(strategyId: string | undefined) {
       setIsSaving(false);
     }
   };
+
+  // Initialize with default data on first render if we got an any type empty object
+  useEffect(() => {
+    if (Object.keys(funnelData).length === 0) {
+      setFunnelData(createInitialFunnelData());
+    }
+  }, [funnelData]);
 
   return {
     funnelData,
