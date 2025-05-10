@@ -7,9 +7,10 @@ import { CustomerProfileSummary, ValueMapSummary, ValuePropositionFit, FitProgre
 interface UspCanvasOverviewProps {
   canvas: UspCanvas;
   briefingContent?: string;
+  personaContent?: string;
 }
 
-const UspCanvasOverview: React.FC<UspCanvasOverviewProps> = ({ canvas, briefingContent = "" }) => {
+const UspCanvasOverview: React.FC<UspCanvasOverviewProps> = ({ canvas, briefingContent = "", personaContent = "" }) => {
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Value Proposition Canvas Overview</h2>
@@ -125,6 +126,34 @@ const UspCanvasOverview: React.FC<UspCanvasOverviewProps> = ({ canvas, briefingC
           </div>
         </CardContent>
       </Card>
+
+      {/* Add Context Information Section if briefing or persona content exists */}
+      {(briefingContent || personaContent) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Strategy Context</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {briefingContent && (
+              <div>
+                <h3 className="text-sm font-medium mb-2">Strategy Briefing</h3>
+                <div className="bg-slate-50 p-3 rounded-md text-sm max-h-60 overflow-y-auto">
+                  {briefingContent}
+                </div>
+              </div>
+            )}
+            
+            {personaContent && (
+              <div className="mt-4">
+                <h3 className="text-sm font-medium mb-2">Target Persona</h3>
+                <div className="bg-slate-50 p-3 rounded-md text-sm max-h-60 overflow-y-auto">
+                  {personaContent}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
