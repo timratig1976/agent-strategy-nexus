@@ -36,10 +36,12 @@ export function useFunnelData(strategyId: string | undefined) {
 
         if (dbResult.metadata && isFunnelMetadata(dbResult.metadata)) {
           try {
-            // Parse the content safely - this was causing the deep instantiation issue
-            const rawContent = JSON.parse(dbResult.content);
+            // Parse the content safely
+            const rawContent = typeof dbResult.content === 'string' 
+              ? JSON.parse(dbResult.content) 
+              : dbResult.content;
             
-            // Create a new funnel data object manually instead of using type casting
+            // Create a new funnel data object with proper type safety
             const safeContent: FunnelData = {
               stages: Array.isArray(rawContent.stages) 
                 ? rawContent.stages.map((stage: any) => parseFunnelStage(stage))
@@ -54,8 +56,8 @@ export function useFunnelData(strategyId: string | undefined) {
               budget: String(rawContent.budget || ""),
               kpis: String(rawContent.kpis || ""),
               notes: String(rawContent.notes || ""),
-              actionPlans: rawContent.actionPlans || {},
-              conversionRates: rawContent.conversionRates || {},
+              actionPlans: typeof rawContent.actionPlans === 'object' ? rawContent.actionPlans : {},
+              conversionRates: typeof rawContent.conversionRates === 'object' ? rawContent.conversionRates : {},
               lastUpdated: String(rawContent.lastUpdated || ""),
               version: Number(rawContent.version || 1),
             };
