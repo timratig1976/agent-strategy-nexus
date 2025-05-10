@@ -3,13 +3,33 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import FunnelStages from "./components/FunnelStages";
-import { FunnelData, FunnelStage, FunnelStrategyModuleProps, isFunnelMetadata } from "./types";
+// import { FunnelData, FunnelStage, FunnelStrategyModuleProps, isFunnelMetadata } from "./types";
+import { FunnelStage, FunnelStrategyModuleProps, isFunnelMetadata } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 // ✅ Flacher Json-Typ zur Vermeidung von TS2589 - ganz oben nach den Imports platziert
 type JsonPrimitive = string | number | boolean | null;
 type LocalJson = JsonPrimitive | JsonPrimitive[] | { [key: string]: JsonPrimitive | JsonPrimitive[] };
+
+// ✅ Temporär vereinfachte FunnelData-Definition
+type FunnelData = {
+  stages: FunnelStage[];
+  name: string;
+  primaryGoal: string;
+  leadMagnetType?: string;
+  targetAudience?: string;
+  mainChannel?: string;
+  conversionAction?: string;
+  timeframe?: string;
+  budget?: string;
+  kpis?: string;
+  notes?: string;
+  actionPlans?: Record<string, string>;
+  conversionRates?: Record<string, number>;
+  lastUpdated?: string;
+  version?: number;
+};
 
 // ✅ Factory-Funktion: verhindert tiefe Typ-Inferenz
 function createInitialFunnelData(): FunnelData {
