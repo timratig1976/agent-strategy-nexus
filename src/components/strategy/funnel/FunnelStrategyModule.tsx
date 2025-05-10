@@ -9,11 +9,12 @@ import { toast } from "sonner";
 import { AgentResult } from "@/types/marketing";
 
 const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy }) => {
-  const [funnelData, setFunnelData] = useState<FunnelData>({
+  // Use lazy initialization to avoid excessive type instantiation
+  const [funnelData, setFunnelData] = useState<FunnelData>(() => ({
     stages: [],
     name: "",
     primaryGoal: "",
-  });
+  }));
   
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -60,11 +61,13 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
         // Check if the result has valid funnel data using our improved type guard
         if (isFunnelMetadata(result.metadata) && result.content) {
           try {
-            const parsedContent = JSON.parse(result.content) as FunnelData;
+            // Use type assertion to avoid deep type instantiation
+            const parsedContent = JSON.parse(result.content);
             
-            if (parsedContent && parsedContent.stages) {
+            if (parsedContent && Array.isArray(parsedContent.stages)) {
               console.log("Loaded funnel data:", parsedContent);
-              setFunnelData(parsedContent);
+              // Use type assertion to help TypeScript avoid deep analysis
+              setFunnelData(parsedContent as FunnelData);
               setHasChanges(false);
             }
           } catch (e) {
