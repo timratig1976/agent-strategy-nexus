@@ -33,7 +33,7 @@ const AIGeneratorLayout: React.FC<AIGeneratorLayoutProps> = ({
     error,
     debugInfo,
     activeTab,
-    // No longer use setActiveTab since we show all tabs at once
+    setActiveTab,
     generateResult,
     generationHistory,
     rawResponse,
@@ -77,7 +77,7 @@ const AIGeneratorLayout: React.FC<AIGeneratorLayoutProps> = ({
           onAddPains={onAddPains}
           onAddGains={onAddGains}
           activeTab={activeTab}
-          setActiveTab={() => {}} // Pass empty function since we don't need tab switching
+          setActiveTab={setActiveTab}
         />
       )}
       
@@ -87,7 +87,6 @@ const AIGeneratorLayout: React.FC<AIGeneratorLayoutProps> = ({
           parseResults={parseResults}
           rawResponse={rawResponse}
           showDebug={showDebug}
-          generationHistory={generationHistory}
         />
       )}
     </div>

@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { StoredAIResult } from '../types';
 import { generateUspCanvasProfile } from '@/services/ai/uspCanvasService';
@@ -23,7 +24,7 @@ export const useAIGenerator = (
   const [generationHistory, setGenerationHistory] = useState<any[]>([]);
   const [showDebug, setShowDebug] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
-  const [activeTab] = useState<string>('jobs');
+  const [activeTab, setActiveTab] = useState<string>('jobs');
   const { ensurePromptExists } = useAgentPrompt('usp_canvas');
 
   const parseResults = useCallback((rawResponse: any) => {
@@ -120,6 +121,7 @@ export const useAIGenerator = (
     error,
     debugInfo,
     activeTab,
+    setActiveTab,
     generateResult,
     generationHistory,
     rawResponse,
