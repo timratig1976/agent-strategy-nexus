@@ -7,8 +7,7 @@ import { Json } from "@/integrations/supabase/types";
 export interface TouchPoint {
   id: string;
   name: string;
-  stageId: string;
-  channelType: string;
+  channelType?: string; // Made optional to match usage in code
 }
 
 /**
@@ -18,8 +17,8 @@ export interface FunnelStage {
   id: string;
   name: string;
   description: string;
-  keyMetrics: string[];
   touchPoints: TouchPoint[];
+  keyMetrics?: string[]; // Added to fix errors in FunnelStages and FunnelVisualization
 }
 
 /**
@@ -44,37 +43,25 @@ export interface FunnelData {
 }
 
 /**
- * Metadata for funnel agent results
- */
-export interface FunnelMetadata {
-  type: string;
-  is_final: boolean | string;
-  updated_at?: string;
-}
-
-/**
  * Props for the FunnelStrategyModule component
  */
 export interface FunnelStrategyModuleProps {
   strategy?: {
     id: string;
-    name: string;
-    state: string;
-    [key: string]: any;
+    name?: string;
   };
-  onNavigateBack?: () => Promise<void>;
-  strategyId?: string;
 }
 
-/**
- * Type guard to check if an object is a FunnelMetadata
- */
-export function isFunnelMetadata(obj: any): obj is FunnelMetadata {
-  return (
-    obj !== null &&
-    typeof obj === 'object' &&
-    'type' in obj &&
-    obj.type === 'funnel' &&
-    'is_final' in obj
-  );
-}
+// Type guard for funnel metadata
+export const isFunnelMetadata = (metadata: any): metadata is { 
+  type: string; 
+  is_final?: boolean | string;
+} => {
+  return metadata 
+    && typeof metadata === 'object' 
+    && metadata.type === 'funnel'
+    && (metadata.is_final === undefined || 
+        typeof metadata.is_final === 'boolean' || 
+        metadata.is_final === 'true' || 
+        metadata.is_final === 'false');
+};

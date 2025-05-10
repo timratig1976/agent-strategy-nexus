@@ -5,7 +5,16 @@ import { v4 as uuidv4 } from 'uuid';
 
 import UspCanvasModuleTabs from './components/UspCanvasModuleTabs';
 import { useUspCanvas } from './useUspCanvas';
-import { CanvasItem, CanvasState } from './types';
+import { 
+  CanvasItem, 
+  CanvasState, 
+  CustomerJob, 
+  CustomerPain, 
+  CustomerGain, 
+  ProductService, 
+  PainReliever, 
+  GainCreator 
+} from './types';
 import UspCanvasOverview from './overview/UspCanvasOverview';
 
 // Known tab values
@@ -81,18 +90,74 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     setSelectedValueItems([]);
   }, [canvasState]);
 
+  // Convert CanvasItem arrays to specific types needed for UspCanvasOverview
+  const mapCanvasToSpecificTypes = () => {
+    const customerJobs: CustomerJob[] = customerItems
+      .filter(item => item.rating === 'high' || item.rating === 'medium')
+      .map(item => ({
+        id: item.id,
+        content: item.content,
+        priority: item.rating,
+        isAIGenerated: item.isAIGenerated
+      }));
+      
+    const customerPains: CustomerPain[] = customerItems
+      .filter(item => item.rating === 'high' || item.rating === 'medium')
+      .map(item => ({
+        id: item.id,
+        content: item.content,
+        severity: item.rating,
+        isAIGenerated: item.isAIGenerated
+      }));
+      
+    const customerGains: CustomerGain[] = customerItems
+      .filter(item => item.rating === 'high' || item.rating === 'medium')
+      .map(item => ({
+        id: item.id,
+        content: item.content,
+        importance: item.rating,
+        isAIGenerated: item.isAIGenerated
+      }));
+      
+    const productServices: ProductService[] = valueItems
+      .filter(item => item.rating === 'high' || item.rating === 'medium')
+      .map(item => ({
+        id: item.id,
+        content: item.content,
+        relatedJobIds: []
+      }));
+      
+    const painRelievers: PainReliever[] = valueItems
+      .filter(item => item.rating === 'high' || item.rating === 'medium')
+      .map(item => ({
+        id: item.id,
+        content: item.content,
+        relatedPainIds: []
+      }));
+      
+    const gainCreators: GainCreator[] = valueItems
+      .filter(item => item.rating === 'high' || item.rating === 'medium')
+      .map(item => ({
+        id: item.id,
+        content: item.content,
+        relatedGainIds: []
+      }));
+      
+    return {
+      customerJobs,
+      customerPains,
+      customerGains,
+      productServices,
+      painRelievers,
+      gainCreators
+    };
+  };
+
   return (
     <div className="usp-canvas-module">
       {activeTab === TABS.OVERVIEW ? (
         <UspCanvasOverview 
-          canvas={{
-            customerJobs: customerItems.filter(item => item.rating === 'high' || item.rating === 'medium'),
-            customerPains: customerItems.filter(item => item.rating === 'high' || item.rating === 'medium'),
-            customerGains: customerItems.filter(item => item.rating === 'high' || item.rating === 'medium'),
-            productServices: valueItems.filter(item => item.rating === 'high' || item.rating === 'medium'),
-            painRelievers: valueItems.filter(item => item.rating === 'high' || item.rating === 'medium'),
-            gainCreators: valueItems.filter(item => item.rating === 'high' || item.rating === 'medium')
-          }}
+          canvas={mapCanvasToSpecificTypes()}
           briefingContent={briefingContent}
         />
       ) : (

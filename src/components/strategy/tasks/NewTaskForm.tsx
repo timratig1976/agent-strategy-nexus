@@ -36,13 +36,13 @@ const NewTaskForm: React.FC<NewTaskFormProps> = ({
     setIsSubmitting(true);
     
     try {
-      // Ensure state is properly typed as StrategyState
+      // Create the new task with state as a string instead of enum
       const newTask = {
         id: uuidv4(),
         strategy_id: strategyId,
         title: title.trim(),
         description: description.trim(),
-        state: state as StrategyState, // Explicitly cast to ensure correct type
+        state: state.toString(), // Convert enum to string for database
         is_completed: false,
       };
       
