@@ -1,4 +1,6 @@
 
+// Define types for the USP Canvas module
+
 export interface CustomerJob {
   id: string;
   content: string;
@@ -48,16 +50,16 @@ export interface UspCanvas {
 }
 
 export interface CanvasHistoryEntry {
-  id?: string;
+  id: string;
   timestamp: number;
   data: UspCanvas;
-  isFinal?: boolean;
-  metadata?: Record<string, any>;
+  isFinal: boolean;
+  metadata: Record<string, any>;
 }
 
+// Simple structure for AI-generated results
 export interface StoredAIResult {
-  jobs: any[];
-  pains: any[];
-  gains: any[];
-  debugInfo?: any;
+  jobs?: Array<{ description?: string; title?: string; priority?: string }>;
+  pains?: Array<{ description?: string; title?: string; severity?: string }>;
+  gains?: Array<{ description?: string; title?: string; importance?: string }>;
 }

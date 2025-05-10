@@ -1,37 +1,23 @@
 
+// Define types for the funnel strategy module
+
 export interface FunnelStage {
   id: string;
   name: string;
   description: string;
-  keyMetrics: string[];
-  touchpoints: TouchPoint[];
+  touchPoints?: TouchPoint[];
 }
 
 export interface TouchPoint {
   id: string;
   name: string;
-}
-
-export interface FunnelStrategyModuleProps {
-  strategyId?: string;
+  stageId: string;
+  channelType: string;
 }
 
 export interface FunnelData {
   stages: FunnelStage[];
-  name?: string;
-  primaryGoal?: string;
-  leadMagnetType?: string;
-  targetAudience?: string;
-  mainChannel?: string;
-  conversionAction?: string;
-  timeframe?: string;
-  budget?: string | number;
-  kpis?: string;
-  notes?: string;
   actionPlans?: Record<string, string>;
-  conversionRates?: Record<string, number>;
-  lastUpdated?: string;
-  version?: number;
 }
 
 export interface FunnelMetadata {
@@ -40,11 +26,16 @@ export interface FunnelMetadata {
   updated_at?: string;
 }
 
-// Type guard to check if metadata has the expected structure
+export interface FunnelStrategyModuleProps {
+  strategy?: any;
+  onNavigateBack?: () => void;
+}
+
+// Type guard for checking if an object matches the FunnelMetadata interface
 export function isFunnelMetadata(obj: any): obj is FunnelMetadata {
   return (
-    obj &&
     typeof obj === 'object' &&
+    obj !== null &&
     'type' in obj &&
     obj.type === 'funnel' &&
     'is_final' in obj

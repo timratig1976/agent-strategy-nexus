@@ -3,7 +3,7 @@ import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { StrategyState } from "@/types/marketing";
-import { getStateLabel, strategyStateToString } from "@/utils/strategyUtils";
+import { getStateLabel } from "@/utils/strategyUtils";
 
 interface UseStrategyNavigationProps {
   strategyId?: string;
@@ -46,7 +46,7 @@ export const useStrategyNavigation = ({ strategyId, onRefetch }: UseStrategyNavi
       // Update the strategy state
       const { error } = await supabase
         .from('strategies')
-        .update({ state: strategyStateToString(previousState) })
+        .update({ state: previousState })
         .eq('id', strategyId)
         .select();
       
@@ -100,7 +100,7 @@ export const useStrategyNavigation = ({ strategyId, onRefetch }: UseStrategyNavi
       // Update the strategy state
       const { error } = await supabase
         .from('strategies')
-        .update({ state: strategyStateToString(nextState) })
+        .update({ state: nextState })
         .eq('id', strategyId)
         .select();
       

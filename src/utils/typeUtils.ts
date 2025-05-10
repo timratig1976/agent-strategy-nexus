@@ -49,13 +49,6 @@ export function safeJsonAccess<T>(json: Json | undefined | null, key: string, de
 }
 
 /**
- * Convert StrategyState enum to string for database operations
- */
-export function strategyStateToString(state: StrategyState): string {
-  return state.toString();
-}
-
-/**
  * Safe conversion from JSON to a Record type
  */
 export function safeJsonToRecord(json: Json | null | undefined): Record<string, any> {

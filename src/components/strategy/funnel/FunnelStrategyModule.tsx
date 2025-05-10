@@ -19,7 +19,7 @@ import {
 } from "./types";
 
 const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = () => {
-  const { strategyId } = useParams<{ strategyId: string }>();
+  const { id: strategyId } = useParams<{ id: string }>();
   const [funnelData, setFunnelData] = useState<FunnelData>({ stages: [] });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -54,9 +54,9 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = () => {
         
         if (finalResult) {
           try {
-            // Explicitly cast parsed content to FunnelData to prevent deep type instantiation
-            const parsedContent = JSON.parse(finalResult.content) as FunnelData;
-            setFunnelData(parsedContent);
+            // Parse the content to get the funnel data
+            const parsedContent = JSON.parse(finalResult.content);
+            setFunnelData(parsedContent as FunnelData);
           } catch (e) {
             console.error("Error parsing funnel data:", e);
             toast.error("Failed to parse saved funnel data");

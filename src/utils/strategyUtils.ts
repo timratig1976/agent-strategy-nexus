@@ -36,10 +36,3 @@ export function getStateColor(state: string | null | undefined): string {
   
   return colors[state] || "bg-gray-100 text-gray-800";
 }
-
-/**
- * Convert StrategyState enum to string for database operations
- */
-export function strategyStateToString(state: StrategyState): string {
-  return state.toString();
-}

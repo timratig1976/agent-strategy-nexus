@@ -9,7 +9,6 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthProvider";
 import { StrategyState } from "@/types/marketing";
-import { strategyStateToString } from "@/utils/typeUtils";
 import BasicInfoSection from "./BasicInfoSection";
 import CompanySection from "./CompanySection";
 import ProductSection from "./ProductSection";
@@ -57,7 +56,7 @@ const StrategyForm = () => {
           product_url: values.productUrl || "",
           additional_info: values.additionalInfo || "",
           status: 'in_progress',
-          state: strategyStateToString(StrategyState.BRIEFING),
+          state: StrategyState.BRIEFING,
           language: values.language
         })
         .select()
@@ -71,7 +70,7 @@ const StrategyForm = () => {
         .insert({
           strategy_id: strategy.id,
           title: "Create AI Briefing",
-          state: strategyStateToString(StrategyState.BRIEFING),
+          state: StrategyState.BRIEFING,
           is_completed: false
         });
       

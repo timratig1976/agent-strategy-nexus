@@ -56,7 +56,7 @@ const StrategyBoardPage = () => {
           strategyId: result.strategy_id,
           content: result.content,
           createdAt: result.created_at,
-          metadata: result.metadata ? safeJsonToRecord(result.metadata) : {}
+          metadata: safeJsonToRecord(result.metadata)
         }));
         
         setAgentResults(mappedResults);
