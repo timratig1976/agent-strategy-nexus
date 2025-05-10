@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { AgentResult } from "@/types/marketing";
 
 const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy }) => {
-  // Use lazy initialization to avoid excessive type instantiation
+  // Use lazy initialization with a function to avoid excessive type instantiation
   const [funnelData, setFunnelData] = useState<FunnelData>(() => ({
     stages: [],
     name: "",
