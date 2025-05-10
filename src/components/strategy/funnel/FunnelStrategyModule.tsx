@@ -38,8 +38,20 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
         if (error) throw error;
         if (!data || data.length === 0) return;
         
+        // Map database result to AgentResult type
+        const dbResult = data[0];
+        
+        // Convert snake_case to camelCase for AgentResult type
+        const result: AgentResult = {
+          id: dbResult.id,
+          agentId: dbResult.agent_id,
+          strategyId: dbResult.strategy_id,
+          content: dbResult.content,
+          createdAt: dbResult.created_at,
+          metadata: dbResult.metadata || {}
+        };
+        
         // Check if the result has valid funnel data
-        const result = data[0] as AgentResult;
         if (isFunnelMetadata(result.metadata) && result.content) {
           try {
             const parsedContent = JSON.parse(result.content) as FunnelData;
