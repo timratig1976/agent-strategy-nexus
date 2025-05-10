@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FunnelStage, TouchPoint } from "../types";
+import { FunnelStage, FunnelTouchpoint } from "../types";
 import { Loader2 } from "lucide-react";
 
 interface FunnelActionPlanProps {

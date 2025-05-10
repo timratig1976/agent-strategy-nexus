@@ -9,7 +9,8 @@ export interface FunnelStage {
   id: string;
   name: string;
   description: string;
-  touchpoints: FunnelTouchpoint[];
+  touchPoints: FunnelTouchpoint[];
+  keyMetrics?: string[];
 }
 
 export interface FunnelTouchpoint {
@@ -18,6 +19,9 @@ export interface FunnelTouchpoint {
   description: string;
   channel: string;
 }
+
+// For backward compatibility
+export type TouchPoint = FunnelTouchpoint;
 
 export interface FunnelData {
   id?: string;

@@ -1,56 +1,45 @@
 
 import React from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
-
-// Define local type needed for this component
-type TouchPoint = {
-  id: string;
-  name: string;
-  channelType?: string;
-};
+import { X } from "lucide-react";
+import { FunnelTouchpoint } from "../../types";
 
 interface TouchpointsListProps {
-  touchPoints: TouchPoint[];
-  stageId: string;
-  onRemoveTouchpoint: (stageId: string, touchpointId: string) => void;
+  touchpoints: FunnelTouchpoint[];
+  onRemove: (id: string) => void;
 }
 
-const TouchpointsList: React.FC<TouchpointsListProps> = ({
-  touchPoints,
-  stageId,
-  onRemoveTouchpoint
+export const TouchpointsList: React.FC<TouchpointsListProps> = ({
+  touchpoints,
+  onRemove
 }) => {
-  if (!touchPoints || touchPoints.length === 0) {
+  if (touchpoints.length === 0) {
     return (
-      <div className="text-sm text-muted-foreground italic mt-2">
-        No touchpoints added yet. Add your first touchpoint below.
+      <div className="text-sm text-muted-foreground mb-2">
+        No touchpoints added yet. Add your first touchpoint to get started.
       </div>
     );
   }
 
   return (
-    <div className="flex flex-wrap gap-2 mt-2">
-      {touchPoints.map(touchpoint => (
-        <Badge 
-          key={touchpoint.id} 
-          variant="outline" 
-          className="flex items-center gap-1 py-1 pl-3 pr-2 bg-slate-50"
-        >
-          {touchpoint.name}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-5 w-5 ml-1 text-muted-foreground hover:text-destructive"
-            onClick={() => onRemoveTouchpoint(stageId, touchpoint.id)}
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
-        </Badge>
-      ))}
+    <div className="space-y-2 mb-4">
+      <h4 className="text-sm font-medium mb-1">Touchpoints:</h4>
+      <ul className="space-y-1">
+        {touchpoints.map(touchpoint => (
+          <li key={touchpoint.id} className="flex items-center justify-between bg-muted/50 px-3 py-2 rounded-md">
+            <span className="text-sm">{touchpoint.name}</span>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-6 w-6"
+              onClick={() => onRemove(touchpoint.id)}
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Remove touchpoint</span>
+            </Button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };
-
-export default TouchpointsList;
