@@ -27,10 +27,10 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
     
     const loadFunnelData = async () => {
       try {
-        // Get the most recent funnel result
+        // Get the most recent funnel result - limiting fields to avoid deep type instantiation
         const { data, error } = await supabase
           .from('agent_results')
-          .select('*')
+          .select('id, content, metadata, created_at, strategy_id, agent_id')
           .eq('strategy_id', strategyId)
           .eq('metadata->type', 'funnel')
           .order('created_at', { ascending: false })
@@ -39,35 +39,42 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
         if (error) throw error;
         if (!data || data.length === 0) return;
         
-        // Map database result to AgentResult type with explicit typing
+        // Get the first result from the database
         const dbResult = data[0];
         
-        // Create a safe metadata object from the database result
-        const safeMetadata: Record<string, any> = 
-          typeof dbResult.metadata === 'object' && dbResult.metadata !== null 
-            ? dbResult.metadata as Record<string, any>
-            : {};
-        
-        // Create the AgentResult with properly typed metadata
-        const result: AgentResult = {
-          id: dbResult.id,
-          agentId: dbResult.agent_id,
-          strategyId: dbResult.strategy_id,
-          content: dbResult.content,
-          createdAt: dbResult.created_at,
-          metadata: safeMetadata
-        };
-        
-        // Check if the result has valid funnel data using our improved type guard
-        if (isFunnelMetadata(result.metadata) && result.content) {
+        // Check if metadata exists and has the right type
+        if (dbResult.metadata && 
+            typeof dbResult.metadata === 'object' &&
+            'type' in dbResult.metadata &&
+            dbResult.metadata.type === 'funnel' && 
+            dbResult.content) {
           try {
-            // Use type assertion to avoid deep type instantiation
-            const parsedContent = JSON.parse(result.content);
+            // Parse the content without type inference initially
+            const parsedContent = JSON.parse(dbResult.content);
             
-            if (parsedContent && Array.isArray(parsedContent.stages)) {
-              console.log("Loaded funnel data:", parsedContent);
-              // Use type assertion to help TypeScript avoid deep analysis
-              setFunnelData(parsedContent as FunnelData);
+            // Validate the structure has required properties
+            if (parsedContent && 
+                typeof parsedContent === 'object' && 
+                Array.isArray(parsedContent.stages)) {
+              
+              // Create a safely-typed object by cherry-picking properties
+              const safeContent = {
+                stages: parsedContent.stages || [],
+                name: parsedContent.name || "",
+                primaryGoal: parsedContent.primaryGoal || "",
+                // Add other optional properties if they exist
+                ...(parsedContent.leadMagnetType ? { leadMagnetType: parsedContent.leadMagnetType } : {}),
+                ...(parsedContent.targetAudience ? { targetAudience: parsedContent.targetAudience } : {}),
+                ...(parsedContent.mainChannel ? { mainChannel: parsedContent.mainChannel } : {}),
+                ...(parsedContent.conversionAction ? { conversionAction: parsedContent.conversionAction } : {}),
+                ...(parsedContent.timeframe ? { timeframe: parsedContent.timeframe } : {}),
+                ...(parsedContent.budget ? { budget: parsedContent.budget } : {}),
+                ...(parsedContent.kpis ? { kpis: parsedContent.kpis } : {}),
+                ...(parsedContent.notes ? { notes: parsedContent.notes } : {})
+              } as FunnelData;
+              
+              console.log("Loaded funnel data:", safeContent);
+              setFunnelData(safeContent);
               setHasChanges(false);
             }
           } catch (e) {
