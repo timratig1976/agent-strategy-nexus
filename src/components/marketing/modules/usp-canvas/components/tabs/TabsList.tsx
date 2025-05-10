@@ -1,16 +1,18 @@
 
 import React from "react";
 import { TabsList as ShadcnTabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TabItem } from "@/components/ui/tabbed-content/types";
 
 interface TabsListProps {
   activeTab: string;
   onTabChange?: (value: string) => void;
   onSave: () => Promise<void>;
   isProcessing: boolean;
+  tabs?: TabItem[];
   children?: React.ReactNode;
 }
 
-const TabsList: React.FC<TabsListProps> = ({ activeTab, onTabChange, onSave, isProcessing, children }) => {
+const TabsList: React.FC<TabsListProps> = ({ activeTab, onTabChange, onSave, isProcessing, tabs, children }) => {
   return (
     <ShadcnTabsList className="w-full">
       {children ? (
@@ -55,7 +57,23 @@ const TabsList: React.FC<TabsListProps> = ({ activeTab, onTabChange, onSave, isP
           // Return other children unchanged
           return child;
         })
+      ) : tabs ? (
+        // Render from tabs array if provided
+        tabs.map((tab) => (
+          <TabsTrigger 
+            key={tab.id}
+            value={tab.id} 
+            className="relative"
+            onClick={() => onTabChange && onTabChange(tab.id)}
+          >
+            {tab.label}
+            {activeTab === tab.id && (
+              <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
+            )}
+          </TabsTrigger>
+        ))
       ) : (
+        // Default tabs if nothing else provided
         <>
           <TabsTrigger 
             value="canvas" 

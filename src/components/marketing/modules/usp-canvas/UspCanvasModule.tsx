@@ -73,7 +73,7 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     setSelectedValueItems([]);
   }, [canvasState]);
 
-  // Get tabs configuration
+  // Get tabs configuration - explicitly pass the tabs as TabItem[]
   const tabs = CanvasTabs({
     canvasId,
     canvasState,
@@ -88,8 +88,8 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     setSelectedValueItems,
     saveCanvasData,
     activeTab,
-    briefingContent,
-    personaContent
+    briefingContent: briefingContent || '',
+    personaContent: personaContent || ''
   });
 
   return (

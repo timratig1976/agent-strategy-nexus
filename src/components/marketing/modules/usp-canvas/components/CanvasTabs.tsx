@@ -10,6 +10,7 @@ import AIGeneratorTab from "./tabs/AIGeneratorTab";
 import HistoryTab from "./tabs/HistoryTab";
 import UspCanvasOverview from "../overview/UspCanvasOverview";
 import { mapCanvasToSpecificTypes } from "../utils/canvasMappers";
+import { TabItem } from "@/components/ui/tabbed-content/types";
 
 // Known tab values
 export const TABS = {
@@ -38,23 +39,25 @@ interface CanvasTabsProps {
   personaContent: string;
 }
 
-const CanvasTabs: React.FC<CanvasTabsProps> = ({
-  canvasId,
-  canvasState,
-  setCanvasState,
-  customerItems,
-  valueItems,
-  setCustomerItems,
-  setValueItems,
-  selectedCustomerItems,
-  selectedValueItems,
-  setSelectedCustomerItems,
-  setSelectedValueItems,
-  saveCanvasData,
-  activeTab,
-  briefingContent,
-  personaContent
-}) => {
+// Changed to return TabItem[] explicitly
+const CanvasTabs = (props: CanvasTabsProps): TabItem[] => {
+  const {
+    canvasId,
+    canvasState,
+    setCanvasState,
+    customerItems,
+    valueItems,
+    setCustomerItems,
+    setValueItems,
+    selectedCustomerItems,
+    selectedValueItems,
+    setSelectedCustomerItems,
+    setSelectedValueItems,
+    saveCanvasData,
+    briefingContent,
+    personaContent
+  } = props;
+
   return [
     {
       id: TABS.CANVAS,
