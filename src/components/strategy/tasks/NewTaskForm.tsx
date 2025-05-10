@@ -37,15 +37,41 @@ const NewTaskForm: React.FC<NewTaskFormProps> = ({
     
     try {
       // Create the new task
-      // Use as const to ensure TypeScript treats the state as a specific string literal
-      const stateAsString = state.toString() as "briefing" | "persona" | "pain_gains" | "funnel" | "ads" | "completed";
+      // Map the StrategyState enum to valid database values
+      // Skip "completed" as it's not a valid state in the database schema
+      let dbState: "briefing" | "persona" | "pain_gains" | "funnel" | "ads";
+      
+      switch(state) {
+        case StrategyState.BRIEFING:
+          dbState = "briefing";
+          break;
+        case StrategyState.PERSONA:
+          dbState = "persona";
+          break;
+        case StrategyState.PAIN_GAINS:
+          dbState = "pain_gains";
+          break;
+        case StrategyState.FUNNEL:
+          dbState = "funnel";
+          break;
+        case StrategyState.ADS:
+          dbState = "ads";
+          break;
+        case StrategyState.COMPLETED:
+          // Default to "ads" if the state is "completed" since it's not in the database schema
+          // This is a workaround - ideally the database schema should be updated to include "completed"
+          dbState = "ads";
+          break;
+        default:
+          dbState = "briefing"; // Default fallback
+      }
       
       const newTask = {
         id: uuidv4(),
         strategy_id: strategyId,
         title: title.trim(),
         description: description.trim(),
-        state: stateAsString,
+        state: dbState,
         is_completed: false,
       };
       

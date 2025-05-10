@@ -1,157 +1,133 @@
 
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import FunnelStages from "./components/FunnelStages";
+import { FunnelData, FunnelStage, FunnelStrategyModuleProps, isFunnelMetadata } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { 
-  FunnelStages, 
-  FunnelConfiguration, 
-  FunnelVisualization, 
-  FunnelAIGenerator,
-  FunnelActionPlan
-} from './components';
-import DocumentManager from "../documents/DocumentManager";
-import { 
-  FunnelData, 
-  FunnelStage, 
-  FunnelStrategyModuleProps, 
-  isFunnelMetadata 
-} from "./types";
+import { AgentResult } from "@/types/marketing";
 
-const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = () => {
-  const { id: strategyId } = useParams<{ id: string }>();
-  const [funnelData, setFunnelData] = useState<FunnelData>({ stages: [] });
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy }) => {
+  const [funnelData, setFunnelData] = useState<FunnelData>({
+    stages: [],
+    name: "",
+    primaryGoal: "",
+  });
   
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  
+  const strategyId = strategy?.id;
+  
+  // Load existing funnel data if available
   useEffect(() => {
-    if (strategyId) {
-      loadFunnelData();
-    }
-  }, [strategyId]);
-  
-  const loadFunnelData = async () => {
-    try {
-      setLoading(true);
-      
-      // Try to load existing funnel data for this strategy
-      const { data: results, error } = await supabase
-        .from('agent_results')
-        .select('*')
-        .eq('strategy_id', strategyId)
-        .eq('metadata->type', 'funnel')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      if (results && results.length > 0) {
-        // Find the most recent final result
-        const finalResult = results.find(result => {
-          // Use the type guard to check if metadata has the expected structure
-          return result.metadata && isFunnelMetadata(result.metadata) && 
-                (result.metadata.is_final === true || result.metadata.is_final === 'true');
-        });
-        
-        if (finalResult) {
-          try {
-            // Parse the content to get the funnel data
-            const parsedContent = JSON.parse(finalResult.content);
-            setFunnelData(parsedContent as FunnelData);
-          } catch (e) {
-            console.error("Error parsing funnel data:", e);
-            toast.error("Failed to parse saved funnel data");
-          }
-        }
-      }
-    } catch (err) {
-      console.error("Error loading funnel data:", err);
-      toast.error("Failed to load funnel data");
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const handleSaveFunnel = async (newData: FunnelData) => {
     if (!strategyId) return;
     
+    const loadFunnelData = async () => {
+      try {
+        // Get the most recent funnel result
+        const { data, error } = await supabase
+          .from('agent_results')
+          .select('*')
+          .eq('strategy_id', strategyId)
+          .eq('metadata->type', 'funnel')
+          .order('created_at', { ascending: false })
+          .limit(1);
+        
+        if (error) throw error;
+        if (!data || data.length === 0) return;
+        
+        // Check if the result has valid funnel data
+        const result = data[0] as AgentResult;
+        if (isFunnelMetadata(result.metadata) && result.content) {
+          try {
+            const parsedContent = JSON.parse(result.content) as FunnelData;
+            
+            if (parsedContent && parsedContent.stages) {
+              console.log("Loaded funnel data:", parsedContent);
+              setFunnelData(parsedContent);
+              setHasChanges(false);
+            }
+          } catch (e) {
+            console.error("Failed to parse funnel content:", e);
+          }
+        }
+      } catch (err) {
+        console.error("Error loading funnel data:", err);
+        toast.error("Failed to load funnel data");
+      }
+    };
+    
+    loadFunnelData();
+  }, [strategyId]);
+  
+  // Handle stages update
+  const handleStagesChange = (updatedStages: FunnelStage[]) => {
+    setFunnelData(prev => ({ ...prev, stages: updatedStages }));
+    setHasChanges(true);
+  };
+  
+  // Save funnel data
+  const handleSave = async () => {
+    if (!strategyId) return;
+    
+    setIsSaving(true);
+    
     try {
-      setSaving(true);
+      // Save as an agent result
+      const result = {
+        strategy_id: strategyId,
+        agent_id: null, // Since this is manual, no agent ID
+        content: JSON.stringify(funnelData),
+        metadata: {
+          type: 'funnel',
+          is_final: true,
+          created_by: 'user'
+        }
+      };
       
-      // Mark existing final results as non-final
-      await supabase.rpc('update_agent_results_final_status', {
-        strategy_id_param: strategyId,
-        result_type_param: 'funnel'
-      });
-      
-      // Save the new funnel data
       const { error } = await supabase
         .from('agent_results')
-        .insert({
-          strategy_id: strategyId,
-          content: JSON.stringify(newData),
-          metadata: {
-            type: 'funnel',
-            is_final: true,
-            updated_at: new Date().toISOString()
-          }
-        });
+        .insert(result);
       
       if (error) throw error;
       
-      toast.success("Funnel saved successfully");
-      setFunnelData(newData);
+      toast.success("Funnel strategy saved successfully");
+      setHasChanges(false);
     } catch (err) {
-      console.error("Error saving funnel:", err);
-      toast.error("Failed to save funnel");
+      console.error("Error saving funnel data:", err);
+      toast.error("Failed to save funnel strategy");
     } finally {
-      setSaving(false);
+      setIsSaving(false);
     }
-  };
-  
-  const handleStagesChange = (stages: FunnelStage[]) => {
-    const newData = { ...funnelData, stages };
-    setFunnelData(newData);
-    handleSaveFunnel(newData);
-  };
-  
-  const handleActionPlanSave = (actionPlans: Record<string, string>) => {
-    const newData = { ...funnelData, actionPlans };
-    setFunnelData(newData);
-    handleSaveFunnel(newData);
   };
   
   return (
-    <div className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <FunnelConfiguration />
-        
-        <FunnelVisualization 
-          funnelData={funnelData}
-          isLoading={loading}
-        />
-      </div>
-      
-      <div className="grid grid-cols-1 gap-8">
-        <FunnelStages 
-          stages={funnelData.stages} 
-          onStagesChange={handleStagesChange}
-        />
-        
-        <FunnelActionPlan 
-          stages={funnelData.stages}
-          onSave={handleActionPlanSave}
-          savedActionPlan={funnelData.actionPlans}
-          isLoading={saving}
-        />
-        
-        <FunnelAIGenerator 
-          strategyId={strategyId || ""}
-          funnelData={funnelData}
-          onGenerateComplete={loadFunnelData}
-        />
-      </div>
-      
-      {strategyId && <DocumentManager strategyId={strategyId} />}
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Funnel Strategy</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="mb-4 text-muted-foreground">
+            Define your marketing funnel stages and touchpoints for a complete customer journey.
+          </p>
+          
+          <FunnelStages 
+            stages={funnelData.stages}
+            onStagesChange={handleStagesChange}
+          />
+        </CardContent>
+        <CardFooter className="flex justify-end">
+          <Button
+            onClick={handleSave}
+            disabled={!hasChanges || isSaving}
+          >
+            {isSaving ? "Saving..." : "Save Funnel Strategy"}
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 };
