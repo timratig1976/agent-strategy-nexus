@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,9 +7,9 @@ import { FunnelData, FunnelStage, FunnelStrategyModuleProps, isFunnelMetadata } 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// ✅ Flacher Json-Typ zur Vermeidung von TS2589
+// ✅ Flacher Json-Typ zur Vermeidung von TS2589 - ganz oben nach den Imports platziert
 type JsonPrimitive = string | number | boolean | null;
-type Json = JsonPrimitive | JsonPrimitive[] | { [key: string]: JsonPrimitive | JsonPrimitive[] };
+type LocalJson = JsonPrimitive | JsonPrimitive[] | { [key: string]: JsonPrimitive | JsonPrimitive[] };
 
 // ✅ Factory-Funktion: verhindert tiefe Typ-Inferenz
 function createInitialFunnelData(): FunnelData {
@@ -104,13 +105,13 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
     setIsSaving(true);
 
     try {
-      // ✅ Casting zu lokalem Json-Typ verhindert Typkonflikte
+      // ✅ Casting zu lokalem LocalJson-Typ verhindert Typkonflikte
       const metadata = {
         type: "funnel",
         is_final: true,
         created_by: "user",
         updated_at: new Date().toISOString(),
-      } as unknown as Json;
+      } as unknown as LocalJson;
 
       const result = {
         strategy_id: strategyId,
