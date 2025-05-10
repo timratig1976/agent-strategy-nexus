@@ -3,27 +3,17 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import FunnelStages from "./components/FunnelStages";
-// Import only what we need and avoid recursive types
-import { FunnelStrategyModuleProps } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// ✅ Flacher Json-Typ zur Vermeidung von TS2589 - ganz oben nach den Imports platziert
-type JsonPrimitive = string | number | boolean | null;
-type LocalJson = JsonPrimitive | JsonPrimitive[] | { [key: string]: JsonPrimitive | JsonPrimitive[] };
-
-function isFunnelMetadata(meta: any): boolean {
-  return meta?.type === "funnel";
-}
-
-// ✅ Lokale Definition des TouchPoint-Typs 
+// ✅ Definition of local types to avoid recursive type problems
+// Define simple local types that don't reference complex JSON types
 type TouchPoint = {
   id: string;
   name: string;
   channelType?: string;
 };
 
-// ✅ Lokale Definition des FunnelStage-Typs
 type FunnelStage = {
   id: string;
   name: string;
@@ -32,7 +22,6 @@ type FunnelStage = {
   keyMetrics?: string[];
 };
 
-// ✅ Lokale Definition des FunnelData-Typs
 type FunnelData = {
   stages: FunnelStage[];
   name: string;
@@ -51,7 +40,34 @@ type FunnelData = {
   version?: number;
 };
 
-// ✅ Factory-Funktion: verhindert tiefe Typ-Inferenz
+// ✅ Local definition of the props type
+type FunnelStrategyModuleProps = {
+  strategy?: {
+    id: string;
+    name?: string;
+  };
+};
+
+// ✅ Helper function to safely parse funnel stage data
+function parseFunnelStage(rawStage: any): FunnelStage {
+  return {
+    id: String(rawStage.id || ''),
+    name: String(rawStage.name || ''),
+    description: String(rawStage.description || ''),
+    touchPoints: Array.isArray(rawStage.touchPoints) 
+      ? rawStage.touchPoints.map((tp: any) => ({
+          id: String(tp.id || ''),
+          name: String(tp.name || ''),
+          channelType: String(tp.channelType || '')
+        }))
+      : [],
+    keyMetrics: Array.isArray(rawStage.keyMetrics) 
+      ? rawStage.keyMetrics.map(String)
+      : []
+  };
+}
+
+// ✅ Helper function to create a safe initial state
 function createInitialFunnelData(): FunnelData {
   return {
     stages: [],
@@ -72,8 +88,15 @@ function createInitialFunnelData(): FunnelData {
   };
 }
 
+// Helper to check if metadata is funnel type
+function isFunnelMetadata(meta: any): boolean {
+  return meta?.type === "funnel";
+}
+
+// Define a simple JSON type for supabase interactions
+type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
+
 const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy }) => {
-  // ✅ useState ohne explizite Typangabe – Factory liefert den Typ
   const [funnelData, setFunnelData] = useState(() => createInitialFunnelData());
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -100,10 +123,13 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
 
         if (dbResult.metadata && isFunnelMetadata(dbResult.metadata)) {
           try {
-            const parsedContent = JSON.parse(dbResult.content) as Record<string, unknown>;
-
+            const parsedContent = JSON.parse(dbResult.content);
+            
+            // ✅ Use the safe parsing approach instead of direct casting
             const safeContent: FunnelData = {
-              stages: Array.isArray(parsedContent.stages) ? parsedContent.stages as FunnelStage[] : [],
+              stages: Array.isArray(parsedContent.stages) 
+                ? parsedContent.stages.map((stage: any) => parseFunnelStage(stage))
+                : [],
               name: String(parsedContent.name || ""),
               primaryGoal: String(parsedContent.primaryGoal || ""),
               leadMagnetType: String(parsedContent.leadMagnetType || ""),
@@ -145,13 +171,12 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
     setIsSaving(true);
 
     try {
-      // ✅ Casting zu lokalem LocalJson-Typ verhindert Typkonflikte
       const metadata = {
         type: "funnel",
         is_final: true,
         created_by: "user",
         updated_at: new Date().toISOString(),
-      } as unknown as LocalJson;
+      } as JsonValue;
 
       const result = {
         strategy_id: strategyId,
