@@ -41,14 +41,17 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
         // Map database result to AgentResult type
         const dbResult = data[0];
         
-        // Convert snake_case to camelCase for AgentResult type
+        // Convert snake_case to camelCase for AgentResult type and ensure metadata is an object
         const result: AgentResult = {
           id: dbResult.id,
           agentId: dbResult.agent_id,
           strategyId: dbResult.strategy_id,
           content: dbResult.content,
           createdAt: dbResult.created_at,
-          metadata: dbResult.metadata || {}
+          // Ensure metadata is treated as a Record<string, any> or default to empty object
+          metadata: (typeof dbResult.metadata === 'object' && dbResult.metadata !== null) 
+            ? dbResult.metadata as Record<string, any> 
+            : {}
         };
         
         // Check if the result has valid funnel data
