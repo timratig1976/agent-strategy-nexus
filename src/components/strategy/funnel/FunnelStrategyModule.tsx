@@ -6,6 +6,7 @@ import { useFunnelData } from "./hooks/useFunnelData";
 import FunnelHeader from "./components/FunnelHeader";
 import FunnelFooter from "./components/FunnelFooter";
 import FunnelStages from "./components/FunnelStages";
+import useStrategyNavigation from "@/hooks/useStrategyNavigation";
 
 const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy }) => {
   const strategyId = strategy?.id;
@@ -18,10 +19,26 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
     handleSave,
   } = useFunnelData(strategyId);
 
+  // Add navigation functionality
+  const { navigateToPreviousStep, isNavigating } = useStrategyNavigation({
+    strategyId,
+    onRefetch: () => {} // No need to refetch here as navigation will change the page
+  });
+
+  // Handler to go back to USP Canvas (pain_gains) stage
+  const handleNavigateBack = () => {
+    if (strategyId) {
+      navigateToPreviousStep('funnel');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
-        <FunnelHeader />
+        <FunnelHeader 
+          onNavigateBack={handleNavigateBack} 
+          isNavigatingBack={isNavigating}
+        />
         
         <CardContent>
           <p className="mb-4 text-muted-foreground">
