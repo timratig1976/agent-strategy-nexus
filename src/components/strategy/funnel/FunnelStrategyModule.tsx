@@ -11,7 +11,21 @@ import {
   FunnelActionPlan
 } from './components';
 import DocumentManager from "../documents/DocumentManager";
-import { FunnelData, FunnelStage, FunnelStrategyModuleProps, isFunnelMetadata } from "./types";
+import { 
+  FunnelData, 
+  FunnelStage, 
+  FunnelStrategyModuleProps, 
+  isFunnelMetadata 
+} from "./types";
+
+interface AgentResult {
+  id: string;
+  content: string;
+  metadata: any;
+  created_at: string;
+  strategy_id: string;
+  [key: string]: any;
+}
 
 const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = () => {
   const { strategyId } = useParams<{ strategyId: string }>();
@@ -39,20 +53,22 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = () => {
       
       if (error) throw error;
       
-      // Find the most recent final result
-      const finalResult = results?.find(result => {
-        // Use the type guard to check if metadata has the expected structure
-        return result.metadata && isFunnelMetadata(result.metadata) && 
-              (result.metadata.is_final === true || result.metadata.is_final === 'true');
-      });
-      
-      if (finalResult) {
-        try {
-          const parsedContent = JSON.parse(finalResult.content);
-          setFunnelData(parsedContent);
-        } catch (e) {
-          console.error("Error parsing funnel data:", e);
-          toast.error("Failed to parse saved funnel data");
+      if (results && results.length > 0) {
+        // Find the most recent final result
+        const finalResult = results.find(result => {
+          // Use the type guard to check if metadata has the expected structure
+          return result.metadata && isFunnelMetadata(result.metadata) && 
+                (result.metadata.is_final === true || result.metadata.is_final === 'true');
+        });
+        
+        if (finalResult) {
+          try {
+            const parsedContent = JSON.parse(finalResult.content);
+            setFunnelData(parsedContent);
+          } catch (e) {
+            console.error("Error parsing funnel data:", e);
+            toast.error("Failed to parse saved funnel data");
+          }
         }
       }
     } catch (err) {

@@ -27,7 +27,8 @@ export interface FunnelData {
 }
 
 /**
- * Represents metadata for an agent result specifically for funnel data
+ * Explicitly defined metadata structure for funnel agent results
+ * to prevent excessive type depth
  */
 export interface FunnelAgentResultMetadata {
   type: 'funnel';
@@ -40,7 +41,12 @@ export interface FunnelAgentResultMetadata {
  * Props for the FunnelStrategyModule component
  */
 export interface FunnelStrategyModuleProps {
-  strategy?: any;
+  strategy?: {
+    id: string;
+    name: string;
+    state: string;
+    [key: string]: any;
+  };
   onNavigateBack?: () => Promise<void>;
 }
 
