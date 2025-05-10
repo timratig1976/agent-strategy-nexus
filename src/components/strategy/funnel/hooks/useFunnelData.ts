@@ -42,8 +42,8 @@ export function useFunnelData(strategyId: string | undefined) {
               ? JSON.parse(dbResult.content) 
               : dbResult.content;
             
-            // Create a new funnel data object with proper type safety
-            const safeContent: FunnelData = {
+            // Create a new funnel data object WITHOUT explicit type annotation
+            const safeContent = {
               stages: Array.isArray(rawContent.stages) 
                 ? rawContent.stages.map((stage: any) => parseFunnelStage(stage))
                 : [],
@@ -63,7 +63,8 @@ export function useFunnelData(strategyId: string | undefined) {
               version: Number(rawContent.version || 1),
             };
 
-            setFunnelData(safeContent);
+            // Type assertion at the set call is safer than in-variable declaration
+            setFunnelData(safeContent as FunnelData);
             setHasChanges(false);
           } catch (e) {
             console.error("Failed to parse funnel content:", e);
