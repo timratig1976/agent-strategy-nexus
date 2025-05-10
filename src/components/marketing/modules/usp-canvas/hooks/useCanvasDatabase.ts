@@ -30,19 +30,20 @@ export default function useCanvasDatabase(canvasId: string) {
 
   // Save canvas data to the database history table
   const saveCanvasSnapshot = useCallback(
-    async (data: CanvasSnapshot): Promise<boolean> => {
+    async (data: CanvasSnapshot, isFinal: boolean = false): Promise<boolean> => {
       if (!canvasId) return false;
       
       setLoading(true);
       setError(null);
       
       try {
-        console.log('Saving canvas snapshot to database', { canvasId, data });
+        console.log('Saving canvas snapshot to database', { canvasId, data, isFinal });
         
         // Prepare metadata
         const metadata = {
           type: 'pain_gains',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          isFinal
         };
         
         // Deep clone and transform data to ensure it's properly serializable
@@ -85,7 +86,7 @@ export default function useCanvasDatabase(canvasId: string) {
     try {
       console.log('Loading canvas history from database', { canvasId });
       
-      const { data, error: fetchError }: PostgrestSingleResponse<any[]> = await supabase
+      const { data, error: fetchError } = await supabase
         .from('canvas_history')
         .select('*')
         .eq('canvas_id', canvasId)
@@ -101,7 +102,7 @@ export default function useCanvasDatabase(canvasId: string) {
       }
       
       // Transform the data to ensure type safety
-      const typedData: CanvasHistoryRecord[] = data.map(item => ({
+      const typedData: CanvasHistoryRecord[] = (data as any[]).map(item => ({
         id: item.id,
         canvas_id: item.canvas_id,
         snapshot_data: item.snapshot_data as CanvasSnapshot,
@@ -121,5 +122,19 @@ export default function useCanvasDatabase(canvasId: string) {
     }
   }, [canvasId]);
 
-  return { loading, error, saveCanvasSnapshot, loadCanvasHistory };
+  // Function to save a final canvas state (for marking completion)
+  const saveFinalCanvasState = useCallback(
+    async (data: CanvasSnapshot): Promise<boolean> => {
+      return saveCanvasSnapshot(data, true);
+    },
+    [saveCanvasSnapshot]
+  );
+
+  return { 
+    loading, 
+    error, 
+    saveCanvasSnapshot, 
+    saveFinalCanvasState, 
+    loadCanvasHistory 
+  };
 }

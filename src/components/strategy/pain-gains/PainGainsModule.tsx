@@ -14,6 +14,15 @@ interface PainGainsModuleProps {
   personaAgentResult: AgentResult | null;
 }
 
+interface CanvasHistoryRecord {
+  id: string;
+  canvas_id: string;
+  metadata: {
+    isFinal?: boolean;
+    type?: string;
+  } | null;
+}
+
 const PainGainsModule: React.FC<PainGainsModuleProps> = ({
   strategy,
   agentResults,
@@ -30,9 +39,9 @@ const PainGainsModule: React.FC<PainGainsModuleProps> = ({
         // Here we'll check for canvas history with final flag
         const { data, error } = await supabase
           .from('canvas_history')
-          .select('*')
+          .select('id, canvas_id, metadata')
           .eq('canvas_id', strategy.id)
-          .eq('metadata->isFinal', true)
+          .filter('metadata->isFinal', 'eq', true)
           .maybeSingle();
         
         if (data) {

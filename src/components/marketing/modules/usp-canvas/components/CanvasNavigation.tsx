@@ -1,40 +1,57 @@
 
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import React from 'react';
+import { Button } from '@/components/ui/button';
 
 interface CanvasNavigationProps {
   onNavigateBack?: () => void;
   onNavigateNext?: () => void;
   prevStageLabel?: string;
   nextStageLabel?: string;
+  onFinalize?: () => Promise<void>;
+  canFinalize?: boolean;
 }
 
 const CanvasNavigation: React.FC<CanvasNavigationProps> = ({
   onNavigateBack,
   onNavigateNext,
-  prevStageLabel = 'Back',
-  nextStageLabel = 'Next'
+  prevStageLabel = "Back",
+  nextStageLabel = "Next",
+  onFinalize,
+  canFinalize = true,
 }) => {
-  if (!onNavigateBack && !onNavigateNext) return null;
-  
   return (
-    <div className="flex justify-between mt-8 pt-4 border-t">
+    <div className="flex justify-between mt-8 pb-8">
       {onNavigateBack && (
-        <Button
-          onClick={onNavigateBack}
+        <Button 
           variant="outline"
-          className="flex items-center"
+          onClick={onNavigateBack}
+          size="lg"
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
           {prevStageLabel}
         </Button>
       )}
-      {onNavigateNext && (
-        <Button onClick={onNavigateNext}>
-          {nextStageLabel}
-        </Button>
-      )}
+      
+      <div className="flex gap-3">
+        {onFinalize && (
+          <Button 
+            variant="secondary"
+            onClick={onFinalize}
+            size="lg"
+            disabled={!canFinalize}
+          >
+            Finalize & Save
+          </Button>
+        )}
+        
+        {onNavigateNext && (
+          <Button 
+            onClick={onNavigateNext}
+            size="lg"
+          >
+            {nextStageLabel}
+          </Button>
+        )}
+      </div>
     </div>
   );
 };

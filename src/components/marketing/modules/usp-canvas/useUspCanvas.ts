@@ -18,6 +18,7 @@ export const useUspCanvas = (canvasId: string) => {
     loading, 
     error, 
     saveCanvasSnapshot, 
+    saveFinalCanvasState,
     loadCanvasHistory 
   } = useCanvasDatabase(canvasId);
 
@@ -61,7 +62,7 @@ export const useUspCanvas = (canvasId: string) => {
   }, [canvasId, loadCanvasHistory]);
 
   // Save canvas data to database only
-  const saveCanvasData = useCallback(async () => {
+  const saveCanvasData = useCallback(async (finalState: boolean = false) => {
     if (!canvasId) return;
     
     setIsProcessing(true);
@@ -72,11 +73,16 @@ export const useUspCanvas = (canvasId: string) => {
         timestamp: new Date().toISOString(),
       };
       
-      // Save to database
-      const saved = await saveCanvasSnapshot(canvasData);
+      // Save to database with final flag if needed
+      const saved = finalState ? 
+        await saveFinalCanvasState(canvasData) : 
+        await saveCanvasSnapshot(canvasData);
       
       if (saved) {
-        toast.success('Canvas saved successfully to database');
+        toast.success(finalState ? 
+          'Canvas finalized and saved successfully' : 
+          'Canvas saved successfully to database'
+        );
       } else {
         toast.error('Failed to save canvas');
       }
@@ -86,7 +92,12 @@ export const useUspCanvas = (canvasId: string) => {
     } finally {
       setIsProcessing(false);
     }
-  }, [canvasId, customerItems, valueItems, saveCanvasSnapshot]);
+  }, [canvasId, customerItems, valueItems, saveCanvasSnapshot, saveFinalCanvasState]);
+
+  // Save as final state (completion)
+  const finalizeCanvas = useCallback(async () => {
+    return saveCanvasData(true);
+  }, [saveCanvasData]);
 
   // Provide methods and state to components
   return {
@@ -98,6 +109,7 @@ export const useUspCanvas = (canvasId: string) => {
     setValueItems,
     isProcessing,
     saveCanvasData,
+    finalizeCanvas,
     isLoading: loading || isProcessing,
     error
   };

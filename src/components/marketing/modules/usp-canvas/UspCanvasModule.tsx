@@ -44,6 +44,7 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     setValueItems,
     isProcessing,
     saveCanvasData,
+    finalizeCanvas,
     isLoading,
     error
   } = useUspCanvas(canvasId);
@@ -72,6 +73,22 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     setSelectedCustomerItems([]);
     setSelectedValueItems([]);
   }, [canvasState]);
+
+  // Handle finalize and navigate
+  const handleFinalizeAndContinue = useCallback(async () => {
+    try {
+      // Save with final flag
+      await finalizeCanvas();
+      
+      // Navigate if we have a navigation function
+      if (onNavigateNext) {
+        onNavigateNext();
+      }
+    } catch (err) {
+      console.error('Error finalizing canvas:', err);
+      toast.error('Failed to finalize canvas');
+    }
+  }, [finalizeCanvas, onNavigateNext]);
 
   // Get tabs configuration - explicitly pass the tabs as TabItem[]
   const tabs = CanvasTabs({
@@ -106,6 +123,8 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
         onNavigateNext={onNavigateNext}
         prevStageLabel={prevStageLabel}
         nextStageLabel={nextStageLabel}
+        onFinalize={handleFinalizeAndContinue}
+        canFinalize={customerItems.length > 0 || valueItems.length > 0}
       />
     </div>
   );
