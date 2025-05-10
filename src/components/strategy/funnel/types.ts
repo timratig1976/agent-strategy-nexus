@@ -4,7 +4,12 @@ export interface FunnelStage {
   name: string;
   description: string;
   keyMetrics: string[];
-  touchpoints: string[];
+  touchpoints: TouchPoint[];
+}
+
+export interface TouchPoint {
+  id: string;
+  name: string;
 }
 
 export interface FunnelStrategyModuleProps {

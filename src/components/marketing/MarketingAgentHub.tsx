@@ -3,7 +3,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AgentType, MarketingPhase } from "@/types/marketing";
+import { MarketingPhase } from "@/types/marketing";
 import { Projector, Users, BarChartBig, Mail, MessageSquare, Search } from "lucide-react";
 import {
   Select,
@@ -16,80 +16,80 @@ import { SettingsIcon } from "lucide-react";
 
 const MarketingAgentHub = () => {
   const navigate = useNavigate();
-  const [selectedPhase, setSelectedPhase] = React.useState<MarketingPhase>("briefing");
+  const [selectedPhase, setSelectedPhase] = React.useState<string>(MarketingPhase.BRIEFING);
 
-  const handleModuleNavigation = (type: MarketingPhase) => {
+  const handleModuleNavigation = (type: string) => {
     navigate(`/module?type=${type}`);
   };
 
   const agentModules: {
-    phase: MarketingPhase;
+    phase: string;
     title: string;
     description: string;
     icon: React.ComponentType<{ className?: string }>;
   }[] = [
     {
-      phase: "briefing",
+      phase: MarketingPhase.BRIEFING,
       title: "Project Briefing",
       description: "Define project goals, target audience, and key performance indicators.",
       icon: Projector,
     },
     {
-      phase: "website_analysis",
+      phase: MarketingPhase.WEBSITE_ANALYSIS,
       title: "Website Analysis",
       description: "Analyze website performance and identify areas for improvement.",
       icon: Search,
     },
     {
-      phase: "persona_development",
+      phase: MarketingPhase.PERSONA_DEVELOPMENT,
       title: "Persona Development",
       description: "Create detailed buyer personas for targeted marketing efforts.",
       icon: Users,
     },
     {
-      phase: "usp_canvas",
+      phase: MarketingPhase.USP_CANVAS,
       title: "USP Canvas",
       description: "Define your Unique Selling Proposition using the USP Canvas.",
       icon: Projector,
     },
     {
-      phase: "usp_generator",
+      phase: MarketingPhase.USP_GENERATOR,
       title: "USP Generator",
       description: "Generate unique selling propositions to differentiate your brand.",
       icon: Projector,
     },
     {
-      phase: "channel_strategy",
+      phase: MarketingPhase.CHANNEL_STRATEGY,
       title: "Channel Strategy",
       description: "Determine the best marketing channels for reaching your audience.",
       icon: BarChartBig,
     },
     {
-      phase: "roas_calculator",
+      phase: MarketingPhase.ROAS_CALCULATOR,
       title: "ROAS Calculator",
       description: "Calculate return on ad spend and optimize marketing investments.",
       icon: BarChartBig,
     },
     {
-      phase: "campaign_ideas",
+      phase: MarketingPhase.CAMPAIGN_IDEAS,
       title: "Campaign Ideas",
       description: "Generate innovative marketing campaign ideas.",
       icon: MessageSquare,
     },
     {
-      phase: "ad_creative",
+      phase: MarketingPhase.AD_CREATIVE,
       title: "Ad Creative",
       description: "Create compelling ad copy and visuals.",
       icon: MessageSquare,
     },
     {
-      phase: "lead_magnets",
+      phase: MarketingPhase.LEAD_MAGNETS,
       title: "Lead Magnets",
       description: "Develop lead magnet ideas to attract and convert potential customers.",
       icon: Mail,
     },
     {
-      phase: "content_strategy",
+      phase: MarketingPhase.CONTENT_STRATEGY,
       title: "Content Strategy",
       description: "Develop a content strategy to attract and engage your target audience.",
       icon: MessageSquare,

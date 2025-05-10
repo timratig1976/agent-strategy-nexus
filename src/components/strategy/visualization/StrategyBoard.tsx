@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -28,6 +27,13 @@ interface StrategyBoardProps {
   currentStage?: StrategyState;
 }
 
+// Define node types outside the component to avoid re-creation on each render
+const nodeTypes: NodeTypes = {
+  stageNode: StageNode,
+  resultNode: ResultNode,
+  strategyNode: StrategyNode
+};
+
 const StrategyBoard: React.FC<StrategyBoardProps> = ({
   strategyId,
   agentResults = [],
@@ -43,12 +49,14 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
     r.metadata?.is_final === true && r.metadata?.type === 'pain_gains'
   );
 
-  // Define custom node types
-  const nodeTypes: NodeTypes = {
-    stageNode: StageNode,
-    resultNode: ResultNode,
-    strategyNode: StrategyNode
-  };
+  // Define stages in order - memoize to prevent recreation
+  const stages = useMemo(() => [
+    StrategyState.BRIEFING, 
+    StrategyState.PERSONA, 
+    StrategyState.PAIN_GAINS, 
+    StrategyState.FUNNEL, 
+    StrategyState.ADS
+  ], []);
 
   // Set up initial nodes and edges based on strategy data
   useEffect(() => {
@@ -77,9 +85,6 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
       const adResult = agentResults.find(r => 
         r.metadata?.is_final === true && r.metadata?.type === 'ads'
       );
-
-      // Define stages in order
-      const stages: StrategyState[] = ['briefing', 'persona', 'pain_gains', 'funnel', 'ads'];
       
       // Create nodes for each stage
       const stageNodes: Node[] = stages.map((stage, index) => {
@@ -181,6 +186,8 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
         });
       }
       
+      setNodes([...stageNodes, ...resultNodes]);
+      
       // Connect stage nodes with edges
       const stageEdges: Edge[] = [];
       for (let i = 0; i < stages.length - 1; i++) {
@@ -209,13 +216,12 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
         });
       });
 
-      setNodes([...stageNodes, ...resultNodes]);
       setEdges([...stageEdges, ...resultEdges]);
       setIsLoading(false);
     };
 
     generateNodesAndEdges();
-  }, [strategyId, agentResults, currentStage]);
+  }, [strategyId, agentResults, currentStage, stages]);
 
   // Helper function to truncate content
   const truncateContent = (content: string, maxLength: number): string => {
@@ -229,9 +235,8 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
   const isStageCompleted = (stage: StrategyState, currentStage?: StrategyState): boolean => {
     if (!currentStage) return false;
     
-    const stages: StrategyState[] = ['briefing', 'persona', 'pain_gains', 'funnel', 'ads'];
-    const currentIndex = stages.indexOf(currentStage);
     const stageIndex = stages.indexOf(stage);
+    const currentIndex = stages.indexOf(currentStage);
     
     return stageIndex < currentIndex;
   };
@@ -239,15 +244,15 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
   // Helper function to get icon for a stage
   const getStageIcon = (stage: StrategyState) => {
     switch (stage) {
-      case 'briefing':
+      case StrategyState.BRIEFING:
         return <FileText size={20} />;
-      case 'persona':
+      case StrategyState.PERSONA:
         return <User size={20} />;
-      case 'pain_gains':
+      case StrategyState.PAIN_GAINS:
         return <Star size={20} />;
-      case 'funnel':
+      case StrategyState.FUNNEL:
         return <BarChart2 size={20} />;
-      case 'ads':
+      case StrategyState.ADS:
         return <MessageSquare size={20} />;
       default:
         return null;
@@ -266,7 +271,7 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
   const handleNodeClick = (event: React.MouseEvent, node: Node) => {
     setSelectedNode(node.id);
   };
-
+  
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Loading strategy visualization...</div>;
   }

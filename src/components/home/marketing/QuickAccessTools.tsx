@@ -5,7 +5,7 @@ import { Users, FileText, Target, Megaphone, Zap, Film } from "lucide-react";
 import { MarketingPhase } from "@/types/marketing";
 
 interface QuickAccessToolsProps {
-  handlePhaseSelect: (phase: MarketingPhase) => void;
+  handlePhaseSelect: (phase: string) => void;
   isAuthenticated: boolean;
   dbStatus: 'checking' | 'ready' | 'not-setup';
 }

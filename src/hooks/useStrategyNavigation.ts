@@ -16,29 +16,29 @@ export const useStrategyNavigation = ({ strategyId, onRefetch }: UseStrategyNavi
   /**
    * Navigate to previous state in the strategy flow
    */
-  const navigateToPreviousStep = useCallback(async (currentState: StrategyState) => {
+  const navigateToPreviousStep = useCallback(async (currentState: string) => {
     if (!strategyId) return;
     
     try {
       setIsNavigating(true);
-      let previousState: StrategyState;
+      let previousState: string;
       
       // Determine the previous state based on the current state
       switch(currentState) {
-        case 'funnel':
-          previousState = 'pain_gains';
+        case StrategyState.FUNNEL:
+          previousState = StrategyState.PAIN_GAINS;
           break;
-        case 'pain_gains':
-          previousState = 'persona';
+        case StrategyState.PAIN_GAINS:
+          previousState = StrategyState.PERSONA;
           break;
-        case 'persona':
-          previousState = 'briefing';
+        case StrategyState.PERSONA:
+          previousState = StrategyState.BRIEFING;
           break;
-        case 'ads':
-          previousState = 'funnel';
+        case StrategyState.ADS:
+          previousState = StrategyState.FUNNEL;
           break;
         default:
-          previousState = 'briefing';
+          previousState = StrategyState.BRIEFING;
       }
       
       console.log(`Going back from ${currentState} to ${previousState}`);
@@ -70,29 +70,29 @@ export const useStrategyNavigation = ({ strategyId, onRefetch }: UseStrategyNavi
   /**
    * Navigate to next state in the strategy flow
    */
-  const navigateToNextStep = useCallback(async (currentState: StrategyState) => {
+  const navigateToNextStep = useCallback(async (currentState: string) => {
     if (!strategyId) return;
     
     try {
       setIsNavigating(true);
-      let nextState: StrategyState;
+      let nextState: string;
       
       // Determine the next state based on the current state
       switch(currentState) {
-        case 'briefing':
-          nextState = 'persona';
+        case StrategyState.BRIEFING:
+          nextState = StrategyState.PERSONA;
           break;
-        case 'persona':
-          nextState = 'pain_gains';
+        case StrategyState.PERSONA:
+          nextState = StrategyState.PAIN_GAINS;
           break;
-        case 'pain_gains':
-          nextState = 'funnel';
+        case StrategyState.PAIN_GAINS:
+          nextState = StrategyState.FUNNEL;
           break;
-        case 'funnel':
-          nextState = 'ads';
+        case StrategyState.FUNNEL:
+          nextState = StrategyState.ADS;
           break;
         default:
-          nextState = 'briefing';
+          nextState = StrategyState.BRIEFING;
       }
       
       console.log(`Moving forward from ${currentState} to ${nextState}`);

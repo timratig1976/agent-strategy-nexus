@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { AgentResult, StrategyState } from "@/types/marketing";
+import { toStrategyState } from '@/utils/typeUtils';
 
 const StrategyBoardPage = () => {
   const { strategyId } = useParams<{ strategyId: string }>();
@@ -36,7 +37,7 @@ const StrategyBoardPage = () => {
       if (strategyError) throw strategyError;
       
       if (strategy) {
-        setCurrentStage(strategy.state as StrategyState);
+        setCurrentStage(toStrategyState(strategy.state));
       }
       
       // Fetch all agent results for this strategy
