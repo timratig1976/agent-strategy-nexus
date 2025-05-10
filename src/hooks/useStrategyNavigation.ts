@@ -44,7 +44,7 @@ export const useStrategyNavigation = ({ strategyId, onRefetch }: UseStrategyNavi
       console.log(`Going back from ${currentState} to ${previousState}`);
       
       // Update the strategy state
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('strategies')
         .update({ state: previousState })
         .eq('id', strategyId)
@@ -98,7 +98,7 @@ export const useStrategyNavigation = ({ strategyId, onRefetch }: UseStrategyNavi
       console.log(`Moving forward from ${currentState} to ${nextState}`);
       
       // Update the strategy state
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('strategies')
         .update({ state: nextState })
         .eq('id', strategyId)

@@ -31,8 +31,20 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
 
   // Handler to go back to USP Canvas (pain_gains) stage
   const handleNavigateBack = () => {
-    if (strategyId) {
+    if (!strategyId) {
+      toast.error("Strategy ID is missing");
+      return;
+    }
+    
+    console.log("Attempting to navigate back from funnel to pain_gains");
+    try {
       navigateToPreviousStep(StrategyState.FUNNEL);
+    } catch (error) {
+      console.error("Navigation error:", error);
+      toast.error("Failed to navigate back to USP Canvas");
+      
+      // Fallback direct navigation if the hook fails
+      navigate(`/strategy-details/${strategyId}`);
     }
   };
 
