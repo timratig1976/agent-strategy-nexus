@@ -102,7 +102,7 @@ const GeneratorForm: React.FC<FormProps> = ({
                 ) : (
                   <>
                     <Info className="h-4 w-4 mr-2" />
-                    Generate Value Proposition
+                    Generate Customer Profile
                   </>
                 )}
               </Button>
