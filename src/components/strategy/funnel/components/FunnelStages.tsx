@@ -24,7 +24,7 @@ const FunnelStages: React.FC<FunnelStagesProps> = ({ stages, onStagesChange }) =
       name: newStageName,
       description: "",
       touchPoints: [],
-      keyMetrics: [] // Initialize empty keyMetrics array
+      keyMetrics: []  // Initialize with empty array
     };
     
     onStagesChange([...stages, newStage]);
@@ -52,7 +52,7 @@ const FunnelStages: React.FC<FunnelStagesProps> = ({ stages, onStagesChange }) =
     const newTouchpoint: TouchPoint = {
       id: uuidv4(),
       name: touchpointName,
-      channelType: "default"
+      channelType: "default"  // Include this property
     };
     
     const updatedStages = stages.map(stage => {

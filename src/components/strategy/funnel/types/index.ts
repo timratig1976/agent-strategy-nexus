@@ -7,7 +7,7 @@ import { Json } from "@/integrations/supabase/types";
 export interface TouchPoint {
   id: string;
   name: string;
-  channelType?: string; // Made optional to match usage in code
+  channelType?: string;
 }
 
 /**
@@ -18,7 +18,7 @@ export interface FunnelStage {
   name: string;
   description: string;
   touchPoints: TouchPoint[];
-  keyMetrics?: string[]; // Added to fix errors in FunnelStages and FunnelVisualization
+  keyMetrics?: string[];
 }
 
 /**

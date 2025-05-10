@@ -10,7 +10,7 @@ import { StrategyState } from "@/types/marketing";
 
 interface NewTaskFormProps {
   strategyId: string;
-  state: StrategyState;  // Updated to explicitly use StrategyState
+  state: StrategyState;
   onTaskAdded: () => void;
   onCancel?: () => void;
 }
@@ -36,13 +36,16 @@ const NewTaskForm: React.FC<NewTaskFormProps> = ({
     setIsSubmitting(true);
     
     try {
-      // Create the new task with state as a string instead of enum
+      // Create the new task
+      // Use as const to ensure TypeScript treats the state as a specific string literal
+      const stateAsString = state.toString() as "briefing" | "persona" | "pain_gains" | "funnel" | "ads" | "completed";
+      
       const newTask = {
         id: uuidv4(),
         strategy_id: strategyId,
         title: title.trim(),
         description: description.trim(),
-        state: state.toString(), // Convert enum to string for database
+        state: stateAsString,
         is_completed: false,
       };
       
