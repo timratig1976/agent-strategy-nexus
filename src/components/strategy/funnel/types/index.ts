@@ -52,16 +52,24 @@ export interface FunnelStrategyModuleProps {
   };
 }
 
-// Type guard for funnel metadata
-export const isFunnelMetadata = (metadata: any): metadata is { 
-  type: string; 
+/**
+ * Specific interface for funnel metadata to avoid recursive type issues
+ */
+export interface FunnelMetadata {
+  type: string;
   is_final?: boolean | string;
-} => {
-  return metadata 
-    && typeof metadata === 'object' 
-    && metadata.type === 'funnel'
-    && (metadata.is_final === undefined || 
-        typeof metadata.is_final === 'boolean' || 
-        metadata.is_final === 'true' || 
-        metadata.is_final === 'false');
-};
+  created_by?: string;
+  version?: number;
+}
+
+/**
+ * Type guard for funnel metadata
+ */
+export function isFunnelMetadata(metadata: unknown): metadata is FunnelMetadata {
+  if (!metadata || typeof metadata !== 'object') {
+    return false;
+  }
+  
+  const meta = metadata as Record<string, unknown>;
+  return meta.type === 'funnel';
+}

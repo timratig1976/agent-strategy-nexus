@@ -38,23 +38,26 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
         if (error) throw error;
         if (!data || data.length === 0) return;
         
-        // Map database result to AgentResult type
+        // Map database result to AgentResult type with explicit typing
         const dbResult = data[0];
         
-        // Convert snake_case to camelCase for AgentResult type and ensure metadata is an object
+        // Create a safe metadata object from the database result
+        const safeMetadata: Record<string, any> = 
+          typeof dbResult.metadata === 'object' && dbResult.metadata !== null 
+            ? dbResult.metadata as Record<string, any>
+            : {};
+        
+        // Create the AgentResult with properly typed metadata
         const result: AgentResult = {
           id: dbResult.id,
           agentId: dbResult.agent_id,
           strategyId: dbResult.strategy_id,
           content: dbResult.content,
           createdAt: dbResult.created_at,
-          // Ensure metadata is treated as a Record<string, any> or default to empty object
-          metadata: (typeof dbResult.metadata === 'object' && dbResult.metadata !== null) 
-            ? dbResult.metadata as Record<string, any> 
-            : {}
+          metadata: safeMetadata
         };
         
-        // Check if the result has valid funnel data
+        // Check if the result has valid funnel data using our improved type guard
         if (isFunnelMetadata(result.metadata) && result.content) {
           try {
             const parsedContent = JSON.parse(result.content) as FunnelData;
