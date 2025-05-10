@@ -15,6 +15,8 @@ export interface TouchPoint {
 export interface FunnelStage {
   id: string;
   name: string;
+  description: string;
+  keyMetrics: string[];
   touchpoints: TouchPoint[];
 }
 
@@ -23,18 +25,29 @@ export interface FunnelStage {
  */
 export interface FunnelData {
   stages: FunnelStage[];
+  name?: string;
+  primaryGoal?: string;
+  leadMagnetType?: string;
+  targetAudience?: string;
+  mainChannel?: string;
+  conversionAction?: string;
+  timeframe?: string;
+  budget?: string | number;
+  kpis?: string;
+  notes?: string;
   actionPlans?: Record<string, string>;
+  conversionRates?: Record<string, number>;
+  lastUpdated?: string;
+  version?: number;
 }
 
 /**
- * Explicitly defined metadata structure for funnel agent results
- * to prevent excessive type depth
+ * Metadata for funnel agent results
  */
-export interface FunnelAgentResultMetadata {
-  type: 'funnel';
+export interface FunnelMetadata {
+  type: string;
   is_final: boolean | string;
   updated_at?: string;
-  [key: string]: any;
 }
 
 /**
@@ -51,14 +64,14 @@ export interface FunnelStrategyModuleProps {
 }
 
 /**
- * Type guard to check if an object is a FunnelAgentResultMetadata
+ * Type guard to check if an object is a FunnelMetadata
  */
-export function isFunnelMetadata(metadata: any): metadata is FunnelAgentResultMetadata {
+export function isFunnelMetadata(obj: any): obj is FunnelMetadata {
   return (
-    metadata !== null &&
-    typeof metadata === 'object' &&
-    'type' in metadata &&
-    metadata.type === 'funnel' &&
-    'is_final' in metadata
+    obj !== null &&
+    typeof obj === 'object' &&
+    'type' in obj &&
+    obj.type === 'funnel' &&
+    'is_final' in obj
   );
 }

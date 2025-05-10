@@ -21,6 +21,8 @@ const FunnelStages: React.FC<FunnelStagesProps> = ({ stages, onStagesChange }) =
     const newStage: FunnelStage = {
       id: uuidv4(),
       name: newStageName,
+      description: "",
+      keyMetrics: [],
       touchpoints: []
     };
     
@@ -55,7 +57,7 @@ const FunnelStages: React.FC<FunnelStagesProps> = ({ stages, onStagesChange }) =
       if (stage.id === stageId) {
         return {
           ...stage,
-          touchpoints: [...stage.touchpoints, newTouchpoint]
+          touchpoints: [...(stage.touchpoints || []), newTouchpoint]
         };
       }
       return stage;
@@ -195,7 +197,7 @@ const StageItem: React.FC<StageItemProps> = ({
       {/* Touchpoints */}
       <div className="space-y-2 mb-4">
         <label className="text-sm font-medium">Touchpoints</label>
-        {stage.touchpoints.length > 0 ? (
+        {stage.touchpoints && stage.touchpoints.length > 0 ? (
           <div className="space-y-2">
             {stage.touchpoints.map((touchpoint) => (
               <div key={touchpoint.id} className="flex items-center justify-between bg-muted p-2 rounded">

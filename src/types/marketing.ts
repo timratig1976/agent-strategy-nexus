@@ -1,25 +1,36 @@
 
-export type AgentType = 'audience' | 'content' | 'seo' | 'social' | 'email' | 'analytics';
-export type StrategyState = 'briefing' | 'persona' | 'pain_gains' | 'funnel' | 'ads';
-export type MarketingPhase = 
-  | 'briefing'
-  | 'website_analysis'
-  | 'persona_development'
-  | 'usp_canvas'
-  | 'usp_generator'
-  | 'channel_strategy'
-  | 'roas_calculator'
-  | 'campaign_ideas'
-  | 'ad_creative'
-  | 'lead_magnets'
-  | 'content_strategy';
+// Create new types file if it doesn't exist
+
+export enum StrategyState {
+  BRIEFING = 'briefing',
+  PERSONA = 'persona',
+  PAIN_GAINS = 'pain_gains',
+  FUNNEL = 'funnel',
+  ADS = 'ads',
+  COMPLETED = 'completed'
+}
+
+export interface Strategy {
+  id: string;
+  name: string;
+  description: string;
+  status: string;
+  state: StrategyState | string;
+  createdAt: string;
+  updatedAt: string;
+  userId: string;
+  agents?: Agent[];
+  results?: AgentResult[];
+  tasks?: StrategyTask[];
+}
 
 export interface Agent {
   id: string;
   name: string;
-  type: AgentType;
-  description: string;
+  description?: string;
+  type: string;
   isActive: boolean;
+  strategyId?: string;
 }
 
 export interface AgentResult {
@@ -35,129 +46,9 @@ export interface StrategyTask {
   id: string;
   strategyId: string;
   title: string;
-  description?: string;
-  state: StrategyState;
+  description: string;
+  state: string;
   isCompleted: boolean;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface Strategy {
-  id: string;
-  name: string;
-  description: string;
-  status: 'draft' | 'in_progress' | 'completed';
-  state: StrategyState;
-  createdAt: string;
-  updatedAt: string;
-  userId: string;
-  agents: Agent[];
-  results: AgentResult[];
-  tasks: StrategyTask[];
-  currentPhase?: MarketingPhase;
-  completedPhases?: MarketingPhase[];
-  metadata?: {
-    language?: string;
-    [key: string]: any;
-  };
-}
-
-export interface FunnelStage {
-  id: string;
-  name: string;
-  description: string;
-  keyMetrics: string[];
-  touchpoints: string[];
-}
-
-export interface LandingPage {
-  id: string;
-  name: string;
-  url: string;
-  funnelStage: string;
-  headline: string;
-  subheadline: string;
-  features: string[];
-  benefits: string[];
-  ctaText: string;
-  ctaColor: string;
-  layout: string;
-  includeTestimonials: boolean;
-  includeFaq: boolean;
-  template: string;
-}
-
-export interface TargetAudience {
-  id: string;
-  name: string;
-  description: string;
-  ageRange: number[];
-  genders: string[];
-  locations: string;
-  interests: string[];
-  behaviors: string[];
-  custom: boolean;
-  lookalikeSource?: string;
-  exclusions?: string;
-}
-
-export interface AdCreative {
-  id: string;
-  headline: string;
-  body: string;
-  cta: string;
-  adSetId: string;
-  imageUrl?: string;
-  primaryText?: string;
-  description?: string;
-}
-
-export interface AdSet {
-  id: string;
-  name: string;
-  objective: string;
-  funnelStage: string;
-  budget: number;
-  targetAudience: string;
-}
-
-export interface FunnelData {
-  name: string;
-  primaryGoal: string;
-  leadMagnetType: string;
-  targetAudience: string;
-  mainChannel: string;
-  conversionAction: string;
-  timeframe: string;
-  budget: string | number;
-  kpis: string;
-  notes: string;
-  stages: FunnelStage[];
-  actionItems?: any[];
-  conversionRates?: Record<string, number>;
-  lastUpdated?: string;
-  version?: number;
-}
-
-export interface AdCampaignData {
-  name: string;
-  objective: string;
-  adSets: AdSet[];
-  targetAudiences: TargetAudience[];
-  adCreatives: AdCreative[];
-  landingPages: LandingPage[];
-  budget: number;
-  settings: {
-    budgetType: string;
-    startDate: string;
-    endDate: string;
-    bidStrategy: string;
-    bidAmount: number;
-    adSchedule: string;
-    optimizationGoal: string;
-    pixelId: string;
-    notes: string;
-  };
-  lastUpdated?: string;
-  version?: number;
 }

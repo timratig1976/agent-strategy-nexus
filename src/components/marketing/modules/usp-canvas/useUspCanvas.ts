@@ -50,7 +50,7 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
         // We found a final version
         try {
           const canvasData = JSON.parse(agentResults[0].content);
-          setCanvas(canvasData);
+          setCanvas(canvasData as UspCanvas);
           
           // Also load the save history
           loadCanvasSaveHistory();
@@ -72,7 +72,7 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
         if (draftResults && draftResults.length > 0) {
           try {
             const canvasData = JSON.parse(draftResults[0].content);
-            setCanvas(canvasData);
+            setCanvas(canvasData as UspCanvas);
             
             // Also load the save history
             loadCanvasSaveHistory();
@@ -106,15 +106,30 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
       if (historyError) throw historyError;
       
       if (historyResults) {
-        const history: CanvasHistoryEntry[] = historyResults.map(result => ({
-          id: result.id,
-          timestamp: new Date(result.created_at).getTime(),
-          data: JSON.parse(result.content),
-          isFinal: result.metadata && typeof result.metadata === 'object' && 'is_final' in result.metadata 
-            ? Boolean(result.metadata.is_final) 
-            : false,
-          metadata: result.metadata
-        }));
+        const history: CanvasHistoryEntry[] = historyResults.map(result => {
+          // Parse the content safely
+          let parsedData: UspCanvas;
+          try {
+            parsedData = JSON.parse(result.content) as UspCanvas;
+          } catch (e) {
+            console.error("Error parsing history entry:", e);
+            parsedData = { ...emptyCanvas };
+          }
+          
+          // Safely check if metadata has is_final property
+          let isFinal = false;
+          if (result.metadata && typeof result.metadata === 'object') {
+            isFinal = !!result.metadata.is_final;
+          }
+          
+          return {
+            id: result.id,
+            timestamp: new Date(result.created_at).getTime(),
+            data: parsedData,
+            isFinal: isFinal,
+            metadata: result.metadata as Record<string, any>
+          };
+        });
         
         setCanvasSaveHistory(history);
       }

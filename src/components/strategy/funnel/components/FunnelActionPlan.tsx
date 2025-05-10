@@ -93,7 +93,7 @@ const FunnelActionPlan: React.FC<FunnelActionPlanProps> = ({
                 />
               </div>
               
-              {stage.touchpoints.length > 0 && (
+              {stage.touchpoints && stage.touchpoints.length > 0 && (
                 <div>
                   <h4 className="text-sm font-medium mb-2">Touchpoints to Consider:</h4>
                   <ul className="list-disc list-inside text-sm space-y-1">
