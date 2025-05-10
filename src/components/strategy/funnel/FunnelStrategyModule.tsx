@@ -7,9 +7,13 @@ import FunnelHeader from "./components/FunnelHeader";
 import FunnelFooter from "./components/FunnelFooter";
 import FunnelStages from "./components/FunnelStages";
 import useStrategyNavigation from "@/hooks/useStrategyNavigation";
+import { StrategyState } from "@/types/marketing";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy }) => {
   const strategyId = strategy?.id;
+  const navigate = useNavigate();
   
   const {
     funnelData,
@@ -28,7 +32,7 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
   // Handler to go back to USP Canvas (pain_gains) stage
   const handleNavigateBack = () => {
     if (strategyId) {
-      navigateToPreviousStep('funnel');
+      navigateToPreviousStep(StrategyState.FUNNEL);
     }
   };
 
