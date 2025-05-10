@@ -1,5 +1,5 @@
+
 import { useCanvasData } from './useCanvasData';
-import { useCanvasStorage } from './useCanvasStorage';
 import { useCanvasItems } from './useCanvasItems';
 import { useCustomerProfile } from './useCustomerProfile';
 import { useValueMap } from './useValueMap';
@@ -8,11 +8,9 @@ import { useAIResults } from './useAIResults';
 import { useAIContentHandler } from './useAIContentHandler';
 import { useNavigation } from './useNavigation';
 import useCanvasDatabase from './useCanvasDatabase';
-// We're keeping useCanvasStorage for backward compatibility but will prioritize database
 
 export {
   useCanvasData,
-  useCanvasStorage,
   useCanvasItems,
   useCustomerProfile,
   useValueMap,

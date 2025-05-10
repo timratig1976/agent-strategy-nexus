@@ -7,34 +7,6 @@ import { v4 as uuidv4 } from 'uuid';
 import useCanvasDatabase from './hooks/useCanvasDatabase';
 import { CanvasState, CanvasItem } from './types';
 
-// Create a simple local storage hook for fallback
-export const useLocalCanvasStorage = () => {
-  // Function to save canvas data to local storage
-  const saveToLocalStorage = (canvasId: string, data: { customerItems: CanvasItem[], valueItems: CanvasItem[] }) => {
-    try {
-      localStorage.setItem(`usp_canvas_${canvasId}`, JSON.stringify(data));
-      return true;
-    } catch (error) {
-      console.error('Failed to save to local storage:', error);
-      return false;
-    }
-  };
-
-  // Function to load canvas data from local storage
-  const loadFromLocalStorage = (canvasId: string) => {
-    try {
-      const data = localStorage.getItem(`usp_canvas_${canvasId}`);
-      return data ? JSON.parse(data) : null;
-    } catch (error) {
-      console.error('Failed to load from local storage:', error);
-      return null;
-    }
-  };
-
-  return { saveToLocalStorage, loadFromLocalStorage };
-};
-
-// Canvas data management hook
 export const useUspCanvas = (canvasId: string) => {
   const [canvasState, setCanvasState] = useState<CanvasState>(CanvasState.CUSTOMER_PROFILE);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -49,15 +21,12 @@ export const useUspCanvas = (canvasId: string) => {
     loadCanvasHistory 
   } = useCanvasDatabase(canvasId);
 
-  // Fallback to local storage when database operations fail
-  const { saveToLocalStorage, loadFromLocalStorage } = useLocalCanvasStorage();
-
   // Initialize canvas data
   useEffect(() => {
     if (canvasId) {
       const loadInitialData = async () => {
         try {
-          // Try to load from database first
+          // Load from database
           const historyData = await loadCanvasHistory();
           
           if (historyData && historyData.length > 0) {
@@ -65,7 +34,7 @@ export const useUspCanvas = (canvasId: string) => {
             const latestSnapshot = historyData[0];
             if (latestSnapshot && latestSnapshot.snapshot_data) {
               // Extract canvas items from snapshot
-              const { customerItems, valueItems } = latestSnapshot.snapshot_data as any;
+              const { customerItems, valueItems } = latestSnapshot.snapshot_data;
               
               if (Array.isArray(customerItems)) {
                 setCustomerItems(customerItems);
@@ -75,36 +44,23 @@ export const useUspCanvas = (canvasId: string) => {
                 setValueItems(valueItems);
               }
               
-              toast.success('Canvas data loaded successfully');
-              return;
+              toast.success('Canvas data loaded successfully from database');
             }
-          }
-          
-          // Fall back to local storage if no database data
-          const localData = loadFromLocalStorage(canvasId);
-          if (localData) {
-            setCustomerItems(localData.customerItems || []);
-            setValueItems(localData.valueItems || []);
-            toast.info('Loaded canvas from local storage');
+          } else {
+            // No data found in history
+            console.log('No canvas history data found for canvas ID:', canvasId);
           }
         } catch (err) {
           console.error('Error loading canvas data:', err);
-          toast.error('Failed to load canvas data');
-          
-          // Try local storage as last resort
-          const localData = loadFromLocalStorage(canvasId);
-          if (localData) {
-            setCustomerItems(localData.customerItems || []);
-            setValueItems(localData.valueItems || []);
-          }
+          toast.error('Failed to load canvas data from database');
         }
       };
       
       loadInitialData();
     }
-  }, [canvasId, loadCanvasHistory, loadFromLocalStorage]);
+  }, [canvasId, loadCanvasHistory]);
 
-  // Save canvas data (to database and local storage)
+  // Save canvas data to database only
   const saveCanvasData = useCallback(async () => {
     if (!canvasId) return;
     
@@ -117,29 +73,20 @@ export const useUspCanvas = (canvasId: string) => {
       };
       
       // Save to database
-      await saveCanvasSnapshot(canvasData);
+      const saved = await saveCanvasSnapshot(canvasData);
       
-      // Also save to local storage as backup
-      saveToLocalStorage(canvasId, {
-        customerItems,
-        valueItems,
-      });
-      
-      toast.success('Canvas saved successfully');
+      if (saved) {
+        toast.success('Canvas saved successfully to database');
+      } else {
+        toast.error('Failed to save canvas');
+      }
     } catch (err) {
       console.error('Error saving canvas:', err);
       toast.error('Failed to save canvas to database');
-      
-      // Fall back to local storage
-      saveToLocalStorage(canvasId, {
-        customerItems,
-        valueItems,
-      });
-      toast.info('Canvas saved to local storage');
     } finally {
       setIsProcessing(false);
     }
-  }, [canvasId, customerItems, valueItems, saveCanvasSnapshot, saveToLocalStorage]);
+  }, [canvasId, customerItems, valueItems, saveCanvasSnapshot]);
 
   // Provide methods and state to components
   return {

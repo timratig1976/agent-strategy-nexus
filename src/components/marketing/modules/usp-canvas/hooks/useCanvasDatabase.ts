@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { CanvasItem, UspCanvas } from '../types';
+import { CanvasItem } from '../types';
 import { PostgrestSingleResponse } from '@supabase/supabase-js';
 
 // Define types for snapshot data
@@ -45,13 +45,15 @@ export default function useCanvasDatabase(canvasId: string) {
           timestamp: new Date().toISOString()
         };
         
+        // Deep clone the data to ensure it's properly serializable
+        const serializableData = JSON.parse(JSON.stringify(data));
+        
         // Insert new snapshot into canvas_history
-        // We need to ensure the data is properly serializable for Supabase
         const { error: insertError } = await supabase
           .from('canvas_history')
           .insert({
             canvas_id: canvasId,
-            snapshot_data: data as any, // Type assertion to avoid TS error with JSON serialization
+            snapshot_data: serializableData,
             metadata
           });
         
@@ -93,16 +95,21 @@ export default function useCanvasDatabase(canvasId: string) {
         throw new Error(`Failed to load canvas history: ${fetchError.message}`);
       }
       
+      if (!data || data.length === 0) {
+        console.log('No canvas history found');
+        return [];
+      }
+      
       // Transform the data to ensure type safety
-      const typedData: CanvasHistoryRecord[] = data ? data.map(item => ({
+      const typedData: CanvasHistoryRecord[] = data.map(item => ({
         id: item.id,
         canvas_id: item.canvas_id,
         snapshot_data: item.snapshot_data as CanvasSnapshot,
         created_at: item.created_at,
         metadata: item.metadata
-      })) : [];
+      }));
       
-      console.log('Canvas history loaded successfully', { count: typedData?.length || 0 });
+      console.log('Canvas history loaded successfully', { count: typedData.length });
       return typedData;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error loading canvas history';
