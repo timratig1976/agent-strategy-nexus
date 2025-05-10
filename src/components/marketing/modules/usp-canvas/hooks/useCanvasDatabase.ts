@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -10,8 +10,8 @@ interface BasicJsonObject {
 
 interface BasicJsonArray extends Array<string | number | boolean | null | BasicJsonObject | BasicJsonArray> {}
 
-// Define a simplified history entry to avoid infinite type recursion
-interface CanvasHistoryEntry {
+// Define history entry type (not exported to avoid circular references)
+interface HistoryEntry {
   id?: string;
   canvas_id: string;
   snapshot_data: BasicJsonObject;
@@ -35,17 +35,19 @@ export function useCanvasDatabase(canvasId: string) {
       setError(null);
 
       try {
-        const historyEntry: CanvasHistoryEntry = {
+        const historyEntry: HistoryEntry = {
           canvas_id: canvasId,
           snapshot_data: snapshotData,
           metadata: metadata || {}
         };
 
+        // Use explicit table name in RPC call to avoid type errors
         const { data, error: saveError } = await supabase
-          .from('canvas_history')
-          .insert(historyEntry)
-          .select()
-          .single();
+          .rpc('insert_canvas_history', {
+            canvas_id_param: canvasId,
+            snapshot_data_param: historyEntry.snapshot_data,
+            metadata_param: historyEntry.metadata
+          });
 
         if (saveError) throw saveError;
         return data;
@@ -69,11 +71,11 @@ export function useCanvasDatabase(canvasId: string) {
     setError(null);
 
     try {
+      // Use explicit RPC call instead of table access
       const { data, error: loadError } = await supabase
-        .from('canvas_history')
-        .select('*')
-        .eq('canvas_id', canvasId)
-        .order('created_at', { ascending: false });
+        .rpc('get_canvas_history', {
+          canvas_id_param: canvasId
+        });
 
       if (loadError) throw loadError;
       return data || [];

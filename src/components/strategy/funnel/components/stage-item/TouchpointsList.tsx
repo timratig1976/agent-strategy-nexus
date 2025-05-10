@@ -1,39 +1,48 @@
 
 import React from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { FunnelStage } from "../../types";
+import { TouchPoint } from "../../types";
 
 interface TouchpointsListProps {
-  stage: FunnelStage;
+  touchPoints: TouchPoint[];
+  stageId: string;
   onRemoveTouchpoint: (stageId: string, touchpointId: string) => void;
 }
 
-const TouchpointsList: React.FC<TouchpointsListProps> = ({ stage, onRemoveTouchpoint }) => {
+const TouchpointsList: React.FC<TouchpointsListProps> = ({
+  touchPoints,
+  stageId,
+  onRemoveTouchpoint
+}) => {
+  if (!touchPoints || touchPoints.length === 0) {
+    return (
+      <div className="text-sm text-muted-foreground italic mt-2">
+        No touchpoints added yet. Add your first touchpoint below.
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-2 mb-4">
-      <label className="text-sm font-medium">Touchpoints</label>
-      {stage.touchPoints && stage.touchPoints.length > 0 ? (
-        <div className="space-y-2">
-          {stage.touchPoints.map((touchpoint) => (
-            <div key={touchpoint.id} className="flex items-center justify-between bg-muted p-2 rounded">
-              <span>{touchpoint.name}</span>
-              <Button 
-                size="icon" 
-                variant="ghost" 
-                onClick={() => onRemoveTouchpoint(stage.id, touchpoint.id)}
-                className="h-6 w-6 text-destructive hover:text-destructive"
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-sm text-muted-foreground p-2 bg-muted/50 rounded">
-          No touchpoints added yet
-        </div>
-      )}
+    <div className="flex flex-wrap gap-2 mt-2">
+      {touchPoints.map(touchpoint => (
+        <Badge 
+          key={touchpoint.id} 
+          variant="outline" 
+          className="flex items-center gap-1 py-1 pl-3 pr-2 bg-slate-50"
+        >
+          {touchpoint.name}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-5 w-5 ml-1 text-muted-foreground hover:text-destructive"
+            onClick={() => onRemoveTouchpoint(stageId, touchpoint.id)}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </Badge>
+      ))}
     </div>
   );
 };

@@ -1,183 +1,133 @@
 
-import { useState, useEffect, useCallback } from "react";
-import { toast } from "sonner";
-import { UspCanvas, StoredAIResult } from "./types";
-import { useCanvas } from "./hooks/useCanvas";
-import { useCanvasItems } from "./hooks/useCanvasItems";
-import { useValueMapItems } from "./hooks/useValueMapItems";
-import { useCanvasDatabase, CanvasHistoryEntry } from "./hooks/useCanvasDatabase";
+import { useState, useCallback, useEffect } from 'react';
+import { toast } from 'sonner';
+import { v4 as uuidv4 } from 'uuid';
 
-export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "editor") => {
-  // Main canvas state and utilities
-  const {
-    canvas,
-    setCanvas,
-    activeTab,
-    setActiveTab,
-    isSaved,
-    setIsSaved,
-    resetCanvas: resetCanvasState,
-    applyAIGeneratedContent
-  } = useCanvas();
+// Import local hooks and types
+import useCanvasDatabase from './hooks/useCanvasDatabase';
+import { useCanvasStorage, useLocalCanvasStorage } from './hooks';
+import { CanvasState, CanvasItem, RelationshipType } from './types';
 
-  // Set default active tab
+// Canvas data management hook
+export const useUspCanvas = (canvasId: string) => {
+  const [canvasState, setCanvasState] = useState<CanvasState>('customer_profile');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [customerItems, setCustomerItems] = useState<CanvasItem[]>([]);
+  const [valueItems, setValueItems] = useState<CanvasItem[]>([]);
+
+  // Database operations
+  const { 
+    loading, 
+    error, 
+    saveCanvasSnapshot, 
+    loadCanvasHistory 
+  } = useCanvasDatabase(canvasId);
+
+  // Fallback to local storage when database operations fail
+  const { saveToLocalStorage, loadFromLocalStorage } = useLocalCanvasStorage();
+
+  // Initialize canvas data
   useEffect(() => {
-    setActiveTab(defaultActiveTab);
-  }, [defaultActiveTab, setActiveTab]);
-
-  // Canvas database operations
-  const {
-    fetchCanvasData,
-    loadCanvasSaveHistory,
-    saveToDatabase,
-    isLoading,
-    error
-  } = useCanvasDatabase(strategyId);
-
-  // Canvas history state
-  const [canvasSaveHistory, setCanvasSaveHistory] = useState<CanvasHistoryEntry[]>([]);
-
-  // Customer profile items operations
-  const {
-    addCustomerJob,
-    updateCustomerJob,
-    deleteCustomerJob,
-    reorderCustomerJobs,
-    addCustomerPain,
-    updateCustomerPain,
-    deleteCustomerPain,
-    reorderCustomerPains,
-    addCustomerGain,
-    updateCustomerGain,
-    deleteCustomerGain,
-    reorderCustomerGains
-  } = useCanvasItems(canvas, setCanvas, setIsSaved);
-
-  // Value map items operations
-  const {
-    addProductService,
-    updateProductService,
-    deleteProductService,
-    addPainReliever,
-    updatePainReliever,
-    deletePainReliever,
-    addGainCreator,
-    updateGainCreator,
-    deleteGainCreator
-  } = useValueMapItems(canvas, setCanvas, setIsSaved);
-
-  // Fetch canvas data on initial load
-  useEffect(() => {
-    if (strategyId) {
-      refreshCanvasData();
+    if (canvasId) {
+      const loadInitialData = async () => {
+        try {
+          // Try to load from database first
+          const historyData = await loadCanvasHistory();
+          
+          if (historyData && historyData.length > 0) {
+            // Use most recent snapshot
+            const latestSnapshot = historyData[0];
+            if (latestSnapshot && latestSnapshot.snapshot_data) {
+              // Extract canvas items from snapshot
+              const { customerItems, valueItems } = latestSnapshot.snapshot_data as any;
+              
+              if (Array.isArray(customerItems)) {
+                setCustomerItems(customerItems);
+              }
+              
+              if (Array.isArray(valueItems)) {
+                setValueItems(valueItems);
+              }
+              
+              toast.success('Canvas data loaded successfully');
+              return;
+            }
+          }
+          
+          // Fall back to local storage if no database data
+          const localData = loadFromLocalStorage(canvasId);
+          if (localData) {
+            setCustomerItems(localData.customerItems || []);
+            setValueItems(localData.valueItems || []);
+            toast.info('Loaded canvas from local storage');
+          }
+        } catch (err) {
+          console.error('Error loading canvas data:', err);
+          toast.error('Failed to load canvas data');
+          
+          // Try local storage as last resort
+          const localData = loadFromLocalStorage(canvasId);
+          if (localData) {
+            setCustomerItems(localData.customerItems || []);
+            setValueItems(localData.valueItems || []);
+          }
+        }
+      };
+      
+      loadInitialData();
     }
-  }, [strategyId]);
+  }, [canvasId]);
 
-  // Function to refresh canvas data
-  const refreshCanvasData = async () => {
-    const { canvas: loadedCanvas, history } = await fetchCanvasData();
+  // Save canvas data (to database and local storage)
+  const saveCanvasData = useCallback(async () => {
+    if (!canvasId) return;
     
-    if (loadedCanvas) {
-      setCanvas(loadedCanvas);
-    }
-    
-    if (history && history.length > 0) {
-      setCanvasSaveHistory(history);
-    }
-  };
-
-  // Save canvas function
-  const saveCanvas = useCallback(async (isFinal: boolean = false) => {
-    if (!strategyId) return false;
-    
+    setIsProcessing(true);
     try {
+      const canvasData = {
+        customerItems,
+        valueItems,
+        timestamp: new Date().toISOString(),
+      };
+      
       // Save to database
-      const success = await saveToDatabase(canvas, isFinal);
+      await saveCanvasSnapshot(canvasData as any);
       
-      if (success) {
-        setIsSaved(true);
-        
-        // Update history after save
-        const updatedHistory = await loadCanvasSaveHistory();
-        setCanvasSaveHistory(updatedHistory);
-      }
+      // Also save to local storage as backup
+      saveToLocalStorage(canvasId, {
+        customerItems,
+        valueItems,
+      });
       
-      return success;
+      toast.success('Canvas saved successfully');
     } catch (err) {
-      console.error("Error saving canvas:", err);
-      toast.error("Failed to save canvas");
-      return false;
-    }
-  }, [canvas, strategyId, saveToDatabase, loadCanvasSaveHistory, setIsSaved]);
-
-  // Save progress
-  const saveProgress = useCallback(async () => {
-    await saveCanvas();
-  }, [saveCanvas]);
-
-  // Save final version
-  const saveFinalVersion = useCallback(() => {
-    if (!strategyId) return false;
-    
-    try {
-      // First, check if there's any content to save
-      if (
-        canvas.customerJobs.length === 0 &&
-        canvas.customerPains.length === 0 &&
-        canvas.customerGains.length === 0
-      ) {
-        toast.error("Cannot save final version with empty canvas. Please add content first.");
-        return false;
-      }
+      console.error('Error saving canvas:', err);
+      toast.error('Failed to save canvas to database');
       
-      return saveCanvas(true);
-    } catch (err) {
-      console.error("Error saving final canvas:", err);
-      toast.error("Failed to save final canvas");
-      return false;
+      // Fall back to local storage
+      saveToLocalStorage(canvasId, {
+        customerItems,
+        valueItems,
+      });
+      toast.info('Canvas saved to local storage');
+    } finally {
+      setIsProcessing(false);
     }
-  }, [canvas, strategyId, saveCanvas]);
+  }, [canvasId, customerItems, valueItems, saveCanvasSnapshot, saveToLocalStorage]);
 
-  // Reset canvas to empty state
-  const resetCanvas = useCallback(() => {
-    resetCanvasState();
-    toast.info("Canvas has been reset");
-  }, [resetCanvasState]);
-
+  // Provide methods and state to components
   return {
-    canvas,
-    activeTab,
-    setActiveTab,
-    isSaved,
-    saveCanvas,
-    resetCanvas,
-    canvasSaveHistory,
-    saveFinalVersion,
-    isLoading,
-    error,
-    refreshCanvasData,
-    addCustomerJob,
-    updateCustomerJob,
-    deleteCustomerJob,
-    reorderCustomerJobs,
-    addCustomerPain,
-    updateCustomerPain,
-    deleteCustomerPain,
-    reorderCustomerPains,
-    addCustomerGain,
-    updateCustomerGain,
-    deleteCustomerGain,
-    reorderCustomerGains,
-    addProductService,
-    updateProductService,
-    deleteProductService,
-    addPainReliever,
-    updatePainReliever,
-    deletePainReliever,
-    addGainCreator,
-    updateGainCreator,
-    deleteGainCreator,
-    saveProgress,
-    applyAIGeneratedContent,
+    canvasState,
+    setCanvasState,
+    customerItems,
+    setCustomerItems,
+    valueItems,
+    setValueItems,
+    isProcessing,
+    saveCanvasData,
+    isLoading: loading || isProcessing,
+    error
   };
 };
+
+export default useUspCanvas;
