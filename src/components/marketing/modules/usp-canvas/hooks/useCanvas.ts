@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { UspCanvas, StoredAIResult, CanvasItem, CustomerJob, CustomerPain, CustomerGain } from '../types';
 import { toast } from 'sonner';
@@ -159,7 +160,8 @@ export const useCanvas = (canvasId?: string) => {
     if (aiResult.jobs && aiResult.jobs.length > 0) {
       aiResult.jobs.forEach(job => {
         if (job) {
-          const content = job.description || job.content || job.title;
+          // Get content by checking description first, then fallback to title
+          const content = job.description || job.title || '';
           if (content) {
             const priority = job.priority || 'medium';
             newCustomerItems.push({
@@ -177,7 +179,8 @@ export const useCanvas = (canvasId?: string) => {
     if (aiResult.pains && aiResult.pains.length > 0) {
       aiResult.pains.forEach(pain => {
         if (pain) {
-          const content = pain.description || pain.content || pain.title;
+          // Get content by checking description first, then fallback to title
+          const content = pain.description || pain.title || '';
           if (content) {
             const severity = pain.severity || 'medium';
             newCustomerItems.push({
@@ -195,7 +198,8 @@ export const useCanvas = (canvasId?: string) => {
     if (aiResult.gains && aiResult.gains.length > 0) {
       aiResult.gains.forEach(gain => {
         if (gain) {
-          const content = gain.description || gain.content || gain.title;
+          // Get content by checking description first, then fallback to title
+          const content = gain.description || gain.title || '';
           if (content) {
             const importance = gain.importance || 'medium';
             newCustomerItems.push({

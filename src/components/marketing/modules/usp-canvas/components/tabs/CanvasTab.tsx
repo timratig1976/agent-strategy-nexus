@@ -138,6 +138,7 @@ const CanvasTab: React.FC<CanvasTabProps> = ({
           addGainCreator={() => {}}
           updateGainCreator={() => {}}
           deleteGainCreator={() => {}}
+          formPosition="bottom"
         />
       )}
     </div>
