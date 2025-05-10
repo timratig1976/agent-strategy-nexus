@@ -11,27 +11,7 @@ import {
   FunnelActionPlan
 } from './components';
 import DocumentManager from "../documents/DocumentManager";
-
-interface TouchPoint {
-  id: string;
-  name: string;
-}
-
-interface FunnelStage {
-  id: string;
-  name: string;
-  touchpoints: TouchPoint[];
-}
-
-interface FunnelData {
-  stages: FunnelStage[];
-  actionPlans?: Record<string, string>;
-}
-
-interface FunnelStrategyModuleProps {
-  strategy?: any;
-  onNavigateBack?: () => Promise<void>;
-}
+import { FunnelData, FunnelStage, FunnelStrategyModuleProps, isFunnelMetadata } from "./types";
 
 const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = () => {
   const { strategyId } = useParams<{ strategyId: string }>();
@@ -61,14 +41,9 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = () => {
       
       // Find the most recent final result
       const finalResult = results?.find(result => {
-        // Handle the type check for is_final in metadata
-        const metadata = result.metadata;
-        if (metadata && typeof metadata === 'object' && metadata !== null) {
-          // Safely check if is_final exists in metadata
-          return (metadata as Record<string, unknown>).is_final === true || 
-                 (metadata as Record<string, unknown>).is_final === 'true';
-        }
-        return false;
+        // Use the type guard to check if metadata has the expected structure
+        return result.metadata && isFunnelMetadata(result.metadata) && 
+              (result.metadata.is_final === true || result.metadata.is_final === 'true');
       });
       
       if (finalResult) {
