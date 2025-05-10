@@ -20,6 +20,7 @@ import OrganizationSettings from "@/pages/OrganizationSettings";
 import { OrganizationProvider } from "@/context/OrganizationProvider";
 import { SubscriptionProvider } from "@/context/SubscriptionProvider";
 import { Toaster } from "@/components/ui/sonner";
+import StrategyBoardPage from "@/pages/StrategyBoardPage";
 
 export default function App() {
   return (
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="/strategy/:id" element={<StrategyOverview />} />
             <Route path="/strategy/:id/:state" element={<StrategyDetailsWithNav />} />
             <Route path="/strategy-details/:id" element={<StrategyDetails />} />
+            <Route path="/strategy-board/:strategyId" element={<StrategyBoardPage />} />
             <Route path="/marketing-hub" element={<MarketingHubPage />} />
             <Route path="/module/:moduleId" element={<ModulePage />} />
             <Route path="/ai-prompt-manager" element={<AIPromptManagerPage />} />

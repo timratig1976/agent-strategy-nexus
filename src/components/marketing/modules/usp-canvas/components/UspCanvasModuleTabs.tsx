@@ -97,13 +97,13 @@ const UspCanvasModuleTabs: React.FC<UspCanvasModuleTabsProps> = ({
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <TabsList className="grid grid-cols-4 mb-8">
-        <TabsTrigger value="editor" className="flex items-center gap-2">
-          <FileStack className="h-4 w-4" />
-          Editor
-        </TabsTrigger>
         <TabsTrigger value="visualization" className="flex items-center gap-2">
           <Share2 className="h-4 w-4" />
           Visual Board
+        </TabsTrigger>
+        <TabsTrigger value="editor" className="flex items-center gap-2">
+          <FileStack className="h-4 w-4" />
+          Editor
         </TabsTrigger>
         <TabsTrigger value="ai" className="flex items-center gap-2">
           <Send className="h-4 w-4" />

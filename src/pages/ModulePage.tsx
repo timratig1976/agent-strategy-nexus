@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+
+import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,9 @@ const ModulePage = () => {
   // Set a default strategy ID for modules that require it in standalone mode
   // If the strategy ID is provided in the URL, use that instead
   const strategyId = searchParams.get("strategyId") || localStorage.getItem("standalone_strategy_id") || uuidv4();
+  
+  // Default tab for USP Canvas
+  const [defaultUspTab, setDefaultUspTab] = useState("visualization");
 
   // Store the strategy ID in localStorage to persist it across refreshes
   useEffect(() => {
@@ -41,8 +45,12 @@ const ModulePage = () => {
       case "persona_development":
         return <PersonaGeneratorModule />;
       case "usp_canvas":
-        // Pass the required props to UspCanvasModule
-        return <UspCanvasModule strategyId={strategyId} briefingContent="" />;
+        // Pass the required props to UspCanvasModule with visualization as the default tab
+        return <UspCanvasModule 
+                 strategyId={strategyId} 
+                 briefingContent="" 
+                 defaultActiveTab={defaultUspTab}
+               />;
       case "usp_generator":
         return <UspGeneratorModule />;
       case "channel_strategy":
