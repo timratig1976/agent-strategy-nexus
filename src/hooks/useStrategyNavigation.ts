@@ -26,6 +26,9 @@ export const useStrategyNavigation = ({ strategyId, onRefetch }: UseStrategyNavi
       // Determine the previous state based on the current state
       switch(currentState) {
         case StrategyState.FUNNEL:
+          previousState = StrategyState.STATEMENTS;
+          break;
+        case StrategyState.STATEMENTS:
           previousState = StrategyState.PAIN_GAINS;
           break;
         case StrategyState.PAIN_GAINS:
@@ -86,6 +89,9 @@ export const useStrategyNavigation = ({ strategyId, onRefetch }: UseStrategyNavi
           nextState = StrategyState.PAIN_GAINS;
           break;
         case StrategyState.PAIN_GAINS:
+          nextState = StrategyState.STATEMENTS;
+          break;
+        case StrategyState.STATEMENTS:
           nextState = StrategyState.FUNNEL;
           break;
         case StrategyState.FUNNEL:

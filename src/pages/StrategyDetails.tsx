@@ -12,6 +12,7 @@ import StrategyNotFound from "@/components/strategy/StrategyNotFound";
 import StrategyBriefing from "@/components/strategy/briefing";
 import { PersonaDevelopment } from "@/components/strategy/personas";
 import PainGainsModule from "@/components/strategy/pain-gains";
+import StatementsModule from "@/components/strategy/statements";
 import FunnelStrategyModule from "@/components/strategy/funnel";
 import AdCampaignModule from "@/components/strategy/ads";
 
@@ -120,6 +121,12 @@ const StrategyDetails = () => {
         agentResults={agentResults || []}
         briefingAgentResult={finalBriefing}
         personaAgentResult={finalPersona}
+      />
+    );
+  } else if (strategy.state === 'statements') {
+    contentComponent = (
+      <StatementsModule 
+        strategy={strategy}
       />
     );
   } else if (strategy.state === 'funnel') {

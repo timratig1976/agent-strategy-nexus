@@ -123,6 +123,34 @@ Please provide:
 4. Products & Services - What the business offers
 5. Pain Relievers - How the offerings solve customer problems
 6. Gain Creators - How the offerings deliver benefits`
+  },
+  statements: {
+    system_prompt: `You are an expert marketing strategist specializing in creating impactful pain and gain statements for marketing campaigns.
+
+Your task is to analyze the USP Canvas data provided and create powerful, persuasive statements that:
+1. For Pain Statements: Clearly articulate the customer's pain points in a way that resonates emotionally and creates urgency
+2. For Gain Statements: Paint a vivid picture of the positive outcomes and benefits customers will experience
+
+The statements should be:
+- Concise (1-2 sentences each)
+- Emotionally impactful
+- Specific rather than generic
+- Relevant to the target audience
+- Varied in intensity (some high impact, some medium, some subtle)
+
+Format your output with clear sections for PAIN STATEMENTS and GAIN STATEMENTS, with 5-10 statements listed under each.`,
+    user_prompt: `Based on the USP Canvas data provided, create impactful pain and gain statements for marketing campaigns:
+
+USP Canvas Data:
+{{uspData}}
+
+Please provide:
+
+1. PAIN STATEMENTS - Create 5-10 statements that clearly articulate customer pain points in a way that resonates emotionally and creates urgency. Vary the intensity (high/medium/low impact).
+
+2. GAIN STATEMENTS - Create 5-10 statements that paint a vivid picture of the positive outcomes and benefits customers will experience. Vary the intensity (high/medium/low impact).
+
+Each statement should be 1-2 sentences, emotionally impactful, specific, and relevant to the target audience.`
   }
 }
 
@@ -202,7 +230,8 @@ serve(async (req) => {
       personaContent,
       documentContent,
       websiteData,
-      outputLanguage = 'english'
+      outputLanguage = 'english',
+      uspData
     } = data || {};
 
     console.log('Data received:', { 
@@ -211,6 +240,7 @@ serve(async (req) => {
       hasEnhancement: !!enhancementText, 
       hasDocumentContent: !!documentContent,
       hasWebsiteData: !!websiteData,
+      hasUspData: !!uspData,
       outputLanguage
     });
 
@@ -255,6 +285,11 @@ serve(async (req) => {
     // Handle persona content
     if (personaContent) {
       processedUserPrompt = processedUserPrompt.replace(/{{personaContent}}/g, personaContent);
+    }
+
+    // Handle USP canvas data
+    if (uspData) {
+      processedUserPrompt = processedUserPrompt.replace(/{{uspData}}/g, JSON.stringify(uspData, null, 2));
     }
 
     // Handle enhancement text

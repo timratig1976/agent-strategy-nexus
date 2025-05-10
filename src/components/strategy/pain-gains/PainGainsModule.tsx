@@ -1,147 +1,63 @@
 
-import React, { useState, useEffect } from "react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { Strategy, AgentResult } from "@/types/marketing";
-import { useNavigate } from "react-router-dom";
-import UspCanvasModule from "@/components/marketing/modules/usp-canvas/UspCanvasModule";
+import React, { useCallback } from "react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { Strategy, StrategyState } from "@/types/marketing";
+import UspCanvasModule from "@/components/marketing/modules/usp-canvas";
+import useStrategyNavigation from "@/hooks/useStrategyNavigation";
 
 interface PainGainsModuleProps {
   strategy: Strategy;
-  agentResults: AgentResult[];
-  briefingAgentResult: AgentResult | null;
-  personaAgentResult: AgentResult | null;
-}
-
-interface CanvasHistoryRecord {
-  id: string;
-  canvas_id: string;
-  metadata: {
-    isFinal?: boolean;
-    type?: string;
-  } | null;
+  agentResults?: any[];
+  briefingAgentResult?: any;
+  personaAgentResult?: any;
 }
 
 const PainGainsModule: React.FC<PainGainsModuleProps> = ({
   strategy,
-  agentResults,
+  agentResults = [],
   briefingAgentResult,
   personaAgentResult
 }) => {
   const navigate = useNavigate();
-  const [canProceed, setCanProceed] = useState<boolean>(false);
   
-  // Check if there's a final USP Canvas saved to determine if we can proceed
-  useEffect(() => {
-    const checkFinalUspCanvas = async () => {
-      try {
-        // Here we'll check for canvas history with final flag
-        const { data, error } = await supabase
-          .from('canvas_history')
-          .select('id, canvas_id, metadata')
-          .eq('canvas_id', strategy.id)
-          .filter('metadata->isFinal', 'eq', true)
-          .maybeSingle();
-        
-        if (data) {
-          setCanProceed(true);
-        }
-      } catch (error) {
-        console.error("Error checking for final USP Canvas:", error);
-      }
-    };
-    
-    checkFinalUspCanvas();
-  }, [strategy.id]);
+  // Get the content from the briefing and persona results
+  const briefingContent = briefingAgentResult?.content || '';
+  const personaContent = personaAgentResult?.content || '';
 
-  // Handler for going back to persona development
-  const handleGoToPreviousStep = async () => {
-    try {
-      console.log("Going back to persona development for strategy:", strategy.id);
-      
-      // Update the strategy state back to persona
-      const { data, error } = await supabase
-        .from('strategies')
-        .update({ state: 'persona' })
-        .eq('id', strategy.id)
-        .select();
-      
-      if (error) {
-        console.error("Error updating strategy state:", error);
-        toast.error("Failed to go back to persona stage");
-        return;
-      }
-      
-      console.log("Strategy state updated successfully:", data);
-      toast.success("Returned to Persona Development stage");
-      
-      // Then navigate back to the strategy details page with updated state
-      navigate(`/strategy-details/${strategy.id}`);
-    } catch (err) {
-      console.error("Failed to go back to persona development:", err);
-      toast.error("Failed to navigate back to persona development");
+  // Use the navigation hook
+  const { navigateToNextStep, isNavigating } = useStrategyNavigation({
+    strategyId: strategy.id,
+    onRefetch: () => {
+      // Navigate to new URL after state change
+      navigate(`/strategy/${strategy.id}`);
     }
-  };
-  
-  // Handler for going to the next step (funnel)
-  const handleGoToNextStep = async () => {
-    // We only allow navigation to the next step when a final USP Canvas is saved
-    try {
-      console.log("Going to funnel step for strategy:", strategy.id);
-      
-      // Update the strategy state to funnel
-      const { data, error } = await supabase
-        .from('strategies')
-        .update({ state: 'funnel' })
-        .eq('id', strategy.id)
-        .select();
-      
-      if (error) {
-        console.error("Error updating strategy state:", error);
-        toast.error("Failed to move to Funnel step");
-        return;
-      }
-      
-      console.log("Strategy state updated successfully:", data);
-      toast.success("Moving to Funnel Strategy step");
-      
-      // Navigate to the strategy details page with updated state
-      navigate(`/strategy-details/${strategy.id}`);
-    } catch (err) {
-      console.error("Failed to move to next step:", err);
-      toast.error("Failed to move to Funnel step");
+  });
+
+  // Handle navigation to next step (Statements module)
+  const handleNavigateNext = useCallback(() => {
+    if (!strategy.id) {
+      toast.error("Strategy ID is missing");
+      return;
     }
-  };
-  
-  // Check if we have the needed persona data
-  if (!personaAgentResult) {
-    return (
-      <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-        <h3 className="text-lg font-medium text-yellow-800">Missing Persona Data</h3>
-        <p className="text-yellow-700">
-          Please complete the Persona Development stage before proceeding to USP Canvas.
-        </p>
-        <Button 
-          onClick={handleGoToPreviousStep}
-          className="mt-4 bg-yellow-600 text-white hover:bg-yellow-700"
-        >
-          Go to Persona Development
-        </Button>
-      </div>
-    );
-  }
+    
+    navigateToNextStep(StrategyState.PAIN_GAINS);
+  }, [navigateToNextStep, strategy.id]);
 
   return (
-    <UspCanvasModule
-      strategyId={strategy.id}
-      briefingContent={briefingAgentResult?.content || ""}
-      personaContent={personaAgentResult?.content || ""}
-      onNavigateBack={handleGoToPreviousStep}
-      onNavigateNext={handleGoToNextStep}
-      prevStageLabel="Back to Persona Stage"
-      nextStageLabel="Continue to Funnel Stage"
-    />
+    <div className="space-y-6">
+      <Card className="overflow-hidden">
+        <UspCanvasModule
+          strategyId={strategy.id}
+          briefingContent={briefingContent}
+          personaContent={personaContent}
+          onNavigateNext={handleNavigateNext}
+          nextStageLabel="Continue to Pain & Gain Statements"
+        />
+      </Card>
+    </div>
   );
 };
 

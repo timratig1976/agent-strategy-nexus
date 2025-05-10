@@ -5,6 +5,7 @@ export enum StrategyState {
   BRIEFING = 'briefing',
   PERSONA = 'persona',
   PAIN_GAINS = 'pain_gains',
+  STATEMENTS = 'statements',
   FUNNEL = 'funnel',
   ADS = 'ads',
   COMPLETED = 'completed'

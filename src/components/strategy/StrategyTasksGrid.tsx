@@ -18,7 +18,8 @@ const StrategyTasksGrid: React.FC<StrategyTasksGridProps> = ({
   const states = [
     StrategyState.BRIEFING, 
     StrategyState.PERSONA, 
-    StrategyState.PAIN_GAINS, 
+    StrategyState.PAIN_GAINS,
+    StrategyState.STATEMENTS,
     StrategyState.FUNNEL, 
     StrategyState.ADS
   ];

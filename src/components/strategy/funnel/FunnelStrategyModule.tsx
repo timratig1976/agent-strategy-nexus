@@ -29,19 +29,19 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
     onRefetch: () => {} // No need to refetch here as navigation will change the page
   });
 
-  // Handler to go back to USP Canvas (pain_gains) stage
+  // Handler to go back to Statements stage
   const handleNavigateBack = () => {
     if (!strategyId) {
       toast.error("Strategy ID is missing");
       return;
     }
     
-    console.log("Attempting to navigate back from funnel to pain_gains");
+    console.log("Attempting to navigate back from funnel to statements");
     try {
       navigateToPreviousStep(StrategyState.FUNNEL);
     } catch (error) {
       console.error("Navigation error:", error);
-      toast.error("Failed to navigate back to USP Canvas");
+      toast.error("Failed to navigate back to Pain & Gain Statements");
       
       // Fallback direct navigation if the hook fails
       navigate(`/strategy-details/${strategyId}`);
