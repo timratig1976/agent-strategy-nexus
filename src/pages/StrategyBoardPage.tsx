@@ -4,8 +4,8 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import NavBar from '@/components/NavBar';
 import StrategyBoard from '@/components/strategy/visualization/StrategyBoard';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { AgentResult, StrategyState } from "@/types/marketing";
 
@@ -55,7 +55,7 @@ const StrategyBoardPage = () => {
           strategyId: result.strategy_id,
           content: result.content,
           createdAt: result.created_at,
-          metadata: result.metadata || {}
+          metadata: result.metadata ? { ...result.metadata } : {}
         }));
         
         setAgentResults(mappedResults);

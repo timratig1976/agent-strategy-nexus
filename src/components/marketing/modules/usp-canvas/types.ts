@@ -48,9 +48,11 @@ export interface UspCanvas {
 }
 
 export interface CanvasHistoryEntry {
+  id?: string;
   timestamp: number;
   data: UspCanvas;
   isFinal?: boolean;
+  metadata?: Record<string, any>;
 }
 
 export interface StoredAIResult {

@@ -26,9 +26,6 @@ const ModulePage = () => {
   // If the strategy ID is provided in the URL, use that instead
   const strategyId = searchParams.get("strategyId") || localStorage.getItem("standalone_strategy_id") || uuidv4();
   
-  // Default tab for USP Canvas
-  const [defaultUspTab, setDefaultUspTab] = useState("visualization");
-
   // Store the strategy ID in localStorage to persist it across refreshes
   useEffect(() => {
     if (!searchParams.get("strategyId")) {
@@ -49,7 +46,7 @@ const ModulePage = () => {
         return <UspCanvasModule 
                  strategyId={strategyId} 
                  briefingContent="" 
-                 defaultActiveTab={defaultUspTab}
+                 defaultActiveTab="visualization"
                />;
       case "usp_generator":
         return <UspGeneratorModule />;

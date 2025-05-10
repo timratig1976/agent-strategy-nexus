@@ -18,15 +18,6 @@ import {
   isFunnelMetadata 
 } from "./types";
 
-interface AgentResult {
-  id: string;
-  content: string;
-  metadata: any;
-  created_at: string;
-  strategy_id: string;
-  [key: string]: any;
-}
-
 const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = () => {
   const { strategyId } = useParams<{ strategyId: string }>();
   const [funnelData, setFunnelData] = useState<FunnelData>({ stages: [] });

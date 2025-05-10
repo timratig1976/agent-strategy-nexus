@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
@@ -6,16 +7,12 @@ import { UspCanvas, CanvasHistoryEntry, StoredAIResult } from "./types";
 
 // Define the shape of the initial empty canvas
 const emptyCanvas: UspCanvas = {
-  customerProfile: {
-    customerJobs: [],
-    customerPains: [],
-    customerGains: [],
-  },
-  valueMap: {
-    productServices: [],
-    painRelievers: [],
-    gainCreators: [],
-  },
+  customerJobs: [],
+  customerPains: [],
+  customerGains: [],
+  productServices: [],
+  painRelievers: [],
+  gainCreators: []
 };
 
 export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "editor") => {
@@ -111,9 +108,11 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
       if (historyResults) {
         const history: CanvasHistoryEntry[] = historyResults.map(result => ({
           id: result.id,
-          date: new Date(result.created_at),
-          isFinal: result.metadata?.is_final === true,
-          canvasData: JSON.parse(result.content),
+          timestamp: new Date(result.created_at).getTime(),
+          data: JSON.parse(result.content),
+          isFinal: result.metadata && typeof result.metadata === 'object' && 'is_final' in result.metadata 
+            ? Boolean(result.metadata.is_final) 
+            : false,
           metadata: result.metadata
         }));
         
@@ -134,10 +133,7 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
     const newJob = { id: uuidv4(), content, priority, isAIGenerated };
     setCanvas(prevCanvas => ({
       ...prevCanvas,
-      customerProfile: {
-        ...prevCanvas.customerProfile,
-        customerJobs: [...prevCanvas.customerProfile.customerJobs, newJob],
-      },
+      customerJobs: [...prevCanvas.customerJobs, newJob],
     }));
     setIsSaved(false);
   }, []);
@@ -146,12 +142,9 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
   const updateCustomerJob = useCallback((id: string, content: string, priority: 'low' | 'medium' | 'high') => {
     setCanvas(prevCanvas => ({
       ...prevCanvas,
-      customerProfile: {
-        ...prevCanvas.customerProfile,
-        customerJobs: prevCanvas.customerProfile.customerJobs.map(job =>
-          job.id === id ? { ...job, content, priority } : job
-        ),
-      },
+      customerJobs: prevCanvas.customerJobs.map(job =>
+        job.id === id ? { ...job, content, priority } : job
+      ),
     }));
     setIsSaved(false);
   }, []);
@@ -160,10 +153,7 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
   const deleteCustomerJob = useCallback((id: string) => {
     setCanvas(prevCanvas => ({
       ...prevCanvas,
-      customerProfile: {
-        ...prevCanvas.customerProfile,
-        customerJobs: prevCanvas.customerProfile.customerJobs.filter(job => job.id !== id),
-      },
+      customerJobs: prevCanvas.customerJobs.filter(job => job.id !== id),
     }));
     setIsSaved(false);
   }, []);
@@ -172,10 +162,7 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
   const reorderCustomerJobs = useCallback((reorderedJobs: any[]) => {
     setCanvas(prevCanvas => ({
       ...prevCanvas,
-      customerProfile: {
-        ...prevCanvas.customerProfile,
-        customerJobs: reorderedJobs,
-      },
+      customerJobs: reorderedJobs,
     }));
     setIsSaved(false);
   }, []);
@@ -185,10 +172,7 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
     const newPain = { id: uuidv4(), content, severity, isAIGenerated };
     setCanvas(prevCanvas => ({
       ...prevCanvas,
-      customerProfile: {
-        ...prevCanvas.customerProfile,
-        customerPains: [...prevCanvas.customerProfile.customerPains, newPain],
-      },
+      customerPains: [...prevCanvas.customerPains, newPain],
     }));
     setIsSaved(false);
   }, []);
@@ -197,12 +181,9 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
   const updateCustomerPain = useCallback((id: string, content: string, severity: 'low' | 'medium' | 'high') => {
     setCanvas(prevCanvas => ({
       ...prevCanvas,
-      customerProfile: {
-        ...prevCanvas.customerProfile,
-        customerPains: prevCanvas.customerProfile.customerPains.map(pain =>
-          pain.id === id ? { ...pain, content, severity } : pain
-        ),
-      },
+      customerPains: prevCanvas.customerPains.map(pain =>
+        pain.id === id ? { ...pain, content, severity } : pain
+      ),
     }));
     setIsSaved(false);
   }, []);
@@ -211,10 +192,7 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
   const deleteCustomerPain = useCallback((id: string) => {
     setCanvas(prevCanvas => ({
       ...prevCanvas,
-      customerProfile: {
-        ...prevCanvas.customerProfile,
-        customerPains: prevCanvas.customerProfile.customerPains.filter(pain => pain.id !== id),
-      },
+      customerPains: prevCanvas.customerPains.filter(pain => pain.id !== id),
     }));
     setIsSaved(false);
   }, []);
@@ -223,10 +201,7 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
   const reorderCustomerPains = useCallback((reorderedPains: any[]) => {
     setCanvas(prevCanvas => ({
       ...prevCanvas,
-      customerProfile: {
-        ...prevCanvas.customerProfile,
-        customerPains: reorderedPains,
-      },
+      customerPains: reorderedPains,
     }));
     setIsSaved(false);
   }, []);
@@ -236,10 +211,7 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
     const newGain = { id: uuidv4(), content, importance, isAIGenerated };
     setCanvas(prevCanvas => ({
       ...prevCanvas,
-      customerProfile: {
-        ...prevCanvas.customerProfile,
-        customerGains: [...prevCanvas.customerProfile.customerGains, newGain],
-      },
+      customerGains: [...prevCanvas.customerGains, newGain],
     }));
     setIsSaved(false);
   }, []);
@@ -248,12 +220,9 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
   const updateCustomerGain = useCallback((id: string, content: string, importance: 'low' | 'medium' | 'high') => {
     setCanvas(prevCanvas => ({
       ...prevCanvas,
-      customerProfile: {
-        ...prevCanvas.customerProfile,
-        customerGains: prevCanvas.customerProfile.customerGains.map(gain =>
-          gain.id === id ? { ...gain, content, importance } : gain
-        ),
-      },
+      customerGains: prevCanvas.customerGains.map(gain =>
+        gain.id === id ? { ...gain, content, importance } : gain
+      ),
     }));
     setIsSaved(false);
   }, []);
@@ -262,10 +231,7 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
   const deleteCustomerGain = useCallback((id: string) => {
     setCanvas(prevCanvas => ({
       ...prevCanvas,
-      customerProfile: {
-        ...prevCanvas.customerProfile,
-        customerGains: prevCanvas.customerProfile.customerGains.filter(gain => gain.id !== id),
-      },
+      customerGains: prevCanvas.customerGains.filter(gain => gain.id !== id),
     }));
     setIsSaved(false);
   }, []);
@@ -274,10 +240,7 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
   const reorderCustomerGains = useCallback((reorderedGains: any[]) => {
     setCanvas(prevCanvas => ({
       ...prevCanvas,
-      customerProfile: {
-        ...prevCanvas.customerProfile,
-        customerGains: reorderedGains,
-      },
+      customerGains: reorderedGains,
     }));
     setIsSaved(false);
   }, []);
@@ -287,10 +250,7 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
     const newProductService = { id: uuidv4(), content, relatedJobIds };
     setCanvas(prevCanvas => ({
       ...prevCanvas,
-      valueMap: {
-        ...prevCanvas.valueMap,
-        productServices: [...prevCanvas.valueMap.productServices, newProductService],
-      },
+      productServices: [...prevCanvas.productServices, newProductService],
     }));
     setIsSaved(false);
   }, []);
@@ -299,12 +259,9 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
   const updateProductService = useCallback((id: string, content: string, relatedJobIds: string[]) => {
     setCanvas(prevCanvas => ({
       ...prevCanvas,
-      valueMap: {
-        ...prevCanvas.valueMap,
-        productServices: prevCanvas.valueMap.productServices.map(productService =>
-          productService.id === id ? { ...productService, content, relatedJobIds } : productService
-        ),
-      },
+      productServices: prevCanvas.productServices.map(productService =>
+        productService.id === id ? { ...productService, content, relatedJobIds } : productService
+      ),
     }));
     setIsSaved(false);
   }, []);
@@ -313,10 +270,7 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
   const deleteProductService = useCallback((id: string) => {
     setCanvas(prevCanvas => ({
       ...prevCanvas,
-      valueMap: {
-        ...prevCanvas.valueMap,
-        productServices: prevCanvas.valueMap.productServices.filter(productService => productService.id !== id),
-      },
+      productServices: prevCanvas.productServices.filter(productService => productService.id !== id),
     }));
     setIsSaved(false);
   }, []);
@@ -326,10 +280,7 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
     const newPainReliever = { id: uuidv4(), content, relatedPainIds };
     setCanvas(prevCanvas => ({
       ...prevCanvas,
-      valueMap: {
-        ...prevCanvas.valueMap,
-        painRelievers: [...prevCanvas.valueMap.painRelievers, newPainReliever],
-      },
+      painRelievers: [...prevCanvas.painRelievers, newPainReliever],
     }));
     setIsSaved(false);
   }, []);
@@ -338,12 +289,9 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
   const updatePainReliever = useCallback((id: string, content: string, relatedPainIds: string[]) => {
     setCanvas(prevCanvas => ({
       ...prevCanvas,
-      valueMap: {
-        ...prevCanvas.valueMap,
-        painRelievers: prevCanvas.valueMap.painRelievers.map(painReliever =>
-          painReliever.id === id ? { ...painReliever, content, relatedPainIds } : painReliever
-        ),
-      },
+      painRelievers: prevCanvas.painRelievers.map(painReliever =>
+        painReliever.id === id ? { ...painReliever, content, relatedPainIds } : painReliever
+      ),
     }));
     setIsSaved(false);
   }, []);
@@ -352,10 +300,7 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
   const deletePainReliever = useCallback((id: string) => {
     setCanvas(prevCanvas => ({
       ...prevCanvas,
-      valueMap: {
-        ...prevCanvas.valueMap,
-        painRelievers: prevCanvas.valueMap.painRelievers.filter(painReliever => painReliever.id !== id),
-      },
+      painRelievers: prevCanvas.painRelievers.filter(painReliever => painReliever.id !== id),
     }));
     setIsSaved(false);
   }, []);
@@ -365,10 +310,7 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
     const newGainCreator = { id: uuidv4(), content, relatedGainIds };
     setCanvas(prevCanvas => ({
       ...prevCanvas,
-      valueMap: {
-        ...prevCanvas.valueMap,
-        gainCreators: [...prevCanvas.valueMap.gainCreators, newGainCreator],
-      },
+      gainCreators: [...prevCanvas.gainCreators, newGainCreator],
     }));
     setIsSaved(false);
   }, []);
@@ -377,12 +319,9 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
   const updateGainCreator = useCallback((id: string, content: string, relatedGainIds: string[]) => {
     setCanvas(prevCanvas => ({
       ...prevCanvas,
-      valueMap: {
-        ...prevCanvas.valueMap,
-        gainCreators: prevCanvas.valueMap.gainCreators.map(gainCreator =>
-          gainCreator.id === id ? { ...gainCreator, content, relatedGainIds } : gainCreator
-        ),
-      },
+      gainCreators: prevCanvas.gainCreators.map(gainCreator =>
+        gainCreator.id === id ? { ...gainCreator, content, relatedGainIds } : gainCreator
+      ),
     }));
     setIsSaved(false);
   }, []);
@@ -391,10 +330,7 @@ export const useUspCanvas = (strategyId: string, defaultActiveTab: string = "edi
   const deleteGainCreator = useCallback((id: string) => {
     setCanvas(prevCanvas => ({
       ...prevCanvas,
-      valueMap: {
-        ...prevCanvas.valueMap,
-        gainCreators: prevCanvas.valueMap.gainCreators.filter(gainCreator => gainCreator.id !== id),
-      },
+      gainCreators: prevCanvas.gainCreators.filter(gainCreator => gainCreator.id !== id),
     }));
     setIsSaved(false);
   }, []);
