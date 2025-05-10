@@ -3,8 +3,8 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import FunnelStages from "./components/FunnelStages";
-// import { FunnelData, FunnelStage, FunnelStrategyModuleProps, isFunnelMetadata } from "./types";
-import { FunnelStage, FunnelStrategyModuleProps, isFunnelMetadata } from "./types";
+// Import only what we need and avoid recursive types
+import { FunnelStrategyModuleProps, isFunnelMetadata } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -12,7 +12,23 @@ import { toast } from "sonner";
 type JsonPrimitive = string | number | boolean | null;
 type LocalJson = JsonPrimitive | JsonPrimitive[] | { [key: string]: JsonPrimitive | JsonPrimitive[] };
 
-// ✅ Temporär vereinfachte FunnelData-Definition
+// ✅ Lokale Definition des TouchPoint-Typs 
+type TouchPoint = {
+  id: string;
+  name: string;
+  channelType?: string;
+};
+
+// ✅ Lokale Definition des FunnelStage-Typs
+type FunnelStage = {
+  id: string;
+  name: string;
+  description: string;
+  touchPoints: TouchPoint[];
+  keyMetrics?: string[];
+};
+
+// ✅ Lokale Definition des FunnelData-Typs
 type FunnelData = {
   stages: FunnelStage[];
   name: string;

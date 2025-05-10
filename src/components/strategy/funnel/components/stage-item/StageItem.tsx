@@ -3,10 +3,24 @@ import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FunnelStage, TouchPoint } from "../../types";
 import StageControls from "./StageControls"; 
 import TouchpointsList from "./TouchpointsList";
 import TouchpointForm from "./TouchpointForm";
+
+// Define local types needed for this component
+type TouchPoint = {
+  id: string;
+  name: string;
+  channelType?: string;
+};
+
+type FunnelStage = {
+  id: string;
+  name: string;
+  description: string;
+  touchPoints: TouchPoint[];
+  keyMetrics?: string[];
+};
 
 interface StageItemProps {
   stage: FunnelStage;

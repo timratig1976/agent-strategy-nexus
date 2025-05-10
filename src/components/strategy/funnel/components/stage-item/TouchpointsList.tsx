@@ -3,7 +3,13 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { TouchPoint } from "../../types";
+
+// Define local type needed for this component
+type TouchPoint = {
+  id: string;
+  name: string;
+  channelType?: string;
+};
 
 interface TouchpointsListProps {
   touchPoints: TouchPoint[];

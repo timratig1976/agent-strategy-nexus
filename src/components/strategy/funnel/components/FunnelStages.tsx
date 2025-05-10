@@ -3,10 +3,24 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FunnelStage, TouchPoint } from "../types";
 import { Plus } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { StageItem } from "./stage-item";
+
+// Define local types needed for this component
+type TouchPoint = {
+  id: string;
+  name: string;
+  channelType?: string;
+};
+
+type FunnelStage = {
+  id: string;
+  name: string;
+  description: string;
+  touchPoints: TouchPoint[];
+  keyMetrics?: string[];
+};
 
 interface FunnelStagesProps {
   stages: FunnelStage[];
@@ -24,7 +38,7 @@ const FunnelStages: React.FC<FunnelStagesProps> = ({ stages, onStagesChange }) =
       name: newStageName,
       description: "",
       touchPoints: [],
-      keyMetrics: []  // Initialize with empty array
+      keyMetrics: []
     };
     
     onStagesChange([...stages, newStage]);
@@ -52,7 +66,7 @@ const FunnelStages: React.FC<FunnelStagesProps> = ({ stages, onStagesChange }) =
     const newTouchpoint: TouchPoint = {
       id: uuidv4(),
       name: touchpointName,
-      channelType: "default"  // Include this property
+      channelType: "default"
     };
     
     const updatedStages = stages.map(stage => {
