@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -11,8 +10,8 @@ import {
 } from "../types";
 
 export function useFunnelData(strategyId: string | undefined) {
-  // Temporarily use any type to bypass TypeScript's deep instantiation error
-  const [funnelData, setFunnelData] = useState<any>({});
+  // Use type inference without explicit type annotation
+  const [funnelData, setFunnelData] = useState(() => createInitialFunnelData());
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -22,18 +21,21 @@ export function useFunnelData(strategyId: string | undefined) {
 
     const loadFunnelData = async () => {
       try {
-        const { data, error } = await supabase
+        // Use type assertion on the response to avoid deep type instantiation
+        const response = await supabase
           .from("agent_results")
           .select("id, content, metadata")
           .eq("strategy_id", strategyId)
           .eq("metadata->type", "funnel")
           .order("created_at", { ascending: false })
           .limit(1);
+          
+        // Use type assertion to avoid TypeScript trying to deeply instantiate types
+        const { data, error } = response as any;
 
         if (error) throw error;
         if (!data || data.length === 0) {
-          // Initialize with empty data if nothing found
-          setFunnelData(createInitialFunnelData());
+          // Keep default data
           return;
         }
 
@@ -46,7 +48,7 @@ export function useFunnelData(strategyId: string | undefined) {
               ? JSON.parse(dbResult.content) 
               : dbResult.content;
             
-            // Create a new funnel data object WITHOUT explicit type annotation
+            // Create a new funnel data object without explicit type annotation
             const safeContent = {
               stages: Array.isArray(rawContent.stages) 
                 ? rawContent.stages.map((stage: any) => parseFunnelStage(stage))
@@ -67,8 +69,8 @@ export function useFunnelData(strategyId: string | undefined) {
               version: Number(rawContent.version || 1),
             };
 
-            // Set without type assertion since we're using any
-            setFunnelData(safeContent);
+            // Use type assertion at the call site instead of variable declaration
+            setFunnelData(safeContent as FunnelData);
             setHasChanges(false);
           } catch (e) {
             console.error("Failed to parse funnel content:", e);
@@ -109,7 +111,9 @@ export function useFunnelData(strategyId: string | undefined) {
         metadata,
       };
 
-      const { error } = await supabase.from("agent_results").insert(result);
+      // Use type assertion on the response to avoid deep type instantiation
+      const response = await supabase.from("agent_results").insert(result);
+      const { error } = response as any;
 
       if (error) throw error;
 
@@ -122,13 +126,6 @@ export function useFunnelData(strategyId: string | undefined) {
       setIsSaving(false);
     }
   };
-
-  // Initialize with default data on first render if we got an any type empty object
-  useEffect(() => {
-    if (Object.keys(funnelData).length === 0) {
-      setFunnelData(createInitialFunnelData());
-    }
-  }, [funnelData]);
 
   return {
     funnelData,
