@@ -59,6 +59,7 @@ export interface FunnelMetadata {
   type: 'funnel';
   is_final?: boolean | string;
   created_by?: string;
+  updated_at?: string;
   version?: number;
 }
 

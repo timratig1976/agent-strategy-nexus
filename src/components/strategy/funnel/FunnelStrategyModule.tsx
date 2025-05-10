@@ -6,6 +6,7 @@ import FunnelStages from "./components/FunnelStages";
 import { FunnelData, FunnelStage, FunnelStrategyModuleProps, FunnelMetadata, isFunnelMetadata } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Json } from "@/integrations/supabase/types";
 
 const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy }) => {
   const [funnelData, setFunnelData] = useState<FunnelData>({
@@ -92,12 +93,13 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
     setIsSaving(true);
     
     try {
-      // Create a strongly typed metadata object
-      const metadata: FunnelMetadata = {
-        type: 'funnel',
+      // Create metadata with explicit casting to Json type for Supabase compatibility
+      const metadata = {
+        type: 'funnel' as const,
         is_final: true,
-        created_by: 'user'
-      };
+        created_by: 'user',
+        updated_at: new Date().toISOString()
+      } as unknown as Json;
       
       // Save as an agent result
       const result = {
