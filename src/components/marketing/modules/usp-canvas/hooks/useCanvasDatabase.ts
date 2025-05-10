@@ -45,7 +45,7 @@ export default function useCanvasDatabase(canvasId: string) {
           timestamp: new Date().toISOString()
         };
         
-        // Deep clone the data to ensure it's properly serializable
+        // Deep clone and transform data to ensure it's properly serializable
         const serializableData = JSON.parse(JSON.stringify(data));
         
         // Insert new snapshot into canvas_history
@@ -53,7 +53,7 @@ export default function useCanvasDatabase(canvasId: string) {
           .from('canvas_history')
           .insert({
             canvas_id: canvasId,
-            snapshot_data: serializableData,
+            snapshot_data: serializableData as any, // Type assertion to handle Json type
             metadata
           });
         

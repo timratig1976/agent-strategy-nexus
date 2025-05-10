@@ -34,14 +34,14 @@ export const useUspCanvas = (canvasId: string) => {
             const latestSnapshot = historyData[0];
             if (latestSnapshot && latestSnapshot.snapshot_data) {
               // Extract canvas items from snapshot
-              const { customerItems, valueItems } = latestSnapshot.snapshot_data;
+              const { customerItems: loadedCustomerItems, valueItems: loadedValueItems } = latestSnapshot.snapshot_data;
               
-              if (Array.isArray(customerItems)) {
-                setCustomerItems(customerItems);
+              if (Array.isArray(loadedCustomerItems)) {
+                setCustomerItems(loadedCustomerItems);
               }
               
-              if (Array.isArray(valueItems)) {
-                setValueItems(valueItems);
+              if (Array.isArray(loadedValueItems)) {
+                setValueItems(loadedValueItems);
               }
               
               toast.success('Canvas data loaded successfully from database');

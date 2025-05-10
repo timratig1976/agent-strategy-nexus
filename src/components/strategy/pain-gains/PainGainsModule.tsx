@@ -25,7 +25,6 @@ const PainGainsModule: React.FC<PainGainsModuleProps> = ({
   
   // Check if there's a final USP Canvas saved to determine if we can proceed
   useEffect(() => {
-    // In a real implementation, you would check if there's a final USP Canvas
     const checkFinalUspCanvas = async () => {
       try {
         // Here we'll check for canvas history with final flag
