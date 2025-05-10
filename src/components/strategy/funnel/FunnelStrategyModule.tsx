@@ -6,10 +6,11 @@ import { FunnelData, FunnelStage, FunnelStrategyModuleProps, isFunnelMetadata } 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// ✅ Lokaler Json-Typ (NICHT rekursiv wie Supabase)
-type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
+// ✅ Flacher Json-Typ zur Vermeidung von TS2589
+type JsonPrimitive = string | number | boolean | null;
+type Json = JsonPrimitive | JsonPrimitive[] | { [key: string]: JsonPrimitive | JsonPrimitive[] };
 
-// ✅ Factory zur Initialisierung (verhindert TS2589)
+// ✅ Factory-Funktion: verhindert tiefe Typ-Inferenz
 function createInitialFunnelData(): FunnelData {
   return {
     stages: [],
@@ -31,13 +32,13 @@ function createInitialFunnelData(): FunnelData {
 }
 
 const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy }) => {
-  const [funnelData, setFunnelData] = useState<FunnelData>(() => createInitialFunnelData());
+  // ✅ useState ohne explizite Typangabe – Factory liefert den Typ
+  const [funnelData, setFunnelData] = useState(() => createInitialFunnelData());
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
   const strategyId = strategy?.id;
 
-  // ✅ Bestehende Funnel-Daten laden
   useEffect(() => {
     if (!strategyId) return;
 
@@ -93,19 +94,17 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
     loadFunnelData();
   }, [strategyId]);
 
-  // ✅ Änderungen an den Stages verarbeiten
   const handleStagesChange = (updatedStages: FunnelStage[]) => {
     setFunnelData(prev => ({ ...prev, stages: updatedStages }));
     setHasChanges(true);
   };
 
-  // ✅ Daten speichern
   const handleSave = async () => {
     if (!strategyId) return;
-
     setIsSaving(true);
 
     try {
+      // ✅ Casting zu lokalem Json-Typ verhindert Typkonflikte
       const metadata = {
         type: "funnel",
         is_final: true,
