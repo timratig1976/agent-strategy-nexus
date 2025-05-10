@@ -3,7 +3,6 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 
-import UspCanvasModuleTabs from './components/UspCanvasModuleTabs';
 import { useUspCanvas } from './useUspCanvas';
 import { 
   CanvasItem, 
@@ -19,6 +18,10 @@ import UspCanvasOverview from './overview/UspCanvasOverview';
 import TabbedContent from '@/components/ui/tabbed-content';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import CanvasTab from './components/tabs/CanvasTab';
+import VisualizationTab from './components/tabs/VisualizationTab';
+import AIGeneratorTab from './components/tabs/AIGeneratorTab';
+import HistoryTab from './components/tabs/HistoryTab';
 
 // Known tab values
 const TABS = {
@@ -162,9 +165,7 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
       id: TABS.CANVAS,
       label: "Canvas",
       content: (
-        <UspCanvasModuleTabs
-          activeTab={TABS.CANVAS}
-          onTabChange={handleTabChange}
+        <CanvasTab
           canvasState={canvasState}
           setCanvasState={setCanvasState}
           customerItems={customerItems}
@@ -175,9 +176,7 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
           selectedValueItems={selectedValueItems}
           setSelectedCustomerItems={setSelectedCustomerItems}
           setSelectedValueItems={setSelectedValueItems}
-          canvasId={canvasId}
           onSaveCanvas={saveCanvasData}
-          isProcessing={isProcessing}
         />
       )
     },
@@ -185,22 +184,12 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
       id: TABS.VISUALIZATION,
       label: "Visualization",
       content: (
-        <UspCanvasModuleTabs
-          activeTab={TABS.VISUALIZATION}
-          onTabChange={handleTabChange}
-          canvasState={canvasState}
-          setCanvasState={setCanvasState}
+        <VisualizationTab
           customerItems={customerItems}
           valueItems={valueItems}
-          setCustomerItems={setCustomerItems}
-          setValueItems={setValueItems}
           selectedCustomerItems={selectedCustomerItems}
           selectedValueItems={selectedValueItems}
-          setSelectedCustomerItems={setSelectedCustomerItems}
-          setSelectedValueItems={setSelectedValueItems}
           canvasId={canvasId}
-          onSaveCanvas={saveCanvasData}
-          isProcessing={isProcessing}
         />
       )
     },
@@ -208,22 +197,13 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
       id: TABS.AI_GEN,
       label: "AI Generator",
       content: (
-        <UspCanvasModuleTabs
-          activeTab={TABS.AI_GEN}
-          onTabChange={handleTabChange}
-          canvasState={canvasState}
-          setCanvasState={setCanvasState}
+        <AIGeneratorTab
+          canvasId={canvasId}
           customerItems={customerItems}
           valueItems={valueItems}
           setCustomerItems={setCustomerItems}
           setValueItems={setValueItems}
-          selectedCustomerItems={selectedCustomerItems}
-          selectedValueItems={selectedValueItems}
-          setSelectedCustomerItems={setSelectedCustomerItems}
-          setSelectedValueItems={setSelectedValueItems}
-          canvasId={canvasId}
           onSaveCanvas={saveCanvasData}
-          isProcessing={isProcessing}
         />
       )
     },
@@ -231,22 +211,10 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
       id: TABS.HISTORY,
       label: "History",
       content: (
-        <UspCanvasModuleTabs
-          activeTab={TABS.HISTORY}
-          onTabChange={handleTabChange}
-          canvasState={canvasState}
-          setCanvasState={setCanvasState}
-          customerItems={customerItems}
-          valueItems={valueItems}
+        <HistoryTab
+          canvasId={canvasId}
           setCustomerItems={setCustomerItems}
           setValueItems={setValueItems}
-          selectedCustomerItems={selectedCustomerItems}
-          selectedValueItems={selectedValueItems}
-          setSelectedCustomerItems={setSelectedCustomerItems}
-          setSelectedValueItems={setSelectedValueItems}
-          canvasId={canvasId}
-          onSaveCanvas={saveCanvasData}
-          isProcessing={isProcessing}
         />
       )
     },
