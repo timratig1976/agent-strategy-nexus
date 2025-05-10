@@ -16,6 +16,9 @@ import {
   GainCreator 
 } from './types';
 import UspCanvasOverview from './overview/UspCanvasOverview';
+import TabbedContent from '@/components/ui/tabbed-content';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 // Known tab values
 const TABS = {
@@ -153,16 +156,14 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     };
   };
 
-  return (
-    <div className="usp-canvas-module">
-      {activeTab === TABS.OVERVIEW ? (
-        <UspCanvasOverview 
-          canvas={mapCanvasToSpecificTypes()}
-          briefingContent={briefingContent}
-        />
-      ) : (
+  // Define all available tabs
+  const tabs = [
+    {
+      id: TABS.CANVAS,
+      label: "Canvas",
+      content: (
         <UspCanvasModuleTabs
-          activeTab={activeTab}
+          activeTab={TABS.CANVAS}
           onTabChange={handleTabChange}
           canvasState={canvasState}
           setCanvasState={setCanvasState}
@@ -178,25 +179,117 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
           onSaveCanvas={saveCanvasData}
           isProcessing={isProcessing}
         />
-      )}
+      )
+    },
+    {
+      id: TABS.VISUALIZATION,
+      label: "Visualization",
+      content: (
+        <UspCanvasModuleTabs
+          activeTab={TABS.VISUALIZATION}
+          onTabChange={handleTabChange}
+          canvasState={canvasState}
+          setCanvasState={setCanvasState}
+          customerItems={customerItems}
+          valueItems={valueItems}
+          setCustomerItems={setCustomerItems}
+          setValueItems={setValueItems}
+          selectedCustomerItems={selectedCustomerItems}
+          selectedValueItems={selectedValueItems}
+          setSelectedCustomerItems={setSelectedCustomerItems}
+          setSelectedValueItems={setSelectedValueItems}
+          canvasId={canvasId}
+          onSaveCanvas={saveCanvasData}
+          isProcessing={isProcessing}
+        />
+      )
+    },
+    {
+      id: TABS.AI_GEN,
+      label: "AI Generator",
+      content: (
+        <UspCanvasModuleTabs
+          activeTab={TABS.AI_GEN}
+          onTabChange={handleTabChange}
+          canvasState={canvasState}
+          setCanvasState={setCanvasState}
+          customerItems={customerItems}
+          valueItems={valueItems}
+          setCustomerItems={setCustomerItems}
+          setValueItems={setValueItems}
+          selectedCustomerItems={selectedCustomerItems}
+          selectedValueItems={selectedValueItems}
+          setSelectedCustomerItems={setSelectedCustomerItems}
+          setSelectedValueItems={setSelectedValueItems}
+          canvasId={canvasId}
+          onSaveCanvas={saveCanvasData}
+          isProcessing={isProcessing}
+        />
+      )
+    },
+    {
+      id: TABS.HISTORY,
+      label: "History",
+      content: (
+        <UspCanvasModuleTabs
+          activeTab={TABS.HISTORY}
+          onTabChange={handleTabChange}
+          canvasState={canvasState}
+          setCanvasState={setCanvasState}
+          customerItems={customerItems}
+          valueItems={valueItems}
+          setCustomerItems={setCustomerItems}
+          setValueItems={setValueItems}
+          selectedCustomerItems={selectedCustomerItems}
+          selectedValueItems={selectedValueItems}
+          setSelectedCustomerItems={setSelectedCustomerItems}
+          setSelectedValueItems={setSelectedValueItems}
+          canvasId={canvasId}
+          onSaveCanvas={saveCanvasData}
+          isProcessing={isProcessing}
+        />
+      )
+    },
+    {
+      id: TABS.OVERVIEW,
+      label: "Overview",
+      content: (
+        <UspCanvasOverview 
+          canvas={mapCanvasToSpecificTypes()}
+          briefingContent={briefingContent}
+          personaContent={personaContent}
+        />
+      )
+    }
+  ];
+
+  return (
+    <div className="usp-canvas-module">
+      <TabbedContent 
+        tabs={tabs}
+        activeTabId={activeTab}
+        onTabChange={handleTabChange}
+        className="w-full"
+      />
       
       {(onNavigateBack || onNavigateNext) && (
         <div className="flex justify-between mt-8 pt-4 border-t">
           {onNavigateBack && (
-            <button
+            <Button
               onClick={onNavigateBack}
-              className="px-4 py-2 border rounded-md hover:bg-gray-100"
+              variant="outline"
+              className="flex items-center"
             >
+              <ArrowLeft className="mr-2 h-4 w-4" />
               {prevStageLabel || 'Back'}
-            </button>
+            </Button>
           )}
           {onNavigateNext && (
-            <button
+            <Button
               onClick={onNavigateNext}
-              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
             >
               {nextStageLabel || 'Next'}
-            </button>
+            </Button>
           )}
         </div>
       )}

@@ -69,23 +69,23 @@ const TabsList: React.FC<TabsListProps> = ({ activeTab, onTabChange, onSave, isP
           </TabsTrigger>
           
           <TabsTrigger 
-            value="overview" 
+            value="visualization" 
             className="relative"
-            onClick={() => onTabChange && onTabChange("overview")}
+            onClick={() => onTabChange && onTabChange("visualization")}
           >
-            Overview
-            {activeTab === "overview" && (
+            Visualization
+            {activeTab === "visualization" && (
               <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
             )}
           </TabsTrigger>
           
           <TabsTrigger 
-            value="ai-generator" 
+            value="ai_gen" 
             className="relative"
-            onClick={() => onTabChange && onTabChange("ai-generator")}
+            onClick={() => onTabChange && onTabChange("ai_gen")}
           >
             AI Generator
-            {activeTab === "ai-generator" && (
+            {activeTab === "ai_gen" && (
               <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full"></span>
             )}
           </TabsTrigger>

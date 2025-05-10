@@ -26,26 +26,6 @@ interface UspCanvasModuleTabsProps {
   isProcessing: boolean;
 }
 
-interface TabsListProps {
-  activeTab: string;
-  onSave: () => Promise<void>;
-  isProcessing: boolean;
-}
-
-interface CanvasTabProps {
-  canvasState: CanvasState;
-  setCanvasState: (state: CanvasState) => void;
-  customerItems: CanvasItem[];
-  valueItems: CanvasItem[];
-  setCustomerItems: (items: CanvasItem[]) => void;
-  setValueItems: (items: CanvasItem[]) => void;
-  selectedCustomerItems: string[];
-  selectedValueItems: string[];
-  setSelectedCustomerItems: (items: string[]) => void;
-  setSelectedValueItems: (items: string[]) => void;
-  onSaveCanvas: () => Promise<void>;
-}
-
 const UspCanvasModuleTabs: React.FC<UspCanvasModuleTabsProps> = ({
   activeTab,
   onTabChange,
@@ -63,57 +43,82 @@ const UspCanvasModuleTabs: React.FC<UspCanvasModuleTabsProps> = ({
   onSaveCanvas,
   isProcessing
 }) => {
+  // Determine which tab content to render based on activeTab
+  const renderTabContent = () => {
+    switch(activeTab) {
+      case 'canvas':
+        return (
+          <CanvasTab
+            canvasState={canvasState}
+            setCanvasState={setCanvasState}
+            customerItems={customerItems}
+            valueItems={valueItems}
+            setCustomerItems={setCustomerItems}
+            setValueItems={setValueItems}
+            selectedCustomerItems={selectedCustomerItems}
+            selectedValueItems={selectedValueItems}
+            setSelectedCustomerItems={setSelectedCustomerItems}
+            setSelectedValueItems={setSelectedValueItems}
+            onSaveCanvas={onSaveCanvas}
+          />
+        );
+      case 'visualization':
+        return (
+          <VisualizationTab
+            customerItems={customerItems}
+            valueItems={valueItems}
+            selectedCustomerItems={selectedCustomerItems}
+            selectedValueItems={selectedValueItems}
+            canvasId={canvasId}
+          />
+        );
+      case 'ai_gen':
+        return (
+          <AIGeneratorTab
+            canvasId={canvasId}
+            customerItems={customerItems}
+            valueItems={valueItems}
+            setCustomerItems={setCustomerItems}
+            setValueItems={setValueItems}
+            onSaveCanvas={onSaveCanvas}
+          />
+        );
+      case 'history':
+        return (
+          <HistoryTab
+            canvasId={canvasId}
+            setCustomerItems={setCustomerItems}
+            setValueItems={setValueItems}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
       <TabsList 
         activeTab={activeTab} 
         onSave={onSaveCanvas}
         isProcessing={isProcessing}
+        onTabChange={onTabChange}
       />
       
       <TabsContent value="canvas" className="mt-6">
-        <CanvasTab
-          canvasState={canvasState}
-          setCanvasState={setCanvasState}
-          customerItems={customerItems}
-          valueItems={valueItems}
-          setCustomerItems={setCustomerItems}
-          setValueItems={setValueItems}
-          selectedCustomerItems={selectedCustomerItems}
-          selectedValueItems={selectedValueItems}
-          setSelectedCustomerItems={setSelectedCustomerItems}
-          setSelectedValueItems={setSelectedValueItems}
-          onSaveCanvas={onSaveCanvas}
-        />
+        {activeTab === 'canvas' && renderTabContent()}
       </TabsContent>
       
-      <TabsContent value="visualization">
-        <VisualizationTab
-          customerItems={customerItems}
-          valueItems={valueItems}
-          selectedCustomerItems={selectedCustomerItems}
-          selectedValueItems={selectedValueItems}
-          canvasId={canvasId}
-        />
+      <TabsContent value="visualization" className="mt-6">
+        {activeTab === 'visualization' && renderTabContent()}
       </TabsContent>
       
-      <TabsContent value="ai_gen">
-        <AIGeneratorTab
-          canvasId={canvasId}
-          customerItems={customerItems}
-          valueItems={valueItems}
-          setCustomerItems={setCustomerItems}
-          setValueItems={setValueItems}
-          onSaveCanvas={onSaveCanvas}
-        />
+      <TabsContent value="ai_gen" className="mt-6">
+        {activeTab === 'ai_gen' && renderTabContent()}
       </TabsContent>
       
-      <TabsContent value="history">
-        <HistoryTab
-          canvasId={canvasId}
-          setCustomerItems={setCustomerItems}
-          setValueItems={setValueItems}
-        />
+      <TabsContent value="history" className="mt-6">
+        {activeTab === 'history' && renderTabContent()}
       </TabsContent>
     </Tabs>
   );
