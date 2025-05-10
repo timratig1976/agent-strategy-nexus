@@ -6,16 +6,40 @@ import { v4 as uuidv4 } from 'uuid';
 import UspCanvasModuleTabs from './components/UspCanvasModuleTabs';
 import { useUspCanvas } from './useUspCanvas';
 import { CanvasItem, CanvasState } from './types';
+import UspCanvasOverview from './overview/UspCanvasOverview';
 
 // Known tab values
 const TABS = {
   CANVAS: 'canvas',
   VISUALIZATION: 'visualization',
   AI_GEN: 'ai_gen',
-  HISTORY: 'history'
+  HISTORY: 'history',
+  OVERVIEW: 'overview'
 };
 
-const UspCanvasModule = ({ projectId = '', strategyId = '' }) => {
+interface UspCanvasModuleProps {
+  projectId?: string;
+  strategyId?: string;
+  briefingContent?: string;
+  personaContent?: string;
+  onNavigateBack?: () => void;
+  onNavigateNext?: () => void;
+  prevStageLabel?: string;
+  nextStageLabel?: string;
+  defaultActiveTab?: string;
+}
+
+const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
+  projectId = '',
+  strategyId = '',
+  briefingContent = '',
+  personaContent = '',
+  onNavigateBack,
+  onNavigateNext,
+  prevStageLabel,
+  nextStageLabel,
+  defaultActiveTab = TABS.CANVAS
+}) => {
   const canvasId = projectId || strategyId || uuidv4();
   
   // Use the main canvas hook
@@ -32,7 +56,7 @@ const UspCanvasModule = ({ projectId = '', strategyId = '' }) => {
     error
   } = useUspCanvas(canvasId);
 
-  const [activeTab, setActiveTab] = useState(TABS.CANVAS);
+  const [activeTab, setActiveTab] = useState(defaultActiveTab);
 
   // Handle canvas item selection
   const [selectedCustomerItems, setSelectedCustomerItems] = useState<string[]>([]);
@@ -59,23 +83,58 @@ const UspCanvasModule = ({ projectId = '', strategyId = '' }) => {
 
   return (
     <div className="usp-canvas-module">
-      <UspCanvasModuleTabs
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-        canvasState={canvasState}
-        setCanvasState={setCanvasState}
-        customerItems={customerItems}
-        valueItems={valueItems}
-        setCustomerItems={setCustomerItems}
-        setValueItems={setValueItems}
-        selectedCustomerItems={selectedCustomerItems}
-        selectedValueItems={selectedValueItems}
-        setSelectedCustomerItems={setSelectedCustomerItems}
-        setSelectedValueItems={setSelectedValueItems}
-        canvasId={canvasId}
-        onSaveCanvas={saveCanvasData}
-        isProcessing={isProcessing}
-      />
+      {activeTab === TABS.OVERVIEW ? (
+        <UspCanvasOverview 
+          canvas={{
+            customerJobs: customerItems.filter(item => item.rating === 'high' || item.rating === 'medium'),
+            customerPains: customerItems.filter(item => item.rating === 'high' || item.rating === 'medium'),
+            customerGains: customerItems.filter(item => item.rating === 'high' || item.rating === 'medium'),
+            productServices: valueItems.filter(item => item.rating === 'high' || item.rating === 'medium'),
+            painRelievers: valueItems.filter(item => item.rating === 'high' || item.rating === 'medium'),
+            gainCreators: valueItems.filter(item => item.rating === 'high' || item.rating === 'medium')
+          }}
+          briefingContent={briefingContent}
+        />
+      ) : (
+        <UspCanvasModuleTabs
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          canvasState={canvasState}
+          setCanvasState={setCanvasState}
+          customerItems={customerItems}
+          valueItems={valueItems}
+          setCustomerItems={setCustomerItems}
+          setValueItems={setValueItems}
+          selectedCustomerItems={selectedCustomerItems}
+          selectedValueItems={selectedValueItems}
+          setSelectedCustomerItems={setSelectedCustomerItems}
+          setSelectedValueItems={setSelectedValueItems}
+          canvasId={canvasId}
+          onSaveCanvas={saveCanvasData}
+          isProcessing={isProcessing}
+        />
+      )}
+      
+      {(onNavigateBack || onNavigateNext) && (
+        <div className="flex justify-between mt-8 pt-4 border-t">
+          {onNavigateBack && (
+            <button
+              onClick={onNavigateBack}
+              className="px-4 py-2 border rounded-md hover:bg-gray-100"
+            >
+              {prevStageLabel || 'Back'}
+            </button>
+          )}
+          {onNavigateNext && (
+            <button
+              onClick={onNavigateNext}
+              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
+            >
+              {nextStageLabel || 'Next'}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };

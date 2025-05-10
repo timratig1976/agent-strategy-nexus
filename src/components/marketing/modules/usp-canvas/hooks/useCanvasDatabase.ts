@@ -2,6 +2,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { CanvasItem } from '../types';
 
 // Define simpler types to avoid deep nesting
 interface BasicJsonObject {
@@ -23,26 +24,50 @@ interface HistoryEntry {
   };
 }
 
+// Helper function to prepare canvas data for storage
+function prepareCanvasDataForStorage(canvasItems: CanvasItem[] = []): any[] {
+  return canvasItems.map(item => ({
+    id: item.id,
+    content: item.content,
+    rating: item.rating,
+    isAIGenerated: item.isAIGenerated || false
+  }));
+}
+
 export function useCanvasDatabase(canvasId: string) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   // Save canvas history snapshot
   const saveCanvasSnapshot = useCallback(
-    async (snapshotData: BasicJsonObject, metadata?: Record<string, any>) => {
+    async (data: { customerItems?: CanvasItem[], valueItems?: CanvasItem[], [key: string]: any }) => {
       if (!canvasId) return null;
       setLoading(true);
       setError(null);
 
       try {
+        // Prepare data for storage - convert CanvasItem arrays to simple objects
+        const snapshotData: BasicJsonObject = {
+          customerItems: prepareCanvasDataForStorage(data.customerItems),
+          valueItems: prepareCanvasDataForStorage(data.valueItems),
+          timestamp: data.timestamp || new Date().toISOString()
+        };
+
+        // Additional properties that are basic types
+        Object.keys(data).forEach(key => {
+          if (key !== 'customerItems' && key !== 'valueItems') {
+            snapshotData[key] = data[key];
+          }
+        });
+
         const historyEntry: HistoryEntry = {
           canvas_id: canvasId,
           snapshot_data: snapshotData,
-          metadata: metadata || {}
+          metadata: data.metadata || {}
         };
 
-        // Direct table insert instead of RPC
-        const { data, error: saveError } = await supabase
+        // Direct table insert
+        const { data: result, error: saveError } = await supabase
           .from('canvas_history')
           .insert({
             canvas_id: canvasId,
@@ -53,7 +78,7 @@ export function useCanvasDatabase(canvasId: string) {
           .single();
 
         if (saveError) throw saveError;
-        return data;
+        return result;
       } catch (err) {
         const error = err instanceof Error ? err : new Error('Unknown error saving canvas snapshot');
         setError(error);
@@ -74,7 +99,7 @@ export function useCanvasDatabase(canvasId: string) {
     setError(null);
 
     try {
-      // Direct table query instead of RPC
+      // Direct table query
       const { data, error: loadError } = await supabase
         .from('canvas_history')
         .select('*')

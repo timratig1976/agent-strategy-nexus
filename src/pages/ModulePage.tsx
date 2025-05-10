@@ -45,7 +45,6 @@ const ModulePage = () => {
         // Pass the required props to UspCanvasModule with visualization as the default tab
         return <UspCanvasModule 
                  strategyId={strategyId} 
-                 briefingContent="" 
                  defaultActiveTab="visualization"
                />;
       case "usp_generator":

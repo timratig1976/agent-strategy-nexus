@@ -6,15 +6,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
-import { StrategyState } from '@/types/marketing';
-import { isValidStrategyState, toStrategyState } from '@/utils/typeUtils';
 
 interface NewTaskFormProps {
   strategyId: string;
+  state?: string;
   onTaskAdded: () => void;
+  onCancel?: () => void;
 }
 
-const NewTaskForm: React.FC<NewTaskFormProps> = ({ strategyId, onTaskAdded }) => {
+const NewTaskForm: React.FC<NewTaskFormProps> = ({ 
+  strategyId, 
+  state = 'briefing',  // Default to 'briefing' state
+  onTaskAdded, 
+  onCancel 
+}) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,13 +35,13 @@ const NewTaskForm: React.FC<NewTaskFormProps> = ({ strategyId, onTaskAdded }) =>
     setIsSubmitting(true);
     
     try {
-      // Make sure to use valid strategy states
+      // Use string literal for state to match database expectations
       const newTask = {
         id: uuidv4(),
         strategy_id: strategyId,
         title: title.trim(),
         description: description.trim(),
-        state: StrategyState.BRIEFING, // Use enum value for type safety
+        state: state, // Use the string literal value passed as prop
         is_completed: false,
       };
       
@@ -81,7 +86,17 @@ const NewTaskForm: React.FC<NewTaskFormProps> = ({ strategyId, onTaskAdded }) =>
         />
       </div>
       
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {onCancel && (
+          <Button 
+            type="button" 
+            variant="outline"
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+        )}
+        
         <Button 
           type="submit" 
           disabled={!title.trim() || isSubmitting}

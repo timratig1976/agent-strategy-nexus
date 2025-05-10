@@ -4,7 +4,7 @@ import { TabsList as ShadcnTabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface TabsListProps {
   activeTab: string;
-  onTabChange: (value: string) => void;
+  onTabChange?: (value: string) => void;
   onSave: () => Promise<void>;
   isProcessing: boolean;
   children?: React.ReactNode;
@@ -60,6 +60,7 @@ const TabsList: React.FC<TabsListProps> = ({ activeTab, onTabChange, onSave, isP
           <TabsTrigger 
             value="canvas" 
             className="relative"
+            onClick={() => onTabChange && onTabChange("canvas")}
           >
             Canvas
             {activeTab === "canvas" && (
@@ -70,6 +71,7 @@ const TabsList: React.FC<TabsListProps> = ({ activeTab, onTabChange, onSave, isP
           <TabsTrigger 
             value="overview" 
             className="relative"
+            onClick={() => onTabChange && onTabChange("overview")}
           >
             Overview
             {activeTab === "overview" && (
@@ -80,6 +82,7 @@ const TabsList: React.FC<TabsListProps> = ({ activeTab, onTabChange, onSave, isP
           <TabsTrigger 
             value="ai-generator" 
             className="relative"
+            onClick={() => onTabChange && onTabChange("ai-generator")}
           >
             AI Generator
             {activeTab === "ai-generator" && (
@@ -90,6 +93,7 @@ const TabsList: React.FC<TabsListProps> = ({ activeTab, onTabChange, onSave, isP
           <TabsTrigger 
             value="history" 
             className="relative"
+            onClick={() => onTabChange && onTabChange("history")}
           >
             History
             {activeTab === "history" && (

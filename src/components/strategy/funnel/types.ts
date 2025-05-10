@@ -1,19 +1,15 @@
 
-// Define types for the funnel strategy module
-
+// Define interfaces for funnel data types to avoid deep recursive type issues
 export interface TouchPoint {
   id: string;
   name: string;
-  stageId: string;
-  channelType: string;
 }
 
 export interface FunnelStage {
   id: string;
   name: string;
   description: string;
-  touchPoints?: TouchPoint[];
-  keyMetrics?: string[];
+  touchPoints: TouchPoint[];
 }
 
 export interface FunnelData {
@@ -21,27 +17,23 @@ export interface FunnelData {
   actionPlans?: Record<string, string>;
 }
 
-export interface FunnelMetadata {
-  type: string;
-  is_final: boolean | string;
-  updated_at?: string;
-}
-
 export interface FunnelStrategyModuleProps {
-  strategy?: any;
-  onNavigateBack?: () => void;
+  strategy?: {
+    id: string;
+    name?: string;
+  };
 }
 
-// Type guard for checking if an object matches the FunnelMetadata interface
-export function isFunnelMetadata(obj: any): obj is FunnelMetadata {
-  return (
-    typeof obj === 'object' &&
-    obj !== null &&
-    'type' in obj &&
-    obj.type === 'funnel' &&
-    'is_final' in obj
-  );
-}
-
-// Re-export from the new types to maintain backward compatibility
-export * from './types/index';
+// Type guard for funnel metadata
+export const isFunnelMetadata = (metadata: any): metadata is { 
+  type: string; 
+  is_final?: boolean | string;
+} => {
+  return metadata 
+    && typeof metadata === 'object' 
+    && metadata.type === 'funnel'
+    && (metadata.is_final === undefined || 
+        typeof metadata.is_final === 'boolean' || 
+        metadata.is_final === 'true' || 
+        metadata.is_final === 'false');
+};

@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlusCircle } from "lucide-react";
@@ -16,14 +16,19 @@ const TaskList: React.FC<TaskListProps> = ({
   onTasksChange 
 }) => {
   const stateTasks = tasks.filter(task => task.state === state);
+  const [isAdding, setIsAdding] = useState(false);
   
   const {
-    isAdding,
-    setIsAdding,
     handleToggleTask,
     handleDeleteTask,
-    handleTaskAdded
   } = useTaskOperations(tasks, onTasksChange);
+
+  // Refactored to not rely on the returned task from handleTaskAdded
+  const handleTaskAdded = () => {
+    setIsAdding(false);
+    // Signal to parent that tasks have changed and need to be refreshed
+    onTasksChange();
+  };
 
   return (
     <Card>
