@@ -11,7 +11,8 @@ import {
 } from "../types";
 
 export function useFunnelData(strategyId: string | undefined) {
-  const [funnelData, setFunnelData] = useState<FunnelData>(() => createInitialFunnelData());
+  // Remove explicit type annotation to prevent TypeScript from deeply instantiating the type
+  const [funnelData, setFunnelData] = useState(() => createInitialFunnelData());
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
