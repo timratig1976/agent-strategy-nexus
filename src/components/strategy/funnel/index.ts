@@ -1,6 +1,6 @@
 
 import FunnelStrategyModule from './FunnelStrategyModule';
-import { 
+import {
   FunnelStages,
   FunnelConfiguration,
   FunnelVisualization,

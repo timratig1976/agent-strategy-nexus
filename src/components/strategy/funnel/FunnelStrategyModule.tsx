@@ -65,7 +65,12 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({
           try {
             const parsedFunnel = JSON.parse(latestFunnel.content);
             setFunnelData(parsedFunnel);
-            setSavedFunnel(latestFunnel.metadata?.is_final === true);
+            // Safely check if is_final exists and is true in the metadata
+            const isFinal = typeof latestFunnel.metadata === 'object' && 
+                          latestFunnel.metadata !== null && 
+                          'is_final' in latestFunnel.metadata && 
+                          latestFunnel.metadata.is_final === true;
+            setSavedFunnel(isFinal);
           } catch (e) {
             console.error("Error parsing funnel data:", e);
             setFunnelData(null);
