@@ -61,3 +61,103 @@ export interface Strategy {
     [key: string]: any;
   };
 }
+
+export interface FunnelStage {
+  id: string;
+  name: string;
+  description: string;
+  keyMetrics: string[];
+  touchpoints: string[];
+}
+
+export interface LandingPage {
+  id: string;
+  name: string;
+  url: string;
+  funnelStage: string;
+  headline: string;
+  subheadline: string;
+  features: string[];
+  benefits: string[];
+  ctaText: string;
+  ctaColor: string;
+  layout: string;
+  includeTestimonials: boolean;
+  includeFaq: boolean;
+  template: string;
+}
+
+export interface TargetAudience {
+  id: string;
+  name: string;
+  description: string;
+  ageRange: number[];
+  genders: string[];
+  locations: string;
+  interests: string[];
+  behaviors: string[];
+  custom: boolean;
+  lookalikeSource?: string;
+  exclusions?: string;
+}
+
+export interface AdCreative {
+  id: string;
+  headline: string;
+  body: string;
+  cta: string;
+  adSetId: string;
+  imageUrl?: string;
+  primaryText?: string;
+  description?: string;
+}
+
+export interface AdSet {
+  id: string;
+  name: string;
+  objective: string;
+  funnelStage: string;
+  budget: number;
+  targetAudience: string;
+}
+
+export interface FunnelData {
+  name: string;
+  primaryGoal: string;
+  leadMagnetType: string;
+  targetAudience: string;
+  mainChannel: string;
+  conversionAction: string;
+  timeframe: string;
+  budget: string | number;
+  kpis: string;
+  notes: string;
+  stages: FunnelStage[];
+  actionItems?: any[];
+  conversionRates?: Record<string, number>;
+  lastUpdated?: string;
+  version?: number;
+}
+
+export interface AdCampaignData {
+  name: string;
+  objective: string;
+  adSets: AdSet[];
+  targetAudiences: TargetAudience[];
+  adCreatives: AdCreative[];
+  landingPages: LandingPage[];
+  budget: number;
+  settings: {
+    budgetType: string;
+    startDate: string;
+    endDate: string;
+    bidStrategy: string;
+    bidAmount: number;
+    adSchedule: string;
+    optimizationGoal: string;
+    pixelId: string;
+    notes: string;
+  };
+  lastUpdated?: string;
+  version?: number;
+}
