@@ -23,11 +23,11 @@ const TaskList: React.FC<TaskListProps> = ({
     handleDeleteTask,
   } = useTaskOperations(tasks, onTasksChange);
 
-  // Refactored to not rely on the returned task from handleTaskAdded
+  // Updated to pass the tasks array to onTasksChange
   const handleTaskAdded = () => {
     setIsAdding(false);
     // Signal to parent that tasks have changed and need to be refreshed
-    onTasksChange();
+    onTasksChange(tasks);
   };
 
   return (

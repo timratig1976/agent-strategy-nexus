@@ -6,17 +6,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
+import { StrategyState } from "@/types/marketing";
 
 interface NewTaskFormProps {
   strategyId: string;
-  state?: string;
+  state: StrategyState;  // Updated to explicitly use StrategyState
   onTaskAdded: () => void;
   onCancel?: () => void;
 }
 
 const NewTaskForm: React.FC<NewTaskFormProps> = ({ 
   strategyId, 
-  state = 'briefing',  // Default to 'briefing' state
+  state,
   onTaskAdded, 
   onCancel 
 }) => {
@@ -35,13 +36,13 @@ const NewTaskForm: React.FC<NewTaskFormProps> = ({
     setIsSubmitting(true);
     
     try {
-      // Use string literal for state to match database expectations
+      // Ensure state is properly typed as StrategyState
       const newTask = {
         id: uuidv4(),
         strategy_id: strategyId,
         title: title.trim(),
         description: description.trim(),
-        state: state, // Use the string literal value passed as prop
+        state: state as StrategyState, // Explicitly cast to ensure correct type
         is_completed: false,
       };
       
