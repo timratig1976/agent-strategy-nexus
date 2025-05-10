@@ -14,6 +14,11 @@ export class CanvasRepository {
     try {
       console.log("Fetching USP canvas data for strategy:", strategyId);
       
+      // Set a request timeout to prevent hanging operations
+      const timeoutId = setTimeout(() => {
+        throw new Error("Database fetch operation timed out");
+      }, 5000);
+      
       const { data, error: fetchError } = await supabase
         .from('usp_canvas')
         .select('*')
@@ -21,6 +26,9 @@ export class CanvasRepository {
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
+      
+      // Clear the timeout since the operation completed
+      clearTimeout(timeoutId);
       
       if (fetchError) {
         console.error("Error fetching canvas data:", fetchError);
@@ -37,7 +45,12 @@ export class CanvasRepository {
       return { canvas: null, error: null };
     } catch (err) {
       console.error("Exception fetching canvas data:", err);
-      return { canvas: null, error: "An error occurred while loading canvas data" };
+      return { 
+        canvas: null, 
+        error: err instanceof Error ? 
+          err.message : 
+          "An error occurred while loading canvas data"
+      };
     }
   }
 
@@ -50,6 +63,11 @@ export class CanvasRepository {
   }> {
     try {
       console.log("Saving USP canvas to database for strategy:", strategyId);
+
+      // Set a request timeout to prevent hanging operations
+      const timeoutId = setTimeout(() => {
+        throw new Error("Database save operation timed out");
+      }, 5000);
 
       // Convert our canvas to the database format
       const dbCanvas = mapCanvasToDbFormat(canvas, strategyId);
@@ -68,6 +86,9 @@ export class CanvasRepository {
           version: dbCanvas.version
         });
       
+      // Clear the timeout since the operation completed
+      clearTimeout(timeoutId);
+      
       if (upsertError) {
         console.error("Error saving canvas to database:", upsertError);
         return { success: false, error: "Failed to save canvas to database" };
@@ -76,7 +97,12 @@ export class CanvasRepository {
       return { success: true, error: null };
     } catch (err) {
       console.error("Exception saving canvas to database:", err);
-      return { success: false, error: "An error occurred while saving canvas" };
+      return { 
+        success: false, 
+        error: err instanceof Error ? 
+          err.message : 
+          "An error occurred while saving canvas" 
+      };
     }
   }
 }

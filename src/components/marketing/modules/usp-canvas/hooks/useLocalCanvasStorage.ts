@@ -6,11 +6,13 @@ import { v4 as uuidv4 } from 'uuid';
 export const useLocalCanvasStorage = (strategyId?: string) => {
   const [canvasData, setCanvasData] = useState<UspCanvas | null>(null);
   const [canvasSaveHistory, setCanvasSaveHistory] = useState<CanvasHistoryEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Load canvas history from localStorage
   useEffect(() => {
     if (strategyId) {
       try {
+        setIsLoading(true);
         const savedData = localStorage.getItem(`usp_canvas_${strategyId}`);
         if (savedData) {
           const parsedData = JSON.parse(savedData);
@@ -22,7 +24,9 @@ export const useLocalCanvasStorage = (strategyId?: string) => {
           }
         }
       } catch (err) {
-        console.error("Error loading saved canvas data:", err);
+        console.error("Error loading saved canvas data from localStorage:", err);
+      } finally {
+        setIsLoading(false);
       }
     }
   }, [strategyId]);
@@ -67,6 +71,7 @@ export const useLocalCanvasStorage = (strategyId?: string) => {
   return {
     canvasData,
     canvasSaveHistory,
-    saveToLocalStorage
+    saveToLocalStorage,
+    isLoading
   };
 };

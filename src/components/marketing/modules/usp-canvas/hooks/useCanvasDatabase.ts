@@ -38,19 +38,25 @@ export function useCanvasDatabase(canvasId: string) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // Save canvas history snapshot
+  // Save canvas history snapshot with timeout to prevent hanging operations
   const saveCanvasSnapshot = useCallback(
     async (data: { customerItems?: CanvasItem[], valueItems?: CanvasItem[], [key: string]: any }) => {
       if (!canvasId) return null;
       setLoading(true);
       setError(null);
 
+      // Create a promise that rejects after a timeout
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Database operation timed out')), 10000);
+      });
+
       try {
         // Prepare data for storage - convert CanvasItem arrays to simple objects
         const snapshotData: BasicJsonObject = {
           customerItems: prepareCanvasDataForStorage(data.customerItems),
           valueItems: prepareCanvasDataForStorage(data.valueItems),
-          timestamp: data.timestamp || new Date().toISOString()
+          timestamp: data.timestamp || new Date().toISOString(),
+          strategy_id: canvasId // Use strategy_id consistently
         };
 
         // Additional properties that are basic types
@@ -63,26 +69,33 @@ export function useCanvasDatabase(canvasId: string) {
         const historyEntry: HistoryEntry = {
           canvas_id: canvasId,
           snapshot_data: snapshotData,
-          metadata: data.metadata || {}
+          metadata: data.metadata || { type: 'pain_gains' }
         };
 
-        // Direct table insert
-        const { data: result, error: saveError } = await supabase
-          .from('canvas_history')
-          .insert({
-            canvas_id: canvasId,
-            snapshot_data: historyEntry.snapshot_data,
-            metadata: historyEntry.metadata
-          })
-          .select('id')
-          .single();
+        // Use Promise.race to implement timeout
+        const result = await Promise.race([
+          supabase
+            .from('canvas_history')
+            .insert({
+              canvas_id: canvasId,
+              snapshot_data: historyEntry.snapshot_data,
+              metadata: historyEntry.metadata
+            })
+            .select('id')
+            .single(),
+          timeoutPromise
+        ]);
 
-        if (saveError) throw saveError;
-        return result;
+        if ('error' in result && result.error) throw result.error;
+        return result.data;
       } catch (err) {
         const error = err instanceof Error ? err : new Error('Unknown error saving canvas snapshot');
         setError(error);
-        toast.error('Failed to save canvas snapshot');
+        if (error.message.includes('timed out')) {
+          toast.error('Database operation timed out. Changes saved to local storage instead.');
+        } else {
+          toast.error('Failed to save to database. Changes saved to local storage instead.');
+        }
         console.error(error);
         return null;
       } finally {
@@ -92,26 +105,38 @@ export function useCanvasDatabase(canvasId: string) {
     [canvasId]
   );
 
-  // Load canvas history snapshots
+  // Load canvas history snapshots with timeout
   const loadCanvasHistory = useCallback(async () => {
     if (!canvasId) return [];
     setLoading(true);
     setError(null);
 
-    try {
-      // Direct table query
-      const { data, error: loadError } = await supabase
-        .from('canvas_history')
-        .select('*')
-        .eq('canvas_id', canvasId)
-        .order('created_at', { ascending: false });
+    // Create a promise that rejects after a timeout
+    const timeoutPromise = new Promise<any>((_, reject) => {
+      setTimeout(() => reject(new Error('Database operation timed out')), 10000);
+    });
 
-      if (loadError) throw loadError;
-      return data || [];
+    try {
+      // Use Promise.race to implement timeout
+      const result = await Promise.race([
+        supabase
+          .from('canvas_history')
+          .select('*')
+          .eq('canvas_id', canvasId)
+          .order('created_at', { ascending: false }),
+        timeoutPromise
+      ]);
+
+      if ('error' in result && result.error) throw result.error;
+      return result.data || [];
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Unknown error loading canvas history');
       setError(error);
-      toast.error('Failed to load canvas history');
+      if (error.message.includes('timed out')) {
+        toast.error('Database operation timed out. Using local storage instead.');
+      } else {
+        toast.error('Failed to load from database. Using local storage instead.');
+      }
       console.error(error);
       return [];
     } finally {
@@ -125,6 +150,6 @@ export function useCanvasDatabase(canvasId: string) {
     saveCanvasSnapshot,
     loadCanvasHistory
   };
-}
+};
 
 export default useCanvasDatabase;
