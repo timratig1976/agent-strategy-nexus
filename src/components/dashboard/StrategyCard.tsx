@@ -68,7 +68,7 @@ const StrategyCard = ({ strategy, stateLabels, stateColors }: StrategyCardProps)
           
           <div className="flex justify-between mt-4">
             <Link 
-              to={`/strategy-overview/${strategy.id}`} 
+              to={`/strategy/${strategy.id}`} 
               className="text-xs text-blue-600 hover:text-blue-800 flex items-center"
             >
               <ExternalLink className="h-3 w-3 mr-1" /> 
