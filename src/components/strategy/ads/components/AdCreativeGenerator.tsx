@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,10 +12,9 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Loader2, Plus, Save, Sparkles, Trash2, Image } from "lucide-react";
+import { Loader2, Plus, Save, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { supabase } from "@/integrations/supabase/client";
 
 interface AdCreativeGeneratorProps {
   campaignData: any;
@@ -55,8 +54,6 @@ const AdCreativeGenerator: React.FC<AdCreativeGeneratorProps> = ({
   const [isAddingCreative, setIsAddingCreative] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState("standard");
-  const [uspCanvasData, setUspCanvasData] = useState<any>(null);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [imagePrompt, setImagePrompt] = useState("");
   
   // CTA options for Meta ads
@@ -70,39 +67,6 @@ const AdCreativeGenerator: React.FC<AdCreativeGeneratorProps> = ({
     { value: "SHOP_NOW", label: "Shop Now" },
     { value: "SUBSCRIBE", label: "Subscribe" }
   ];
-  
-  // Load USP Canvas data to help with ad creative generation
-  useEffect(() => {
-    const loadUspCanvasData = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("agent_results")
-          .select("*")
-          .eq("strategy_id", strategyId)
-          .eq("metadata->>type", "usp_canvas")
-          .eq("metadata->>is_final", "true")
-          .order("created_at", { ascending: false })
-          .maybeSingle();
-          
-        if (error) throw error;
-        
-        if (data) {
-          try {
-            const parsedUspCanvas = JSON.parse(data.content);
-            setUspCanvasData(parsedUspCanvas);
-          } catch (e) {
-            console.error("Error parsing USP Canvas data:", e);
-          }
-        }
-      } catch (err) {
-        console.error("Error loading USP Canvas data:", err);
-      }
-    };
-    
-    if (strategyId) {
-      loadUspCanvasData();
-    }
-  }, [strategyId]);
   
   // Handle adding a new ad creative
   const handleAddCreative = () => {
@@ -159,7 +123,7 @@ const AdCreativeGenerator: React.FC<AdCreativeGeneratorProps> = ({
     onSaveCampaign(updatedCampaign);
   };
   
-  // Generate ad creative based on USP Canvas data
+  // Generate ad creative based on funnel data and selected ad set
   const handleGenerateCreative = async () => {
     if (!selectedAdSet) {
       toast.error("Please select an ad set first");
@@ -204,49 +168,6 @@ const AdCreativeGenerator: React.FC<AdCreativeGeneratorProps> = ({
         cta = "SHOP_NOW";
       }
       
-      // If we have USP Canvas data, use it to customize the creative
-      if (uspCanvasData) {
-        // Extract key selling points from USP canvas
-        const painPoints = uspCanvasData.pains || [];
-        const benefits = uspCanvasData.gains || [];
-        const products = uspCanvasData.products || [];
-        
-        // Use pain points for headlines
-        if (painPoints.length > 0) {
-          const randomPain = painPoints[Math.floor(Math.random() * painPoints.length)];
-          headline = headline.replace("[pain point]", randomPain.title || randomPain.name || "pain point");
-          body = body.replace("[pain point]", randomPain.title || randomPain.name || "pain point");
-        }
-        
-        // Use products for product names
-        if (products.length > 0) {
-          const randomProduct = products[Math.floor(Math.random() * products.length)];
-          headline = headline.replace("[Product]", randomProduct.title || randomProduct.name || "Our Product");
-          headline = headline.replace("[Product Category]", randomProduct.title || randomProduct.name || "Our Product");
-        }
-        
-        // Use benefits for the primary text
-        if (benefits.length > 0) {
-          primaryText = "Benefits:";
-          
-          // Get up to 3 random benefits
-          const numBenefits = Math.min(3, benefits.length);
-          const selectedBenefits = [...benefits].sort(() => 0.5 - Math.random()).slice(0, numBenefits);
-          
-          selectedBenefits.forEach((benefit: any, index: number) => {
-            primaryText += `\n✅ ${benefit.title || benefit.name || "Benefit " + (index + 1)}`;
-          });
-        }
-        
-        // Generate description
-        if (benefits.length > 0 && painPoints.length > 0) {
-          const randomBenefit = benefits[Math.floor(Math.random() * benefits.length)];
-          const randomPain = painPoints[Math.floor(Math.random() * painPoints.length)];
-          
-          description = `Solve ${randomPain.title || "your challenges"} and achieve ${randomBenefit.title || "your goals"} with our solution.`;
-        }
-      }
-      
       // Create the image prompt based on the headline and body
       const generatedImagePrompt = `Create a professional, high-quality Meta ad image for "${headline}". The ad is about ${body.substring(0, 100)}`;
       setImagePrompt(generatedImagePrompt);
@@ -270,41 +191,6 @@ const AdCreativeGenerator: React.FC<AdCreativeGeneratorProps> = ({
       toast.error("Failed to generate ad creative");
     } finally {
       setIsGenerating(false);
-    }
-  };
-  
-  // Generate image for ad creative
-  const handleGenerateImage = async () => {
-    if (!imagePrompt) {
-      toast.error("Please enter an image prompt");
-      return;
-    }
-    
-    setIsGeneratingImage(true);
-    
-    try {
-      // Call the edge function to generate an image
-      const { data, error } = await supabase.functions.invoke('generate-ad-image', {
-        body: { prompt: imagePrompt, platform: "facebook" },
-      });
-      
-      if (error) throw new Error(error.message);
-      
-      if (data?.image_url) {
-        setNewAdCreative({
-          ...newAdCreative,
-          imageUrl: data.image_url
-        });
-        
-        toast.success("Ad image generated");
-      } else {
-        throw new Error("No image URL returned");
-      }
-    } catch (error) {
-      console.error("Error generating image:", error);
-      toast.error("Failed to generate image");
-    } finally {
-      setIsGeneratingImage(false);
     }
   };
   
@@ -488,45 +374,25 @@ const AdCreativeGenerator: React.FC<AdCreativeGeneratorProps> = ({
                   />
                 </div>
                 
-                <Button
-                  variant="outline"
-                  onClick={handleGenerateImage}
-                  disabled={isGeneratingImage}
-                  className="flex items-center gap-2"
-                >
-                  {isGeneratingImage ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Image className="h-4 w-4" />
-                      Generate Image
-                    </>
-                  )}
-                </Button>
-                
-                {newAdCreative.imageUrl && (
-                  <div className="border rounded-md p-2">
-                    <img 
-                      src={newAdCreative.imageUrl} 
-                      alt="Generated ad" 
-                      className="w-full h-auto max-h-64 object-contain"
-                    />
-                  </div>
-                )}
-                
                 <div className="space-y-2">
                   <Label htmlFor="image-url">Image URL</Label>
                   <Input
                     id="image-url"
                     value={newAdCreative.imageUrl}
                     onChange={(e) => setNewAdCreative({...newAdCreative, imageUrl: e.target.value})}
-                    placeholder="Enter image URL or generate an image"
-                    disabled={isGeneratingImage}
+                    placeholder="Enter image URL"
                   />
                 </div>
+                
+                {newAdCreative.imageUrl && (
+                  <div className="border rounded-md p-2">
+                    <img 
+                      src={newAdCreative.imageUrl} 
+                      alt="Ad preview" 
+                      className="w-full h-auto max-h-64 object-contain"
+                    />
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
             

@@ -1,13 +1,10 @@
 
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, Plus, Save, Sparkles, Trash2, Copy } from "lucide-react";
-import { toast } from "sonner";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Select, 
   SelectContent, 
@@ -15,7 +12,15 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent
+} from "@/components/ui/tabs";
+import { Loader2, Plus, Save, Trash2, Columns, Check } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
 
 interface LandingPageDesignerProps {
   campaignData: any;
@@ -43,32 +48,34 @@ const LandingPageDesigner: React.FC<LandingPageDesignerProps> = ({
     features: [],
     benefits: [],
     ctaText: "Get Started",
-    ctaColor: "#3366FF",
+    ctaColor: "#4f46e5",
     layout: "centered",
     includeTestimonials: true,
-    includeFaq: true,
-    template: "standard"
+    includeFaq: false,
+    template: "simple"
   });
   
-  const [isAddingLandingPage, setIsAddingLandingPage] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [isAddingPage, setIsAddingPage] = useState(false);
   const [newFeature, setNewFeature] = useState("");
   const [newBenefit, setNewBenefit] = useState("");
+  const [activeTab, setActiveTab] = useState("content");
+  
+  const funnelStages = funnelData?.stages || [];
   
   // Available templates
   const templates = [
-    { value: "standard", label: "Standard Landing Page" },
-    { value: "leadgen", label: "Lead Generation" },
-    { value: "product", label: "Product Sales Page" },
+    { value: "simple", label: "Simple Lead Gen" },
+    { value: "product", label: "Product Focused" },
+    { value: "service", label: "Service Based" },
     { value: "webinar", label: "Webinar Registration" },
-    { value: "ebook", label: "E-book Download" }
+    { value: "ebook", label: "Ebook Download" }
   ];
   
   // Layout options
   const layouts = [
     { value: "centered", label: "Centered Hero" },
     { value: "split", label: "Split Screen" },
-    { value: "zigzag", label: "Zig Zag Sections" },
+    { value: "zigzag", label: "Zig-Zag Sections" },
     { value: "minimal", label: "Minimal" }
   ];
   
@@ -84,15 +91,15 @@ const LandingPageDesigner: React.FC<LandingPageDesignerProps> = ({
       return;
     }
     
-    const updatedLandingPages = [
+    const updatedPages = [
       ...landingPages,
       {
-        id: `landingpage-${Date.now()}`,
+        id: `page-${Date.now()}`,
         ...newLandingPage
       }
     ];
     
-    setLandingPages(updatedLandingPages);
+    setLandingPages(updatedPages);
     
     // Reset form
     setNewLandingPage({
@@ -104,21 +111,21 @@ const LandingPageDesigner: React.FC<LandingPageDesignerProps> = ({
       features: [],
       benefits: [],
       ctaText: "Get Started",
-      ctaColor: "#3366FF",
+      ctaColor: "#4f46e5",
       layout: "centered",
       includeTestimonials: true,
-      includeFaq: true,
-      template: "standard"
+      includeFaq: false,
+      template: "simple"
     });
     
-    setIsAddingLandingPage(false);
+    setIsAddingPage(false);
     toast.success("Landing page added");
   };
   
   // Handle removing a landing page
-  const handleRemoveLandingPage = (landingPageId: string) => {
-    const updatedLandingPages = landingPages.filter(page => page.id !== landingPageId);
-    setLandingPages(updatedLandingPages);
+  const handleRemovePage = (pageId: string) => {
+    const updatedPages = landingPages.filter(page => page.id !== pageId);
+    setLandingPages(updatedPages);
     toast.success("Landing page removed");
   };
   
@@ -133,7 +140,7 @@ const LandingPageDesigner: React.FC<LandingPageDesignerProps> = ({
     onSaveCampaign(updatedCampaign);
   };
   
-  // Add feature to new landing page
+  // Add feature to the new landing page
   const handleAddFeature = () => {
     if (!newFeature) return;
     
@@ -145,7 +152,7 @@ const LandingPageDesigner: React.FC<LandingPageDesignerProps> = ({
     setNewFeature("");
   };
   
-  // Remove feature from new landing page
+  // Remove feature from the new landing page
   const handleRemoveFeature = (feature: string) => {
     setNewLandingPage({
       ...newLandingPage,
@@ -153,7 +160,7 @@ const LandingPageDesigner: React.FC<LandingPageDesignerProps> = ({
     });
   };
   
-  // Add benefit to new landing page
+  // Add benefit to the new landing page
   const handleAddBenefit = () => {
     if (!newBenefit) return;
     
@@ -165,7 +172,7 @@ const LandingPageDesigner: React.FC<LandingPageDesignerProps> = ({
     setNewBenefit("");
   };
   
-  // Remove benefit from new landing page
+  // Remove benefit from the new landing page
   const handleRemoveBenefit = (benefit: string) => {
     setNewLandingPage({
       ...newLandingPage,
@@ -173,334 +180,45 @@ const LandingPageDesigner: React.FC<LandingPageDesignerProps> = ({
     });
   };
   
-  // Generate landing page based on funnel stage and campaign data
-  const handleGenerateLandingPage = () => {
-    if (!funnelData || !funnelData.stages || funnelData.stages.length === 0) {
-      toast.error("No funnel data available to create a landing page");
-      return;
+  // Create a landing page from funnel stage
+  const createFromFunnelStage = (stageId: string) => {
+    const stage = funnelStages.find((s: any) => s.id === stageId);
+    if (!stage) return;
+    
+    let template = "simple";
+    let ctaText = "Get Started";
+    
+    // Determine appropriate template based on funnel stage position
+    const stageIndex = funnelStages.findIndex((s: any) => s.id === stageId);
+    if (stageIndex === 0) {
+      // Awareness stage
+      template = "simple";
+      ctaText = "Learn More";
+    } else if (stageIndex === funnelStages.length - 1) {
+      // Conversion stage
+      template = "product";
+      ctaText = "Buy Now";
+    } else if (stageIndex === 1) {
+      // Interest/consideration stage
+      template = "webinar";
+      ctaText = "Register Now";
+    } else {
+      // Middle stages
+      template = "ebook";
+      ctaText = "Download Now";
     }
     
-    setIsGenerating(true);
+    setNewLandingPage({
+      ...newLandingPage,
+      name: `${stage.name} Landing Page`,
+      funnelStage: stageId,
+      headline: `${stage.name}: Solve Your ${stage.name.toLowerCase()} Challenges`,
+      subheadline: stage.description,
+      ctaText,
+      template
+    });
     
-    // Simulate API call/generation with a timeout
-    setTimeout(() => {
-      try {
-        // Select a random funnel stage if none is selected
-        const selectedStage = newLandingPage.funnelStage || 
-          funnelData.stages[Math.floor(Math.random() * funnelData.stages.length)].id;
-        
-        // Find the selected funnel stage
-        const funnelStage = funnelData.stages.find((stage: any) => stage.id === selectedStage);
-        
-        if (!funnelStage) {
-          throw new Error("Selected funnel stage not found");
-        }
-        
-        // Set template based on funnel stage
-        let template = "standard";
-        let ctaText = "Get Started";
-        let layout = "centered";
-        
-        if (funnelStage.name.toLowerCase().includes("aware")) {
-          template = "standard";
-          ctaText = "Learn More";
-        } else if (funnelStage.name.toLowerCase().includes("interest") || funnelStage.name.toLowerCase().includes("consider")) {
-          template = "leadgen";
-          ctaText = "Download Now";
-        } else if (funnelStage.name.toLowerCase().includes("conversion") || funnelStage.name.toLowerCase().includes("decision")) {
-          template = "product";
-          ctaText = "Buy Now";
-          layout = "split";
-        }
-        
-        // Generate features and benefits
-        const generatedFeatures = funnelStage.touchpoints.slice(0, 3).map((touchpoint: string) => 
-          `Feature related to ${touchpoint}`
-        );
-        
-        const generatedBenefits = funnelStage.keyMetrics.slice(0, 3).map((metric: string) => 
-          `Benefit: Improve your ${metric}`
-        );
-        
-        // Generate headline and subheadline
-        const headline = `${funnelStage.name} Solution for Your Business`;
-        const subheadline = `Discover how our solution helps with ${funnelStage.description}`;
-        
-        // Create the generated landing page
-        const generatedLandingPage = {
-          name: `${funnelStage.name} Landing Page`,
-          url: `/${funnelStage.name.toLowerCase().replace(/\s+/g, '-')}`,
-          funnelStage: selectedStage,
-          headline,
-          subheadline,
-          features: generatedFeatures,
-          benefits: generatedBenefits,
-          ctaText,
-          ctaColor: "#3366FF",
-          layout,
-          includeTestimonials: true,
-          includeFaq: true,
-          template
-        };
-        
-        setNewLandingPage(generatedLandingPage);
-        setIsAddingLandingPage(true);
-        
-        toast.success("Landing page generated based on funnel stage");
-        
-      } catch (error) {
-        console.error("Error generating landing page:", error);
-        toast.error("Failed to generate landing page");
-      } finally {
-        setIsGenerating(false);
-      }
-    }, 1500);
-  };
-  
-  // Copy landing page HTML to clipboard
-  const handleCopyHtml = (landingPage: any) => {
-    // Generate a simple HTML template based on landing page data
-    const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${landingPage.headline}</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-white font-sans">
-  <header class="bg-white shadow-sm">
-    <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center">
-        <div class="flex-shrink-0">
-          <h1 class="text-xl font-bold text-gray-800">Your Brand</h1>
-        </div>
-        <nav class="flex space-x-8">
-          <a href="#" class="text-gray-500 hover:text-gray-900">Features</a>
-          <a href="#" class="text-gray-500 hover:text-gray-900">Benefits</a>
-          <a href="#" class="text-gray-500 hover:text-gray-900">Testimonials</a>
-        </nav>
-      </div>
-    </div>
-  </header>
-
-  <main>
-    <!-- Hero Section -->
-    <div class="bg-gray-50 py-12 md:py-20">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${landingPage.layout === 'split' ? 'md:grid md:grid-cols-2 md:gap-8 items-center' : 'text-center'}">
-        <div>
-          <h2 class="text-4xl font-extrabold text-gray-900 tracking-tight sm:text-5xl md:text-6xl">
-            ${landingPage.headline}
-          </h2>
-          <p class="mt-3 max-w-md mx-auto text-lg text-gray-500 sm:text-xl md:mt-5 ${landingPage.layout === 'split' ? '' : 'md:max-w-3xl'}">
-            ${landingPage.subheadline}
-          </p>
-          <div class="mt-10">
-            <a href="#" class="rounded-md shadow px-8 py-3 bg-[${landingPage.ctaColor}] text-white font-medium hover:bg-opacity-90">
-              ${landingPage.ctaText}
-            </a>
-          </div>
-        </div>
-        ${landingPage.layout === 'split' ? '<div class="mt-12 md:mt-0"><img src="https://via.placeholder.com/600x400" alt="Hero image" class="rounded-lg shadow-xl"></div>' : ''}
-      </div>
-    </div>
-
-    <!-- Features Section -->
-    <div class="py-12 bg-white">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="lg:text-center">
-          <h2 class="text-base text-[${landingPage.ctaColor}] font-semibold tracking-wide uppercase">Features</h2>
-          <p class="mt-2 text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            Everything you need
-          </p>
-        </div>
-
-        <div class="mt-10">
-          <dl class="${landingPage.layout === 'zigzag' ? '' : 'space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10'}">
-            ${landingPage.features.map((feature: string, index: number) => `
-            <div class="${landingPage.layout === 'zigzag' ? 'flex flex-col md:flex-row items-center my-12 md:my-16' : 'relative'}">
-              ${landingPage.layout === 'zigzag' ? (index % 2 === 0 ? `
-              <div class="md:w-1/2 md:pr-8">
-                <h3 class="text-2xl font-bold text-gray-900">Feature ${index + 1}</h3>
-                <p class="mt-2 text-gray-600">${feature}</p>
-              </div>
-              <div class="md:w-1/2 mt-6 md:mt-0">
-                <img src="https://via.placeholder.com/400x300" alt="Feature image" class="rounded-lg shadow">
-              </div>` : 
-              `<div class="md:w-1/2 mt-6 md:mt-0 md:order-first">
-                <img src="https://via.placeholder.com/400x300" alt="Feature image" class="rounded-lg shadow">
-              </div>
-              <div class="md:w-1/2 md:pl-8">
-                <h3 class="text-2xl font-bold text-gray-900">Feature ${index + 1}</h3>
-                <p class="mt-2 text-gray-600">${feature}</p>
-              </div>`) : `
-              <dt>
-                <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-[${landingPage.ctaColor}] text-white">
-                  <!-- Icon -->
-                  ${index + 1}
-                </div>
-                <p class="ml-16 text-lg font-medium text-gray-900">Feature ${index + 1}</p>
-              </dt>
-              <dd class="mt-2 ml-16 text-base text-gray-500">
-                ${feature}
-              </dd>`}
-            </div>`).join('')}
-          </dl>
-        </div>
-      </div>
-    </div>
-
-    <!-- Benefits Section -->
-    <div class="py-12 bg-gray-50">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="lg:text-center">
-          <h2 class="text-base text-[${landingPage.ctaColor}] font-semibold tracking-wide uppercase">Benefits</h2>
-          <p class="mt-2 text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            Why choose us
-          </p>
-        </div>
-        <div class="mt-10">
-          <ul class="space-y-4">
-            ${landingPage.benefits.map((benefit: string) => `
-            <li class="flex items-start">
-              <div class="flex-shrink-0">
-                <svg class="h-6 w-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-              </div>
-              <p class="ml-3 text-base text-gray-700">${benefit}</p>
-            </li>`).join('')}
-          </ul>
-        </div>
-      </div>
-    </div>
-
-    ${landingPage.includeTestimonials ? `
-    <!-- Testimonials Section -->
-    <div class="py-12 bg-white">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="lg:text-center">
-          <h2 class="text-base text-[${landingPage.ctaColor}] font-semibold tracking-wide uppercase">Testimonials</h2>
-          <p class="mt-2 text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            What our clients say
-          </p>
-        </div>
-        <div class="mt-10 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-          <div class="bg-gray-50 p-6 rounded-lg shadow">
-            <p class="text-gray-600 italic">"This product has completely changed how we operate. Highly recommended!"</p>
-            <div class="mt-4 flex items-center">
-              <div class="flex-shrink-0">
-                <img class="h-10 w-10 rounded-full" src="https://via.placeholder.com/150" alt="Client">
-              </div>
-              <div class="ml-3">
-                <p class="text-sm font-medium text-gray-900">Jane Smith</p>
-                <p class="text-sm text-gray-500">CEO, Company Inc.</p>
-              </div>
-            </div>
-          </div>
-          <div class="bg-gray-50 p-6 rounded-lg shadow">
-            <p class="text-gray-600 italic">"The results we've seen since implementing this solution have been incredible."</p>
-            <div class="mt-4 flex items-center">
-              <div class="flex-shrink-0">
-                <img class="h-10 w-10 rounded-full" src="https://via.placeholder.com/150" alt="Client">
-              </div>
-              <div class="ml-3">
-                <p class="text-sm font-medium text-gray-900">John Doe</p>
-                <p class="text-sm text-gray-500">Marketing Director, Enterprise Co.</p>
-              </div>
-            </div>
-          </div>
-          <div class="bg-gray-50 p-6 rounded-lg shadow">
-            <p class="text-gray-600 italic">"Easy to implement and our team loves using it. Great customer support too!"</p>
-            <div class="mt-4 flex items-center">
-              <div class="flex-shrink-0">
-                <img class="h-10 w-10 rounded-full" src="https://via.placeholder.com/150" alt="Client">
-              </div>
-              <div class="ml-3">
-                <p class="text-sm font-medium text-gray-900">Sarah Johnson</p>
-                <p class="text-sm text-gray-500">Operations Manager, Tech Solutions</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>` : ''}
-
-    ${landingPage.includeFaq ? `
-    <!-- FAQ Section -->
-    <div class="py-12 bg-gray-50">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="lg:text-center">
-          <h2 class="text-base text-[${landingPage.ctaColor}] font-semibold tracking-wide uppercase">FAQ</h2>
-          <p class="mt-2 text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            Frequently Asked Questions
-          </p>
-        </div>
-        <div class="mt-10">
-          <dl class="space-y-6 divide-y divide-gray-200">
-            <div class="pt-6">
-              <dt class="text-lg font-medium text-gray-900">
-                How does this solution work?
-              </dt>
-              <dd class="mt-2 text-base text-gray-500">
-                Our solution integrates seamlessly with your existing systems, providing immediate benefits without disrupting your workflow.
-              </dd>
-            </div>
-            <div class="pt-6">
-              <dt class="text-lg font-medium text-gray-900">
-                What kind of support do you offer?
-              </dt>
-              <dd class="mt-2 text-base text-gray-500">
-                We provide 24/7 customer support via chat, email, and phone to ensure you always have help when you need it.
-              </dd>
-            </div>
-            <div class="pt-6">
-              <dt class="text-lg font-medium text-gray-900">
-                How long does implementation take?
-              </dt>
-              <dd class="mt-2 text-base text-gray-500">
-                Most customers are up and running within 48 hours, with our team guiding you through the entire process.
-              </dd>
-            </div>
-          </dl>
-        </div>
-      </div>
-    </div>` : ''}
-
-    <!-- CTA Section -->
-    <div class="bg-[${landingPage.ctaColor}] py-12">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl text-center">
-          <span class="block">Ready to get started?</span>
-        </h2>
-        <div class="mt-8 flex justify-center">
-          <div class="inline-flex rounded-md shadow">
-            <a href="#" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-[${landingPage.ctaColor}] bg-white hover:bg-gray-50">
-              ${landingPage.ctaText}
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <footer class="bg-gray-800">
-    <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-      <p class="text-center text-gray-400">
-        © ${new Date().getFullYear()} Your Company. All rights reserved.
-      </p>
-    </div>
-  </footer>
-</body>
-</html>`;
-    
-    // Copy to clipboard
-    navigator.clipboard.writeText(html)
-      .then(() => toast.success("HTML template copied to clipboard"))
-      .catch((error) => {
-        console.error("Failed to copy HTML template:", error);
-        toast.error("Failed to copy HTML template");
-      });
+    setIsAddingPage(true);
   };
   
   if (isLoading) {
@@ -511,34 +229,14 @@ const LandingPageDesigner: React.FC<LandingPageDesignerProps> = ({
       </div>
     );
   }
-
-  const funnelStages = funnelData?.stages || [];
-
+  
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Landing Page Designer</h3>
         <div className="space-x-2">
           <Button 
-            variant="outline" 
-            onClick={handleGenerateLandingPage}
-            disabled={isGenerating || !funnelData}
-            className="flex items-center gap-2"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4" />
-                Generate Landing Page
-              </>
-            )}
-          </Button>
-          <Button 
-            onClick={() => setIsAddingLandingPage(true)}
+            onClick={() => setIsAddingPage(true)}
             className="flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
@@ -554,156 +252,150 @@ const LandingPageDesigner: React.FC<LandingPageDesignerProps> = ({
         </div>
       </div>
       
-      {isAddingLandingPage && (
+      {/* Funnel Stages Card */}
+      {funnelStages.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Create from Funnel Stage</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {funnelStages.map((stage: any) => (
+                <Button
+                  key={stage.id}
+                  variant="outline"
+                  onClick={() => createFromFunnelStage(stage.id)}
+                  className="justify-start h-auto py-2"
+                >
+                  <div className="flex flex-col items-start text-left">
+                    <span className="font-medium">{stage.name}</span>
+                    <span className="text-xs text-muted-foreground">Create landing page</span>
+                  </div>
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      {isAddingPage && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">New Landing Page</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="landing-name">Page Name</Label>
-                <Input
-                  id="landing-name"
-                  value={newLandingPage.name}
-                  onChange={(e) => setNewLandingPage({...newLandingPage, name: e.target.value})}
-                  placeholder="Enter landing page name"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="landing-url">URL Path</Label>
-                <Input
-                  id="landing-url"
-                  value={newLandingPage.url}
-                  onChange={(e) => setNewLandingPage({...newLandingPage, url: e.target.value})}
-                  placeholder="e.g., /landing-page"
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="landing-funnel-stage">Funnel Stage</Label>
-                <Select 
-                  value={newLandingPage.funnelStage}
-                  onValueChange={(value) => setNewLandingPage({...newLandingPage, funnelStage: value})}
-                >
-                  <SelectTrigger id="landing-funnel-stage">
-                    <SelectValue placeholder="Select funnel stage" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {funnelStages.map((stage: any) => (
-                      <SelectItem key={stage.id} value={stage.id}>
-                        {stage.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="landing-template">Template</Label>
-                <Select 
-                  value={newLandingPage.template}
-                  onValueChange={(value) => setNewLandingPage({...newLandingPage, template: value})}
-                >
-                  <SelectTrigger id="landing-template">
-                    <SelectValue placeholder="Select template" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {templates.map((template) => (
-                      <SelectItem key={template.value} value={template.value}>
-                        {template.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <Tabs defaultValue="content">
-              <TabsList className="grid grid-cols-3 w-[400px] mb-4">
+          <CardContent>
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid grid-cols-3 mb-4">
                 <TabsTrigger value="content">Content</TabsTrigger>
                 <TabsTrigger value="design">Design</TabsTrigger>
-                <TabsTrigger value="sections">Sections</TabsTrigger>
+                <TabsTrigger value="preview">Preview</TabsTrigger>
               </TabsList>
               
               <TabsContent value="content" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="landing-headline">Headline</Label>
-                  <Input
-                    id="landing-headline"
-                    value={newLandingPage.headline}
-                    onChange={(e) => setNewLandingPage({...newLandingPage, headline: e.target.value})}
-                    placeholder="Enter headline"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="landing-subheadline">Subheadline</Label>
-                  <Input
-                    id="landing-subheadline"
-                    value={newLandingPage.subheadline}
-                    onChange={(e) => setNewLandingPage({...newLandingPage, subheadline: e.target.value})}
-                    placeholder="Enter subheadline"
-                  />
-                </div>
-                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="landing-cta-text">CTA Button Text</Label>
+                    <Label htmlFor="page-name">Landing Page Name</Label>
                     <Input
-                      id="landing-cta-text"
-                      value={newLandingPage.ctaText}
-                      onChange={(e) => setNewLandingPage({...newLandingPage, ctaText: e.target.value})}
-                      placeholder="Enter CTA text"
+                      id="page-name"
+                      value={newLandingPage.name}
+                      onChange={(e) => setNewLandingPage({...newLandingPage, name: e.target.value})}
+                      placeholder="Enter landing page name"
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="landing-cta-color">CTA Button Color</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="color"
-                        id="landing-cta-color"
-                        value={newLandingPage.ctaColor}
-                        onChange={(e) => setNewLandingPage({...newLandingPage, ctaColor: e.target.value})}
-                        className="w-12 h-9 p-1"
-                      />
-                      <Input
-                        value={newLandingPage.ctaColor}
-                        onChange={(e) => setNewLandingPage({...newLandingPage, ctaColor: e.target.value})}
-                        placeholder="#HEX"
-                        className="flex-1"
-                      />
-                    </div>
+                    <Label htmlFor="page-url">URL Path (Optional)</Label>
+                    <Input
+                      id="page-url"
+                      value={newLandingPage.url}
+                      onChange={(e) => setNewLandingPage({...newLandingPage, url: e.target.value})}
+                      placeholder="e.g., /landing/special-offer"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="page-funnel-stage">Funnel Stage</Label>
+                    <Select 
+                      value={newLandingPage.funnelStage}
+                      onValueChange={(value) => setNewLandingPage({...newLandingPage, funnelStage: value})}
+                    >
+                      <SelectTrigger id="page-funnel-stage">
+                        <SelectValue placeholder="Select funnel stage" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {funnelStages.map((stage: any) => (
+                          <SelectItem key={stage.id} value={stage.id}>
+                            {stage.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="page-template">Page Template</Label>
+                    <Select 
+                      value={newLandingPage.template}
+                      onValueChange={(value) => setNewLandingPage({...newLandingPage, template: value})}
+                    >
+                      <SelectTrigger id="page-template">
+                        <SelectValue placeholder="Select template" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {templates.map((template) => (
+                          <SelectItem key={template.value} value={template.value}>
+                            {template.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 
                 <div className="space-y-2">
+                  <Label htmlFor="page-headline">Headline</Label>
+                  <Input
+                    id="page-headline"
+                    value={newLandingPage.headline}
+                    onChange={(e) => setNewLandingPage({...newLandingPage, headline: e.target.value})}
+                    placeholder="Enter main headline"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="page-subheadline">Subheadline</Label>
+                  <Textarea
+                    id="page-subheadline"
+                    value={newLandingPage.subheadline}
+                    onChange={(e) => setNewLandingPage({...newLandingPage, subheadline: e.target.value})}
+                    placeholder="Enter supporting text"
+                    rows={2}
+                  />
+                </div>
+                
+                <div className="space-y-2">
                   <Label>Features</Label>
-                  <div className="flex flex-wrap gap-2 mb-2">
+                  <div className="space-y-2">
                     {newLandingPage.features.map((feature, index) => (
-                      <div key={index} className="bg-slate-100 px-3 py-1 rounded-md flex items-center">
-                        <span className="text-sm mr-2">{feature}</span>
+                      <div key={index} className="flex items-center gap-2 p-2 bg-slate-50 rounded-md">
+                        <Check className="h-4 w-4 text-green-500" />
+                        <span className="flex-1">{feature}</span>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6 hover:bg-slate-200"
                           onClick={() => handleRemoveFeature(feature)}
+                          className="h-6 w-6"
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
                     ))}
                   </div>
-                  <div className="flex space-x-2">
+                  <div className="flex space-x-2 mt-2">
                     <Input
                       value={newFeature}
                       onChange={(e) => setNewFeature(e.target.value)}
                       placeholder="Add a feature"
-                      className="flex-1"
                     />
                     <Button onClick={handleAddFeature}>Add</Button>
                   </div>
@@ -711,27 +403,27 @@ const LandingPageDesigner: React.FC<LandingPageDesignerProps> = ({
                 
                 <div className="space-y-2">
                   <Label>Benefits</Label>
-                  <div className="flex flex-wrap gap-2 mb-2">
+                  <div className="space-y-2">
                     {newLandingPage.benefits.map((benefit, index) => (
-                      <div key={index} className="bg-green-100 px-3 py-1 rounded-md flex items-center">
-                        <span className="text-sm mr-2">{benefit}</span>
+                      <div key={index} className="flex items-center gap-2 p-2 bg-slate-50 rounded-md">
+                        <Check className="h-4 w-4 text-blue-500" />
+                        <span className="flex-1">{benefit}</span>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6 hover:bg-green-200"
                           onClick={() => handleRemoveBenefit(benefit)}
+                          className="h-6 w-6"
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
                     ))}
                   </div>
-                  <div className="flex space-x-2">
+                  <div className="flex space-x-2 mt-2">
                     <Input
                       value={newBenefit}
                       onChange={(e) => setNewBenefit(e.target.value)}
                       placeholder="Add a benefit"
-                      className="flex-1"
                     />
                     <Button onClick={handleAddBenefit}>Add</Button>
                   </div>
@@ -739,59 +431,146 @@ const LandingPageDesigner: React.FC<LandingPageDesignerProps> = ({
               </TabsContent>
               
               <TabsContent value="design" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="landing-layout">Layout</Label>
-                  <Select 
-                    value={newLandingPage.layout}
-                    onValueChange={(value) => setNewLandingPage({...newLandingPage, layout: value})}
-                  >
-                    <SelectTrigger id="landing-layout">
-                      <SelectValue placeholder="Select layout" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {layouts.map((layout) => (
-                        <SelectItem key={layout.value} value={layout.value}>
-                          {layout.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="sections" className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="testimonials"
-                      checked={newLandingPage.includeTestimonials}
-                      onCheckedChange={(checked) => 
-                        setNewLandingPage({...newLandingPage, includeTestimonials: !!checked})
-                      }
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="page-layout">Page Layout</Label>
+                    <Select 
+                      value={newLandingPage.layout}
+                      onValueChange={(value) => setNewLandingPage({...newLandingPage, layout: value})}
+                    >
+                      <SelectTrigger id="page-layout">
+                        <SelectValue placeholder="Select layout" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {layouts.map((layout) => (
+                          <SelectItem key={layout.value} value={layout.value}>
+                            {layout.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="cta-text">Call to Action Text</Label>
+                    <Input
+                      id="cta-text"
+                      value={newLandingPage.ctaText}
+                      onChange={(e) => setNewLandingPage({...newLandingPage, ctaText: e.target.value})}
+                      placeholder="e.g., Sign Up Now"
                     />
-                    <Label htmlFor="testimonials">Include Testimonials Section</Label>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="cta-color">CTA Button Color</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="cta-color"
+                        type="color"
+                        value={newLandingPage.ctaColor}
+                        onChange={(e) => setNewLandingPage({...newLandingPage, ctaColor: e.target.value})}
+                        className="w-12 h-8 p-1"
+                      />
+                      <Input
+                        type="text"
+                        value={newLandingPage.ctaColor}
+                        onChange={(e) => setNewLandingPage({...newLandingPage, ctaColor: e.target.value})}
+                        className="flex-1"
+                      />
+                    </div>
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="faq"
-                      checked={newLandingPage.includeFaq}
-                      onCheckedChange={(checked) => 
-                        setNewLandingPage({...newLandingPage, includeFaq: !!checked})
-                      }
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="include-testimonials">Include Testimonials</Label>
+                    <Switch
+                      id="include-testimonials"
+                      checked={newLandingPage.includeTestimonials}
+                      onCheckedChange={(checked) => setNewLandingPage({...newLandingPage, includeTestimonials: checked})}
                     />
-                    <Label htmlFor="faq">Include FAQ Section</Label>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="include-faq">Include FAQ Section</Label>
+                    <Switch
+                      id="include-faq"
+                      checked={newLandingPage.includeFaq}
+                      onCheckedChange={(checked) => setNewLandingPage({...newLandingPage, includeFaq: checked})}
+                    />
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="preview" className="space-y-4">
+                <div className="border rounded-md p-4">
+                  <div className="bg-white border rounded-md shadow-sm h-[400px] overflow-hidden">
+                    <div className="p-6 flex flex-col items-center text-center">
+                      <h2 className="text-2xl font-bold text-gray-800">{newLandingPage.headline || "Your Headline Here"}</h2>
+                      <p className="mt-2 text-gray-600">{newLandingPage.subheadline || "Your subheadline text goes here"}</p>
+                      
+                      <div className="mt-6">
+                        <div 
+                          className="inline-block px-6 py-3 text-white rounded-md font-medium"
+                          style={{ backgroundColor: newLandingPage.ctaColor }}
+                        >
+                          {newLandingPage.ctaText || "Get Started"}
+                        </div>
+                      </div>
+                      
+                      {(newLandingPage.features.length > 0 || newLandingPage.benefits.length > 0) && (
+                        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                          {newLandingPage.features.length > 0 && (
+                            <div className="text-left">
+                              <h3 className="font-medium mb-2">Features</h3>
+                              <ul className="space-y-2">
+                                {newLandingPage.features.map((feature, index) => (
+                                  <li key={index} className="flex items-center gap-2">
+                                    <Check className="h-4 w-4 text-green-500" />
+                                    <span>{feature}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          
+                          {newLandingPage.benefits.length > 0 && (
+                            <div className="text-left">
+                              <h3 className="font-medium mb-2">Benefits</h3>
+                              <ul className="space-y-2">
+                                {newLandingPage.benefits.map((benefit, index) => (
+                                  <li key={index} className="flex items-center gap-2">
+                                    <Check className="h-4 w-4 text-blue-500" />
+                                    <span>{benefit}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {newLandingPage.includeTestimonials && (
+                        <div className="mt-8 p-4 bg-gray-50 rounded-md text-left">
+                          <p className="italic">"This is a sample testimonial that would appear on your landing page."</p>
+                          <p className="mt-2 font-medium">- Sample Customer</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="mt-2 text-center text-sm text-muted-foreground">
+                    Preview is simplified. Actual landing page would include full design based on selected template.
                   </div>
                 </div>
               </TabsContent>
             </Tabs>
             
-            <div className="flex justify-end space-x-2">
+            <div className="flex justify-end space-x-2 mt-4">
               <Button
                 variant="outline"
-                onClick={() => setIsAddingLandingPage(false)}
+                onClick={() => setIsAddingPage(false)}
               >
                 Cancel
               </Button>
@@ -803,15 +582,14 @@ const LandingPageDesigner: React.FC<LandingPageDesignerProps> = ({
         </Card>
       )}
       
-      {/* Display existing landing pages */}
       {landingPages.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="p-8 text-center">
             <p className="text-muted-foreground">
-              No landing pages defined yet. Create landing pages for your marketing funnel.
+              No landing pages created yet. Design landing pages for your ad campaigns.
             </p>
             <Button 
-              onClick={() => setIsAddingLandingPage(true)}
+              onClick={() => setIsAddingPage(true)}
               variant="outline"
               className="mt-4"
             >
@@ -822,75 +600,91 @@ const LandingPageDesigner: React.FC<LandingPageDesignerProps> = ({
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {landingPages.map((landingPage) => {
-            // Find the funnel stage this landing page belongs to
-            const funnelStage = funnelStages.find((stage: any) => stage.id === landingPage.funnelStage);
-            
-            return (
-              <Card key={landingPage.id} className="overflow-hidden">
-                <CardHeader className="pb-2 border-b">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-lg">{landingPage.name}</CardTitle>
-                      <p className="text-sm text-muted-foreground">{landingPage.url || "No URL"}</p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveLandingPage(landingPage.id)}
-                      className="hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="p-4 bg-slate-50">
-                    <div className="text-center py-3 border-b border-slate-200">
-                      <h3 className="font-bold">{landingPage.headline}</h3>
-                      <p className="text-sm text-muted-foreground">{landingPage.subheadline}</p>
-                      <Button
-                        className="mt-2"
-                        style={{ backgroundColor: landingPage.ctaColor }}
+          {landingPages.map((page) => (
+            <Card key={page.id}>
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-lg">{page.name}</CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemovePage(page.id)}
+                    className="hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="border rounded-md p-3 overflow-hidden bg-slate-50">
+                  <div className="bg-white border rounded-md shadow-sm p-4">
+                    <h3 className="font-bold text-base">{page.headline}</h3>
+                    {page.subheadline && (
+                      <p className="text-sm text-muted-foreground mt-1">{page.subheadline}</p>
+                    )}
+                    <div className="mt-2">
+                      <span 
+                        className="inline-block px-3 py-1 text-white text-xs rounded"
+                        style={{ backgroundColor: page.ctaColor }}
                       >
-                        {landingPage.ctaText}
-                      </Button>
-                    </div>
-                    <div className="py-2 px-4">
-                      <div className="grid grid-cols-2 gap-4 mt-2 text-sm">
-                        <div>
-                          <p className="font-medium">Template:</p>
-                          <p className="text-muted-foreground">{templates.find(t => t.value === landingPage.template)?.label || landingPage.template}</p>
-                        </div>
-                        <div>
-                          <p className="font-medium">Layout:</p>
-                          <p className="text-muted-foreground">{layouts.find(l => l.value === landingPage.layout)?.label || landingPage.layout}</p>
-                        </div>
-                        {funnelStage && (
-                          <div className="col-span-2">
-                            <p className="font-medium">Funnel Stage:</p>
-                            <p className="text-muted-foreground">{funnelStage.name}</p>
-                          </div>
-                        )}
-                      </div>
+                        {page.ctaText}
+                      </span>
                     </div>
                   </div>
-                  <div className="flex border-t">
-                    <Button
-                      variant="ghost"
-                      className="flex-1 rounded-none h-12 text-sm"
-                      onClick={() => handleCopyHtml(landingPage)}
-                    >
-                      <Copy className="h-4 w-4 mr-2" />
-                      Copy HTML
-                    </Button>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  {page.funnelStage && (
+                    <div>
+                      <span className="font-medium">Funnel Stage:</span>{' '}
+                      {funnelStages.find((s: any) => s.id === page.funnelStage)?.name || 'Unknown'}
+                    </div>
+                  )}
+                  <div>
+                    <span className="font-medium">Template:</span>{' '}
+                    {templates.find(t => t.value === page.template)?.label || page.template}
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                  <div>
+                    <span className="font-medium">Layout:</span>{' '}
+                    {layouts.find(l => l.value === page.layout)?.label || page.layout}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="font-medium">Sections:</span>
+                    <span className="text-xs">
+                      {[
+                        ...(page.includeTestimonials ? ['Testimonials'] : []),
+                        ...(page.includeFaq ? ['FAQ'] : [])
+                      ].join(', ') || 'Standard'}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2 text-xs">
+                  <Columns className="h-3 w-3" />
+                  <span>
+                    {page.features.length} features, {page.benefits.length} benefits
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
+      
+      <Card className="bg-slate-50 border border-slate-200">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-slate-700">Tips for Effective Landing Pages</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="text-sm text-slate-600 space-y-1">
+            <li>• Match your landing page to the specific ad creative and funnel stage</li>
+            <li>• Keep your headline clear and focused on the primary benefit</li>
+            <li>• Use a single, prominent call-to-action that stands out</li>
+            <li>• Include social proof like testimonials or reviews</li>
+            <li>• Optimize for mobile users to prevent drop-off</li>
+          </ul>
+        </CardContent>
+      </Card>
     </div>
   );
 };
