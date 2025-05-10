@@ -4,13 +4,17 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import FunnelStages from "./components/FunnelStages";
 // Import only what we need and avoid recursive types
-import { FunnelStrategyModuleProps, isFunnelMetadata } from "./types";
+import { FunnelStrategyModuleProps } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 // ✅ Flacher Json-Typ zur Vermeidung von TS2589 - ganz oben nach den Imports platziert
 type JsonPrimitive = string | number | boolean | null;
 type LocalJson = JsonPrimitive | JsonPrimitive[] | { [key: string]: JsonPrimitive | JsonPrimitive[] };
+
+function isFunnelMetadata(meta: any): boolean {
+  return meta?.type === "funnel";
+}
 
 // ✅ Lokale Definition des TouchPoint-Typs 
 type TouchPoint = {
