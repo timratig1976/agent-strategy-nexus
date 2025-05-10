@@ -124,7 +124,9 @@ const StrategyDetails = () => {
     );
   } else if (strategy.state === 'funnel') {
     contentComponent = (
-      <FunnelStrategyModule />
+      <FunnelStrategyModule 
+        strategy={strategy}
+      />
     );
   } else if (strategy.state === 'ads') {
     contentComponent = (
