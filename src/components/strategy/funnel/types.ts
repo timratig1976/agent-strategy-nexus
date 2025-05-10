@@ -28,8 +28,8 @@ export type FunnelData = {
   budget?: string;
   kpis?: string;
   notes?: string;
-  actionPlans?: Record<string, string>;
-  conversionRates?: Record<string, number>;
+  actionPlans: Record<string, string>;
+  conversionRates: Record<string, number>;
   lastUpdated?: string;
   version?: number;
 };

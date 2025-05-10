@@ -11,7 +11,7 @@ import {
 } from "../types";
 
 export function useFunnelData(strategyId: string | undefined) {
-  const [funnelData, setFunnelData] = useState(() => createInitialFunnelData());
+  const [funnelData, setFunnelData] = useState<FunnelData>(() => createInitialFunnelData());
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -36,27 +36,28 @@ export function useFunnelData(strategyId: string | undefined) {
 
         if (dbResult.metadata && isFunnelMetadata(dbResult.metadata)) {
           try {
-            const parsedContent = JSON.parse(dbResult.content);
+            // Parse the content safely - this was causing the deep instantiation issue
+            const rawContent = JSON.parse(dbResult.content);
             
-            // Use the safe parsing approach instead of direct casting
+            // Create a new funnel data object manually instead of using type casting
             const safeContent: FunnelData = {
-              stages: Array.isArray(parsedContent.stages) 
-                ? parsedContent.stages.map((stage: any) => parseFunnelStage(stage))
+              stages: Array.isArray(rawContent.stages) 
+                ? rawContent.stages.map((stage: any) => parseFunnelStage(stage))
                 : [],
-              name: String(parsedContent.name || ""),
-              primaryGoal: String(parsedContent.primaryGoal || ""),
-              leadMagnetType: String(parsedContent.leadMagnetType || ""),
-              targetAudience: String(parsedContent.targetAudience || ""),
-              mainChannel: String(parsedContent.mainChannel || ""),
-              conversionAction: String(parsedContent.conversionAction || ""),
-              timeframe: String(parsedContent.timeframe || ""),
-              budget: String(parsedContent.budget || ""),
-              kpis: String(parsedContent.kpis || ""),
-              notes: String(parsedContent.notes || ""),
-              actionPlans: (parsedContent.actionPlans ?? {}) as Record<string, string>,
-              conversionRates: (parsedContent.conversionRates ?? {}) as Record<string, number>,
-              lastUpdated: String(parsedContent.lastUpdated || ""),
-              version: Number(parsedContent.version ?? 1),
+              name: String(rawContent.name || ""),
+              primaryGoal: String(rawContent.primaryGoal || ""),
+              leadMagnetType: String(rawContent.leadMagnetType || ""),
+              targetAudience: String(rawContent.targetAudience || ""),
+              mainChannel: String(rawContent.mainChannel || ""),
+              conversionAction: String(rawContent.conversionAction || ""),
+              timeframe: String(rawContent.timeframe || ""),
+              budget: String(rawContent.budget || ""),
+              kpis: String(rawContent.kpis || ""),
+              notes: String(rawContent.notes || ""),
+              actionPlans: rawContent.actionPlans || {},
+              conversionRates: rawContent.conversionRates || {},
+              lastUpdated: String(rawContent.lastUpdated || ""),
+              version: Number(rawContent.version || 1),
             };
 
             setFunnelData(safeContent);
