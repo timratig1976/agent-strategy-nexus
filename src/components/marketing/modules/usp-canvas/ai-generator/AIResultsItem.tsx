@@ -9,6 +9,7 @@ interface AIResultsItemProps {
   item: any;
   ratingProperty: 'priority' | 'severity' | 'importance';
   ratingLabel: string;
+  onAddItem?: (item: any) => void;
 }
 
 // Function to get badge color based on rating value
@@ -42,13 +43,21 @@ const translateRating = (rating: string): string => {
 const AIResultsItem: React.FC<AIResultsItemProps> = ({ 
   item,
   ratingProperty,
-  ratingLabel
+  ratingLabel,
+  onAddItem
 }) => {
   // Determine if this item has already been added to the canvas
   const isAlreadyAdded = item.isAdded || false;
   
   // Get the rating value
   const ratingValue = item[ratingProperty] || 'medium';
+
+  // Handle click on the add button
+  const handleAddItem = () => {
+    if (onAddItem && !isAlreadyAdded) {
+      onAddItem(item);
+    }
+  };
 
   return (
     <Card className={`relative border ${isAlreadyAdded ? 'border-primary/40 bg-primary/5' : 'border-border'}`}>
@@ -71,6 +80,7 @@ const AIResultsItem: React.FC<AIResultsItemProps> = ({
             variant="ghost"
             className="flex-shrink-0 h-8 w-8 p-0"
             disabled={isAlreadyAdded}
+            onClick={handleAddItem}
           >
             <Plus size={16} />
             <span className="sr-only">Hinzufügen</span>

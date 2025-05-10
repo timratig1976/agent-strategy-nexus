@@ -5,6 +5,7 @@ import AIResultsPanel from './AIResultsPanel';
 import AIResultsItem from './AIResultsItem';
 import TabbedContent from '@/components/ui/tabbed-content';
 import { TabItem } from '@/components/ui/tabbed-content/types';
+import { toast } from 'sonner';
 
 interface ResultsSectionProps {
   activeTab: string;
@@ -23,6 +24,30 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({
 }) => {
   const [currentTab, setCurrentTab] = useState<string>('jobs');
 
+  // Handle adding a single job
+  const handleAddSingleJob = (job: any) => {
+    if (job) {
+      onAddJobs([job]);
+      toast.success('Job added to Customer Profile');
+    }
+  };
+
+  // Handle adding a single pain
+  const handleAddSinglePain = (pain: any) => {
+    if (pain) {
+      onAddPains([pain]);
+      toast.success('Pain added to Customer Profile');
+    }
+  };
+
+  // Handle adding a single gain
+  const handleAddSingleGain = (gain: any) => {
+    if (gain) {
+      onAddGains([gain]);
+      toast.success('Gain added to Customer Profile');
+    }
+  };
+
   const tabs: TabItem[] = [
     {
       id: 'jobs',
@@ -33,6 +58,7 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({
           title="Kundenaufgaben (Jobs)"
           items={storedAIResult.jobs || []}
           onAddItems={onAddJobs}
+          onAddSingleItem={handleAddSingleJob}
           renderItem={(item, index) => (
             <AIResultsItem
               key={`job-${index}`}
@@ -53,6 +79,7 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({
           title="Kundenprobleme (Pains)"
           items={storedAIResult.pains || []}
           onAddItems={onAddPains}
+          onAddSingleItem={handleAddSinglePain}
           renderItem={(item, index) => (
             <AIResultsItem
               key={`pain-${index}`}
@@ -73,6 +100,7 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({
           title="Kundenvorteile (Gains)"
           items={storedAIResult.gains || []}
           onAddItems={onAddGains}
+          onAddSingleItem={handleAddSingleGain}
           renderItem={(item, index) => (
             <AIResultsItem
               key={`gain-${index}`}

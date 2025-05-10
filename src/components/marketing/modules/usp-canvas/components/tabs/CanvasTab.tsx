@@ -125,6 +125,7 @@ const CanvasTab: React.FC<CanvasTabProps> = ({
           addCustomerGain={handleAddCustomerGain}
           updateCustomerGain={handleUpdateCustomerGain}
           deleteCustomerGain={handleDeleteCustomerGain}
+          formPosition="bottom"
         />
       ) : (
         <ValueMapCanvas

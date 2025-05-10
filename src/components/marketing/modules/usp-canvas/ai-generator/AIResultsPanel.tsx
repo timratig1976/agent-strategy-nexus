@@ -9,6 +9,7 @@ interface AIResultsPanelProps {
   title: string;
   items: Array<any>;
   onAddItems: (items: Array<any>) => void;
+  onAddSingleItem?: (item: any) => void;
   renderItem: (item: any, index: number) => React.ReactNode;
 }
 
@@ -16,6 +17,7 @@ const AIResultsPanel: React.FC<AIResultsPanelProps> = ({
   title,
   items,
   onAddItems,
+  onAddSingleItem,
   renderItem
 }) => {
   const handleAddToCanvas = () => {
@@ -40,7 +42,18 @@ const AIResultsPanel: React.FC<AIResultsPanelProps> = ({
       <CardContent className="flex-grow overflow-y-auto">
         <div className="space-y-3">
           {items && items.length > 0 ? (
-            items.map((item, index) => renderItem(item, index))
+            items.map((item, index) => {
+              // If onAddSingleItem is provided, pass a modified renderItem
+              if (onAddSingleItem) {
+                const originalItem = renderItem(item, index);
+                // Clone the element and add the onAddItem prop
+                return React.cloneElement(originalItem, {
+                  key: `item-${index}`,
+                  onAddItem: () => onAddSingleItem(item)
+                });
+              }
+              return React.cloneElement(renderItem(item, index), { key: `item-${index}` });
+            })
           ) : (
             <p className="text-sm text-muted-foreground">No items generated yet.</p>
           )}

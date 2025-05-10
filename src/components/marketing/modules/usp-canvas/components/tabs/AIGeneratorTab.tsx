@@ -33,7 +33,7 @@ const AIGeneratorTab: React.FC<AIGeneratorTabProps> = ({
     gains: []
   });
 
-  // Handle adding job items to canvas
+  // Handle adding job items to canvas - ensuring proper prefixes are maintained
   const handleAddAIJobs = (jobs: any[]) => {
     if (!jobs || jobs.length === 0) return;
     
@@ -57,7 +57,7 @@ const AIGeneratorTab: React.FC<AIGeneratorTabProps> = ({
     });
   };
 
-  // Handle adding pain items to canvas
+  // Handle adding pain items to canvas - with proper prefixes
   const handleAddAIPains = (pains: any[]) => {
     if (!pains || pains.length === 0) return;
     
@@ -81,7 +81,7 @@ const AIGeneratorTab: React.FC<AIGeneratorTabProps> = ({
     });
   };
 
-  // Handle adding gain items to canvas
+  // Handle adding gain items to canvas - with proper prefixes
   const handleAddAIGains = (gains: any[]) => {
     if (!gains || gains.length === 0) return;
     
@@ -108,13 +108,21 @@ const AIGeneratorTab: React.FC<AIGeneratorTabProps> = ({
   // Handle AI results generated
   const handleAIResultsGenerated = (results: StoredAIResult) => {
     console.log("AI results generated:", results);
-    setStoredAIResult(results);
+    
+    // Make sure we have valid data and structure before storing
+    const validatedResults = {
+      jobs: Array.isArray(results.jobs) ? results.jobs : [],
+      pains: Array.isArray(results.pains) ? results.pains : [],
+      gains: Array.isArray(results.gains) ? results.gains : []
+    };
+    
+    setStoredAIResult(validatedResults);
     
     // Save to localStorage for persistence
     try {
       localStorage.setItem(
         `usp_canvas_${canvasId}_ai_results`, 
-        JSON.stringify({ data: results, timestamp: Date.now() })
+        JSON.stringify({ data: validatedResults, timestamp: Date.now() })
       );
     } catch (err) {
       console.error('Error saving AI results:', err);
