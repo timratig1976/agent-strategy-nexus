@@ -4,7 +4,7 @@ import AIDebugPanel from '@/components/shared/AIDebugPanel';
 
 interface DebugSectionProps {
   debugInfo: any;
-  parseResults: any;
+  parseResults?: any;
   validationResults?: {
     jobsComplete?: boolean;
     painsComplete?: boolean;

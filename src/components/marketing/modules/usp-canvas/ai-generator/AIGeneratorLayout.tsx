@@ -40,7 +40,7 @@ const AIGeneratorLayout: React.FC<AIGeneratorLayoutProps> = ({
     parseResults,
     showDebug,
     setShowDebug,
-    progress // Get progress from the hook
+    progress // Progress from the hook
   } = useAIGenerator(
     strategyId,
     briefingContent,
@@ -67,7 +67,7 @@ const AIGeneratorLayout: React.FC<AIGeneratorLayoutProps> = ({
         hasResults={hasResults}
         onToggleDebug={handleToggleDebug}
         showDebug={showDebug}
-        progress={progress} // Pass progress to form
+        progress={progress}
       />
       
       {hasResults && (
@@ -86,6 +86,8 @@ const AIGeneratorLayout: React.FC<AIGeneratorLayoutProps> = ({
           debugInfo={debugInfo}
           parseResults={parseResults}
           rawResponse={rawResponse}
+          showDebug={showDebug} // Add this missing prop
+          generationHistory={generationHistory} // Pass this prop as well for completeness
         />
       )}
     </div>

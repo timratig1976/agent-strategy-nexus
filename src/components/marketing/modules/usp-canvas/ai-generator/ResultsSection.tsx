@@ -8,27 +8,26 @@ interface ResultsSectionProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   storedAIResult: StoredAIResult;
-  handleAddJobs: (jobs: any[]) => void;
-  handleAddPains: (pains: any[]) => void;
-  handleAddGains: (gains: any[]) => void;
-  isGenerating: boolean;
+  onAddJobs: (jobs: any[]) => void;
+  onAddPains: (pains: any[]) => void;
+  onAddGains: (gains: any[]) => void;
 }
 
 const ResultsSection: React.FC<ResultsSectionProps> = ({
   activeTab,
+  setActiveTab,
   storedAIResult,
-  handleAddJobs,
-  handleAddPains,
-  handleAddGains,
-  isGenerating
+  onAddJobs,
+  onAddPains,
+  onAddGains
 }) => {
   return (
     <div className="mt-8">
       {activeTab === 'jobs' && (
         <AIResultsPanel
           title="Kundenaufgaben"
-          items={storedAIResult.jobs}
-          onAddItems={handleAddJobs}
+          items={storedAIResult.jobs || []}
+          onAddItems={onAddJobs}
           renderItem={(item, index) => (
             <AIResultsItem
               key={index}
@@ -43,8 +42,8 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({
       {activeTab === 'pains' && (
         <AIResultsPanel
           title="Kundenprobleme"
-          items={storedAIResult.pains}
-          onAddItems={handleAddPains}
+          items={storedAIResult.pains || []}
+          onAddItems={onAddPains}
           renderItem={(item, index) => (
             <AIResultsItem
               key={index}
@@ -59,8 +58,8 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({
       {activeTab === 'gains' && (
         <AIResultsPanel
           title="Kundenvorteile"
-          items={storedAIResult.gains}
-          onAddItems={handleAddGains}
+          items={storedAIResult.gains || []}
+          onAddItems={onAddGains}
           renderItem={(item, index) => (
             <AIResultsItem
               key={index}
