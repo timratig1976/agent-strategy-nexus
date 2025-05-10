@@ -56,7 +56,7 @@ export interface FunnelStrategyModuleProps {
  * Specific interface for funnel metadata to avoid recursive type issues
  */
 export interface FunnelMetadata {
-  type: string;
+  type: 'funnel';
   is_final?: boolean | string;
   created_by?: string;
   version?: number;
@@ -70,6 +70,5 @@ export function isFunnelMetadata(metadata: unknown): metadata is FunnelMetadata 
     return false;
   }
   
-  const meta = metadata as Record<string, unknown>;
-  return meta.type === 'funnel';
+  return (metadata as FunnelMetadata).type === 'funnel';
 }

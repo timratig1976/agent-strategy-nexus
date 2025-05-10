@@ -3,18 +3,16 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import FunnelStages from "./components/FunnelStages";
-import { FunnelData, FunnelStage, FunnelStrategyModuleProps, isFunnelMetadata } from "./types";
+import { FunnelData, FunnelStage, FunnelStrategyModuleProps, FunnelMetadata, isFunnelMetadata } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AgentResult } from "@/types/marketing";
 
 const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy }) => {
-  // Use lazy initialization with a function to avoid excessive type instantiation
-  const [funnelData, setFunnelData] = useState<FunnelData>(() => ({
+  const [funnelData, setFunnelData] = useState<FunnelData>({
     stages: [],
     name: "",
     primaryGoal: "",
-  }));
+  });
   
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -27,10 +25,10 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
     
     const loadFunnelData = async () => {
       try {
-        // Get the most recent funnel result - limiting fields to avoid deep type instantiation
+        // Get the most recent funnel result - selecting only needed fields
         const { data, error } = await supabase
           .from('agent_results')
-          .select('id, content, metadata, created_at, strategy_id, agent_id')
+          .select('id, content, metadata')
           .eq('strategy_id', strategyId)
           .eq('metadata->type', 'funnel')
           .order('created_at', { ascending: false })
@@ -43,40 +41,31 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
         const dbResult = data[0];
         
         // Check if metadata exists and has the right type
-        if (dbResult.metadata && 
-            typeof dbResult.metadata === 'object' &&
-            'type' in dbResult.metadata &&
-            dbResult.metadata.type === 'funnel' && 
-            dbResult.content) {
+        if (dbResult.metadata && isFunnelMetadata(dbResult.metadata)) {
           try {
-            // Parse the content without type inference initially
-            const parsedContent = JSON.parse(dbResult.content);
+            // Parse the content with explicit typing
+            const parsedContent = JSON.parse(dbResult.content) as Record<string, unknown>;
             
-            // Validate the structure has required properties
-            if (parsedContent && 
-                typeof parsedContent === 'object' && 
-                Array.isArray(parsedContent.stages)) {
-              
-              // Create a safely-typed object by cherry-picking properties
-              const safeContent = {
-                stages: parsedContent.stages || [],
-                name: parsedContent.name || "",
-                primaryGoal: parsedContent.primaryGoal || "",
-                // Add other optional properties if they exist
-                ...(parsedContent.leadMagnetType ? { leadMagnetType: parsedContent.leadMagnetType } : {}),
-                ...(parsedContent.targetAudience ? { targetAudience: parsedContent.targetAudience } : {}),
-                ...(parsedContent.mainChannel ? { mainChannel: parsedContent.mainChannel } : {}),
-                ...(parsedContent.conversionAction ? { conversionAction: parsedContent.conversionAction } : {}),
-                ...(parsedContent.timeframe ? { timeframe: parsedContent.timeframe } : {}),
-                ...(parsedContent.budget ? { budget: parsedContent.budget } : {}),
-                ...(parsedContent.kpis ? { kpis: parsedContent.kpis } : {}),
-                ...(parsedContent.notes ? { notes: parsedContent.notes } : {})
-              } as FunnelData;
-              
-              console.log("Loaded funnel data:", safeContent);
-              setFunnelData(safeContent);
-              setHasChanges(false);
-            }
+            // Create a new properly typed FunnelData object
+            const safeContent: FunnelData = {
+              stages: Array.isArray(parsedContent.stages) ? parsedContent.stages : [],
+              name: typeof parsedContent.name === 'string' ? parsedContent.name : "",
+              primaryGoal: typeof parsedContent.primaryGoal === 'string' ? parsedContent.primaryGoal : "",
+            };
+            
+            // Add optional properties if they exist
+            if (typeof parsedContent.leadMagnetType === 'string') safeContent.leadMagnetType = parsedContent.leadMagnetType;
+            if (typeof parsedContent.targetAudience === 'string') safeContent.targetAudience = parsedContent.targetAudience;
+            if (typeof parsedContent.mainChannel === 'string') safeContent.mainChannel = parsedContent.mainChannel;
+            if (typeof parsedContent.conversionAction === 'string') safeContent.conversionAction = parsedContent.conversionAction;
+            if (typeof parsedContent.timeframe === 'string') safeContent.timeframe = parsedContent.timeframe;
+            if (parsedContent.budget !== undefined) safeContent.budget = parsedContent.budget as string | number;
+            if (typeof parsedContent.kpis === 'string') safeContent.kpis = parsedContent.kpis;
+            if (typeof parsedContent.notes === 'string') safeContent.notes = parsedContent.notes;
+            
+            console.log("Loaded funnel data:", safeContent);
+            setFunnelData(safeContent);
+            setHasChanges(false);
           } catch (e) {
             console.error("Failed to parse funnel content:", e);
           }
@@ -103,16 +92,19 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
     setIsSaving(true);
     
     try {
+      // Create a strongly typed metadata object
+      const metadata: FunnelMetadata = {
+        type: 'funnel',
+        is_final: true,
+        created_by: 'user'
+      };
+      
       // Save as an agent result
       const result = {
         strategy_id: strategyId,
         agent_id: null, // Since this is manual, no agent ID
         content: JSON.stringify(funnelData),
-        metadata: {
-          type: 'funnel',
-          is_final: true,
-          created_by: 'user'
-        }
+        metadata: metadata
       };
       
       const { error } = await supabase
