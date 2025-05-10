@@ -1,0 +1,2 @@
+
+export { useFunnelData } from './useFunnelData';
