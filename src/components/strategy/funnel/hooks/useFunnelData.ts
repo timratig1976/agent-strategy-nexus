@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// 🔒 Lokale Typen (nicht importiert)
+// 🔒 Lokale Typen
 type FunnelStage = {
   id: string;
   name: string;
@@ -51,12 +50,12 @@ function createInitialFunnelData(): FunnelData {
   };
 }
 
-// ✅ Typprüfung für Funnel-Metadaten
+// ✅ Typprüfung
 function isFunnelMetadata(metadata: any): boolean {
   return metadata?.type === "funnel";
 }
 
-// ✅ Parser für Funnel-Stages
+// ✅ Parser
 function parseFunnelStage(stage: any): FunnelStage {
   return {
     id: String(stage.id),
@@ -78,36 +77,33 @@ export function useFunnelData(strategyId: string | undefined) {
 
     const loadFunnelData = async () => {
       try {
-        const { data, error } = (await supabase
+        // 🔥 TS2589-Vermeidung: response als any, dann destrukturieren
+        const response: any = await supabase
           .from("agent_results")
           .select("id, content, metadata")
           .eq("strategy_id", strategyId)
           .eq("metadata->type", "funnel")
           .order("created_at", { ascending: false })
-          .limit(1)) as any; // 💡 TS2589-Schutz: Kein Typgraph aus Supabase
+          .limit(1);
+
+        const data = response.data;
+        const error = response.error;
 
         if (error) throw error;
 
         if (data && data.length > 0 && data[0].content) {
-          try {
-            const parsedContent = JSON.parse(data[0].content);
-            
-            // Avoid type instantiation errors by not using explicit type annotation
-            const safeContent = {
-              ...createInitialFunnelData(),
-              ...parsedContent,
-              stages: Array.isArray(parsedContent.stages)
-                ? parsedContent.stages.map((stage: any) => parseFunnelStage(stage))
-                : [],
-            };
-            
-            // Use type assertion when setting state to maintain type safety
-            setFunnelData(safeContent as FunnelData);
-            setHasChanges(false);
-          } catch (parseError) {
-            console.error("Failed to parse funnel data:", parseError);
-            toast.error("Failed to parse funnel data");
-          }
+          const parsedContent = JSON.parse(data[0].content);
+
+          const safeContent = {
+            ...createInitialFunnelData(),
+            ...parsedContent,
+            stages: Array.isArray(parsedContent.stages)
+              ? parsedContent.stages.map((stage: any) => parseFunnelStage(stage))
+              : [],
+          };
+
+          setFunnelData(safeContent as FunnelData);
+          setHasChanges(false);
         }
       } catch (err) {
         console.error("Error loading funnel data:", err);
@@ -121,7 +117,7 @@ export function useFunnelData(strategyId: string | undefined) {
   const handleStagesChange = (newStages: FunnelStage[]) => {
     setFunnelData(prev => ({
       ...prev,
-      stages: newStages
+      stages: newStages,
     }));
     setHasChanges(true);
   };
@@ -145,8 +141,8 @@ export function useFunnelData(strategyId: string | undefined) {
             is_final: true,
             version: funnelData.version || 1,
             created_by: "user",
-            updated_at: new Date().toISOString()
-          }
+            updated_at: new Date().toISOString(),
+          },
         });
 
       if (error) throw error;
@@ -166,6 +162,6 @@ export function useFunnelData(strategyId: string | undefined) {
     isSaving,
     hasChanges,
     handleStagesChange,
-    handleSave
+    handleSave,
   };
 }
