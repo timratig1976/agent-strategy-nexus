@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FunnelStage } from "../../types";
 import { TouchpointsList } from "./TouchpointsList";
-import { TouchpointForm } from "./TouchpointForm";
-import { StageControls } from "./StageControls";
+import TouchpointForm from "./TouchpointForm";
+import StageControls from "./StageControls";
 
 interface StageItemProps {
   stage: FunnelStage;
@@ -49,10 +49,11 @@ export const StageItem: React.FC<StageItemProps> = ({
         </div>
         
         <StageControls 
+          stageId={stage.id}
           index={index}
           totalStages={totalStages}
-          onMove={(direction) => onMove(index, direction)}
-          onRemove={() => onRemove(stage.id)}
+          onMove={onMove}
+          onRemove={onRemove}
         />
       </CardHeader>
       
@@ -66,13 +67,9 @@ export const StageItem: React.FC<StageItemProps> = ({
         {/* Add Touchpoint Form */}
         {isAddingTouchpoint ? (
           <TouchpointForm 
-            value={newTouchpointName}
-            onChange={setNewTouchpointName}
-            onAdd={handleAddTouchpoint}
-            onCancel={() => {
-              setIsAddingTouchpoint(false);
-              setNewTouchpointName("");
-            }}
+            newTouchpointName={newTouchpointName}
+            setNewTouchpointName={setNewTouchpointName}
+            handleAddTouchpoint={handleAddTouchpoint}
           />
         ) : (
           <Button 
@@ -105,3 +102,5 @@ const getStageColor = (index: number): string => {
   
   return colors[index % colors.length];
 };
+
+export default StageItem;

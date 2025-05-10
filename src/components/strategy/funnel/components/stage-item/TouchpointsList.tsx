@@ -43,3 +43,5 @@ export const TouchpointsList: React.FC<TouchpointsListProps> = ({
     </div>
   );
 };
+
+export default TouchpointsList;

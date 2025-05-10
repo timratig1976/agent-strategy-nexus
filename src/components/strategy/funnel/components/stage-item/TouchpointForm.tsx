@@ -10,7 +10,7 @@ interface TouchpointFormProps {
   handleAddTouchpoint: () => void;
 }
 
-const TouchpointForm: React.FC<TouchpointFormProps> = ({
+export const TouchpointForm: React.FC<TouchpointFormProps> = ({
   newTouchpointName,
   setNewTouchpointName,
   handleAddTouchpoint

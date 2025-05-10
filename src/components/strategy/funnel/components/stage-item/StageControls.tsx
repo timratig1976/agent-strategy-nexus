@@ -11,7 +11,7 @@ interface StageControlsProps {
   onRemove: (id: string) => void;
 }
 
-const StageControls: React.FC<StageControlsProps> = ({ 
+export const StageControls: React.FC<StageControlsProps> = ({ 
   stageId, 
   index, 
   totalStages, 
