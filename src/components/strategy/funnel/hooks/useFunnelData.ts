@@ -1,137 +1,88 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { 
-  FunnelData, 
-  FunnelStage, 
-  isFunnelMetadata, 
-  createInitialFunnelData,
-  parseFunnelStage
-} from "../types";
 
+// 🔒 Lokale Typen (nicht importiert)
+type FunnelStage = {
+  id: string;
+  name: string;
+  description: string;
+  touchPoints: any[];
+  keyMetrics?: string[];
+};
+
+type FunnelData = {
+  stages: FunnelStage[];
+  name: string;
+  primaryGoal: string;
+  leadMagnetType?: string;
+  targetAudience?: string;
+  mainChannel?: string;
+  conversionAction?: string;
+  timeframe?: string;
+  budget?: string;
+  kpis?: string;
+  notes?: string;
+  actionPlans?: Record<string, string>;
+  conversionRates?: Record<string, number>;
+  lastUpdated?: string;
+  version?: number;
+};
+
+// ✅ Lokale Factory
+function createInitialFunnelData(): FunnelData {
+  return {
+    stages: [],
+    name: "",
+    primaryGoal: "",
+    leadMagnetType: "",
+    targetAudience: "",
+    mainChannel: "",
+    conversionAction: "",
+    timeframe: "",
+    budget: "",
+    kpis: "",
+    notes: "",
+    actionPlans: {},
+    conversionRates: {},
+    lastUpdated: "",
+    version: 1,
+  };
+}
+
+// ✅ Typprüfung für Funnel-Metadaten
+function isFunnelMetadata(metadata: any): boolean {
+  return metadata?.type === "funnel";
+}
+
+// ✅ Parser für Funnel-Stages
+function parseFunnelStage(stage: any): FunnelStage {
+  return {
+    id: String(stage.id),
+    name: String(stage.name),
+    description: String(stage.description),
+    touchPoints: Array.isArray(stage.touchPoints) ? stage.touchPoints : [],
+    keyMetrics: Array.isArray(stage.keyMetrics) ? stage.keyMetrics : [],
+  };
+}
+
+// ✅ Finaler Hook
 export function useFunnelData(strategyId: string | undefined) {
-  // Use type inference without explicit type annotation
   const [funnelData, setFunnelData] = useState(() => createInitialFunnelData());
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
-  // Load funnel data
   useEffect(() => {
     if (!strategyId) return;
 
     const loadFunnelData = async () => {
       try {
-        // Use type assertion on the response to avoid deep type instantiation
-        const response = await supabase
+        const { data, error } = (await supabase
           .from("agent_results")
           .select("id, content, metadata")
           .eq("strategy_id", strategyId)
           .eq("metadata->type", "funnel")
           .order("created_at", { ascending: false })
-          .limit(1);
-          
-        // Use type assertion to avoid TypeScript trying to deeply instantiate types
-        const { data, error } = response as any;
+          .limit(1)) as any; // 💡 TS2589-Schutz: Kein Typgraph aus Supabase
 
         if (error) throw error;
-        if (!data || data.length === 0) {
-          // Keep default data
-          return;
-        }
-
-        const dbResult = data[0];
-
-        if (dbResult.metadata && isFunnelMetadata(dbResult.metadata)) {
-          try {
-            // Parse the content safely
-            const rawContent = typeof dbResult.content === 'string' 
-              ? JSON.parse(dbResult.content) 
-              : dbResult.content;
-            
-            // Create a new funnel data object without explicit type annotation
-            const safeContent = {
-              stages: Array.isArray(rawContent.stages) 
-                ? rawContent.stages.map((stage: any) => parseFunnelStage(stage))
-                : [],
-              name: String(rawContent.name || ""),
-              primaryGoal: String(rawContent.primaryGoal || ""),
-              leadMagnetType: String(rawContent.leadMagnetType || ""),
-              targetAudience: String(rawContent.targetAudience || ""),
-              mainChannel: String(rawContent.mainChannel || ""),
-              conversionAction: String(rawContent.conversionAction || ""),
-              timeframe: String(rawContent.timeframe || ""),
-              budget: String(rawContent.budget || ""),
-              kpis: String(rawContent.kpis || ""),
-              notes: String(rawContent.notes || ""),
-              actionPlans: typeof rawContent.actionPlans === 'object' ? rawContent.actionPlans : {},
-              conversionRates: typeof rawContent.conversionRates === 'object' ? rawContent.conversionRates : {},
-              lastUpdated: String(rawContent.lastUpdated || ""),
-              version: Number(rawContent.version || 1),
-            };
-
-            // Use type assertion at the call site instead of variable declaration
-            setFunnelData(safeContent as FunnelData);
-            setHasChanges(false);
-          } catch (e) {
-            console.error("Failed to parse funnel content:", e);
-          }
-        }
-      } catch (err) {
-        console.error("Error loading funnel data:", err);
-        toast.error("Failed to load funnel data");
-      }
-    };
-
-    loadFunnelData();
-  }, [strategyId]);
-
-  // Handle stages change
-  const handleStagesChange = (updatedStages: FunnelStage[]) => {
-    setFunnelData(prev => ({ ...prev, stages: updatedStages }));
-    setHasChanges(true);
-  };
-
-  // Handle save
-  const handleSave = async () => {
-    if (!strategyId) return;
-    setIsSaving(true);
-
-    try {
-      const metadata = {
-        type: "funnel",
-        is_final: true,
-        created_by: "user",
-        updated_at: new Date().toISOString(),
-      };
-
-      const result = {
-        strategy_id: strategyId,
-        agent_id: null,
-        content: JSON.stringify(funnelData),
-        metadata,
-      };
-
-      // Use type assertion on the response to avoid deep type instantiation
-      const response = await supabase.from("agent_results").insert(result);
-      const { error } = response as any;
-
-      if (error) throw error;
-
-      toast.success("Funnel strategy saved successfully");
-      setHasChanges(false);
-    } catch (err) {
-      console.error("Error saving funnel data:", err);
-      toast.error("Failed to save funnel strategy");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  return {
-    funnelData,
-    isSaving,
-    hasChanges,
-    handleStagesChange,
-    handleSave,
-  };
-}
