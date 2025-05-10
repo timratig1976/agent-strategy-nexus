@@ -5,7 +5,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 // Import local hooks and types
 import useCanvasDatabase from './hooks/useCanvasDatabase';
-import { useCanvasStorage } from './hooks';
 import { CanvasState, CanvasItem } from './types';
 
 // Create a simple local storage hook for fallback

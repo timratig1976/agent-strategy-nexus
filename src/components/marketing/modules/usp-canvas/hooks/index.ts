@@ -1,11 +1,22 @@
+import { useCanvasData } from './useCanvasData';
+import { useCanvasStorage } from './useCanvasStorage';
+import { useCanvasItems } from './useCanvasItems';
+import { useCustomerProfile } from './useCustomerProfile';
+import { useValueMap } from './useValueMap';
+import { useRelationshipHandler } from './useRelationshipHandler';
+import { useAIResults } from './useAIResults';
+import { useAIContentHandler } from './useAIContentHandler';
+import { useNavigation } from './useNavigation';
+// We're keeping useCanvasStorage for backward compatibility but will prioritize database
 
-export * from './useCustomerProfile';
-export * from './useValueMap';
-export * from './useCanvasManager';
-export * from './useCanvasStorage';
-export * from './useAIContentHandler';
-export * from './useRelationshipHandler';
-export * from './useCanvasData';
-export * from './useLocalCanvasStorage';
-export * from './db/canvasMappers';
-export * from './db/canvasRepository';
+export {
+  useCanvasData,
+  useCanvasStorage,
+  useCanvasItems,
+  useCustomerProfile,
+  useValueMap,
+  useRelationshipHandler,
+  useAIResults,
+  useAIContentHandler,
+  useNavigation
+};
