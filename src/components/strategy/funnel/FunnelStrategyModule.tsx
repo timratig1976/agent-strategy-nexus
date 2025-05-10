@@ -28,7 +28,12 @@ interface FunnelData {
   actionPlans?: Record<string, string>;
 }
 
-const FunnelStrategyModule: React.FC = () => {
+interface FunnelStrategyModuleProps {
+  strategy?: any;
+  onNavigateBack?: () => Promise<void>;
+}
+
+const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = () => {
   const { strategyId } = useParams<{ strategyId: string }>();
   const [funnelData, setFunnelData] = useState<FunnelData>({ stages: [] });
   const [loading, setLoading] = useState(true);
@@ -58,8 +63,10 @@ const FunnelStrategyModule: React.FC = () => {
       const finalResult = results?.find(result => {
         // Handle the type check for is_final in metadata
         const metadata = result.metadata;
-        if (typeof metadata === 'object' && metadata !== null) {
-          return metadata.is_final === true || metadata.is_final === 'true';
+        if (metadata && typeof metadata === 'object' && metadata !== null) {
+          // Safely check if is_final exists in metadata
+          return (metadata as Record<string, unknown>).is_final === true || 
+                 (metadata as Record<string, unknown>).is_final === 'true';
         }
         return false;
       });

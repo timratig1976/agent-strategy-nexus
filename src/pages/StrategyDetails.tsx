@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -123,10 +124,7 @@ const StrategyDetails = () => {
     );
   } else if (strategy.state === 'funnel') {
     contentComponent = (
-      <FunnelStrategyModule
-        strategy={strategy}
-        onNavigateBack={() => navigateToPreviousStep('funnel')}
-      />
+      <FunnelStrategyModule />
     );
   } else if (strategy.state === 'ads') {
     contentComponent = (
