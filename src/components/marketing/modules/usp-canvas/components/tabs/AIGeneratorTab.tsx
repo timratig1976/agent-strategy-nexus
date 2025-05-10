@@ -42,11 +42,9 @@ const AIGeneratorTab: React.FC<AIGeneratorTabProps> = ({
       if (job.content) {
         newCustomerItems.push({
           id: uuidv4(),
-          type: 'job',
           content: job.content,
-          priority: job.priority || 'medium',
-          isAIGenerated: true,
-          timestamp: new Date().toISOString()
+          rating: job.priority || 'medium',
+          isAIGenerated: true
         });
       }
     });
@@ -65,11 +63,9 @@ const AIGeneratorTab: React.FC<AIGeneratorTabProps> = ({
       if (pain.content) {
         newCustomerItems.push({
           id: uuidv4(),
-          type: 'pain',
           content: pain.content,
-          severity: pain.severity || 'medium',
-          isAIGenerated: true,
-          timestamp: new Date().toISOString()
+          rating: pain.severity || 'medium',
+          isAIGenerated: true
         });
       }
     });
@@ -88,11 +84,9 @@ const AIGeneratorTab: React.FC<AIGeneratorTabProps> = ({
       if (gain.content) {
         newCustomerItems.push({
           id: uuidv4(),
-          type: 'gain',
           content: gain.content,
-          importance: gain.importance || 'medium',
-          isAIGenerated: true,
-          timestamp: new Date().toISOString()
+          rating: gain.importance || 'medium',
+          isAIGenerated: true
         });
       }
     });
