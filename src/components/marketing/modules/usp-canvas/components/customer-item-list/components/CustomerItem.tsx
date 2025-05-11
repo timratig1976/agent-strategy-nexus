@@ -41,14 +41,15 @@ const CustomerItem: React.FC<CustomerItemProps> = ({
       draggable={true}
       onDragStart={onDragStart}
       onDragOver={(e) => {
-        e.preventDefault();
+        e.preventDefault(); // Prevent default to allow drop
         onDragOver(e);
       }}
       onDrop={(e) => {
-        e.preventDefault();
+        e.preventDefault(); // Prevent default to allow drop
         onDrop(e);
       }}
-      className={`${isDragged ? 'opacity-50' : 'opacity-100'}`}
+      className={`${isDragged ? 'opacity-50' : 'opacity-100'} cursor-grab`}
+      data-item-id={id} // Add a data attribute for easier identification
     >
       <ItemCard 
         key={id}
@@ -65,8 +66,8 @@ const CustomerItem: React.FC<CustomerItemProps> = ({
         onToggleSelect={onToggleSelect}
         onDelete={onDelete}
         onDragStart={(e) => e.stopPropagation()} // Prevent double handling
-        onDragOver={(e) => e.stopPropagation()} // Prevent double handling
-        onDrop={(e) => e.stopPropagation()} // Prevent double handling
+        onDragOver={(e) => e.preventDefault()} // Prevent default and double handling
+        onDrop={(e) => e.preventDefault()} // Prevent default and double handling
         placeholderText={placeholderText}
       />
     </div>

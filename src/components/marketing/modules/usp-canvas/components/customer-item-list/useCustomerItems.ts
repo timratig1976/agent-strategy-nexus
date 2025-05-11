@@ -1,3 +1,4 @@
+
 import { useState, useRef } from 'react';
 import { CustomerItemProps, RatingValue } from './types';
 
@@ -17,26 +18,10 @@ export const useCustomerItems = ({ items, onDelete, onReorder }: UseCustomerItem
   const [sortOrder, setSortOrder] = useState<'default' | 'priority-high' | 'priority-low'>('default');
   const newItemInputRef = useRef<HTMLInputElement>(null);
 
-  // Apply sorting if needed
-  const ratingValue = (rating: RatingValue): number => {
-    switch (rating) {
-      case 'high': return 3;
-      case 'medium': return 2;
-      case 'low': return 1;
-    }
-  };
-
-  // Get sorted and filtered items
+  // Get filtered items (sorting is now removed)
   const getSortedAndFilteredItems = () => {
-    let sortedItems = [...items];
-    if (sortOrder === 'priority-high') {
-      sortedItems = sortedItems.sort((a, b) => ratingValue(b.rating) - ratingValue(a.rating));
-    } else if (sortOrder === 'priority-low') {
-      sortedItems = sortedItems.sort((a, b) => ratingValue(a.rating) - ratingValue(b.rating));
-    }
-    
-    // Filter AI-generated items if needed
-    return aiOnlyFilter ? sortedItems.filter(item => item.isAIGenerated) : sortedItems;
+    // Only filtering is applied, no sorting
+    return aiOnlyFilter ? items.filter(item => item.isAIGenerated) : items;
   };
 
   const toggleSelectItem = (itemId: string) => {
@@ -63,16 +48,15 @@ export const useCustomerItems = ({ items, onDelete, onReorder }: UseCustomerItem
     setSelectedItems([]);
   };
 
+  // This is now a no-op since we've removed sorting functionality
   const handleSort = () => {
-    if (sortOrder === 'default') setSortOrder('priority-high');
-    else if (sortOrder === 'priority-high') setSortOrder('priority-low');
-    else setSortOrder('default');
+    // Removed sorting functionality
   };
 
   const handleDragStart = (e: React.DragEvent, itemId: string) => {
     setDraggedItem(itemId);
     e.dataTransfer.effectAllowed = 'move';
-    // Set data transfer to make dragging work across browsers
+    // Set data transfer to make dragging work across all browsers
     e.dataTransfer.setData('text/plain', itemId);
   };
 
@@ -85,7 +69,8 @@ export const useCustomerItems = ({ items, onDelete, onReorder }: UseCustomerItem
     e.preventDefault();
     
     if (draggedItem !== null && draggedItem !== targetId && onReorder) {
-      const currentItems = [...items]; // Use the original items order from props
+      // Get the current filtered items that match what the user sees
+      const currentItems = [...getSortedAndFilteredItems()];
       const draggedIndex = currentItems.findIndex(item => item.id === draggedItem);
       const targetIndex = currentItems.findIndex(item => item.id === targetId);
       
@@ -95,8 +80,15 @@ export const useCustomerItems = ({ items, onDelete, onReorder }: UseCustomerItem
         const [removed] = reorderedItems.splice(draggedIndex, 1);
         reorderedItems.splice(targetIndex, 0, removed);
         
-        // Call the onReorder callback with the new order
-        onReorder(reorderedItems);
+        // If we're filtering, we need to merge the reordered filtered items with the non-filtered ones
+        if (aiOnlyFilter) {
+          const nonFilteredItems = items.filter(item => !item.isAIGenerated);
+          const finalOrder = [...reorderedItems, ...nonFilteredItems];
+          onReorder(finalOrder);
+        } else {
+          // Call the onReorder callback with the new order
+          onReorder(reorderedItems);
+        }
       }
     }
     

@@ -62,10 +62,6 @@ const ItemCard = ({
       className={`p-3 bg-white border rounded-md ${
         isSelectMode && isSelected ? 'border-primary bg-primary/5' : ''
       } ${isDragged ? 'opacity-50' : 'opacity-100'}`}
-      draggable={isDraggable}
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
     >
       <div className="flex items-center space-x-2">
         {isDraggable && (
