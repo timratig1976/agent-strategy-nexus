@@ -84,7 +84,7 @@ const StrategyOverview = () => {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Language</p>
-                    <p className="text-base capitalize">{strategy.language || "English"}</p>
+                    <p className="text-base capitalize">{formValues.language || "English"}</p>
                   </div>
                 </div>
               </div>
