@@ -9,6 +9,17 @@ interface UseStatementsDataProps {
   strategyId?: string;
 }
 
+// Define a TypeScript interface for the strategy_statements table row
+interface StrategyStatementRow {
+  id: string;
+  strategy_id: string;
+  content: string;
+  impact: 'low' | 'medium' | 'high';
+  is_ai_generated: boolean;
+  statement_type: 'pain' | 'gain';
+  created_at: string;
+}
+
 export const useStatementsData = ({ strategyId }: UseStatementsDataProps) => {
   const [painStatements, setPainStatements] = useState<PainStatement[]>([]);
   const [gainStatements, setGainStatements] = useState<GainStatement[]>([]);
@@ -26,8 +37,8 @@ export const useStatementsData = ({ strategyId }: UseStatementsDataProps) => {
     try {
       setIsLoading(true);
       
-      // Load statements from the database
-      const { data, error } = await supabase
+      // Cast to any to bypass TypeScript's type checking since the table might not be in types yet
+      const { data, error } = await (supabase as any)
         .from('strategy_statements')
         .select('*')
         .eq('strategy_id', strategyId);
@@ -39,8 +50,11 @@ export const useStatementsData = ({ strategyId }: UseStatementsDataProps) => {
       }
 
       if (data && data.length > 0) {
+        // Process the data properly with type assertions
+        const statements = data as StrategyStatementRow[];
+        
         // Format data from database
-        const painStatements = data
+        const painStatements = statements
           .filter(item => item.statement_type === 'pain')
           .map(item => ({
             id: item.id,
@@ -50,7 +64,7 @@ export const useStatementsData = ({ strategyId }: UseStatementsDataProps) => {
             createdAt: item.created_at
           })) as PainStatement[];
         
-        const gainStatements = data
+        const gainStatements = statements
           .filter(item => item.statement_type === 'gain')
           .map(item => ({
             id: item.id,
@@ -171,8 +185,9 @@ export const useStatementsData = ({ strategyId }: UseStatementsDataProps) => {
         }))
       ];
 
-      // Delete existing statements for this strategy
-      const { error: deleteError } = await supabase
+      // Delete existing statements for this strategy using type assertion 
+      // to bypass TypeScript's type checking
+      const { error: deleteError } = await (supabase as any)
         .from('strategy_statements')
         .delete()
         .eq('strategy_id', strategyId);
@@ -183,7 +198,7 @@ export const useStatementsData = ({ strategyId }: UseStatementsDataProps) => {
 
       // Insert new statements if we have any
       if (statementsToSave.length > 0) {
-        const { error: insertError } = await supabase
+        const { error: insertError } = await (supabase as any)
           .from('strategy_statements')
           .insert(statementsToSave);
 

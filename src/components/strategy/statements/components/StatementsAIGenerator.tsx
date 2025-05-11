@@ -114,7 +114,7 @@ const StatementsAIGenerator: React.FC<StatementsAIGeneratorProps> = ({
       <CardFooter className="flex justify-end gap-3 bg-gray-50">
         {generatedStatements ? (
           <>
-            <Button variant="outline" onClick={() => setGeneratedStatements(null)}>
+            <Button variant="secondary" onClick={() => setGeneratedStatements(null)}>
               Discard
             </Button>
             <Button onClick={handleAddStatements}>
