@@ -18,7 +18,7 @@ export const useCustomerItems = ({ items, onDelete, onReorder }: UseCustomerItem
   const [sortOrder, setSortOrder] = useState<'default' | 'priority-high' | 'priority-low'>('default');
   const newItemInputRef = useRef<HTMLInputElement>(null);
 
-  // Get filtered items (sorting is now removed)
+  // Get filtered items (no sorting applied)
   const getSortedAndFilteredItems = () => {
     // Only filtering is applied, no sorting
     return aiOnlyFilter ? items.filter(item => item.isAIGenerated) : items;
@@ -68,30 +68,46 @@ export const useCustomerItems = ({ items, onDelete, onReorder }: UseCustomerItem
   const handleDrop = (e: React.DragEvent, targetId: string) => {
     e.preventDefault();
     
-    if (draggedItem !== null && draggedItem !== targetId && onReorder) {
-      // Get the current filtered items that match what the user sees
-      const currentItems = [...getSortedAndFilteredItems()];
-      const draggedIndex = currentItems.findIndex(item => item.id === draggedItem);
-      const targetIndex = currentItems.findIndex(item => item.id === targetId);
-      
-      if (draggedIndex !== -1 && targetIndex !== -1) {
-        // Create a new array with the item moved to the new position
-        const reorderedItems = [...currentItems];
-        const [removed] = reorderedItems.splice(draggedIndex, 1);
-        reorderedItems.splice(targetIndex, 0, removed);
-        
-        // If we're filtering, we need to merge the reordered filtered items with the non-filtered ones
-        if (aiOnlyFilter) {
-          const nonFilteredItems = items.filter(item => !item.isAIGenerated);
-          const finalOrder = [...reorderedItems, ...nonFilteredItems];
-          onReorder(finalOrder);
-        } else {
-          // Call the onReorder callback with the new order
-          onReorder(reorderedItems);
-        }
-      }
+    if (!draggedItem || !targetId || draggedItem === targetId || !onReorder) {
+      setDraggedItem(null);
+      return;
     }
     
+    console.log(`Drop: dragging ${draggedItem} onto ${targetId}`);
+    
+    // Start with the current visible items (filtered if needed)
+    const currentItems = [...getSortedAndFilteredItems()];
+    
+    // Find the indices of both items
+    const draggedIndex = currentItems.findIndex(item => item.id === draggedItem);
+    const targetIndex = currentItems.findIndex(item => item.id === targetId);
+    
+    console.log(`Indices: dragged=${draggedIndex}, target=${targetIndex}`);
+    
+    if (draggedIndex === -1 || targetIndex === -1) {
+      console.log("Could not find one of the items in the list");
+      setDraggedItem(null);
+      return;
+    }
+    
+    // Create a new array with the dragged item moved to the new position
+    const reorderedItems = [...currentItems];
+    const [removed] = reorderedItems.splice(draggedIndex, 1);
+    reorderedItems.splice(targetIndex, 0, removed);
+    
+    console.log("Reordered items:", reorderedItems.map(item => item.id));
+    
+    if (aiOnlyFilter) {
+      // If we're filtering by AI-generated items, we need to preserve the non-filtered items
+      const nonFilteredItems = items.filter(item => !item.isAIGenerated);
+      // Call onReorder with the combined list (reordered AI items + untouched non-AI items)
+      onReorder([...reorderedItems, ...nonFilteredItems]);
+    } else {
+      // No filtering, just use the reordered items
+      onReorder(reorderedItems);
+    }
+    
+    // Reset the draggedItem state
     setDraggedItem(null);
   };
 

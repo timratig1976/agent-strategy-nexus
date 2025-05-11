@@ -36,20 +36,36 @@ const CustomerItem: React.FC<CustomerItemProps> = ({
   onDrop,
   placeholderText
 }) => {
+  const handleDragStart = (e: React.DragEvent) => {
+    console.log(`Starting drag for item: ${id}`);
+    // Set the drag data for better compatibility across browsers
+    e.dataTransfer.setData('text/plain', id);
+    e.dataTransfer.effectAllowed = 'move';
+    // Call the parent onDragStart handler
+    onDragStart(e);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault(); // This is critical to allow dropping
+    e.dataTransfer.dropEffect = 'move';
+    onDragOver(e);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    console.log(`Drop event on item: ${id}`);
+    // This item becomes the target
+    onDrop(e);
+  };
+
   return (
     <div 
       draggable={true}
-      onDragStart={onDragStart}
-      onDragOver={(e) => {
-        e.preventDefault(); // Prevent default to allow drop
-        onDragOver(e);
-      }}
-      onDrop={(e) => {
-        e.preventDefault(); // Prevent default to allow drop
-        onDrop(e);
-      }}
-      className={`${isDragged ? 'opacity-50' : 'opacity-100'} cursor-grab`}
-      data-item-id={id} // Add a data attribute for easier identification
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      className={`${isDragged ? 'opacity-50' : 'opacity-100'} cursor-grab ${isDragged ? 'border-2 border-dashed border-primary' : ''}`}
+      data-item-id={id}
     >
       <ItemCard 
         key={id}
@@ -65,9 +81,10 @@ const CustomerItem: React.FC<CustomerItemProps> = ({
         onContentChange={onContentChange}
         onToggleSelect={onToggleSelect}
         onDelete={onDelete}
-        onDragStart={(e) => e.stopPropagation()} // Prevent double handling
-        onDragOver={(e) => e.preventDefault()} // Prevent default and double handling
-        onDrop={(e) => e.preventDefault()} // Prevent default and double handling
+        // Use empty handlers for the inner ItemCard since we're handling drag at the container level
+        onDragStart={(e) => e.stopPropagation()}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => e.preventDefault()}
         placeholderText={placeholderText}
       />
     </div>

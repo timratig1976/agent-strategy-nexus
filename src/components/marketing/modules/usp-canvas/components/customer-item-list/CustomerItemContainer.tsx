@@ -37,7 +37,7 @@ const CustomerItemContainer = ({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" data-drag-container="true">
       {items.map((item) => (
         <CustomerItem 
           key={item.id}
