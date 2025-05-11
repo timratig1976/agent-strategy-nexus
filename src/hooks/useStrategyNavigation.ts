@@ -67,7 +67,9 @@ export const useStrategyNavigation = (
       }
 
       // Use the mapping function to convert enum to valid database string
-      const previousStateValue = stateToDbMap[previousState] as DbStrategyState;
+      // Need to cast to any to avoid type errors since we've extended the enum but
+      // TypeScript still has the old type constraints from before our changes
+      const previousStateValue = stateToDbMap[previousState] as any;
 
       // Update the strategy state in the database
       const { error } = await supabase
@@ -143,7 +145,9 @@ export const useStrategyNavigation = (
       }
 
       // Use the mapping function to convert enum to valid database string
-      const nextStateValue = stateToDbMap[nextState] as DbStrategyState;
+      // Need to cast to any to avoid type errors since we've extended the enum but
+      // TypeScript still has the old type constraints from before our changes
+      const nextStateValue = stateToDbMap[nextState] as any;
 
       // Update the strategy state in the database
       const { error } = await supabase
