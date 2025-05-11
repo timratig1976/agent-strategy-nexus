@@ -84,11 +84,10 @@ export const useStrategyStageSynchronization = ({
         // from the dropdown menu but sync the database accordingly
         
         // Update the database with the new state
-        // Use the type assertion with correctly defined database state types
-        // For TypeScript safety, we use a more specific type assertion
+        // Fix the type issue by matching exactly what the database expects
         const { error } = await supabase
           .from('strategies')
-          .update({ state: dbState as "briefing" | "persona" | "pain_gains" | "channel_strategy" | "funnel" | "roas_calculator" | "ads" | "completed" })
+          .update({ state: dbState as "briefing" | "persona" | "pain_gains" | "funnel" | "ads" })
           .eq('id', id);
         
         if (error) throw error;

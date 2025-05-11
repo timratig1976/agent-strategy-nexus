@@ -1,5 +1,4 @@
 
-
 import { StrategyState } from "@/types/marketing";
 
 /**
@@ -57,16 +56,18 @@ export const getStateColor = (state: string): string => {
 /**
  * Maps StrategyState enum values to valid database strings
  * This is needed because the database enum type doesn't include all TS enum values
+ * 
+ * Important: Only map to values that exist in the database strategy_state enum:
+ * 'briefing', 'persona', 'pain_gains', 'funnel', 'ads'
  */
 export const stateToDbMap: Record<StrategyState, string> = {
   [StrategyState.BRIEFING]: "briefing",
   [StrategyState.PERSONA]: "persona",
   [StrategyState.PAIN_GAINS]: "pain_gains",
   [StrategyState.STATEMENTS]: "pain_gains", // Map to pain_gains in DB since statements isn't in DB enum
-  [StrategyState.CHANNEL_STRATEGY]: "channel_strategy", // New mapping
+  [StrategyState.CHANNEL_STRATEGY]: "pain_gains", // Map to pain_gains in DB since channel_strategy isn't in DB enum
   [StrategyState.FUNNEL]: "funnel",
-  [StrategyState.ROAS_CALCULATOR]: "roas_calculator", // New mapping
+  [StrategyState.ROAS_CALCULATOR]: "funnel", // Map to funnel in DB since roas_calculator isn't in DB enum
   [StrategyState.ADS]: "ads",
   [StrategyState.COMPLETED]: "ads" // Map to ads in DB since completed isn't in DB enum
 };
-
