@@ -1,13 +1,17 @@
+
 import React, { useEffect, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Strategy, StrategyState } from "@/types/marketing";
 import { useAuth } from "@/context/AuthProvider";
 import NavBar from "@/components/NavBar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   DashboardHeader,
-  StrategyList,
-  StrategySkeleton
+  DashboardSummary,
+  StrategyCharts,
+  StrategiesTable,
+  TableSkeleton
 } from "@/components/dashboard";
 
 const stateLabels: Record<string, string> = {
@@ -16,7 +20,10 @@ const stateLabels: Record<string, string> = {
   [StrategyState.PAIN_GAINS]: "Pain & Gains",
   [StrategyState.FUNNEL]: "Funnel Strategy",
   [StrategyState.ADS]: "Ad Campaign",
-  [StrategyState.COMPLETED]: "Completed"
+  [StrategyState.COMPLETED]: "Completed",
+  [StrategyState.STATEMENTS]: "Statements",
+  [StrategyState.CHANNEL_STRATEGY]: "Channel Strategy",
+  [StrategyState.ROAS_CALCULATOR]: "ROAS"
 };
 
 const stateColors: Record<string, string> = {
@@ -25,7 +32,10 @@ const stateColors: Record<string, string> = {
   [StrategyState.PAIN_GAINS]: "bg-amber-100 text-amber-800",
   [StrategyState.FUNNEL]: "bg-green-100 text-green-800",
   [StrategyState.ADS]: "bg-pink-100 text-pink-800",
-  [StrategyState.COMPLETED]: "bg-gray-100 text-gray-800"
+  [StrategyState.COMPLETED]: "bg-gray-100 text-gray-800",
+  [StrategyState.STATEMENTS]: "bg-indigo-100 text-indigo-800",
+  [StrategyState.CHANNEL_STRATEGY]: "bg-cyan-100 text-cyan-800",
+  [StrategyState.ROAS_CALCULATOR]: "bg-orange-100 text-orange-800"
 };
 
 const Dashboard = () => {
@@ -119,13 +129,47 @@ const Dashboard = () => {
       <DashboardHeader />
       
       {loading ? (
-        <StrategySkeleton />
+        <div className="space-y-8">
+          {/* KPI Section Skeleton */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-muted/20 rounded-md p-4">
+                <Skeleton className="h-8 w-24 mb-2" />
+                <Skeleton className="h-6 w-12" />
+              </div>
+            ))}
+          </div>
+          
+          {/* Charts Skeleton - simplified */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="border rounded-md p-4">
+              <Skeleton className="h-6 w-40 mb-4" />
+              <Skeleton className="h-[250px] w-full" />
+            </div>
+            <div className="border rounded-md p-4">
+              <Skeleton className="h-6 w-40 mb-4" />
+              <Skeleton className="h-[250px] w-full" />
+            </div>
+          </div>
+          
+          {/* Table Skeleton */}
+          <TableSkeleton />
+        </div>
       ) : (
-        <StrategyList 
-          strategies={strategies}
-          stateLabels={stateLabels}
-          stateColors={stateColors}
-        />
+        <>
+          {/* KPI Summary */}
+          <DashboardSummary strategies={strategies} />
+          
+          {/* Charts */}
+          <StrategyCharts strategies={strategies} />
+          
+          {/* Strategies Table */}
+          <StrategiesTable 
+            strategies={strategies}
+            stateLabels={stateLabels}
+            stateColors={stateColors}
+          />
+        </>
       )}
     </div>
   );
