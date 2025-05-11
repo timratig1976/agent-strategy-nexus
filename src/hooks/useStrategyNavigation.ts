@@ -1,86 +1,104 @@
 
-import { useState, useCallback } from "react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { StrategyState } from "@/types/marketing";
+import { useCallback, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { StrategyState } from '@/types/marketing';
 
-interface UseStrategyNavigationProps {
+type StrategyNavigationOptions = {
   strategyId?: string;
-  onRefetch: () => void;
-}
+  onRefetch?: () => void;
+};
 
-export const useStrategyNavigation = ({ strategyId, onRefetch }: UseStrategyNavigationProps) => {
+/**
+ * Custom hook for handling strategy navigation
+ */
+export const useStrategyNavigation = (
+  { strategyId, onRefetch }: StrategyNavigationOptions
+) => {
   const [isNavigating, setIsNavigating] = useState(false);
-
+  const navigate = useNavigate();
+  
   /**
-   * Navigate to previous state in the strategy flow
+   * Navigate to the previous step in the strategy workflow
    */
-  const navigateToPreviousStep = useCallback(async (currentState: StrategyState | string) => {
-    if (!strategyId) return;
-    
+  const navigateToPreviousStep = useCallback(async (currentState: string) => {
+    if (!strategyId) {
+      toast.error('Strategy ID is missing');
+      return;
+    }
+
     try {
       setIsNavigating(true);
-      let previousState: StrategyState;
       
-      // Determine the previous state based on the current state
-      switch(currentState) {
-        case StrategyState.FUNNEL:
-          previousState = StrategyState.STATEMENTS;
-          break;
-        case StrategyState.STATEMENTS:
-          previousState = StrategyState.PAIN_GAINS;
+      // Map current state to previous state
+      let previousState: string;
+      
+      switch (currentState) {
+        case StrategyState.PERSONA:
+          previousState = StrategyState.BRIEFING;
           break;
         case StrategyState.PAIN_GAINS:
           previousState = StrategyState.PERSONA;
           break;
-        case StrategyState.PERSONA:
-          previousState = StrategyState.BRIEFING;
+        case StrategyState.STATEMENTS:
+          previousState = StrategyState.PAIN_GAINS;
+          break;
+        case StrategyState.FUNNEL:
+          previousState = StrategyState.STATEMENTS;
           break;
         case StrategyState.ADS:
           previousState = StrategyState.FUNNEL;
           break;
         default:
-          previousState = StrategyState.BRIEFING;
+          toast.error('Invalid current state');
+          setIsNavigating(false);
+          return;
       }
-      
-      console.log(`Going back from ${currentState} to ${previousState}`);
-      
-      // Update the strategy state
-      const { data, error } = await supabase
+
+      // Update the strategy state in the database
+      const { error } = await supabase
         .from('strategies')
         .update({ state: previousState })
-        .eq('id', strategyId)
-        .select();
-      
+        .eq('id', strategyId);
+
       if (error) {
-        console.error("Error updating strategy state:", error);
-        toast.error(`Failed to go back to ${getStateLabel(previousState)} stage`);
+        console.error('Error updating strategy state:', error);
+        toast.error('Failed to navigate to previous step');
         return;
       }
+
+      // Notify success
+      toast.success(`Navigated back to ${previousState}`);
       
-      toast.success(`Returned to ${getStateLabel(previousState)} stage`);
-      onRefetch(); // Refresh the data
-      
-    } catch (err) {
-      console.error("Failed to go back to previous step:", err);
-      toast.error("Failed to navigate back");
+      // Refresh data if callback provided
+      if (onRefetch) {
+        onRefetch();
+      }
+    } catch (error: any) {
+      console.error('Error in navigateToPreviousStep:', error);
+      toast.error(error.message || 'Navigation failed');
     } finally {
       setIsNavigating(false);
     }
   }, [strategyId, onRefetch]);
-
+  
   /**
-   * Navigate to next state in the strategy flow
+   * Navigate to the next step in the strategy workflow
    */
-  const navigateToNextStep = useCallback(async (currentState: StrategyState | string) => {
-    if (!strategyId) return;
-    
+  const navigateToNextStep = useCallback(async (currentState: string) => {
+    if (!strategyId) {
+      toast.error('Strategy ID is missing');
+      return;
+    }
+
     try {
       setIsNavigating(true);
-      let nextState: StrategyState;
       
-      // Determine the next state based on the current state
-      switch(currentState) {
+      // Map current state to next state
+      let nextState: string;
+      
+      switch (currentState) {
         case StrategyState.BRIEFING:
           nextState = StrategyState.PERSONA;
           break;
@@ -96,61 +114,47 @@ export const useStrategyNavigation = ({ strategyId, onRefetch }: UseStrategyNavi
         case StrategyState.FUNNEL:
           nextState = StrategyState.ADS;
           break;
+        case StrategyState.ADS:
+          nextState = StrategyState.COMPLETED;
+          break;
         default:
-          nextState = StrategyState.BRIEFING;
+          toast.error('Invalid current state');
+          setIsNavigating(false);
+          return;
       }
-      
-      console.log(`Moving forward from ${currentState} to ${nextState}`);
-      
-      // Update the strategy state
-      const { data, error } = await supabase
+
+      // Update the strategy state in the database
+      const { error } = await supabase
         .from('strategies')
         .update({ state: nextState })
-        .eq('id', strategyId)
-        .select();
-      
+        .eq('id', strategyId);
+
       if (error) {
-        console.error("Error updating strategy state:", error);
-        toast.error(`Failed to advance to ${getStateLabel(nextState)} stage`);
+        console.error('Error updating strategy state:', error);
+        toast.error('Failed to navigate to next step');
         return;
       }
+
+      // Notify success
+      toast.success(`Moved to ${nextState} stage`);
       
-      toast.success(`Advanced to ${getStateLabel(nextState)} stage`);
-      onRefetch(); // Refresh the data
-      
-    } catch (err) {
-      console.error("Failed to advance to next step:", err);
-      toast.error("Failed to navigate forward");
+      // Refresh data if callback provided
+      if (onRefetch) {
+        onRefetch();
+      }
+    } catch (error: any) {
+      console.error('Error in navigateToNextStep:', error);
+      toast.error(error.message || 'Navigation failed');
     } finally {
       setIsNavigating(false);
     }
   }, [strategyId, onRefetch]);
 
-  return {
+  return { 
     navigateToPreviousStep,
     navigateToNextStep,
     isNavigating
   };
-};
-
-// Helper function to get a human-readable label for a strategy state
-const getStateLabel = (state: StrategyState | string): string => {
-  switch (state) {
-    case StrategyState.BRIEFING:
-      return "Briefing";
-    case StrategyState.PERSONA:
-      return "Persona Development";
-    case StrategyState.PAIN_GAINS:
-      return "USP Canvas";
-    case StrategyState.STATEMENTS:
-      return "Pain & Gain Statements";
-    case StrategyState.FUNNEL:
-      return "Funnel Strategy";
-    case StrategyState.ADS:
-      return "Ad Campaign";
-    default:
-      return String(state);
-  }
 };
 
 export default useStrategyNavigation;
