@@ -126,6 +126,7 @@ const CustomerItemList = ({
         hasItems={items.length > 0}
         sortOrder={sortOrder}
         handleSort={handleSort}
+        showAIControls={false}
       />
 
       <SelectedItemsNotification 

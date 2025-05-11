@@ -40,8 +40,14 @@ const CustomerItem: React.FC<CustomerItemProps> = ({
     <div 
       draggable={true}
       onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
+      onDragOver={(e) => {
+        e.preventDefault();
+        onDragOver(e);
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        onDrop(e);
+      }}
       className={`${isDragged ? 'opacity-50' : 'opacity-100'}`}
     >
       <ItemCard 
@@ -58,9 +64,9 @@ const CustomerItem: React.FC<CustomerItemProps> = ({
         onContentChange={onContentChange}
         onToggleSelect={onToggleSelect}
         onDelete={onDelete}
-        onDragStart={onDragStart}
-        onDragOver={onDragOver}
-        onDrop={onDrop}
+        onDragStart={(e) => e.stopPropagation()} // Prevent double handling
+        onDragOver={(e) => e.stopPropagation()} // Prevent double handling
+        onDrop={(e) => e.stopPropagation()} // Prevent double handling
         placeholderText={placeholderText}
       />
     </div>

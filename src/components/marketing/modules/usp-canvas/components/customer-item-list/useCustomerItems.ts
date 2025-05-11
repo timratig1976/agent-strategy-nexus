@@ -73,6 +73,8 @@ export const useCustomerItems = ({ items, onDelete, onReorder }: UseCustomerItem
   const handleDragStart = (e: React.DragEvent, itemId: string) => {
     setDraggedItem(itemId);
     e.dataTransfer.effectAllowed = 'move';
+    // Set data transfer to make dragging work across browsers
+    e.dataTransfer.setData('text/plain', itemId);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -84,14 +86,18 @@ export const useCustomerItems = ({ items, onDelete, onReorder }: UseCustomerItem
     e.preventDefault();
     
     if (draggedItem !== null && draggedItem !== targetId && onReorder) {
-      const currentItems = [...getSortedAndFilteredItems()];
+      const currentItems = [...items]; // Use the original items order from props
       const draggedIndex = currentItems.findIndex(item => item.id === draggedItem);
       const targetIndex = currentItems.findIndex(item => item.id === targetId);
       
       if (draggedIndex !== -1 && targetIndex !== -1) {
-        const [removed] = currentItems.splice(draggedIndex, 1);
-        currentItems.splice(targetIndex, 0, removed);
-        onReorder(currentItems);
+        // Create a new array with the item moved to the new position
+        const reorderedItems = [...currentItems];
+        const [removed] = reorderedItems.splice(draggedIndex, 1);
+        reorderedItems.splice(targetIndex, 0, removed);
+        
+        // Call the onReorder callback with the new order
+        onReorder(reorderedItems);
       }
     }
     
