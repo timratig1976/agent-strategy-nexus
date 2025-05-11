@@ -46,7 +46,7 @@ const StrategyCharts: React.FC<StrategyChartsProps> = ({ strategies }) => {
         label: 'Strategies by Status',
         data,
         backgroundColor: backgroundColors.slice(0, labels.length),
-        borderColor: '#ffffff',
+        borderColor: ['#ffffff'], // Make sure borderColor is an array of strings
         borderWidth: 1
       }]
     };
@@ -73,14 +73,14 @@ const StrategyCharts: React.FC<StrategyChartsProps> = ({ strategies }) => {
         {
           label: 'Completed',
           data: completedData,
-          borderColor: '#10b981', // emerald-500
+          borderColor: ['#10b981'], // Fix: Make borderColor an array of strings
           backgroundColor: 'rgba(16, 185, 129, 0.1)',
           fill: true
         },
         {
           label: 'In Progress',
           data: inProgressData,
-          borderColor: '#f59e0b', // amber-500
+          borderColor: ['#f59e0b'], // Fix: Make borderColor an array of strings
           backgroundColor: 'rgba(245, 158, 11, 0.1)',
           fill: true
         }
