@@ -13,9 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { 
-  Eye, 
-  Edit, 
-  MoreHorizontal, 
+  ArrowRight, 
   ArrowUp, 
   ArrowDown 
 } from "lucide-react";
@@ -141,7 +139,7 @@ const StrategiesTable: React.FC<StrategiesTableProps> = ({
               </div>
             </TableHead>
             <TableHead>Current Stage</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="text-right">Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -171,18 +169,11 @@ const StrategiesTable: React.FC<StrategiesTableProps> = ({
                   {getStateLabel(strategy.state)}
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Link to={`/strategy/${strategy.id}/${stateSlug}`}>
-                      <Button variant="outline" size="sm" title="Continue Strategy">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                    <Link to={`/strategy/${strategy.id}`}>
-                      <Button variant="outline" size="sm" title="Strategy Overview">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                  </div>
+                  <Link to={`/strategy/${strategy.id}/${stateSlug}`}>
+                    <Button variant="outline" size="sm" className="flex items-center gap-1">
+                      Continue <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
                 </TableCell>
               </TableRow>
             );
