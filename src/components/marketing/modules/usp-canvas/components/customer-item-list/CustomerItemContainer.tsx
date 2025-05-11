@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { CustomerItemProps } from './types';
-import { CustomerItem, EmptyItemsPlaceholder } from './components';
+import { CustomerItem } from './components';
 
 interface CustomerItemContainerProps {
   items: CustomerItemProps[];

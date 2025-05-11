@@ -37,25 +37,33 @@ const CustomerItem: React.FC<CustomerItemProps> = ({
   placeholderText
 }) => {
   return (
-    <ItemCard 
-      key={id}
-      id={id}
-      content={content}
-      rating={rating}
-      ratingLabel="priority"
-      isAIGenerated={isAIGenerated}
-      isSelected={isSelected}
-      isSelectMode={isSelectMode}
-      isDragged={isDragged}
-      isDraggable={true}
-      onContentChange={onContentChange}
-      onToggleSelect={onToggleSelect}
-      onDelete={onDelete}
+    <div 
+      draggable={true}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDrop={onDrop}
-      placeholderText={placeholderText}
-    />
+      className={`${isDragged ? 'opacity-50' : 'opacity-100'}`}
+    >
+      <ItemCard 
+        key={id}
+        id={id}
+        content={content}
+        rating={rating}
+        ratingLabel="priority"
+        isAIGenerated={isAIGenerated}
+        isSelected={isSelected}
+        isSelectMode={isSelectMode}
+        isDragged={isDragged}
+        isDraggable={true}
+        onContentChange={onContentChange}
+        onToggleSelect={onToggleSelect}
+        onDelete={onDelete}
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDrop={onDrop}
+        placeholderText={placeholderText}
+      />
+    </div>
   );
 };
 
