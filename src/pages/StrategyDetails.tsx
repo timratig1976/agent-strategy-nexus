@@ -139,7 +139,7 @@ const StrategyDetails = () => {
     contentComponent = (
       <AdCampaignModule
         strategy={strategy}
-        onNavigateBack={() => navigateToPreviousStep('ads')}
+        onNavigateBack={() => navigateToPreviousStep(StrategyState.ADS)}
       />
     );
   }
