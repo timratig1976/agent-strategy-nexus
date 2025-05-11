@@ -13,7 +13,9 @@ import StrategyBriefing from "@/components/strategy/briefing";
 import { PersonaDevelopment } from "@/components/strategy/personas";
 import PainGainsModule from "@/components/strategy/pain-gains";
 import StatementsModule from "@/components/strategy/statements";
+import ChannelStrategyModule from "@/components/strategy/channel-strategy";
 import FunnelStrategyModule from "@/components/strategy/funnel";
+import RoasCalculatorModule from "@/components/strategy/roas-calculator";
 import AdCampaignModule from "@/components/strategy/ads";
 
 // Import custom hooks and utilities
@@ -129,9 +131,23 @@ const StrategyDetails = () => {
         strategy={strategy}
       />
     );
+  } else if (strategy.state === 'channel_strategy') {
+    contentComponent = (
+      <ChannelStrategyModule 
+        strategy={strategy}
+        briefingAgentResult={finalBriefing}
+        personaAgentResult={finalPersona}
+      />
+    );
   } else if (strategy.state === 'funnel') {
     contentComponent = (
       <FunnelStrategyModule 
+        strategy={strategy}
+      />
+    );
+  } else if (strategy.state === 'roas_calculator') {
+    contentComponent = (
+      <RoasCalculatorModule
         strategy={strategy}
       />
     );
@@ -156,8 +172,6 @@ const StrategyDetails = () => {
             getStateLabel={getStateLabel}
             getStateColor={getStateColor}
           />
-          
-          {/* Description removed from here */}
         </div>
         
         {contentComponent}

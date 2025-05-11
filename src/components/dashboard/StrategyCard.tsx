@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,14 +17,16 @@ interface StrategyCardProps {
 const StrategyCard = ({ strategy, stateLabels, stateColors }: StrategyCardProps) => {
   // Calculate progress percentage for a strategy based on state
   const calculateProgress = (strategy: Strategy): number => {
-    // Map each state to a percentage value
+    // Map each state to a percentage value with adjusted percentages for new states
     const stateProgressMap: Record<StrategyState, number> = {
-      [StrategyState.BRIEFING]: 16,
-      [StrategyState.PERSONA]: 33,
-      [StrategyState.PAIN_GAINS]: 50,
-      [StrategyState.STATEMENTS]: 66,
-      [StrategyState.FUNNEL]: 83,
-      [StrategyState.ADS]: 100,
+      [StrategyState.BRIEFING]: 11,
+      [StrategyState.PERSONA]: 22,
+      [StrategyState.PAIN_GAINS]: 33,
+      [StrategyState.STATEMENTS]: 44,
+      [StrategyState.CHANNEL_STRATEGY]: 55,
+      [StrategyState.FUNNEL]: 66,
+      [StrategyState.ROAS_CALCULATOR]: 77,
+      [StrategyState.ADS]: 88,
       [StrategyState.COMPLETED]: 100
     };
     

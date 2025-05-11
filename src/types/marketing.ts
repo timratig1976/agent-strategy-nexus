@@ -1,4 +1,3 @@
-
 // Define marketing-related types for the application
 
 export enum StrategyState {
@@ -6,7 +5,9 @@ export enum StrategyState {
   PERSONA = 'persona',
   PAIN_GAINS = 'pain_gains',
   STATEMENTS = 'statements',
+  CHANNEL_STRATEGY = 'channel_strategy',
   FUNNEL = 'funnel',
+  ROAS_CALCULATOR = 'roas_calculator',
   ADS = 'ads',
   COMPLETED = 'completed'
 }

@@ -1,4 +1,5 @@
 
+
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,7 +8,7 @@ import { StrategyState } from '@/types/marketing';
 import { stateToDbMap } from '@/utils/strategyUtils';
 
 // Define a type for the valid database state values
-type DbStrategyState = "briefing" | "persona" | "pain_gains" | "funnel" | "ads";
+type DbStrategyState = "briefing" | "persona" | "pain_gains" | "channel_strategy" | "funnel" | "roas_calculator" | "ads";
 
 type StrategyNavigationOptions = {
   strategyId?: string;
@@ -48,11 +49,17 @@ export const useStrategyNavigation = (
         case StrategyState.STATEMENTS:
           previousState = StrategyState.PAIN_GAINS;
           break;
-        case StrategyState.FUNNEL:
+        case StrategyState.CHANNEL_STRATEGY:
           previousState = StrategyState.STATEMENTS;
           break;
-        case StrategyState.ADS:
+        case StrategyState.FUNNEL:
+          previousState = StrategyState.CHANNEL_STRATEGY;
+          break;
+        case StrategyState.ROAS_CALCULATOR:
           previousState = StrategyState.FUNNEL;
+          break;
+        case StrategyState.ADS:
+          previousState = StrategyState.ROAS_CALCULATOR;
           break;
         default:
           toast.error('Invalid current state');
@@ -116,9 +123,15 @@ export const useStrategyNavigation = (
           nextState = StrategyState.STATEMENTS;
           break;
         case StrategyState.STATEMENTS:
+          nextState = StrategyState.CHANNEL_STRATEGY;
+          break;
+        case StrategyState.CHANNEL_STRATEGY:
           nextState = StrategyState.FUNNEL;
           break;
         case StrategyState.FUNNEL:
+          nextState = StrategyState.ROAS_CALCULATOR;
+          break;
+        case StrategyState.ROAS_CALCULATOR:
           nextState = StrategyState.ADS;
           break;
         case StrategyState.ADS:
