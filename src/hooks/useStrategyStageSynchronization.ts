@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { slugToState, stateToSlug } from "@/utils/strategyUrlUtils";
 import { stateToDbMap } from "@/utils/strategyUtils";
+import { isValidStrategyState } from "@/utils/typeUtils";
 
 interface StrategyStageSyncOptions {
   /**
@@ -64,6 +65,13 @@ export const useStrategyStageSynchronization = ({
     }
     
     // Map the URL state to a valid database state value
+    // We need to ensure urlState is a valid StrategyState before using it as a key in stateToDbMap
+    if (!isValidStrategyState(urlState)) {
+      console.error("URL state is not a valid StrategyState:", urlState);
+      navigate(`/strategy/${id}`);
+      return;
+    }
+    
     const dbState = stateToDbMap[urlState]; 
     
     // Handle state transitions based on the existing state and URL
@@ -74,8 +82,11 @@ export const useStrategyStageSynchronization = ({
         // If trying to access a stage ahead of current progress, redirect to current stage
         const currentStateSlug = stateToSlug[strategy.state as StrategyState];
         
+        // Ensure strategy.state is a valid StrategyState for type safety
+        const currentState = isValidStrategyState(strategy.state) ? strategy.state : StrategyState.BRIEFING;
+        
         // Skip ahead not allowed - redirect to appropriate stage
-        if (!isAllowedNavigation(strategy.state as StrategyState, urlState as StrategyState)) {
+        if (!isAllowedNavigation(currentState, urlState)) {
           toast.error("You cannot skip ahead in the strategy workflow");
           navigate(`/strategy/${id}/${currentStateSlug}`);
           return;
