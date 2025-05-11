@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
@@ -13,12 +13,14 @@ import LoadingStrategy from "@/components/strategy/loading/LoadingStrategy";
 import StrategyNotFound from "@/components/strategy/StrategyNotFound";
 import useStrategyData from "@/hooks/useStrategyData";
 import { Separator } from "@/components/ui/separator";
+import { useStrategyMetadata } from "@/components/strategy/briefing/hooks/useStrategyMetadata";
 
 const StrategyOverview = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
   const { strategy, isLoading } = useStrategyData({ id });
+  const { formValues } = useStrategyMetadata(id || '');
   
   // Navigate to continue working on strategy
   const handleContinueStrategy = () => {
@@ -94,19 +96,19 @@ const StrategyOverview = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Company Name</p>
-                    <p className="text-base">{strategy.companyName || "-"}</p>
+                    <p className="text-base">{formValues.companyName || "-"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Website URL</p>
                     <p className="text-base">
-                      {strategy.websiteUrl ? (
+                      {formValues.websiteUrl ? (
                         <a 
-                          href={strategy.websiteUrl} 
+                          href={formValues.websiteUrl} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="text-primary hover:underline"
                         >
-                          {strategy.websiteUrl}
+                          {formValues.websiteUrl}
                         </a>
                       ) : "-"}
                     </p>
@@ -121,19 +123,19 @@ const StrategyOverview = () => {
                 <div className="space-y-3">
                   <div>
                     <p className="text-sm text-muted-foreground">Product Description</p>
-                    <p className="text-base">{strategy.productDescription || "-"}</p>
+                    <p className="text-base">{formValues.productDescription || "-"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Product URL</p>
                     <p className="text-base">
-                      {strategy.productUrl ? (
+                      {formValues.productUrl ? (
                         <a 
-                          href={strategy.productUrl} 
+                          href={formValues.productUrl} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="text-primary hover:underline"
                         >
-                          {strategy.productUrl}
+                          {formValues.productUrl}
                         </a>
                       ) : "-"}
                     </p>
@@ -145,7 +147,7 @@ const StrategyOverview = () => {
               
               <div>
                 <h4 className="font-medium mb-1">Additional Information</h4>
-                <p className="text-base">{strategy.additionalInfo || "-"}</p>
+                <p className="text-base">{formValues.additionalInfo || "-"}</p>
               </div>
               
               <div className="mt-6 flex justify-end">
