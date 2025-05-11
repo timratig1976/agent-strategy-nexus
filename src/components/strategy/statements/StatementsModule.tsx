@@ -1,14 +1,19 @@
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 import { toast } from 'sonner';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { useStatementsData, useStatementsGenerator } from './hooks';
-import { StatementsHeader, StatementsFooter, StatementsList, StatementsAIGenerator } from './components';
+import { useUspCanvasData } from './hooks/useUspCanvasData';
+import { 
+  StatementsHeader, 
+  StatementsFooter, 
+  StatementsAIGenerator,
+  StatementsTabPanel,
+  StatementsLoading
+} from './components';
 import { useStrategyNavigation } from '@/hooks/useStrategyNavigation';
 import { StrategyState } from '@/types/marketing';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 
 interface StatementsModuleProps {
   strategy: any;  // Strategy object
@@ -21,8 +26,10 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({
 }) => {
   const navigate = useNavigate();
   const strategyId = strategy?.id;
-  const [activeTab, setActiveTab] = useState<string>('pain');
-  const [uspData, setUspData] = useState<any>(uspCanvasData);
+  
+  // Fetch USP Canvas data if not provided
+  const { uspData } = useUspCanvasData(strategyId);
+  const finalUspData = uspCanvasData || uspData;
   
   // Hooks for data management and navigation
   const { 
@@ -52,45 +59,15 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({
     progressPercent 
   } = useStatementsGenerator({ strategyId });
 
-  // Fetch USP Canvas data if not provided
-  useEffect(() => {
-    if (!strategyId || uspData) return;
-
-    const fetchUspData = async () => {
-      try {
-        // Check if there's canvas history data for this strategy
-        const { data: canvasData, error: canvasError } = await supabase
-          .from('canvas_history')
-          .select('*')
-          .eq('canvas_id', strategyId)
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (canvasError) {
-          console.error('Error fetching canvas data:', canvasError);
-          return;
-        }
-
-        if (canvasData && canvasData.length > 0) {
-          setUspData(canvasData[0].snapshot_data);
-        }
-      } catch (error) {
-        console.error('Error in fetchUspData:', error);
-      }
-    };
-
-    fetchUspData();
-  }, [strategyId, uspData]);
-
   // Handle AI generation
   const handleGenerate = useCallback(async () => {
-    if (!uspData) {
+    if (!finalUspData) {
       toast.error('No USP Canvas data available for generation');
       return { painStatements: [], gainStatements: [] };
     }
 
-    return await generateStatements(uspData);
-  }, [generateStatements, uspData]);
+    return await generateStatements(finalUspData);
+  }, [generateStatements, finalUspData]);
 
   // Handle adding all generated statements
   const handleAddGeneratedStatements = useCallback((painStmts: any[], gainStmts: any[]) => {
@@ -103,9 +80,6 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({
     gainStmts.forEach(item => {
       addGainStatement(item.content, item.impact, true);
     });
-    
-    // Switch to pain tab to show added statements
-    setActiveTab('pain');
   }, [addPainStatement, addGainStatement]);
 
   // Handle navigation back to USP Canvas
@@ -162,14 +136,7 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({
   }, [strategyId, saveStatements, handleContinue]);
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading statements...</p>
-        </div>
-      </div>
-    );
+    return <StatementsLoading />;
   }
 
   return (
@@ -188,42 +155,20 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({
               onAddStatements={handleAddGeneratedStatements}
               isGenerating={isGenerating}
               progress={progressPercent}
-              disabled={!uspData}
+              disabled={!finalUspData}
             />
           </div>
           
           {/* Right column: Tabs with statements lists */}
           <div className="md:col-span-8">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="w-full mb-6">
-                <TabsTrigger value="pain" className="flex-1">
-                  Pain Statements ({painStatements.length})
-                </TabsTrigger>
-                <TabsTrigger value="gain" className="flex-1">
-                  Gain Statements ({gainStatements.length})
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="pain">
-                <StatementsList
-                  title="Pain Statements"
-                  statements={painStatements}
-                  onAddStatement={(content, impact) => addPainStatement(content, impact)}
-                  onDeleteStatement={deletePainStatement}
-                  placeholder="Enter a pain statement that describes your customers' frustrations..."
-                />
-              </TabsContent>
-              
-              <TabsContent value="gain">
-                <StatementsList
-                  title="Gain Statements"
-                  statements={gainStatements}
-                  onAddStatement={(content, impact) => addGainStatement(content, impact)}
-                  onDeleteStatement={deleteGainStatement}
-                  placeholder="Enter a gain statement that describes your customers' desired outcomes..."
-                />
-              </TabsContent>
-            </Tabs>
+            <StatementsTabPanel
+              painStatements={painStatements}
+              gainStatements={gainStatements}
+              addPainStatement={addPainStatement}
+              addGainStatement={addGainStatement}
+              deletePainStatement={deletePainStatement}
+              deleteGainStatement={deleteGainStatement}
+            />
           </div>
         </div>
         

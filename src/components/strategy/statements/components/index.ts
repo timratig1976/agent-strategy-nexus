@@ -5,3 +5,5 @@ export { default as StatementsList } from './StatementsList';
 export { default as StatementsHeader } from './StatementsHeader';
 export { default as StatementsFooter } from './StatementsFooter';
 export { default as StatementsAIGenerator } from './StatementsAIGenerator';
+export { default as StatementsLoading } from './StatementsLoading';
+export { default as StatementsTabPanel } from './StatementsTabPanel';
