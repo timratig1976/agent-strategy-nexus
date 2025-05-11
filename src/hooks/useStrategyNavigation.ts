@@ -46,10 +46,10 @@ export const useStrategyNavigation = ({ strategyId, onRefetch }: UseStrategyNavi
       
       console.log(`Going back from ${currentState} to ${previousState}`);
       
-      // Update the strategy state
+      // Update the strategy state - using type assertion to handle the enum type
       const { data, error } = await supabase
         .from('strategies')
-        .update({ state: previousState })
+        .update({ state: previousState as string })
         .eq('id', strategyId)
         .select();
       
@@ -103,10 +103,10 @@ export const useStrategyNavigation = ({ strategyId, onRefetch }: UseStrategyNavi
       
       console.log(`Moving forward from ${currentState} to ${nextState}`);
       
-      // Update the strategy state
+      // Update the strategy state - using type assertion to handle the enum type
       const { data, error } = await supabase
         .from('strategies')
-        .update({ state: nextState })
+        .update({ state: nextState as string })
         .eq('id', strategyId)
         .select();
       
