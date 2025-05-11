@@ -101,7 +101,7 @@ const StatementsAIGenerator: React.FC<StatementsAIGeneratorProps> = ({
         )}
         
         {!generatedStatements && !isGenerating && (
-          <Alert variant="outline" className="my-4">
+          <Alert variant="default" className="my-4">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Information</AlertTitle>
             <AlertDescription>

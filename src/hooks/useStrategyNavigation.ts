@@ -3,7 +3,6 @@ import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { StrategyState } from "@/types/marketing";
-import { getStateLabel } from "@/utils/strategyUtils";
 
 interface UseStrategyNavigationProps {
   strategyId?: string;
@@ -46,10 +45,10 @@ export const useStrategyNavigation = ({ strategyId, onRefetch }: UseStrategyNavi
       
       console.log(`Going back from ${currentState} to ${previousState}`);
       
-      // Update the strategy state - using proper type handling
+      // Update the strategy state with type assertion to correctly handle enum
       const { data, error } = await supabase
         .from('strategies')
-        .update({ state: previousState })
+        .update({ state: previousState as unknown as string })
         .eq('id', strategyId)
         .select();
       
@@ -103,10 +102,10 @@ export const useStrategyNavigation = ({ strategyId, onRefetch }: UseStrategyNavi
       
       console.log(`Moving forward from ${currentState} to ${nextState}`);
       
-      // Update the strategy state - using proper type handling
+      // Update the strategy state with type assertion to correctly handle enum
       const { data, error } = await supabase
         .from('strategies')
-        .update({ state: nextState })
+        .update({ state: nextState as unknown as string })
         .eq('id', strategyId)
         .select();
       
@@ -132,6 +131,26 @@ export const useStrategyNavigation = ({ strategyId, onRefetch }: UseStrategyNavi
     navigateToNextStep,
     isNavigating
   };
+};
+
+// Helper function to get a human-readable label for a strategy state
+const getStateLabel = (state: StrategyState | string): string => {
+  switch (state) {
+    case StrategyState.BRIEFING:
+      return "Briefing";
+    case StrategyState.PERSONA:
+      return "Persona Development";
+    case StrategyState.PAIN_GAINS:
+      return "USP Canvas";
+    case StrategyState.STATEMENTS:
+      return "Pain & Gain Statements";
+    case StrategyState.FUNNEL:
+      return "Funnel Strategy";
+    case StrategyState.ADS:
+      return "Ad Campaign";
+    default:
+      return String(state);
+  }
 };
 
 export default useStrategyNavigation;
