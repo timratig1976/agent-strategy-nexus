@@ -22,7 +22,7 @@ export const useStrategyNavigation = (
   /**
    * Navigate to the previous step in the strategy workflow
    */
-  const navigateToPreviousStep = useCallback(async (currentState: string) => {
+  const navigateToPreviousStep = useCallback(async (currentState: StrategyState) => {
     if (!strategyId) {
       toast.error('Strategy ID is missing');
       return;
@@ -32,7 +32,7 @@ export const useStrategyNavigation = (
       setIsNavigating(true);
       
       // Map current state to previous state
-      let previousState: string;
+      let previousState: StrategyState;
       
       switch (currentState) {
         case StrategyState.PERSONA:
@@ -86,7 +86,7 @@ export const useStrategyNavigation = (
   /**
    * Navigate to the next step in the strategy workflow
    */
-  const navigateToNextStep = useCallback(async (currentState: string) => {
+  const navigateToNextStep = useCallback(async (currentState: StrategyState) => {
     if (!strategyId) {
       toast.error('Strategy ID is missing');
       return;
@@ -96,7 +96,7 @@ export const useStrategyNavigation = (
       setIsNavigating(true);
       
       // Map current state to next state
-      let nextState: string;
+      let nextState: StrategyState;
       
       switch (currentState) {
         case StrategyState.BRIEFING:
