@@ -79,25 +79,16 @@ export const useStrategyStageSynchronization = ({
       try {
         setIsUpdating(true);
         
-        // If trying to access a stage ahead of current progress, redirect to current stage
-        const currentStateSlug = stateToSlug[strategy.state as StrategyState];
-        
-        // Ensure strategy.state is a valid StrategyState for type safety
-        const currentState = isValidStrategyState(strategy.state) ? strategy.state : StrategyState.BRIEFING;
-        
-        // Skip ahead not allowed - redirect to appropriate stage
-        if (!isAllowedNavigation(currentState, urlState)) {
-          toast.error("You cannot skip ahead in the strategy workflow");
-          navigate(`/strategy/${id}/${currentStateSlug}`);
-          return;
-        }
+        console.log(`Handling transition from ${strategy.state} to ${urlState}`);
+        // Instead of restricting forward navigation, we'll allow all stage navigation 
+        // from the dropdown menu but sync the database accordingly
         
         // Update the database with the new state
         // Fix for TypeScript error: Type assertion to make TypeScript understand
         // that dbState is a valid value for the database enum
         const { error } = await supabase
           .from('strategies')
-          .update({ state: dbState as "briefing" | "persona" | "pain_gains" | "funnel" | "ads" })
+          .update({ state: dbState as string })
           .eq('id', id);
         
         if (error) throw error;
@@ -118,15 +109,6 @@ export const useStrategyStageSynchronization = ({
     handleStateTransition();
     
   }, [id, stageSlug, strategy, navigate, refetch]);
-  
-  // Helper function to determine if a navigation is allowed
-  const isAllowedNavigation = (currentState: StrategyState, targetState: StrategyState): boolean => {
-    // Always allow backward navigation
-    const currentIndex = Object.values(StrategyState).indexOf(currentState);
-    const targetIndex = Object.values(StrategyState).indexOf(targetState);
-    
-    return targetIndex <= currentIndex;
-  };
   
   return { isUpdating };
 };
