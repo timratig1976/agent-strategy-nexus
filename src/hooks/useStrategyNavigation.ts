@@ -1,5 +1,4 @@
 
-
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,7 +6,7 @@ import { toast } from 'sonner';
 import { StrategyState } from '@/types/marketing';
 import { stateToDbMap } from '@/utils/strategyUtils';
 
-// Define a type for the valid database state values
+// Define a type for the valid database state values - Updated to include new states
 type DbStrategyState = "briefing" | "persona" | "pain_gains" | "channel_strategy" | "funnel" | "roas_calculator" | "ads";
 
 type StrategyNavigationOptions = {

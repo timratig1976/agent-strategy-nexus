@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Button } from "@/components/ui/card";
+import { Button } from "@/components/ui/button"; // Fixed import path
 import { Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
