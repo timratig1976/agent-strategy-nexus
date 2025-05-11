@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { CustomerItemProps, RatingValue } from './types';
 
@@ -53,62 +52,61 @@ export const useCustomerItems = ({ items, onDelete, onReorder }: UseCustomerItem
     // Removed sorting functionality
   };
 
+  // Move item up (swap with previous item)
+  const handleMoveUp = (index: number) => {
+    if (!onReorder || index <= 0) return;
+    
+    // Create a copy of the filtered/sorted items
+    const currentItems = [...getSortedAndFilteredItems()];
+    
+    // Swap current item with the one above it
+    const temp = currentItems[index];
+    currentItems[index] = currentItems[index - 1];
+    currentItems[index - 1] = temp;
+    
+    // If filtering is active, we need to merge back with non-filtered items
+    if (aiOnlyFilter) {
+      const nonFilteredItems = items.filter(item => !item.isAIGenerated);
+      onReorder([...currentItems, ...nonFilteredItems]);
+    } else {
+      onReorder(currentItems);
+    }
+    
+    console.log("Moved item up:", currentItems.map(item => item.id));
+  };
+
+  // Move item down (swap with next item)
+  const handleMoveDown = (index: number) => {
+    const currentItems = [...getSortedAndFilteredItems()];
+    if (!onReorder || index >= currentItems.length - 1) return;
+    
+    // Swap current item with the one below it
+    const temp = currentItems[index];
+    currentItems[index] = currentItems[index + 1];
+    currentItems[index + 1] = temp;
+    
+    // If filtering is active, we need to merge back with non-filtered items
+    if (aiOnlyFilter) {
+      const nonFilteredItems = items.filter(item => !item.isAIGenerated);
+      onReorder([...currentItems, ...nonFilteredItems]);
+    } else {
+      onReorder(currentItems);
+    }
+    
+    console.log("Moved item down:", currentItems.map(item => item.id));
+  };
+
+  // We'll keep these for backward compatibility
   const handleDragStart = (e: React.DragEvent, itemId: string) => {
-    setDraggedItem(itemId);
-    e.dataTransfer.effectAllowed = 'move';
-    // Set data transfer to make dragging work across all browsers
-    e.dataTransfer.setData('text/plain', itemId);
+    e.preventDefault(); // Prevent default drag behavior since we're using buttons now
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
   };
 
   const handleDrop = (e: React.DragEvent, targetId: string) => {
     e.preventDefault();
-    
-    if (!draggedItem || !targetId || draggedItem === targetId || !onReorder) {
-      setDraggedItem(null);
-      return;
-    }
-    
-    console.log(`Drop: dragging ${draggedItem} onto ${targetId}`);
-    
-    // Start with the current visible items (filtered if needed)
-    const currentItems = [...getSortedAndFilteredItems()];
-    
-    // Find the indices of both items
-    const draggedIndex = currentItems.findIndex(item => item.id === draggedItem);
-    const targetIndex = currentItems.findIndex(item => item.id === targetId);
-    
-    console.log(`Indices: dragged=${draggedIndex}, target=${targetIndex}`);
-    
-    if (draggedIndex === -1 || targetIndex === -1) {
-      console.log("Could not find one of the items in the list");
-      setDraggedItem(null);
-      return;
-    }
-    
-    // Create a new array with the dragged item moved to the new position
-    const reorderedItems = [...currentItems];
-    const [removed] = reorderedItems.splice(draggedIndex, 1);
-    reorderedItems.splice(targetIndex, 0, removed);
-    
-    console.log("Reordered items:", reorderedItems.map(item => item.id));
-    
-    if (aiOnlyFilter) {
-      // If we're filtering by AI-generated items, we need to preserve the non-filtered items
-      const nonFilteredItems = items.filter(item => !item.isAIGenerated);
-      // Call onReorder with the combined list (reordered AI items + untouched non-AI items)
-      onReorder([...reorderedItems, ...nonFilteredItems]);
-    } else {
-      // No filtering, just use the reordered items
-      onReorder(reorderedItems);
-    }
-    
-    // Reset the draggedItem state
-    setDraggedItem(null);
   };
 
   return {
@@ -130,6 +128,8 @@ export const useCustomerItems = ({ items, onDelete, onReorder }: UseCustomerItem
     handleDeleteAIGenerated,
     toggleSelectMode,
     handleSort,
+    handleMoveUp,
+    handleMoveDown,
     handleDragStart,
     handleDragOver,
     handleDrop

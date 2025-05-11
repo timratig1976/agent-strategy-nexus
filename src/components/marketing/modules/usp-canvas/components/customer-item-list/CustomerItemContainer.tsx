@@ -12,6 +12,8 @@ interface CustomerItemContainerProps {
   onContentChange: (id: string, value: string) => void;
   onToggleSelect: (id: string) => void;
   onDelete: (id: string) => void;
+  onMoveUp: (index: number) => void;
+  onMoveDown: (index: number) => void;
   onDragStart: (e: React.DragEvent, id: string) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent, id: string) => void;
@@ -27,6 +29,8 @@ const CustomerItemContainer = ({
   onContentChange,
   onToggleSelect,
   onDelete,
+  onMoveUp,
+  onMoveDown,
   onDragStart,
   onDragOver,
   onDrop,
@@ -38,7 +42,7 @@ const CustomerItemContainer = ({
 
   return (
     <div className="space-y-2" data-drag-container="true">
-      {items.map((item) => (
+      {items.map((item, index) => (
         <CustomerItem 
           key={item.id}
           id={item.id}
@@ -51,6 +55,8 @@ const CustomerItemContainer = ({
           onContentChange={(value) => onContentChange(item.id, value)}
           onToggleSelect={() => onToggleSelect(item.id)}
           onDelete={() => onDelete(item.id)}
+          onMoveUp={index > 0 ? () => onMoveUp(index) : undefined}
+          onMoveDown={index < items.length - 1 ? () => onMoveDown(index) : undefined}
           onDragStart={(e) => onDragStart(e, item.id)}
           onDragOver={onDragOver}
           onDrop={(e) => onDrop(e, item.id)}

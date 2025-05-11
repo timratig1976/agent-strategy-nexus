@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { 
   Trash2, 
-  GripVertical,
+  User, 
+  Bot,
   CheckSquare, 
   Square, 
-  User, 
-  Bot 
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
 
 interface ItemCardProps {
@@ -25,6 +26,8 @@ interface ItemCardProps {
   onContentChange: (value: string) => void;
   onToggleSelect: () => void;
   onDelete: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
   onDragStart: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
@@ -44,6 +47,8 @@ const ItemCard = ({
   onContentChange,
   onToggleSelect,
   onDelete,
+  onMoveUp,
+  onMoveDown,
   onDragStart,
   onDragOver,
   onDrop,
@@ -64,11 +69,27 @@ const ItemCard = ({
       } ${isDragged ? 'opacity-50' : 'opacity-100'}`}
     >
       <div className="flex items-center space-x-2">
-        {isDraggable && (
-          <div className="cursor-grab">
-            <GripVertical className="h-5 w-5 text-gray-400" />
-          </div>
-        )}
+        {/* Sorting buttons */}
+        <div className="flex flex-col">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="p-0 h-6 w-6"
+            onClick={onMoveUp}
+            title="Move up"
+          >
+            <ArrowUp className="h-4 w-4 text-gray-400" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="p-0 h-6 w-6"
+            onClick={onMoveDown}
+            title="Move down"
+          >
+            <ArrowDown className="h-4 w-4 text-gray-400" />
+          </Button>
+        </div>
         
         {isSelectMode ? (
           <Button

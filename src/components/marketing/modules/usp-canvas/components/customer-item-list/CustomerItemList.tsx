@@ -59,6 +59,8 @@ const CustomerItemList = ({
     handleDeleteAIGenerated,
     toggleSelectMode,
     handleSort,
+    handleMoveUp,
+    handleMoveDown,
     handleDragStart,
     handleDragOver,
     handleDrop
@@ -147,6 +149,8 @@ const CustomerItemList = ({
           onContentChange={handleContentChange}
           onToggleSelect={toggleSelectItem}
           onDelete={onDelete}
+          onMoveUp={handleMoveUp}
+          onMoveDown={handleMoveDown}
           onDragStart={handleDragStart}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
