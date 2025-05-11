@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Filter, Trash2, ArrowUpDown } from "lucide-react";
+import { Filter, Trash2 } from "lucide-react";
 
 interface ItemListControlsProps {
   aiOnlyFilter?: boolean;
@@ -31,19 +31,6 @@ const ItemListControls = ({
   return (
     <div className="flex justify-between items-center">
       <div className="flex items-center gap-2">
-        {handleSort && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleSort}
-            className="flex items-center gap-1 text-xs"
-          >
-            <ArrowUpDown className="h-3 w-3" />
-            {sortOrder === 'default' ? 'Order' : 
-             sortOrder === 'priority-high' ? 'High→Low' : 'Low→High'}
-          </Button>
-        )}
-        
         {/* AI-related buttons have been removed from the default view */}
         {showAIControls && setAiOnlyFilter && (
           <Button
