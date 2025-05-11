@@ -16,10 +16,18 @@ import {
   ArrowRight, 
   ArrowUp, 
   ArrowDown, 
-  Edit
+  Edit,
+  ChevronDown
 } from "lucide-react";
 import { getStateLabel, getStateColor } from "@/utils/strategyUtils";
-import { stateToSlug } from "@/utils/strategyUrlUtils";
+import { stateToSlug, getOrderedStages, getStageLabel } from "@/utils/strategyUrlUtils";
+import { 
+  DropdownMenu, 
+  DropdownMenuTrigger, 
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
 
 interface StrategiesTableProps {
   strategies: Strategy[];
@@ -149,6 +157,7 @@ const StrategiesTable: React.FC<StrategiesTableProps> = ({
             const stateColor = stateColors[strategy.state] || "bg-gray-100 text-gray-800";
             const progressPercentage = getProgressPercentage(strategy.state);
             const stateSlug = stateToSlug[strategy.state as StrategyState] || "briefing";
+            const orderedStages = getOrderedStages();
             
             return (
               <TableRow key={strategy.id}>
@@ -178,11 +187,39 @@ const StrategiesTable: React.FC<StrategiesTableProps> = ({
                   {getStateLabel(strategy.state)}
                 </TableCell>
                 <TableCell className="text-right">
-                  <Link to={`/strategy/${strategy.id}/${stateSlug}`}>
-                    <Button variant="outline" size="sm" className="flex items-center gap-1">
-                      Continue <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
+                  <div className="flex justify-end items-center gap-2">
+                    <Link to={`/strategy/${strategy.id}/${stateSlug}`}>
+                      <Button variant="outline" size="sm" className="flex items-center gap-1">
+                        Continue <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56 bg-popover">
+                        <DropdownMenuItem asChild>
+                          <Link to={`/strategy/${strategy.id}`} className="cursor-pointer">
+                            Strategy Overview
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {orderedStages.map((stage) => (
+                          <DropdownMenuItem key={stage} asChild>
+                            <Link 
+                              to={`/strategy/${strategy.id}/${stage}`}
+                              className="cursor-pointer"
+                            >
+                              {getStageLabel(stage)}
+                            </Link>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </TableCell>
               </TableRow>
             );
