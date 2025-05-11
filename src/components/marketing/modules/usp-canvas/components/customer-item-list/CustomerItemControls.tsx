@@ -36,6 +36,8 @@ const CustomerItemControls = ({
       hasItems={hasItems}
       sortOrder={sortOrder}
       handleSort={handleSort}
+      // Set showAIControls to false to hide AI-related buttons
+      showAIControls={false}
     />
   );
 };
