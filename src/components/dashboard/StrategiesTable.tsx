@@ -15,7 +15,8 @@ import { Progress } from "@/components/ui/progress";
 import { 
   ArrowRight, 
   ArrowUp, 
-  ArrowDown 
+  ArrowDown, 
+  Edit
 } from "lucide-react";
 import { getStateLabel, getStateColor } from "@/utils/strategyUtils";
 import { stateToSlug } from "@/utils/strategyUrlUtils";
@@ -152,7 +153,15 @@ const StrategiesTable: React.FC<StrategiesTableProps> = ({
             return (
               <TableRow key={strategy.id}>
                 <TableCell className="font-medium">
-                  {strategy.name}
+                  <div className="flex items-center">
+                    <Link 
+                      to={`/strategy/${strategy.id}`} 
+                      className="hover:text-primary transition-colors flex items-center"
+                    >
+                      {strategy.name}
+                      <Edit className="h-3.5 w-3.5 ml-2 text-muted-foreground" />
+                    </Link>
+                  </div>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   {formatDate(strategy.updatedAt)}
