@@ -1,105 +1,121 @@
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { Strategy, StrategyState } from "@/types/marketing";
-import { slugToState, stateToSlug, getStageIndex } from "@/utils/strategyUrlUtils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { slugToState, stateToSlug } from "@/utils/strategyUrlUtils";
+import { stateToDbMap } from "@/utils/strategyUtils";
 
-interface UseStrategyStageSynchronizationProps {
+interface StrategyStageSyncOptions {
+  /**
+   * Strategy ID from URL params
+   */
   id?: string;
+  
+  /**
+   * Current stage slug from URL params
+   */
   stageSlug?: string;
+  
+  /**
+   * Strategy data object
+   */
   strategy?: Strategy | null;
-  refetch: () => void;
+  
+  /**
+   * Function to refetch strategy data
+   */
+  refetch?: () => void;
 }
 
+/**
+ * Custom hook that handles synchronization between URL stage and database strategy state
+ * 
+ * This ensures the URL and the database state are consistent and handles navigation restrictions
+ */
 export const useStrategyStageSynchronization = ({
   id,
   stageSlug,
   strategy,
   refetch
-}: UseStrategyStageSynchronizationProps) => {
+}: StrategyStageSyncOptions) => {
   const navigate = useNavigate();
-  const [isSyncingState, setIsSyncingState] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   
-  // Redirect to overview if no stage slug is provided
   useEffect(() => {
-    if (id && !stageSlug) {
+    // Skip if we don't have necessary data
+    if (!id || !stageSlug || !strategy) return;
+    
+    // Map the URL slug to a strategy state (like briefing -> StrategyState.BRIEFING)
+    const urlState = slugToState[stageSlug];
+    
+    // If we can't map the slug to a state, it's an invalid URL - redirect to overview
+    if (!urlState) {
+      console.log("Invalid stage slug:", stageSlug);
       navigate(`/strategy/${id}`);
+      return;
     }
-  }, [id, stageSlug, navigate]);
-
-  // Sync the URL stageSlug with the database state if they don't match
-  useEffect(() => {
-    const syncStateWithUrl = async () => {
-      if (!id || !strategy || !stageSlug || isSyncingState) return;
-      
-      // Get the state that corresponds to the current URL slug
-      const urlState = slugToState[stageSlug];
-      
-      // If the URL state doesn't match the database state, update the database
-      if (urlState && urlState !== strategy.state && !isSyncingState) {
-        try {
-          setIsSyncingState(true);
-          
-          // Only allow navigation to valid next steps or previous completed steps
-          const urlStateIndex = getStageIndex(urlState);
-          const currentStateIndex = getStageIndex(strategy.state as StrategyState);
-          
-          // Allow navigation to the next step or any previous step
-          if (urlStateIndex === currentStateIndex + 1 || urlStateIndex <= currentStateIndex) {
-            console.log(`Syncing database state to match URL: ${urlState}`);
-            
-            // Update the database state to match the URL
-            const { error } = await supabase
-              .from('strategies')
-              .update({ state: urlState })
-              .eq('id', id);
-            
-            if (error) {
-              console.error('Error updating strategy state:', error);
-              toast.error('Failed to update strategy state');
-              // Navigate back to the current state in URL
-              navigate(`/strategy/${id}/${stateToSlug[strategy.state as StrategyState]}`);
-              return;
-            }
-            
-            // Refresh the data to get the updated state
-            refetch();
-          } else {
-            // If trying to jump ahead more than one step, redirect to the current state
-            console.log("Cannot skip ahead multiple steps");
-            toast.error("You need to complete previous steps first");
-            navigate(`/strategy/${id}/${stateToSlug[strategy.state as StrategyState]}`);
-          }
-        } catch (error: any) {
-          console.error('Error syncing state:', error);
-          toast.error(error.message || 'Navigation failed');
-        } finally {
-          setIsSyncingState(false);
+    
+    // If current strategy state exactly matches the URL state, nothing to do
+    if (strategy.state === urlState) {
+      console.log("URL state matches DB state:", urlState);
+      return;
+    }
+    
+    // Map the URL state to a valid database state value
+    const dbState = stateToDbMap[urlState]; 
+    
+    // Handle state transitions based on the existing state and URL
+    const handleStateTransition = async () => {
+      try {
+        setIsUpdating(true);
+        
+        // If trying to access a stage ahead of current progress, redirect to current stage
+        const currentStateSlug = stateToSlug[strategy.state as StrategyState];
+        
+        // Skip ahead not allowed - redirect to appropriate stage
+        if (!isAllowedNavigation(strategy.state as StrategyState, urlState as StrategyState)) {
+          toast.error("You cannot skip ahead in the strategy workflow");
+          navigate(`/strategy/${id}/${currentStateSlug}`);
+          return;
         }
+        
+        // Update the database with the new state
+        const { error } = await supabase
+          .from('strategies')
+          .update({ state: dbState })
+          .eq('id', id);
+        
+        if (error) throw error;
+        
+        console.log(`Updated strategy state from ${strategy.state} to ${dbState}`);
+        
+        // Refetch the strategy data to get the updated state
+        if (refetch) refetch();
+        
+      } catch (error: any) {
+        console.error("Error updating strategy state:", error);
+        toast.error("Failed to update strategy state");
+      } finally {
+        setIsUpdating(false);
       }
     };
     
-    syncStateWithUrl();
-  }, [id, stageSlug, strategy, navigate, refetch, isSyncingState]);
+    handleStateTransition();
+    
+  }, [id, stageSlug, strategy, navigate, refetch]);
   
-  // Redirect to the URL that matches the database state if needed
-  useEffect(() => {
-    if (strategy && stageSlug) {
-      const currentStateSlug = stateToSlug[strategy.state as StrategyState];
-      
-      // If the URL doesn't match the database state and we're not already syncing
-      if (currentStateSlug !== stageSlug && !isSyncingState) {
-        console.log(`URL (${stageSlug}) doesn't match DB state (${currentStateSlug}), updating URL`);
-        navigate(`/strategy/${id}/${currentStateSlug}`);
-      }
-    }
-  }, [strategy, stageSlug, id, navigate, isSyncingState]);
-  
-  return {
-    isSyncingState
+  // Helper function to determine if a navigation is allowed
+  const isAllowedNavigation = (currentState: StrategyState, targetState: StrategyState): boolean => {
+    // Always allow backward navigation
+    const currentIndex = Object.values(StrategyState).indexOf(currentState);
+    const targetIndex = Object.values(StrategyState).indexOf(targetState);
+    
+    return targetIndex <= currentIndex;
   };
+  
+  return { isUpdating };
 };
 
 export default useStrategyStageSynchronization;

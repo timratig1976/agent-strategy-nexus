@@ -4,7 +4,7 @@ import { Strategy } from "@/types/marketing";
 import StrategyBackButton from "@/components/strategy/StrategyBackButton";
 import StrategyHeader from "@/components/strategy/StrategyHeader";
 import StrategyProgress from "@/components/strategy/StrategyProgress";
-import { getStageLabel, getStateColor } from "@/utils/strategyUtils";
+import { getStateLabel, getStateColor } from "@/utils/strategyUtils";
 
 interface StrategyStageLayoutProps {
   strategy: Strategy;
@@ -12,6 +12,11 @@ interface StrategyStageLayoutProps {
   children: ReactNode;
 }
 
+/**
+ * Layout component for strategy stage pages
+ * 
+ * Provides consistent layout with back button, strategy header and progress bar
+ */
 const StrategyStageLayout: React.FC<StrategyStageLayoutProps> = ({
   strategy,
   currentStage,
@@ -24,7 +29,7 @@ const StrategyStageLayout: React.FC<StrategyStageLayoutProps> = ({
         
         <StrategyHeader 
           strategy={strategy}
-          getStateLabel={getStageLabel}
+          getStateLabel={getStateLabel}
           getStateColor={getStateColor}
         />
         
