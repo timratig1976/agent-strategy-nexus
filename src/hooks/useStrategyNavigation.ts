@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { StrategyState } from '@/types/marketing';
+import { stateToDbMap } from '@/utils/strategyUtils';
 
 type StrategyNavigationOptions = {
   strategyId?: string;
@@ -56,8 +57,8 @@ export const useStrategyNavigation = (
           return;
       }
 
-      // Convert enum to string value for database
-      const previousStateValue = previousState.toString();
+      // Use the mapping function to convert enum to valid database string
+      const previousStateValue = stateToDbMap[previousState];
 
       // Update the strategy state in the database
       const { error } = await supabase
@@ -126,8 +127,8 @@ export const useStrategyNavigation = (
           return;
       }
 
-      // Convert enum to string value for database
-      const nextStateValue = nextState.toString();
+      // Use the mapping function to convert enum to valid database string
+      const nextStateValue = stateToDbMap[nextState];
 
       // Update the strategy state in the database
       const { error } = await supabase

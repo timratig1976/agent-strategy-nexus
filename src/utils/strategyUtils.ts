@@ -44,3 +44,17 @@ export const getStateColor = (state: string): string => {
       return "bg-gray-100 text-gray-800";
   }
 };
+
+/**
+ * Maps StrategyState enum values to valid database strings
+ * This is needed because the database enum type doesn't include all TS enum values
+ */
+export const stateToDbMap: Record<StrategyState, string> = {
+  [StrategyState.BRIEFING]: "briefing",
+  [StrategyState.PERSONA]: "persona",
+  [StrategyState.PAIN_GAINS]: "pain_gains",
+  [StrategyState.STATEMENTS]: "pain_gains", // Map to pain_gains in DB since statements isn't in DB enum
+  [StrategyState.FUNNEL]: "funnel",
+  [StrategyState.ADS]: "ads",
+  [StrategyState.COMPLETED]: "ads" // Map to ads in DB since completed isn't in DB enum
+};
