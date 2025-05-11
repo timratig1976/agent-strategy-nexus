@@ -25,6 +25,7 @@ import StrategyProgress from "@/components/strategy/StrategyProgress";
 import { slugToState, stateToSlug, getStageIndex, getStageLabel } from "@/utils/strategyUrlUtils";
 import { getStateColor } from "@/utils/strategyUtils";
 import { StrategyState } from "@/types/marketing";
+import useStrategyNavigation from "@/hooks/useStrategyNavigation";
 
 const StrategyStageContainer = () => {
   const { id, stageSlug } = useParams<{ id: string; stageSlug: string }>();
@@ -38,6 +39,12 @@ const StrategyStageContainer = () => {
     isLoading,
     refetch 
   } = useStrategyData({ id });
+  
+  // Use the navigation hook to get navigation functions
+  const { navigateToPreviousStep } = useStrategyNavigation({ 
+    strategyId: id, 
+    onRefetch: refetch 
+  });
 
   // Redirect to overview if no stage slug is provided
   useEffect(() => {
@@ -133,6 +140,13 @@ const StrategyStageContainer = () => {
     result.metadata?.is_final === true && result.metadata?.type === 'persona'
   ) || null;
 
+  // Handle back navigation for ad campaign module
+  const handleAdCampaignBack = () => {
+    if (id) {
+      navigateToPreviousStep(StrategyState.ADS);
+    }
+  };
+
   // Determine which component to render based on the URL stage
   let stageComponent;
   switch (stageSlug) {
@@ -197,6 +211,7 @@ const StrategyStageContainer = () => {
       stageComponent = (
         <AdCampaignModule
           strategy={strategy}
+          onNavigateBack={handleAdCampaignBack}
         />
       );
       break;
