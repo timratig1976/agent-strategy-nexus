@@ -1,131 +1,72 @@
-
 import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, FileText, ArrowRight, Globe } from "lucide-react";
-import { toast } from "sonner";
 import NavBar from "@/components/NavBar";
-import useStrategyData from "@/hooks/useStrategyData";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { ChevronRight } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { getStateLabel, getStateColor } from "@/utils/strategyUtils";
+import { stateToSlug } from "@/utils/strategyUrlUtils";
+import StrategyBackButton from "@/components/strategy/StrategyBackButton";
+import StrategyHeader from "@/components/strategy/StrategyHeader";
+import LoadingStrategy from "@/components/strategy/loading/LoadingStrategy";
+import StrategyNotFound from "@/components/strategy/StrategyNotFound";
+import useStrategyData from "@/hooks/useStrategyData";
 
 const StrategyOverview = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  
   const { strategy, isLoading } = useStrategyData({ id });
-
-  useEffect(() => {
-    if (!id) {
-      toast.error("Missing strategy ID");
-      navigate("/dashboard");
+  
+  // Navigate to continue working on strategy
+  const handleContinueStrategy = () => {
+    if (strategy && strategy.state) {
+      const stateSlug = stateToSlug[strategy.state] || "briefing";
+      navigate(`/strategy/${id}/${stateSlug}`);
     }
-  }, [id, navigate]);
-
-  const handleCreateBriefing = () => {
-    navigate(`/strategy-details/${id}?tab=briefing`);
   };
-
+  
   if (isLoading) {
-    return (
-      <>
-        <NavBar />
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-3xl mx-auto">
-            <Skeleton className="h-12 w-48 mb-6" />
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-8 w-64" />
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <Skeleton className="h-24 w-full" />
-                <Skeleton className="h-12 w-40" />
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </>
-    );
+    return <LoadingStrategy />;
   }
-
+  
   if (!strategy) {
-    return (
-      <>
-        <NavBar />
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-2xl font-bold mb-4">Strategy Not Found</h2>
-            <p className="text-muted-foreground mb-6">
-              The requested strategy could not be found or you don't have permission to access it.
-            </p>
-            <Button onClick={() => navigate("/dashboard")}>Return to Dashboard</Button>
-          </div>
-        </div>
-      </>
-    );
+    return <StrategyNotFound />;
   }
-
-  // Get language code - default to EN
-  const languageCode = strategy.metadata?.language || 'EN';
-
+  
   return (
     <>
       <NavBar />
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-start mb-6">
-          <Button variant="ghost" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
-          </Button>
-        </div>
-
-        <div className="max-w-3xl mx-auto">
+      <div className="container mx-auto p-4">
+        <StrategyBackButton />
+        
+        <StrategyHeader 
+          strategy={strategy}
+          getStateLabel={getStateLabel}
+          getStateColor={getStateColor}
+        />
+        
+        <div className="mt-6 space-y-6">
           <Card>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-2xl flex items-center gap-2">
-                  <FileText className="h-6 w-6" />
-                  Strategy: {strategy.name}
-                </CardTitle>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center">
-                    <Globe className="h-4 w-4 text-muted-foreground" aria-label="Language" />
-                    <span className="text-xs font-medium ml-1 text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">
-                      {languageCode}
-                    </span>
-                  </div>
-                  <div className={`px-2 py-1 rounded text-xs font-medium ${getStateColor(strategy.state)}`}>
-                    {getStateLabel(strategy.state)}
-                  </div>
+            <CardContent className="pt-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">Strategy Overview</h3>
+                  <p className="text-muted-foreground">{strategy.description}</p>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="bg-green-50 border border-green-200 p-4 rounded-md">
-                <p className="text-green-800 font-medium">Your marketing strategy has been successfully created!</p>
-                <p className="text-green-700 mt-2">Current phase: <span className="font-semibold">{getStateLabel(strategy.state)}</span></p>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Strategy Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Strategy Name</p>
-                    <p className="text-base">{strategy.name}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Created</p>
-                    <p className="text-base">{new Date(strategy.createdAt).toLocaleDateString()}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <Button onClick={handleCreateBriefing}>
-                  Create AI Briefing <ArrowRight className="ml-2 h-4 w-4" />
+                
+                <Button 
+                  onClick={handleContinueStrategy} 
+                  className="sm:w-auto w-full flex items-center gap-2"
+                >
+                  Continue Strategy
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
             </CardContent>
           </Card>
+          
+          {/* You can add more sections here for strategy overview */}
         </div>
       </div>
     </>

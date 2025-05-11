@@ -5,9 +5,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { StrategyState } from '@/types/marketing';
 import { stateToDbMap } from '@/utils/strategyUtils';
+import { stateToSlug } from '@/utils/strategyUrlUtils';
 
 // Define a type for the valid database state values - Updated to include new states
-type DbStrategyState = "briefing" | "persona" | "pain_gains" | "channel_strategy" | "funnel" | "roas_calculator" | "ads";
+type DbStrategyState = "briefing" | "persona" | "pain_gains" | "statements" | "channel_strategy" | "funnel" | "roas_calculator" | "ads" | "completed";
 
 type StrategyNavigationOptions = {
   strategyId?: string;
@@ -25,6 +26,7 @@ export const useStrategyNavigation = (
   
   /**
    * Navigate to the previous step in the strategy workflow
+   * The new implementation uses URLs for navigation
    */
   const navigateToPreviousStep = useCallback(async (currentState: StrategyState) => {
     if (!strategyId) {
@@ -66,40 +68,27 @@ export const useStrategyNavigation = (
           return;
       }
 
-      // Use the mapping function to convert enum to valid database string
-      // Need to cast to any to avoid type errors since we've extended the enum but
-      // TypeScript still has the old type constraints from before our changes
-      const previousStateValue = stateToDbMap[previousState] as any;
-
-      // Update the strategy state in the database
-      const { error } = await supabase
-        .from('strategies')
-        .update({ state: previousStateValue })
-        .eq('id', strategyId);
-
-      if (error) {
-        console.error('Error updating strategy state:', error);
-        toast.error('Failed to navigate to previous step');
-        return;
-      }
+      // Get URL slug for the previous state
+      const previousStateSlug = stateToSlug[previousState];
+      
+      // Simply navigate to the URL for the previous state
+      // The StrategyStageContainer component will handle the database update
+      navigate(`/strategy/${strategyId}/${previousStateSlug}`);
 
       // Notify success
-      toast.success(`Navigated back to ${previousState}`);
+      toast.success(`Navigating to ${previousState}`);
       
-      // Refresh data if callback provided
-      if (onRefetch) {
-        onRefetch();
-      }
     } catch (error: any) {
       console.error('Error in navigateToPreviousStep:', error);
       toast.error(error.message || 'Navigation failed');
     } finally {
       setIsNavigating(false);
     }
-  }, [strategyId, onRefetch]);
+  }, [strategyId, navigate]);
   
   /**
    * Navigate to the next step in the strategy workflow
+   * The new implementation uses URLs for navigation
    */
   const navigateToNextStep = useCallback(async (currentState: StrategyState) => {
     if (!strategyId) {
@@ -144,37 +133,23 @@ export const useStrategyNavigation = (
           return;
       }
 
-      // Use the mapping function to convert enum to valid database string
-      // Need to cast to any to avoid type errors since we've extended the enum but
-      // TypeScript still has the old type constraints from before our changes
-      const nextStateValue = stateToDbMap[nextState] as any;
-
-      // Update the strategy state in the database
-      const { error } = await supabase
-        .from('strategies')
-        .update({ state: nextStateValue })
-        .eq('id', strategyId);
-
-      if (error) {
-        console.error('Error updating strategy state:', error);
-        toast.error('Failed to navigate to next step');
-        return;
-      }
+      // Get URL slug for the next state
+      const nextStateSlug = stateToSlug[nextState];
+      
+      // Simply navigate to the URL for the next state
+      // The StrategyStageContainer component will handle the database update
+      navigate(`/strategy/${strategyId}/${nextStateSlug}`);
 
       // Notify success
-      toast.success(`Moved to ${nextState} stage`);
+      toast.success(`Moving to ${nextState} stage`);
       
-      // Refresh data if callback provided
-      if (onRefetch) {
-        onRefetch();
-      }
     } catch (error: any) {
       console.error('Error in navigateToNextStep:', error);
       toast.error(error.message || 'Navigation failed');
     } finally {
       setIsNavigating(false);
     }
-  }, [strategyId, onRefetch]);
+  }, [strategyId, navigate]);
 
   return { 
     navigateToPreviousStep,

@@ -1,7 +1,8 @@
 
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { StrategyState } from "@/types/marketing";
+import { stateToSlug } from "@/utils/strategyUrlUtils";
 
 export const usePersonaNavigation = (strategyId: string) => {
   const navigate = useNavigate();
@@ -11,24 +12,11 @@ export const usePersonaNavigation = (strategyId: string) => {
     try {
       console.log("Going back to briefing step for strategy:", strategyId);
       
-      // First update the strategy state back to briefing
-      const { data, error } = await supabase
-        .from('strategies')
-        .update({ state: 'briefing' })
-        .eq('id', strategyId)
-        .select();
+      // Use the URL-based navigation
+      const briefingSlug = stateToSlug[StrategyState.BRIEFING];
+      navigate(`/strategy/${strategyId}/${briefingSlug}`);
       
-      if (error) {
-        console.error("Error updating strategy state:", error);
-        toast.error("Failed to go back to briefing stage");
-        return;
-      }
-      
-      console.log("Strategy state updated successfully:", data);
-      toast.success("Returned to Briefing stage");
-      
-      // Then navigate back to the strategy details page
-      navigate(`/strategy-details/${strategyId}`);
+      toast.success("Navigating to Briefing stage");
     } catch (err) {
       console.error("Failed to go back to briefing:", err);
       toast.error("Failed to go back to briefing stage");
@@ -40,24 +28,11 @@ export const usePersonaNavigation = (strategyId: string) => {
     try {
       console.log("Going to pain_gains step for strategy:", strategyId);
       
-      // Update the strategy state to pain_gains
-      const { data, error } = await supabase
-        .from('strategies')
-        .update({ state: 'pain_gains' })
-        .eq('id', strategyId)
-        .select();
+      // Use the URL-based navigation
+      const painGainsSlug = stateToSlug[StrategyState.PAIN_GAINS];
+      navigate(`/strategy/${strategyId}/${painGainsSlug}`);
       
-      if (error) {
-        console.error("Error updating strategy state:", error);
-        toast.error("Failed to move to USP Canvas step");
-        return;
-      }
-      
-      console.log("Strategy state updated successfully:", data);
       toast.success("Moving to USP Canvas step");
-      
-      // Navigate to the strategy details page
-      navigate(`/strategy-details/${strategyId}`);
     } catch (err) {
       console.error("Failed to move to next step:", err);
       toast.error("Failed to move to USP Canvas step");

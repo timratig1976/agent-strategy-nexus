@@ -1,4 +1,3 @@
-
 import { Routes, Route } from "react-router-dom";
 import Index from "@/pages/Index";
 import Dashboard from "@/pages/Dashboard";
@@ -22,6 +21,7 @@ import { SubscriptionProvider } from "@/context/SubscriptionProvider";
 import { Toaster } from "@/components/ui/sonner";
 import StrategyBoardPage from "@/pages/StrategyBoardPage";
 import StrategyOverviewRedirect from "@/pages/StrategyOverviewRedirect";
+import StrategyStageContainer from "@/components/strategy/StrategyStageContainer";
 
 export default function App() {
   return (
@@ -41,6 +41,11 @@ export default function App() {
             <Route path="/strategy/:id" element={<StrategyOverview />} />
             {/* Redirect from old route to new route */}
             <Route path="/strategy-overview/:id" element={<StrategyOverviewRedirect />} />
+            
+            {/* New URL-based stage navigation */}
+            <Route path="/strategy/:id/:stageSlug" element={<StrategyStageContainer />} />
+            
+            {/* Keep the old routes for backwards compatibility */}
             <Route path="/strategy/:id/:state" element={<StrategyDetailsWithNav />} />
             <Route path="/strategy-details/:id" element={<StrategyDetails />} />
             <Route path="/strategy-board/:strategyId" element={<StrategyBoardPage />} />
