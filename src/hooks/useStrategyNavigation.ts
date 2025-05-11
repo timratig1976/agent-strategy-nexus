@@ -56,10 +56,13 @@ export const useStrategyNavigation = (
           return;
       }
 
+      // Convert enum to string value for database
+      const previousStateValue = previousState.toString();
+
       // Update the strategy state in the database
       const { error } = await supabase
         .from('strategies')
-        .update({ state: previousState })
+        .update({ state: previousStateValue })
         .eq('id', strategyId);
 
       if (error) {
@@ -123,10 +126,13 @@ export const useStrategyNavigation = (
           return;
       }
 
+      // Convert enum to string value for database
+      const nextStateValue = nextState.toString();
+
       // Update the strategy state in the database
       const { error } = await supabase
         .from('strategies')
-        .update({ state: nextState })
+        .update({ state: nextStateValue })
         .eq('id', strategyId);
 
       if (error) {
