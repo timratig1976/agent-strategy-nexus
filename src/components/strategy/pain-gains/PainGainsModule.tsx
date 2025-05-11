@@ -28,7 +28,7 @@ const PainGainsModule: React.FC<PainGainsModuleProps> = ({
   const personaContent = personaAgentResult?.content || '';
 
   // Use the navigation hook
-  const { navigateToNextStep, isNavigating } = useStrategyNavigation({
+  const { navigateToNextStep, navigateToPreviousStep, isNavigating } = useStrategyNavigation({
     strategyId: strategy.id,
     onRefetch: () => {
       // Navigate to new URL after state change

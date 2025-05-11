@@ -101,6 +101,7 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
       // Navigate if we have a navigation function
       if (onNavigateNext) {
         onNavigateNext();
+        toast.success("Canvas finalized - continuing to next step");
       }
     } catch (err) {
       console.error('Error finalizing canvas:', err);
@@ -138,10 +139,9 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
       
       <CanvasNavigation
         onNavigateBack={onNavigateBack}
-        onNavigateNext={onNavigateNext}
+        onNavigateNext={handleFinalizeAndContinue}
         prevStageLabel={prevStageLabel}
         nextStageLabel={nextStageLabel}
-        onFinalize={handleFinalizeAndContinue}
         canFinalize={customerItems.length > 0 || valueItems.length > 0}
       />
     </div>
