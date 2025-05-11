@@ -6,6 +6,9 @@ import { toast } from 'sonner';
 import { StrategyState } from '@/types/marketing';
 import { stateToDbMap } from '@/utils/strategyUtils';
 
+// Define a type for the valid database state values
+type DbStrategyState = "briefing" | "persona" | "pain_gains" | "funnel" | "ads";
+
 type StrategyNavigationOptions = {
   strategyId?: string;
   onRefetch?: () => void;
@@ -58,7 +61,7 @@ export const useStrategyNavigation = (
       }
 
       // Use the mapping function to convert enum to valid database string
-      const previousStateValue = stateToDbMap[previousState];
+      const previousStateValue = stateToDbMap[previousState] as DbStrategyState;
 
       // Update the strategy state in the database
       const { error } = await supabase
@@ -128,7 +131,7 @@ export const useStrategyNavigation = (
       }
 
       // Use the mapping function to convert enum to valid database string
-      const nextStateValue = stateToDbMap[nextState];
+      const nextStateValue = stateToDbMap[nextState] as DbStrategyState;
 
       // Update the strategy state in the database
       const { error } = await supabase
