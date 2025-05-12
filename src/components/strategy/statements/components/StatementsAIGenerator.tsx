@@ -6,9 +6,10 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import CustomPromptDialog from './CustomPromptDialog';
 
 interface StatementsAIGeneratorProps {
-  onGenerate: () => Promise<{ painStatements: any[], gainStatements: any[] }>;
+  onGenerate: (customPrompt?: string) => Promise<{ painStatements: any[], gainStatements: any[] }>;
   onAddStatements: (painStatements: any[], gainStatements: any[]) => void;
   isGenerating: boolean;
   progress: number;
@@ -26,10 +27,12 @@ const StatementsAIGenerator: React.FC<StatementsAIGeneratorProps> = ({
     painStatements: any[];
     gainStatements: any[];
   } | null>(null);
+  
+  const [customPrompt, setCustomPrompt] = useState<string>('');
 
   const handleGenerate = async () => {
     try {
-      const result = await onGenerate();
+      const result = await onGenerate(customPrompt);
       setGeneratedStatements(result);
     } catch (error) {
       console.error('Error generating statements:', error);
@@ -51,10 +54,21 @@ const StatementsAIGenerator: React.FC<StatementsAIGeneratorProps> = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-blue-500" />
-          Generate Statements with AI
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-blue-500" />
+            Generate Statements with AI
+          </CardTitle>
+          <CustomPromptDialog 
+            defaultPrompt={customPrompt}
+            onSavePrompt={setCustomPrompt}
+          />
+        </div>
+        {customPrompt && (
+          <div className="text-xs text-muted-foreground mt-2 italic border-l-2 border-blue-200 pl-2">
+            Custom instructions enabled: {customPrompt.substring(0, 100)}{customPrompt.length > 100 ? '...' : ''}
+          </div>
+        )}
       </CardHeader>
       
       <CardContent>
@@ -106,6 +120,7 @@ const StatementsAIGenerator: React.FC<StatementsAIGeneratorProps> = ({
             <AlertTitle>Information</AlertTitle>
             <AlertDescription>
               AI-generated statements are based on your USP Canvas data. Make sure you have completed the USP Canvas before generating statements.
+              {customPrompt && <p className="mt-1">You have provided custom instructions to improve the output.</p>}
             </AlertDescription>
           </Alert>
         )}

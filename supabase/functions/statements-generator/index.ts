@@ -20,7 +20,7 @@ serve(async (req) => {
   }
 
   try {
-    const { strategyId, uspData, outputLanguage = 'english' } = await req.json();
+    const { strategyId, uspData, customPrompt = '', outputLanguage = 'english', minStatements = 10 } = await req.json();
     
     if (!OPENAI_API_KEY) {
       return new Response(
@@ -54,6 +54,8 @@ serve(async (req) => {
 
     console.log(`Generating statements for strategy ${strategyId}`);
     console.log(`Output language: ${outputLanguage}`);
+    console.log(`Minimum statements: ${minStatements}`);
+    console.log(`Custom prompt provided: ${customPrompt ? 'Yes' : 'No'}`);
 
     // System prompt for generating statements
     const systemPrompt = `You are an expert marketing strategist specializing in pain and gain statements.
@@ -63,7 +65,9 @@ Your task is to analyze the USP Canvas data and create compelling:
 2. Gain Statements - Persuasive descriptions of desired positive outcomes
 
 Format your response as a valid JSON object with two arrays: "painStatements" and "gainStatements".
-Each statement should be persuasive, specific, and emotionally resonant.`;
+Each statement should be persuasive, specific, and emotionally resonant.
+
+You must create at least ${minStatements} statements of each type.`;
 
     // User prompt for generating statements
     const userPrompt = `Based on the provided USP Canvas data, create compelling pain and gain statements:
@@ -86,6 +90,10 @@ Please provide a valid JSON with the following structure:
 For each statement, specify an impact level of "low", "medium", or "high".
 Pain statements should focus on emotional pain points, frustrations, and challenges.
 Gain statements should focus on aspirational outcomes and desired positive states.
+
+IMPORTANT: Generate at least ${minStatements} statements of each type (pain and gain).
+
+${customPrompt ? `ADDITIONAL INSTRUCTIONS: ${customPrompt}` : ''}
 
 ${outputLanguage !== 'english' ? `Please respond in ${outputLanguage}.` : ''}`;
 
@@ -134,6 +142,8 @@ ${outputLanguage !== 'english' ? `Please respond in ${outputLanguage}.` : ''}`;
       result = JSON.parse(jsonString.replace(/```/g, '').trim());
       
       console.log("Successfully parsed result");
+      console.log(`Generated ${result.painStatements?.length || 0} pain statements`);
+      console.log(`Generated ${result.gainStatements?.length || 0} gain statements`);
     } catch (e) {
       console.error("Error parsing JSON response:", e);
       console.log("Raw content:", content);
@@ -162,7 +172,8 @@ ${outputLanguage !== 'english' ? `Please respond in ${outputLanguage}.` : ''}`;
           user_prompt: userPrompt,
           response_tokens: completion.usage?.completion_tokens,
           prompt_tokens: completion.usage?.prompt_tokens,
-          total_tokens: completion.usage?.total_tokens
+          total_tokens: completion.usage?.total_tokens,
+          custom_prompt_provided: !!customPrompt
         } 
       }),
       { 

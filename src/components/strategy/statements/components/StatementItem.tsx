@@ -1,66 +1,71 @@
 
-import React from 'react';
-import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Trash2, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Pencil, Trash2, Sparkles, Copy } from "lucide-react";
+import { toast } from 'sonner';
+import { PainStatement, GainStatement } from "../types";
 
 interface StatementItemProps {
-  id: string;
-  content: string;
-  impact: 'low' | 'medium' | 'high';
-  isAIGenerated?: boolean;
+  statement: PainStatement | GainStatement;
+  type: 'pain' | 'gain';
+  onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
-const StatementItem: React.FC<StatementItemProps> = ({
-  id,
-  content,
-  impact,
-  isAIGenerated = false,
-  onDelete
-}) => {
-  // Get color based on impact level
+const StatementItem: React.FC<StatementItemProps> = ({ statement, type, onEdit, onDelete }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  
   const getImpactColor = () => {
-    switch (impact) {
-      case 'high':
-        return 'bg-red-100 text-red-800 border-red-300';
-      case 'medium':
-        return 'bg-amber-100 text-amber-800 border-amber-300';
-      case 'low':
-        return 'bg-green-100 text-green-800 border-green-300';
-      default:
-        return 'bg-gray-100 text-gray-800';
+    const impact = statement.impact;
+    if (type === 'pain') {
+      return impact === 'high' ? 'bg-red-100 text-red-800' : 
+             impact === 'medium' ? 'bg-amber-100 text-amber-800' : 
+             'bg-yellow-50 text-yellow-800';
+    } else {
+      return impact === 'high' ? 'bg-green-100 text-green-800' : 
+             impact === 'medium' ? 'bg-emerald-100 text-emerald-800' : 
+             'bg-teal-50 text-teal-800';
     }
   };
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(statement.content);
+    toast.success('Statement copied to clipboard');
+  };
+
   return (
-    <Card className="border shadow-sm">
-      <CardHeader className="py-3 px-4 flex justify-between items-start">
-        <div className="flex gap-2 items-center">
-          <Badge className={`${getImpactColor()} capitalize`}>
-            {impact} impact
+    <Card 
+      className={`transition-all ${type === 'pain' ? 'border-red-100' : 'border-green-100'} ${
+        isHovered ? 'shadow-md' : 'shadow-sm'
+      }`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <CardContent className="pt-4 pb-2">
+        <div className="flex justify-between items-start mb-2">
+          <Badge className={getImpactColor()}>
+            {statement.impact.charAt(0).toUpperCase() + statement.impact.slice(1)} Impact
           </Badge>
-          {isAIGenerated && (
-            <Badge variant="outline" className="flex items-center gap-1 border-blue-300">
-              <Sparkles className="h-3 w-3 text-blue-500" />
-              <span className="text-blue-600">AI Generated</span>
+          {statement.isAIGenerated && (
+            <Badge variant="outline" className="bg-blue-50">
+              <Sparkles className="h-3 w-3 mr-1" />
+              AI Generated
             </Badge>
           )}
         </div>
-      </CardHeader>
-      <CardContent className="py-2 px-4">
-        <p className="text-sm">{content}</p>
+        <p className="text-sm">{statement.content}</p>
       </CardContent>
-      <CardFooter className="py-2 px-4 flex justify-end">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="text-red-600 hover:text-red-800 hover:bg-red-50"
-          onClick={() => onDelete(id)}
-        >
-          <Trash2 className="h-4 w-4 mr-1" />
-          Remove
+      <CardFooter className="flex justify-end gap-1 pt-0 pb-2">
+        <Button variant="ghost" size="sm" onClick={handleCopy}>
+          <Copy className="h-3.5 w-3.5" />
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => onEdit(statement.id)}>
+          <Pencil className="h-3.5 w-3.5" />
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => onDelete(statement.id)}>
+          <Trash2 className="h-3.5 w-3.5" />
         </Button>
       </CardFooter>
     </Card>

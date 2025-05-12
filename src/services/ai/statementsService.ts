@@ -1,10 +1,12 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
 
-export interface StatementsGenerationOptions {
+interface StatementsGenerationOptions {
   strategyId: string;
-  uspData: any;
+  uspData?: any;
+  customPrompt?: string;
   outputLanguage?: string;
+  minStatements?: number;
 }
 
 export interface GeneratedStatements {
@@ -15,36 +17,33 @@ export interface GeneratedStatements {
 
 export class StatementsService {
   /**
-   * Generate statements from USP Canvas data
+   * Generate statements using the edge function
    */
-  static async generateStatements(
-    options: StatementsGenerationOptions
-  ): Promise<GeneratedStatements> {
-    const { strategyId, uspData, outputLanguage = 'english' } = options;
-
+  static async generateStatements(options: StatementsGenerationOptions): Promise<GeneratedStatements> {
+    const { strategyId, uspData, customPrompt, outputLanguage = 'english', minStatements = 10 } = options;
+    
     if (!strategyId) {
       throw new Error('Strategy ID is required');
     }
 
-    if (!uspData) {
-      throw new Error('USP Canvas data is required');
-    }
-
     try {
       const { data, error } = await supabase.functions.invoke('statements-generator', {
-        body: {
-          strategyId,
+        body: { 
+          strategyId, 
           uspData,
-          outputLanguage
-        }
+          customPrompt,
+          outputLanguage,
+          minStatements
+        },
       });
 
       if (error) {
-        throw new Error(`Error invoking statements generator: ${error.message}`);
+        console.error('Error invoking statements-generator function:', error);
+        throw new Error(`Failed to generate statements: ${error.message}`);
       }
 
       if (!data || !data.result) {
-        throw new Error('Invalid response from statements generator');
+        throw new Error('No result returned from statements generator');
       }
 
       return {
@@ -53,8 +52,8 @@ export class StatementsService {
         rawOutput: data.result.rawOutput
       };
     } catch (error: any) {
-      console.error('Error in statements generation service:', error);
-      throw error;
+      console.error('Statements generation service error:', error);
+      throw new Error(`Failed to generate statements: ${error.message}`);
     }
   }
 }

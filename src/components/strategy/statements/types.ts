@@ -1,23 +1,18 @@
 
-export interface BaseStatement {
+export interface PainStatement {
   id: string;
   content: string;
-  isAIGenerated?: boolean;
   impact: 'low' | 'medium' | 'high';
-  createdAt?: string; // Add createdAt property
+  isAIGenerated?: boolean;
+  createdAt: string;
 }
 
-export interface PainStatement extends BaseStatement {
-  // No need for additional fields as they inherit from BaseStatement
-}
-
-export interface GainStatement extends BaseStatement {
-  // No need for additional fields as they inherit from BaseStatement
-}
-
-export interface StatementFormValues {
+export interface GainStatement {
+  id: string;
   content: string;
   impact: 'low' | 'medium' | 'high';
+  isAIGenerated?: boolean;
+  createdAt: string;
 }
 
 export interface UseStatementsDataProps {
@@ -36,4 +31,10 @@ export interface UseStatementsDataReturn {
   saveStatements: () => Promise<void>;
   isLoading: boolean;
   error: Error | null;
+}
+
+export interface StatementCategory {
+  id: string;
+  name: string;
+  color: string;
 }

@@ -1,8 +1,7 @@
 
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { useAgentGeneration } from "@/hooks/useAgentGeneration";
-// Fix the import to use default import for useUspCanvasData
 import useUspCanvasData from "./useUspCanvasData";
 import { PainStatement, GainStatement } from "../types";
 
@@ -27,8 +26,15 @@ const useStatementsGenerator = (strategyId: string) => {
     module: 'statements'
   });
   
+  // Check if we have USP Canvas data on mount
+  useEffect(() => {
+    if (uspCanvasData && Object.keys(uspCanvasData).length === 0) {
+      console.warn("No USP Canvas data found for strategy:", strategyId);
+    }
+  }, [uspCanvasData, strategyId]);
+  
   // Generate statements
-  const generateStatements = async () => {
+  const generateStatements = useCallback(async (customPrompt: string = '') => {
     if (!strategyId) {
       toast.error("Strategy ID is missing");
       return { painStatements: [], gainStatements: [] };
@@ -45,9 +51,11 @@ const useStatementsGenerator = (strategyId: string) => {
         return { painStatements: [], gainStatements: [] };
       }
       
-      // Call AI to generate statements
+      // Call AI to generate statements with custom prompt if provided
       const result = await generateContent<StatementsGenerationResult>({
-        uspData: uspCanvasData
+        uspData: uspCanvasData,
+        customPrompt: customPrompt || undefined,
+        minStatements: 10 // Ensure at least 10 statements of each type
       });
       
       if (result.error) {
@@ -71,7 +79,7 @@ const useStatementsGenerator = (strategyId: string) => {
       toast.error(error.message || "Failed to generate statements");
       return { painStatements: [], gainStatements: [] };
     }
-  };
+  }, [strategyId, uspCanvasData, isLoadingCanvasData, generateContent]);
   
   return {
     generateStatements,
