@@ -6,7 +6,6 @@ import { Progress } from '@/components/ui/progress';
 import { Sparkles, PlusCircle, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface StatementsAIGeneratorProps {
   onGenerate: (customPrompt?: string) => Promise<{
