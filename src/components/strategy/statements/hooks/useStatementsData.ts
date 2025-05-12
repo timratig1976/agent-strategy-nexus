@@ -6,7 +6,6 @@ import { fetchStatements, saveStatementsToDatabase } from './statementsRepositor
 import { mapToPainStatements, mapToGainStatements } from './statementsMapper';
 import { StrategyState } from '@/types/marketing';
 import { supabase } from '@/integrations/supabase/client';
-import { stateToDbMap } from '@/utils/strategyUtils';
 
 interface UseStatementsDataProps {
   strategyId: string;
@@ -126,13 +125,11 @@ export const useStatementsData = ({ strategyId, onChanges }: UseStatementsDataPr
       
       // If it's the final version, update the strategy state
       if (isFinal) {
-        // Map the StrategyState enum value to a valid database value using stateToDbMap
-        const dbState = stateToDbMap[StrategyState.STATEMENTS];
-        
-        // Use type assertion to avoid TypeScript errors
+        // Use the StrategyState.STATEMENTS enum value directly since the database now supports it
+        // This fixes the type error by using a proper enum value instead of a string literal
         const { error: updateError } = await supabase
           .from('strategies')
-          .update({ state: dbState })
+          .update({ state: StrategyState.STATEMENTS })
           .eq('id', strategyId);
           
         if (updateError) {
