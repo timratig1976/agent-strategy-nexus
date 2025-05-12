@@ -1,29 +1,29 @@
 
 import { useState, useCallback, useEffect } from 'react';
-import { toast } from 'sonner';
 import { StrategyState } from '@/types/marketing';
 import { useStatementsData } from './useStatementsData';
 import useStatementsGenerator from './useStatementsGenerator';
-import useStrategyNavigation from '@/hooks/useStrategyNavigation';
 import { useAgentPrompt } from '@/hooks/useAgentPrompt';
 import { supabase } from '@/integrations/supabase/client';
-import { stateToDbMap } from '@/utils/strategyUtils'; // Import stateToDbMap for consistent state mapping
+import { useStrategyStateUpdate } from './useStrategyStateUpdate';
+import { useStatementsNavigation } from './useStatementsNavigation';
+import { useStatementsAI } from './useStatementsAI';
+import { useStatementsEditor } from './useStatementsEditor';
 
 interface UseStatementsModuleProps {
   strategyId: string;
 }
 
 export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) => {
-  const [activeTab, setActiveTab] = useState<'pain' | 'gain'>('pain');
-  const [editingStatementId, setEditingStatementId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [customPrompt, setCustomPrompt] = useState<string>('');
   const [hasChanges, setHasChanges] = useState<boolean>(false);
   
   // Load custom prompt from settings
   const { userPrompt, systemPrompt } = useAgentPrompt('statements');
   
-  // Use our hooks
+  // Use our strategy state update hook
+  const { updateStrategyState } = useStrategyStateUpdate(strategyId);
+  
+  // Use our statements data hook
   const {
     painStatements,
     gainStatements,
@@ -42,6 +42,7 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
     onChanges: (hasChanged) => setHasChanges(hasChanged)
   });
   
+  // Use our statements generator hook
   const {
     generateStatements,
     isGenerating,
@@ -51,8 +52,17 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
     isLoadingCanvasData
   } = useStatementsGenerator(strategyId);
 
-  const { navigateToNextStep, navigateToPreviousStep } = useStrategyNavigation({
-    strategyId
+  // Use our statements editor hook
+  const {
+    activeTab,
+    setActiveTab,
+    editingStatementId,
+    setEditingStatementId,
+    handleAddStatement
+  } = useStatementsEditor({
+    addPainStatement,
+    addGainStatement,
+    setHasChanges: setHasLocalChanges
   });
 
   // Load strategy language for AI
@@ -89,148 +99,39 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
   const handleGenerateStatements = useCallback(async (additionalPrompt: string = '') => {
     try {
       // Combine system and user prompts with any additional input
-      const combinedPrompt = additionalPrompt || customPrompt || '';
+      const combinedPrompt = additionalPrompt || '';
       
       return await generateStatements(combinedPrompt, outputLanguage);
     } catch (error) {
       console.error('Error in generation:', error);
       return { painStatements: [], gainStatements: [] };
     }
-  }, [generateStatements, customPrompt, outputLanguage]);
+  }, [generateStatements, outputLanguage]);
 
-  // Handle adding AI generated statements
-  const handleAddGeneratedStatements = useCallback((generatedPainStatements: any[], generatedGainStatements: any[]) => {
-    // Add all pain statements
-    generatedPainStatements.forEach(statement => {
-      addPainStatement(statement.content, statement.impact, true);
-    });
-    
-    // Add all gain statements
-    generatedGainStatements.forEach(statement => {
-      addGainStatement(statement.content, statement.impact, true);
-    });
-  }, [addPainStatement, addGainStatement]);
-  
-  // Handle saving custom prompt
-  const handleSaveCustomPrompt = useCallback(async (prompt: string) => {
-    setCustomPrompt(prompt);
-    toast.success('Custom prompt saved');
-  }, []);
+  // Use our statements AI hook
+  const {
+    customPrompt,
+    handleAddGeneratedStatements,
+    handleSaveCustomPrompt
+  } = useStatementsAI({
+    handleGenerateStatements,
+    addPainStatement,
+    addGainStatement
+  });
 
-  // Update strategy state function - improved with better error handling
-  const updateStrategyState = useCallback(async (nextState: StrategyState) => {
-    try {
-      console.log(`Updating strategy state to ${nextState}`);
-      
-      // Get the correct database enum value
-      const dbState = stateToDbMap[nextState];
-      
-      if (!dbState) {
-        console.error(`No valid database value found for state: ${nextState}`);
-        throw new Error(`Invalid strategy state: ${nextState}`);
-      }
-      
-      console.log(`Mapped state ${nextState} to database value: ${dbState}`);
-      
-      // Fix the type issue by explicitly typing the database state value
-      // Use type assertion to match exactly what the database expects
-      const { error } = await supabase
-        .from('strategies')
-        .update({ 
-          state: dbState as "briefing" | "persona" | "pain_gains" | "statements" | 
-                "channel_strategy" | "funnel" | "roas_calculator" | "ads" 
-        })
-        .eq('id', strategyId);
-    
-      if (error) {
-        console.error("Error updating strategy state:", error);
-        console.error("Error details:", error.message, error.details, error.hint);
-        toast.error(`Failed to update strategy state: ${error.message}`);
-        throw error;
-      }
-    
-      console.log(`Strategy state updated successfully to ${nextState} (${dbState})`);
-      return true;
-    } catch (err) {
-      console.error("Error in updateStrategyState:", err);
-      return false;
-    }
-  }, [strategyId]);
-
-  // Save statements and move to next step - now with better handling
-  const handleSaveAndContinue = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      // First save the statements
-      await saveStatements(false);
-    
-      // Then update the strategy state using the consistent method
-      const success = await updateStrategyState(StrategyState.CHANNEL_STRATEGY);
-    
-      if (success) {
-        toast.success('Statements saved and proceeding to next step');
-        // Allow navigation to continue even if state wasn't updated in database
-        navigateToNextStep(StrategyState.STATEMENTS);
-      } else {
-        // Even if the update fails, we'll still try to navigate
-        toast.warning('Strategy state update failed, but proceeding to next step');
-        navigateToNextStep(StrategyState.STATEMENTS);
-      }
-    } catch (error) {
-      console.error('Error in handleSaveAndContinue:', error);
-      toast.error('Failed to save statements - please try again');
-      // Even if there's an error, still try to navigate
-      navigateToNextStep(StrategyState.STATEMENTS);
-    } finally {
-      setIsLoading(false);
-      setHasChanges(false);
-    }
-  }, [saveStatements, navigateToNextStep, updateStrategyState]);
-
-  // Handle navigation back to previous step
-  const handleNavigateBack = useCallback(() => {
-    navigateToPreviousStep(StrategyState.STATEMENTS);
-  }, [navigateToPreviousStep]);
-
-  // Just save statements without navigation (as draft)
-  const handleSave = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      await saveStatements(false);
-      toast.success('Statements saved as draft');
-      setHasChanges(false);
-    } catch (error) {
-      toast.error('Failed to save statements');
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [saveStatements]);
-
-  // Save statements as final
-  const handleSaveFinal = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      await saveStatements(true); // Mark as final
-      toast.success('Statements saved as final');
-      setHasChanges(false);
-    } catch (error) {
-      toast.error('Failed to save statements');
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [saveStatements]);
-
-  // Handle adding new statement 
-  const handleAddStatement = useCallback((content: string, impact: 'low' | 'medium' | 'high' = 'medium') => {
-    if (activeTab === 'pain') {
-      addPainStatement(content, impact);
-    } else {
-      addGainStatement(content, impact);
-    }
-    setHasChanges(true);
-  }, [activeTab, addPainStatement, addGainStatement]);
+  // Use our statements navigation hook
+  const {
+    isLoading,
+    handleSaveAndContinue,
+    handleNavigateBack,
+    handleSave,
+    handleSaveFinal
+  } = useStatementsNavigation({
+    strategyId,
+    saveStatements,
+    updateStrategyState,
+    setHasChanges: setHasLocalChanges
+  });
 
   return {
     activeTab,
