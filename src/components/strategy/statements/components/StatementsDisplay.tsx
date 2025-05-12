@@ -29,9 +29,17 @@ const StatementsDisplay: React.FC<StatementsDisplayProps> = ({
   
   const statements = activeTab === 'pain' ? painStatements : gainStatements;
   
-  // Get all statements without sorting
-  const sortedStatements = useMemo(() => {
-    return [...statements];
+  // Group statements by impact level for better organization
+  const groupedStatements = useMemo(() => {
+    const high = statements.filter(s => s.impact === 'high');
+    const medium = statements.filter(s => s.impact === 'medium');
+    const low = statements.filter(s => s.impact === 'low');
+    
+    return {
+      high,
+      medium,
+      low
+    };
   }, [statements]);
 
   const handleEditStatement = (id: string) => {
@@ -56,21 +64,38 @@ const StatementsDisplay: React.FC<StatementsDisplayProps> = ({
     }
   };
 
+  const renderImpactGroup = (statements: (PainStatement | GainStatement)[], label: string) => {
+    if (statements.length === 0) return null;
+    
+    return (
+      <div className="mb-5">
+        <h3 className="text-sm font-medium mb-2 text-gray-700">{label} Impact</h3>
+        <div className="space-y-2">
+          {statements.map((statement) => (
+            <StatementItem
+              key={statement.id}
+              statement={statement}
+              type={activeTab}
+              onEdit={handleEditStatement}
+              onDelete={handleDeleteStatement}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="w-full">
       <ScrollArea className="h-[450px] pr-4">
-        <div className="flex flex-wrap gap-3">
-          {sortedStatements.map((statement) => (
-            <div className="w-full" key={statement.id}>
-              <StatementItem
-                statement={statement}
-                type={activeTab}
-                onEdit={handleEditStatement}
-                onDelete={handleDeleteStatement}
-              />
-            </div>
-          ))}
-          {sortedStatements.length === 0 && (
+        <div className="space-y-3">
+          {statements.length > 0 ? (
+            <>
+              {renderImpactGroup(groupedStatements.high, "High")}
+              {renderImpactGroup(groupedStatements.medium, "Medium")}
+              {renderImpactGroup(groupedStatements.low, "Low")}
+            </>
+          ) : (
             <div className="w-full text-center py-8 text-gray-500">
               <p>No statements yet. Generate or add statements using the options above.</p>
             </div>
