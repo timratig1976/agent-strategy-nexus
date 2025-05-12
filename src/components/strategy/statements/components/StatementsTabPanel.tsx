@@ -11,6 +11,8 @@ interface StatementsTabPanelProps {
   addGainStatement: (content: string, impact: 'low' | 'medium' | 'high') => void;
   deletePainStatement: (id: string) => void;
   deleteGainStatement: (id: string) => void;
+  editPainStatement: (id: string) => void;
+  editGainStatement: (id: string) => void;
   initialActiveTab?: string;
 }
 
@@ -21,6 +23,8 @@ const StatementsTabPanel: React.FC<StatementsTabPanelProps> = ({
   addGainStatement,
   deletePainStatement,
   deleteGainStatement,
+  editPainStatement,
+  editGainStatement,
   initialActiveTab = 'pain'
 }) => {
   const [activeTab, setActiveTab] = useState<string>(initialActiveTab);
@@ -42,6 +46,8 @@ const StatementsTabPanel: React.FC<StatementsTabPanelProps> = ({
           statements={painStatements}
           onAddStatement={(content, impact) => addPainStatement(content, impact)}
           onDeleteStatement={deletePainStatement}
+          onEditStatement={editPainStatement}
+          type="pain"
           placeholder="Enter a pain statement that describes your customers' frustrations..."
         />
       </TabsContent>
@@ -52,6 +58,8 @@ const StatementsTabPanel: React.FC<StatementsTabPanelProps> = ({
           statements={gainStatements}
           onAddStatement={(content, impact) => addGainStatement(content, impact)}
           onDeleteStatement={deleteGainStatement}
+          onEditStatement={editGainStatement}
+          type="gain"
           placeholder="Enter a gain statement that describes your customers' desired outcomes..."
         />
       </TabsContent>

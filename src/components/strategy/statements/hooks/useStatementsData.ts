@@ -2,8 +2,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
-import { PainStatement, GainStatement, UseStatementsDataProps, UseStatementsDataReturn } from "../types";
+import { PainStatement, GainStatement } from "../types";
 import { supabase } from "@/integrations/supabase/client";
+import { UseStatementsDataProps, UseStatementsDataReturn } from "./types";
 
 export const useStatementsData = ({ strategyId }: UseStatementsDataProps): UseStatementsDataReturn => {
   const [painStatements, setPainStatements] = useState<PainStatement[]>([]);

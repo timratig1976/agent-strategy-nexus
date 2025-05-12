@@ -26,6 +26,7 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({ strategy }) => {
   const [activeTab, setActiveTab] = useState<'pain' | 'gain'>('pain');
   const [customPrompt, setCustomPrompt] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [editingStatementId, setEditingStatementId] = useState<string | null>(null);
   
   // Use our hooks
   const {
@@ -67,9 +68,9 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({ strategy }) => {
   }, [statementsError, generationError]);
 
   // Handle statement generation
-  const handleGenerateStatements = useCallback(async (customPrompt?: string) => {
+  const handleGenerateStatements = useCallback(async (prompt: string) => {
     try {
-      return await generateStatements(customPrompt || '');
+      return await generateStatements(prompt);
     } catch (error) {
       console.error('Error in generation:', error);
       return { painStatements: [], gainStatements: [] };
@@ -127,6 +128,14 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({ strategy }) => {
   const handleSaveCustomPrompt = useCallback((prompt: string) => {
     setCustomPrompt(prompt);
     toast.success('Custom prompt saved');
+  }, []);
+
+  const handleEditPainStatement = useCallback((id: string) => {
+    setEditingStatementId(id);
+  }, []);
+
+  const handleEditGainStatement = useCallback((id: string) => {
+    setEditingStatementId(id);
   }, []);
 
   return (

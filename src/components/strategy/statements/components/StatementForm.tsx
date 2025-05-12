@@ -1,103 +1,69 @@
 
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { PlusCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { StatementFormValues } from '../types';
 
 interface StatementFormProps {
   onSubmit: (values: StatementFormValues) => void;
+  initialValues?: StatementFormValues;
   placeholder?: string;
 }
 
-const StatementForm: React.FC<StatementFormProps> = ({
-  onSubmit,
-  placeholder = 'Enter statement content...'
+const StatementForm: React.FC<StatementFormProps> = ({ 
+  onSubmit, 
+  initialValues = { content: '', impact: 'medium' },
+  placeholder = 'Enter statement content here...' 
 }) => {
-  const form = useForm<StatementFormValues>({
-    defaultValues: {
-      content: '',
-      impact: 'medium'
-    }
-  });
+  const [content, setContent] = useState(initialValues.content);
+  const [impact, setImpact] = useState<'low' | 'medium' | 'high'>(initialValues.impact);
 
-  const handleSubmit = (values: StatementFormValues) => {
-    onSubmit(values);
-    form.reset();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (content.trim()) {
+      onSubmit({ content, impact });
+      setContent('');
+      setImpact('medium');
+    }
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="content"
-          rules={{ required: "Statement content is required" }}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Statement Content</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder={placeholder} 
-                  className="resize-none" 
-                  rows={3}
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder={placeholder}
+          className="min-h-[80px]"
         />
-
-        <FormField
-          control={form.control}
-          name="impact"
-          rules={{ required: "Impact level is required" }}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Impact Level</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select impact level" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="low">Low Impact</SelectItem>
-                  <SelectItem value="medium">Medium Impact</SelectItem>
-                  <SelectItem value="high">High Impact</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <Button type="submit" className="w-full flex items-center gap-2">
-          <PlusCircle className="h-4 w-4" />
-          Add Statement
-        </Button>
-      </form>
-    </Form>
+      </div>
+      
+      <div className="space-y-2">
+        <Label>Impact Level</Label>
+        <RadioGroup 
+          value={impact} 
+          onValueChange={(value) => setImpact(value as 'low' | 'medium' | 'high')}
+          className="flex space-x-4"
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="low" id="low" />
+            <Label htmlFor="low">Low</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="medium" id="medium" />
+            <Label htmlFor="medium">Medium</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="high" id="high" />
+            <Label htmlFor="high">High</Label>
+          </div>
+        </RadioGroup>
+      </div>
+      
+      <Button type="submit">Add Statement</Button>
+    </form>
   );
 };
 
