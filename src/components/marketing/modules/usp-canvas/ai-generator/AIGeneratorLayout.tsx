@@ -35,9 +35,6 @@ const AIGeneratorLayout: React.FC<AIGeneratorLayoutProps> = ({
     activeTab,
     setActiveTab,
     generateResult,
-    generationHistory,
-    rawResponse,
-    parseResults,
     showDebug,
     setShowDebug,
     progress
@@ -84,8 +81,6 @@ const AIGeneratorLayout: React.FC<AIGeneratorLayoutProps> = ({
       {showDebug && debugInfo && (
         <DebugSection 
           debugInfo={debugInfo}
-          parseResults={parseResults}
-          rawResponse={rawResponse}
           showDebug={showDebug}
         />
       )}
