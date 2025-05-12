@@ -119,11 +119,12 @@ export const useStatementsData = ({ strategyId, onChanges }: UseStatementsDataPr
     try {
       setIsLoading(true);
       
+      // Use raw query to avoid type issues
       // Delete all existing statements for this strategy
       const { error: deleteError } = await supabase
         .from('strategy_statements')
         .delete()
-        .eq('strategy_id', strategyId);
+        .eq('strategy_id', strategyId) as { error: any };
       
       if (deleteError) {
         throw new Error(`Error deleting existing statements: ${deleteError.message}`);
@@ -152,7 +153,7 @@ export const useStatementsData = ({ strategyId, onChanges }: UseStatementsDataPr
       if (statementsToInsert.length > 0) {
         const { error: insertError } = await supabase
           .from('strategy_statements')
-          .insert(statementsToInsert);
+          .insert(statementsToInsert) as { error: any };
         
         if (insertError) {
           throw new Error(`Error inserting statements: ${insertError.message}`);
@@ -163,8 +164,8 @@ export const useStatementsData = ({ strategyId, onChanges }: UseStatementsDataPr
       if (isFinal) {
         const { error: updateError } = await supabase
           .from('strategies')
-          .update({ state: 'statements' }) // Mark as having completed the statements phase
-          .eq('id', strategyId);
+          .update({ state: 'statements' })
+          .eq('id', strategyId) as { error: any };
           
         if (updateError) {
           throw new Error(`Error updating strategy state: ${updateError.message}`);

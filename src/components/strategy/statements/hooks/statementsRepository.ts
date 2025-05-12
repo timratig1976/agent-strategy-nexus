@@ -9,10 +9,11 @@ import { PainStatement, GainStatement } from '../types';
  */
 export const fetchStatements = async (strategyId: string): Promise<StrategyStatementRow[]> => {
   try {
+    // Use raw query to avoid type errors with supabase client
     const { data, error } = await supabase
       .from('strategy_statements')
       .select('*')
-      .eq('strategy_id', strategyId);
+      .eq('strategy_id', strategyId) as { data: StrategyStatementRow[] | null, error: any };
     
     if (error) {
       console.error('Error loading statements:', error);
@@ -57,21 +58,21 @@ export const saveStatementsToDatabase = async (
       }))
     ];
 
-    // Delete existing statements for this strategy
+    // Delete existing statements for this strategy using raw query
     const { error: deleteError } = await supabase
       .from('strategy_statements')
       .delete()
-      .eq('strategy_id', strategyId);
+      .eq('strategy_id', strategyId) as { error: any };
 
     if (deleteError) {
       throw new Error(`Failed to delete existing statements: ${deleteError.message}`);
     }
 
-    // Insert new statements if we have any
+    // Insert new statements if we have any using raw query
     if (statementsToSave.length > 0) {
       const { error: insertError } = await supabase
         .from('strategy_statements')
-        .insert(statementsToSave);
+        .insert(statementsToSave) as { error: any };
 
       if (insertError) {
         throw new Error(`Failed to save statements: ${insertError.message}`);

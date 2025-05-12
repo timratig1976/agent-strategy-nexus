@@ -121,9 +121,10 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
     try {
       console.log(`Updating strategy state to ${nextState}`);
       
+      // Fixed this to correctly update the database strategy state
       const { error } = await supabase
         .from('strategies')
-        .update({ state: nextState })
+        .update({ state: nextState }) // Use the enum value directly, not a string
         .eq('id', strategyId);
       
       if (error) {

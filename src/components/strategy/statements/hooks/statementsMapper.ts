@@ -11,7 +11,7 @@ export const mapToPainStatements = (rows: StrategyStatementRow[]): PainStatement
     .map(item => ({
       id: item.id,
       content: item.content,
-      impact: item.impact,
+      impact: item.impact as 'low' | 'medium' | 'high',
       isAiGenerated: item.is_ai_generated,
       createdAt: item.created_at
     }));
@@ -26,7 +26,7 @@ export const mapToGainStatements = (rows: StrategyStatementRow[]): GainStatement
     .map(item => ({
       id: item.id,
       content: item.content,
-      impact: item.impact,
+      impact: item.impact as 'low' | 'medium' | 'high',
       isAiGenerated: item.is_ai_generated,
       createdAt: item.created_at
     }));
