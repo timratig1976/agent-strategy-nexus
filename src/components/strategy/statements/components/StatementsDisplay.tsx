@@ -2,8 +2,6 @@
 import React, { useMemo, useState } from 'react';
 import { PainStatement, GainStatement } from '../types';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SlidersHorizontal } from "lucide-react";
 import StatementItem from './StatementItem';
 import StatementEditDialog from './StatementEditDialog';
 
@@ -26,32 +24,15 @@ const StatementsDisplay: React.FC<StatementsDisplayProps> = ({
   onDeleteGainStatement,
   activeTab
 }) => {
-  const [sortBy, setSortBy] = useState<string>('impact');
   const [editingStatement, setEditingStatement] = useState<PainStatement | GainStatement | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
   const statements = activeTab === 'pain' ? painStatements : gainStatements;
   
-  // Sort statements based on user preferences
+  // Get all statements without sorting
   const sortedStatements = useMemo(() => {
-    return statements
-      .sort((a, b) => {
-        if (sortBy === 'impact') {
-          const impactOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
-          return impactOrder[a.impact] - impactOrder[b.impact];
-        } else if (sortBy === 'newest') {
-          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return dateB - dateA;
-        } else if (sortBy === 'oldest') {
-          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return dateA - dateB;
-        } else {
-          return 0;
-        }
-      });
-  }, [statements, sortBy]);
+    return [...statements];
+  }, [statements]);
 
   const handleEditStatement = (id: string) => {
     const statement = statements.find(s => s.id === id) || null;
@@ -77,22 +58,6 @@ const StatementsDisplay: React.FC<StatementsDisplayProps> = ({
 
   return (
     <div className="w-full">
-      <div className="flex justify-end items-center mb-3">
-        <div className="flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4 text-gray-500" />
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="impact">Impact (High → Low)</SelectItem>
-              <SelectItem value="newest">Newest First</SelectItem>
-              <SelectItem value="oldest">Oldest First</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
       <ScrollArea className="h-[450px] pr-4">
         <div className="flex flex-wrap gap-3">
           {sortedStatements.map((statement) => (
