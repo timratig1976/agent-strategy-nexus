@@ -12,9 +12,8 @@ interface UseStatementsModuleProps {
 
 export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) => {
   const [activeTab, setActiveTab] = useState<'pain' | 'gain'>('pain');
-  const [customPrompt, setCustomPrompt] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [editingStatementId, setEditingStatementId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   
   // Use our hooks
   const {
@@ -101,12 +100,6 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
     }
   }, [saveStatements]);
 
-  // Handle custom prompt save
-  const handleSaveCustomPrompt = useCallback((prompt: string) => {
-    setCustomPrompt(prompt);
-    toast.success('Custom prompt saved');
-  }, []);
-
   // Handle adding new statement
   const handleAddStatement = useCallback((content: string, impact: 'low' | 'medium' | 'high') => {
     if (activeTab === 'pain') {
@@ -119,7 +112,6 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
   return {
     activeTab,
     setActiveTab,
-    customPrompt,
     isLoading,
     editingStatementId,
     setEditingStatementId,
@@ -136,8 +128,7 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
     handleAddGeneratedStatements,
     handleSaveAndContinue,
     handleNavigateBack,
-    handleSave, 
-    handleSaveCustomPrompt,
+    handleSave,
     handleAddStatement,
     updatePainStatement,
     updateGainStatement,

@@ -14,7 +14,6 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({ strategy }) => {
   const {
     activeTab,
     setActiveTab,
-    customPrompt,
     isLoading,
     painStatements,
     gainStatements,
@@ -31,7 +30,6 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({ strategy }) => {
     handleSaveAndContinue,
     handleNavigateBack,
     handleSave, 
-    handleSaveCustomPrompt,
     handleAddStatement,
     updatePainStatement,
     updateGainStatement,
@@ -66,8 +64,6 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({ strategy }) => {
           isLoadingCanvasData={isLoadingCanvasData}
           isGenerating={isGenerating}
           progress={progress}
-          customPrompt={customPrompt}
-          onCustomPromptSave={handleSaveCustomPrompt}
           onGenerate={handleGenerateStatements}
           onAddGeneratedStatements={handleAddGeneratedStatements}
           onAddStatement={handleAddStatement}
