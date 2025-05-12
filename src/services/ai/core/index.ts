@@ -1,3 +1,3 @@
 
-export * from './promptManager';
-export * from './resultManager';
+export { PromptManager } from './promptManager';
+export { ResultManager } from './resultManager';
