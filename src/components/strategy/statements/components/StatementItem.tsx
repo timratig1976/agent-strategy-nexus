@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, Sparkles } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { PainStatement, GainStatement } from "../types";
 
 interface StatementItemProps {
@@ -37,31 +37,24 @@ const StatementItem: React.FC<StatementItemProps> = ({ statement, type, onEdit, 
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <CardContent className="pt-2 pb-1">
-        <div className="flex justify-between items-start mb-1">
-          {/* Only show impact badge for non-AI generated statements */}
-          {!statement.isAiGenerated && (
-            <Badge className={getImpactColor()}>
-              {statement.impact.charAt(0).toUpperCase() + statement.impact.slice(1)} Impact
-            </Badge>
-          )}
-          {statement.isAiGenerated && (
-            <Badge variant="outline" className="bg-blue-50">
-              <Sparkles className="h-3 w-3 mr-1" />
-              AI
-            </Badge>
-          )}
+      <CardContent className="pt-2 pb-1 flex items-center justify-between">
+        <div className="flex-grow">
+          <p className="text-sm">{statement.content}</p>
         </div>
-        <p className="text-sm">{statement.content}</p>
+        <div className="flex items-center gap-1 ml-2">
+          {!statement.isAiGenerated && (
+            <Badge className={`ml-2 ${getImpactColor()}`}>
+              {statement.impact.charAt(0).toUpperCase()}
+            </Badge>
+          )}
+          <Button variant="ghost" size="sm" onClick={() => onEdit(statement.id)} className="h-7 w-7 p-0">
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => onDelete(statement.id)} className="h-7 w-7 p-0">
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </CardContent>
-      <CardFooter className="flex justify-end gap-1 pt-0 pb-1">
-        <Button variant="ghost" size="sm" onClick={() => onEdit(statement.id)}>
-          <Pencil className="h-3.5 w-3.5" />
-        </Button>
-        <Button variant="ghost" size="sm" onClick={() => onDelete(statement.id)}>
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
-      </CardFooter>
     </Card>
   );
 };
