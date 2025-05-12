@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { StrategyState } from '@/types/marketing';
@@ -131,10 +132,14 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
       
       console.log(`Mapped state ${nextState} to database value: ${dbState}`);
       
-      // Make sure we're using the correct database value
+      // Fix the type issue by explicitly typing the database state value
+      // Use type assertion to match exactly what the database expects
       const { error } = await supabase
         .from('strategies')
-        .update({ state: dbState })
+        .update({ 
+          state: dbState as "briefing" | "persona" | "pain_gains" | "statements" | 
+                "channel_strategy" | "funnel" | "roas_calculator" | "ads" 
+        })
         .eq('id', strategyId);
     
       if (error) {
