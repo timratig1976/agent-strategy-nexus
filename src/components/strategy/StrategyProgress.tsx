@@ -46,25 +46,22 @@ const StrategyProgress: React.FC<StrategyProgressProps> = ({ currentStage, strat
       
       <Breadcrumb className="mt-4">
         <BreadcrumbList className="flex-wrap">
-          {orderedStages.map((stage, index) => {
-            // Instead of using a Fragment with data-lov-id prop, we'll use a div or return elements directly
-            return (
-              <React.Fragment key={stage}>
-                {index > 0 && <BreadcrumbSeparator />}
-                <BreadcrumbItem>
-                  <BreadcrumbLink 
-                    onClick={() => handleStageClick(stage, index)}
-                    className={`
-                      ${index === currentIndex ? 'font-semibold text-primary' : ''}
-                      ${index > strategyStateIndex ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
-                    `}
-                  >
-                    {getStageLabel(stage)}
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-              </React.Fragment>
-            );
-          })}
+          {orderedStages.map((stage, index) => (
+            <React.Fragment key={stage}>
+              {index > 0 && <BreadcrumbSeparator />}
+              <BreadcrumbItem>
+                <BreadcrumbLink 
+                  onClick={() => handleStageClick(stage, index)}
+                  className={`
+                    ${index === currentIndex ? 'font-semibold text-primary' : ''}
+                    ${index > strategyStateIndex ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
+                  `}
+                >
+                  {getStageLabel(stage)}
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+            </React.Fragment>
+          ))}
         </BreadcrumbList>
       </Breadcrumb>
     </div>
