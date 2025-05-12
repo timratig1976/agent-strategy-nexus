@@ -6,6 +6,7 @@ import useStatementsGenerator from './useStatementsGenerator';
 import useStrategyNavigation from '@/hooks/useStrategyNavigation';
 import { useAgentPrompt } from '@/hooks/useAgentPrompt';
 import { supabase } from '@/integrations/supabase/client';
+import { stateToDbMap } from '@/utils/strategyUtils'; // Import stateToDbMap for consistent state mapping
 
 interface UseStatementsModuleProps {
   strategyId: string;
@@ -115,25 +116,35 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
     toast.success('Custom prompt saved');
   }, []);
 
-  // Update strategy state function
+  // Update strategy state function - improved with better error handling
   const updateStrategyState = useCallback(async (nextState: StrategyState) => {
     try {
       console.log(`Updating strategy state to ${nextState}`);
-    
-      // Fixed this to correctly update the database strategy state
-      // Use type assertion to handle the new enum values added via SQL migration
+      
+      // Get the correct database enum value
+      const dbState = stateToDbMap[nextState];
+      
+      if (!dbState) {
+        console.error(`No valid database value found for state: ${nextState}`);
+        throw new Error(`Invalid strategy state: ${nextState}`);
+      }
+      
+      console.log(`Mapped state ${nextState} to database value: ${dbState}`);
+      
+      // Make sure we're using the correct database value
       const { error } = await supabase
         .from('strategies')
-        .update({ state: nextState as any }) // Use 'any' to bypass TypeScript checking
+        .update({ state: dbState })
         .eq('id', strategyId);
     
       if (error) {
         console.error("Error updating strategy state:", error);
-        toast.error("Failed to update strategy state");
+        console.error("Error details:", error.message, error.details, error.hint);
+        toast.error(`Failed to update strategy state: ${error.message}`);
         throw error;
       }
     
-      console.log(`Strategy state updated successfully to ${nextState}`);
+      console.log(`Strategy state updated successfully to ${nextState} (${dbState})`);
       return true;
     } catch (err) {
       console.error("Error in updateStrategyState:", err);
@@ -141,26 +152,30 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
     }
   }, [strategyId]);
 
-  // Save statements and move to next step
+  // Save statements and move to next step - now with better handling
   const handleSaveAndContinue = useCallback(async () => {
     setIsLoading(true);
     try {
       // First save the statements
       await saveStatements(false);
     
-      // Then update the strategy state
-      // Use the string literal directly since our database now supports this value
-      const success = await updateStrategyState('channel_strategy' as StrategyState);
+      // Then update the strategy state using the consistent method
+      const success = await updateStrategyState(StrategyState.CHANNEL_STRATEGY);
     
       if (success) {
         toast.success('Statements saved and proceeding to next step');
-        navigateToNextStep('statements' as StrategyState);
+        // Allow navigation to continue even if state wasn't updated in database
+        navigateToNextStep(StrategyState.STATEMENTS);
       } else {
-        toast.error('Failed to update strategy state');
+        // Even if the update fails, we'll still try to navigate
+        toast.warning('Strategy state update failed, but proceeding to next step');
+        navigateToNextStep(StrategyState.STATEMENTS);
       }
     } catch (error) {
-      toast.error('Failed to save statements and continue');
-      console.error(error);
+      console.error('Error in handleSaveAndContinue:', error);
+      toast.error('Failed to save statements - please try again');
+      // Even if there's an error, still try to navigate
+      navigateToNextStep(StrategyState.STATEMENTS);
     } finally {
       setIsLoading(false);
       setHasChanges(false);

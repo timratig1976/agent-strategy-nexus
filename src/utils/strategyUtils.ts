@@ -55,19 +55,19 @@ export const getStateColor = (state: string): string => {
 
 /**
  * Maps StrategyState enum values to valid database strings
- * This is needed because the database enum type doesn't include all TS enum values
- * 
- * Important: Only map to values that exist in the database strategy_state enum:
- * 'briefing', 'persona', 'pain_gains', 'funnel', 'ads'
+ * Updated to correctly map to the actual database strategy_state enum values
+ * which now includes: 'briefing', 'persona', 'pain_gains', 'funnel', 'ads', 
+ * 'statements', 'channel_strategy', 'roas_calculator'
  */
 export const stateToDbMap: Record<StrategyState, string> = {
   [StrategyState.BRIEFING]: "briefing",
   [StrategyState.PERSONA]: "persona",
   [StrategyState.PAIN_GAINS]: "pain_gains",
-  [StrategyState.STATEMENTS]: "pain_gains", // Map to pain_gains in DB since statements isn't in DB enum
-  [StrategyState.CHANNEL_STRATEGY]: "pain_gains", // Map to pain_gains in DB since channel_strategy isn't in DB enum
+  [StrategyState.STATEMENTS]: "statements", // Now maps to actual 'statements' enum value in DB
+  [StrategyState.CHANNEL_STRATEGY]: "channel_strategy", // Now maps to actual 'channel_strategy' enum value in DB
   [StrategyState.FUNNEL]: "funnel",
-  [StrategyState.ROAS_CALCULATOR]: "funnel", // Map to funnel in DB since roas_calculator isn't in DB enum
+  [StrategyState.ROAS_CALCULATOR]: "roas_calculator", // Now maps to actual 'roas_calculator' enum value in DB
   [StrategyState.ADS]: "ads",
   [StrategyState.COMPLETED]: "ads" // Map to ads in DB since completed isn't in DB enum
 };
+
