@@ -6,6 +6,7 @@ import { fetchStatements, saveStatementsToDatabase } from './statementsRepositor
 import { mapToPainStatements, mapToGainStatements } from './statementsMapper';
 import { StrategyState } from '@/types/marketing';
 import { supabase } from '@/integrations/supabase/client';
+import { stateToDbMap } from '@/utils/strategyUtils';
 
 interface UseStatementsDataProps {
   strategyId: string;
@@ -125,11 +126,14 @@ export const useStatementsData = ({ strategyId, onChanges }: UseStatementsDataPr
       
       // If it's the final version, update the strategy state
       if (isFinal) {
-        // Use type assertion to avoid TypeScript errors since we've added the new state values to the database
+        // Map the StrategyState enum value to a valid database value using stateToDbMap
+        const dbState = stateToDbMap[StrategyState.STATEMENTS];
+        
+        // Use type assertion to avoid TypeScript errors
         const { error: updateError } = await supabase
           .from('strategies')
-          .update({ state: 'statements' as StrategyState })
-          .eq('id', strategyId) as any;
+          .update({ state: dbState })
+          .eq('id', strategyId);
           
         if (updateError) {
           throw new Error(`Error updating strategy state: ${updateError.message}`);
@@ -163,4 +167,3 @@ export const useStatementsData = ({ strategyId, onChanges }: UseStatementsDataPr
     setHasLocalChanges
   };
 };
-
