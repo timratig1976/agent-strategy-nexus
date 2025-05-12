@@ -1,20 +1,24 @@
 
-project_id = "lqrbflaupbwizcyhwcsz"
+project_id = "sphere-mode"
 
-[functions.create-checkout]
-verify_jwt = true
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
 
-[functions.customer-portal]
-verify_jwt = true
+[db]
+port = 54322
 
-[functions.stripe-webhook]
-verify_jwt = false
+[realtime]
+enabled = true
 
-[functions.usp-canvas-ai]
-verify_jwt = false
+[storage]
+enabled = true
 
-[functions.marketing-ai]
-verify_jwt = false
+[studio]
+enabled = true
+port = 54323
+api_url = "http://127.0.0.1"
 
-[functions.process-document]
+[functions.statements-generator]
 verify_jwt = true

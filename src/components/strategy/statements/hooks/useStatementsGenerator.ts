@@ -1,66 +1,85 @@
 
-import { useState, useCallback } from 'react';
-import { toast } from 'sonner';
-import { StatementsGeneratorService, GeneratedStatements } from '../services/statementsGeneratorService';
-import { parseGeneratedStatements } from '../utils/statementsParser';
+import { useState } from "react";
+import { toast } from "sonner";
+import { useAgentGeneration } from "@/hooks/useAgentGeneration";
+import { useUspCanvasData } from "./useUspCanvasData";
+import { PainStatement, GainStatement } from "../types";
 
-interface UseStatementsGeneratorProps {
-  strategyId?: string;
+interface StatementsGenerationResult {
+  painStatements: PainStatement[];
+  gainStatements: GainStatement[];
+  rawOutput?: string;
 }
 
-/**
- * Hook for generating statements with AI
- */
-export const useStatementsGenerator = ({ strategyId }: UseStatementsGeneratorProps) => {
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [progressPercent, setProgressPercent] = useState(0);
-
-  // Generate statements with AI
-  const generateStatements = useCallback(async (uspData: any) => {
+const useStatementsGenerator = (strategyId: string) => {
+  const [generatedStatements, setGeneratedStatements] = useState<StatementsGenerationResult | null>(null);
+  const { uspCanvasData, isLoading: isLoadingCanvasData } = useUspCanvasData(strategyId);
+  
+  // Use the agent generation hook
+  const {
+    isGenerating,
+    progress,
+    error,
+    generateContent
+  } = useAgentGeneration({
+    strategyId,
+    module: 'statements'
+  });
+  
+  // Generate statements
+  const generateStatements = async () => {
     if (!strategyId) {
-      toast.error('Strategy ID is missing');
+      toast.error("Strategy ID is missing");
       return { painStatements: [], gainStatements: [] };
     }
-
+    
     try {
-      setIsGenerating(true);
-      setProgressPercent(10);
-
-      // Start progress simulation
-      const progressInterval = setInterval(() => {
-        setProgressPercent(prev => Math.min(prev + 5, 90));
-      }, 1000);
-
-      // Generate statements using the service
-      const rawGenerated = await StatementsGeneratorService.generateStatements(
-        strategyId, 
-        uspData
-      );
+      if (isLoadingCanvasData) {
+        toast.error("Canvas data is still loading");
+        return { painStatements: [], gainStatements: [] };
+      }
       
-      // Parse the generated statements
-      const parsed = parseGeneratedStatements(rawGenerated.rawOutput || '');
-
-      clearInterval(progressInterval);
-      setProgressPercent(100);
-
-      return {
-        painStatements: parsed.painStatements,
-        gainStatements: parsed.gainStatements
-      };
+      if (!uspCanvasData) {
+        toast.error("No USP Canvas data available. Please complete the USP Canvas first.");
+        return { painStatements: [], gainStatements: [] };
+      }
+      
+      // Call AI to generate statements
+      const result = await generateContent<StatementsGenerationResult>({
+        uspData: uspCanvasData
+      });
+      
+      if (result.error) {
+        toast.error(`Failed to generate statements: ${result.error}`);
+        return { painStatements: [], gainStatements: [] };
+      }
+      
+      if (!result.data) {
+        toast.error("No statements were generated");
+        return { painStatements: [], gainStatements: [] };
+      }
+      
+      // Store the generated statements
+      setGeneratedStatements(result.data);
+      toast.success("Statements generated successfully");
+      
+      return result.data;
+      
     } catch (error: any) {
-      console.error('Error generating statements:', error);
-      toast.error(error.message || 'Failed to generate statements');
+      console.error("Error generating statements:", error);
+      toast.error(error.message || "Failed to generate statements");
       return { painStatements: [], gainStatements: [] };
-    } finally {
-      setIsGenerating(false);
-      setProgressPercent(0);
     }
-  }, [strategyId]);
-
+  };
+  
   return {
     generateStatements,
+    generatedStatements,
     isGenerating,
-    progressPercent
+    progress,
+    error,
+    isLoadingCanvasData,
+    uspCanvasData
   };
 };
 

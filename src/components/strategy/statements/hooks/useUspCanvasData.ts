@@ -1,49 +1,58 @@
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
-export const useUspCanvasData = (strategyId?: string) => {
-  const [uspData, setUspData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+interface USPCanvasData {
+  customerJobs?: any[];
+  customerPains?: any[];
+  customerGains?: any[];
+  productServices?: any[];
+  painRelievers?: any[];
+  gainCreators?: any[];
+}
 
+const useUspCanvasData = (strategyId: string) => {
+  const [uspCanvasData, setUspCanvasData] = useState<USPCanvasData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  
   useEffect(() => {
-    if (!strategyId) return;
-
-    const fetchUspData = async () => {
+    const fetchUspCanvasData = async () => {
+      if (!strategyId) return;
+      
       try {
         setIsLoading(true);
-        setError(null);
         
-        // Check if there's canvas history data for this strategy
-        const { data: canvasData, error: canvasError } = await supabase
-          .from('canvas_history')
-          .select('*')
-          .eq('canvas_id', strategyId)
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (canvasError) {
-          console.error('Error fetching canvas data:', canvasError);
-          setError(canvasError.message);
-          return;
-        }
-
-        if (canvasData && canvasData.length > 0) {
-          setUspData(canvasData[0].snapshot_data);
-        }
-      } catch (error: any) {
-        console.error('Error in fetchUspData:', error);
-        setError(error.message);
+        // Fetch strategy metadata which contains USP Canvas data
+        const { data, error } = await supabase
+          .from('strategies')
+          .select('metadata')
+          .eq('id', strategyId)
+          .single();
+          
+        if (error) throw error;
+        
+        // Extract USP Canvas data from metadata
+        const metadata = data?.metadata || {};
+        const canvasData = metadata.uspCanvas || {};
+        
+        setUspCanvasData(canvasData);
+      } catch (err: any) {
+        console.error("Error fetching USP Canvas data:", err);
+        setError(err);
       } finally {
         setIsLoading(false);
       }
     };
-
-    fetchUspData();
+    
+    fetchUspCanvasData();
   }, [strategyId]);
-
-  return { uspData, isLoading, error };
+  
+  return {
+    uspCanvasData,
+    isLoading,
+    error
+  };
 };
 
 export default useUspCanvasData;

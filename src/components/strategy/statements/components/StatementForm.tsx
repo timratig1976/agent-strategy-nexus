@@ -1,42 +1,34 @@
 
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { 
-  Card,
-  CardContent,
-  CardFooter
-} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { 
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-  FormLabel
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
 } from '@/components/ui/form';
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { PlusCircle } from 'lucide-react';
 import { StatementFormValues } from '../types';
 
 interface StatementFormProps {
   onSubmit: (values: StatementFormValues) => void;
-  isSubmitting?: boolean;
   placeholder?: string;
-  autoFocus?: boolean;
 }
 
 const StatementForm: React.FC<StatementFormProps> = ({
   onSubmit,
-  isSubmitting = false,
-  placeholder = "Enter a statement...",
-  autoFocus = false
+  placeholder = 'Enter statement content...'
 }) => {
   const form = useForm<StatementFormValues>({
     defaultValues: {
@@ -52,61 +44,58 @@ const StatementForm: React.FC<StatementFormProps> = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)}>
-        <Card className="border-dashed border-gray-300">
-          <CardContent className="pt-4">
-            <FormField
-              control={form.control}
-              name="content"
-              rules={{ required: "Statement text is required" }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      placeholder={placeholder}
-                      className="min-h-24 resize-none"
-                      autoFocus={autoFocus}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-          <CardFooter className="flex justify-between gap-2 bg-gray-50">
-            <FormField
-              control={form.control}
-              name="impact"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs text-gray-500">Impact Level</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="w-24">
-                        <SelectValue placeholder="Impact" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-            <Button 
-              type="submit" 
-              disabled={isSubmitting}
-            >
-              Add Statement
-            </Button>
-          </CardFooter>
-        </Card>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="content"
+          rules={{ required: "Statement content is required" }}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Statement Content</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder={placeholder} 
+                  className="resize-none" 
+                  rows={3}
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="impact"
+          rules={{ required: "Impact level is required" }}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Impact Level</FormLabel>
+              <Select 
+                onValueChange={field.onChange} 
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select impact level" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="low">Low Impact</SelectItem>
+                  <SelectItem value="medium">Medium Impact</SelectItem>
+                  <SelectItem value="high">High Impact</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <Button type="submit" className="w-full flex items-center gap-2">
+          <PlusCircle className="h-4 w-4" />
+          Add Statement
+        </Button>
       </form>
     </Form>
   );

@@ -1,14 +1,8 @@
 
-import { MarketingAIService } from '@/services/marketingAIService';
+import { StatementsService, GeneratedStatements } from '@/services/ai/statementsService';
 
 export interface StatementsGenerationOptions {
   strategyId: string;
-}
-
-export interface GeneratedStatements {
-  painStatements: Array<{ content: string; impact: 'low' | 'medium' | 'high' }>;
-  gainStatements: Array<{ content: string; impact: 'low' | 'medium' | 'high' }>;
-  rawOutput?: string;
 }
 
 /**
@@ -27,23 +21,11 @@ export class StatementsGeneratorService {
     }
 
     try {
-      // Call the marketing AI service to generate statements
-      const response = await MarketingAIService.generateContent('statements', 'generate', {
+      // Call the statements service to generate statements
+      return await StatementsService.generateStatements({
         strategyId,
         uspData
       });
-
-      if (response.error) {
-        throw new Error(response.error);
-      }
-
-      const result = response.data?.rawOutput || '';
-      
-      return {
-        painStatements: [],
-        gainStatements: [],
-        rawOutput: result
-      };
     } catch (error: any) {
       console.error('Error in statements generation service:', error);
       throw error;
