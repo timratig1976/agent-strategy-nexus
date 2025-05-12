@@ -1,10 +1,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { PainStatement, GainStatement } from '../types';
-import { fetchStatements } from './statementsRepository';
+import { fetchStatements, saveStatementsToDatabase } from './statementsRepository';
 import { mapToPainStatements, mapToGainStatements } from './statementsMapper';
+import { StrategyState } from '@/types/marketing';
 
 interface UseStatementsDataProps {
   strategyId: string;
@@ -119,53 +119,16 @@ export const useStatementsData = ({ strategyId, onChanges }: UseStatementsDataPr
     try {
       setIsLoading(true);
       
-      // Use raw query to avoid type issues
-      // Delete all existing statements for this strategy
-      const { error: deleteError } = await supabase
-        .from('strategy_statements')
-        .delete()
-        .eq('strategy_id', strategyId) as { error: any };
-      
-      if (deleteError) {
-        throw new Error(`Error deleting existing statements: ${deleteError.message}`);
-      }
-      
-      // Prepare statements for insertion
-      const statementsToInsert = [
-        ...painStatements.map(statement => ({
-          strategy_id: strategyId,
-          content: statement.content,
-          impact: statement.impact,
-          statement_type: 'pain',
-          is_ai_generated: statement.isAiGenerated,
-          created_at: statement.createdAt || new Date().toISOString(),
-        })),
-        ...gainStatements.map(statement => ({
-          strategy_id: strategyId,
-          content: statement.content,
-          impact: statement.impact,
-          statement_type: 'gain',
-          is_ai_generated: statement.isAiGenerated,
-          created_at: statement.createdAt || new Date().toISOString(),
-        }))
-      ];
-      
-      if (statementsToInsert.length > 0) {
-        const { error: insertError } = await supabase
-          .from('strategy_statements')
-          .insert(statementsToInsert) as { error: any };
-        
-        if (insertError) {
-          throw new Error(`Error inserting statements: ${insertError.message}`);
-        }
-      }
+      // Save statements to database
+      await saveStatementsToDatabase(strategyId, painStatements, gainStatements);
       
       // If it's the final version, update the strategy state
       if (isFinal) {
+        // Use type assertion to avoid TypeScript errors since we've added the new state values to the database
         const { error: updateError } = await supabase
           .from('strategies')
-          .update({ state: 'statements' })
-          .eq('id', strategyId) as { error: any };
+          .update({ state: 'statements' as StrategyState })
+          .eq('id', strategyId) as any;
           
         if (updateError) {
           throw new Error(`Error updating strategy state: ${updateError.message}`);

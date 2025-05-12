@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { StrategyState } from '@/types/marketing';
@@ -120,19 +119,20 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
   const updateStrategyState = useCallback(async (nextState: StrategyState) => {
     try {
       console.log(`Updating strategy state to ${nextState}`);
-      
+    
       // Fixed this to correctly update the database strategy state
+      // Use type assertion to handle the new enum values added via SQL migration
       const { error } = await supabase
         .from('strategies')
-        .update({ state: nextState }) // Use the enum value directly, not a string
+        .update({ state: nextState as any }) // Use 'any' to bypass TypeScript checking
         .eq('id', strategyId);
-      
+    
       if (error) {
         console.error("Error updating strategy state:", error);
         toast.error("Failed to update strategy state");
         throw error;
       }
-      
+    
       console.log(`Strategy state updated successfully to ${nextState}`);
       return true;
     } catch (err) {
@@ -147,13 +147,14 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
     try {
       // First save the statements
       await saveStatements(false);
-      
+    
       // Then update the strategy state
-      const success = await updateStrategyState(StrategyState.CHANNEL_STRATEGY);
-      
+      // Use the string literal directly since our database now supports this value
+      const success = await updateStrategyState('channel_strategy' as StrategyState);
+    
       if (success) {
         toast.success('Statements saved and proceeding to next step');
-        navigateToNextStep(StrategyState.STATEMENTS);
+        navigateToNextStep('statements' as StrategyState);
       } else {
         toast.error('Failed to update strategy state');
       }
@@ -165,7 +166,7 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
       setHasChanges(false);
     }
   }, [saveStatements, navigateToNextStep, updateStrategyState]);
-  
+
   // Handle navigation back to previous step
   const handleNavigateBack = useCallback(() => {
     navigateToPreviousStep(StrategyState.STATEMENTS);

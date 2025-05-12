@@ -967,6 +967,47 @@ export type Database = {
           },
         ]
       }
+      strategy_statements: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          impact: string
+          is_ai_generated: boolean
+          statement_type: string
+          strategy_id: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          impact: string
+          is_ai_generated?: boolean
+          statement_type: string
+          strategy_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          impact?: string
+          is_ai_generated?: boolean
+          statement_type?: string
+          strategy_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategy_statements_strategy_id_fkey"
+            columns: ["strategy_id"]
+            isOneToOne: false
+            referencedRelation: "strategies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       strategy_tasks: {
         Row: {
           created_at: string
@@ -1420,7 +1461,15 @@ export type Database = {
         | "ad_creative"
         | "lead_magnets"
         | "content_strategy"
-      strategy_state: "briefing" | "persona" | "pain_gains" | "funnel" | "ads"
+      strategy_state:
+        | "briefing"
+        | "persona"
+        | "pain_gains"
+        | "funnel"
+        | "ads"
+        | "statements"
+        | "channel_strategy"
+        | "roas_calculator"
       strategy_status: "draft" | "in_progress" | "completed"
       user_role: "owner" | "admin" | "member" | "viewer"
     }
@@ -1560,7 +1609,16 @@ export const Constants = {
         "lead_magnets",
         "content_strategy",
       ],
-      strategy_state: ["briefing", "persona", "pain_gains", "funnel", "ads"],
+      strategy_state: [
+        "briefing",
+        "persona",
+        "pain_gains",
+        "funnel",
+        "ads",
+        "statements",
+        "channel_strategy",
+        "roas_calculator",
+      ],
       strategy_status: ["draft", "in_progress", "completed"],
       user_role: ["owner", "admin", "member", "viewer"],
     },
