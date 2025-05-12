@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Strategy } from '@/types/marketing';
+import { Strategy, StrategyState } from '@/types/marketing';
 import { ArrowLeft, ArrowRight, Save } from 'lucide-react';
 import { useStatementsData } from './hooks/useStatementsData';
 import useStatementsGenerator from './hooks/useStatementsGenerator';
@@ -96,7 +96,7 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({ strategy }) => {
     try {
       await saveStatements();
       toast.success('Statements saved successfully');
-      navigateToNextStep();
+      navigateToNextStep(StrategyState.STATEMENTS);
     } catch (error) {
       toast.error('Failed to save statements');
       console.error(error);
@@ -107,7 +107,7 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({ strategy }) => {
   
   // Handle navigation back to previous step
   const handleNavigateBack = useCallback(() => {
-    navigateToPreviousStep();
+    navigateToPreviousStep(StrategyState.STATEMENTS);
   }, [navigateToPreviousStep]);
 
   // Just save statements without navigation
