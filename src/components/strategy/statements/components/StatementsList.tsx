@@ -10,6 +10,8 @@ interface StatementsListProps {
   statements: PainStatement[] | GainStatement[];
   onAddStatement: (content: string, impact: 'low' | 'medium' | 'high') => void;
   onDeleteStatement: (id: string) => void;
+  onEditStatement: (id: string) => void;
+  type: 'pain' | 'gain';
   placeholder?: string;
 }
 
@@ -18,6 +20,8 @@ const StatementsList: React.FC<StatementsListProps> = ({
   statements,
   onAddStatement,
   onDeleteStatement,
+  onEditStatement,
+  type,
   placeholder
 }) => {
   const handleSubmit = (values: StatementFormValues) => {
@@ -35,10 +39,9 @@ const StatementsList: React.FC<StatementsListProps> = ({
             {statements.map((statement) => (
               <StatementItem
                 key={statement.id}
-                id={statement.id}
-                content={statement.content}
-                impact={statement.impact}
-                isAIGenerated={statement.isAIGenerated}
+                statement={statement}
+                type={type}
+                onEdit={onEditStatement}
                 onDelete={onDeleteStatement}
               />
             ))}

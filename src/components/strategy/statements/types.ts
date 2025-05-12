@@ -38,3 +38,8 @@ export interface StatementCategory {
   name: string;
   color: string;
 }
+
+export interface StatementFormValues {
+  content: string;
+  impact: 'low' | 'medium' | 'high';
+}

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Strategy } from '@/types/marketing';
 import { ArrowLeft, ArrowRight, Save } from 'lucide-react';
-import useStatementsData from './hooks/useStatementsData';
+import { useStatementsData } from './hooks/useStatementsData';
 import useStatementsGenerator from './hooks/useStatementsGenerator';
 import useStrategyNavigation from '@/hooks/useStrategyNavigation';
 import CanvasNavigation from '@/components/marketing/modules/usp-canvas/components/CanvasNavigation';
@@ -15,6 +15,7 @@ import UspCanvasDataPanel from './components/UspCanvasDataPanel';
 import StatementsAIGenerator from './components/StatementsAIGenerator';
 import StatementsDisplay from './components/StatementsDisplay';
 import AddStatementForm from './components/AddStatementForm';
+import CustomPromptDialog from './components/CustomPromptDialog';
 
 interface StatementsModuleProps {
   strategy: Strategy;
@@ -122,6 +123,12 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({ strategy }) => {
     }
   }, [saveStatements]);
 
+  // Handle custom prompt save
+  const handleSaveCustomPrompt = useCallback((prompt: string) => {
+    setCustomPrompt(prompt);
+    toast.success('Custom prompt saved');
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row gap-6">
@@ -138,6 +145,12 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({ strategy }) => {
             isGenerating={isGenerating}
             progress={progress}
             disabled={isLoadingCanvasData || !uspCanvasData}
+            customPrompt={customPrompt}
+          />
+          
+          <CustomPromptDialog 
+            defaultPrompt={customPrompt} 
+            onSavePrompt={handleSaveCustomPrompt} 
           />
           
           <AddStatementForm 

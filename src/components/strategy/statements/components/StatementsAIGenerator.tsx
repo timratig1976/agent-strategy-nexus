@@ -1,19 +1,24 @@
 
 import React, { useState } from 'react';
-import { Sparkles, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sparkles, PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import CustomPromptDialog from './CustomPromptDialog';
 
 interface StatementsAIGeneratorProps {
-  onGenerate: (customPrompt?: string) => Promise<{ painStatements: any[], gainStatements: any[] }>;
-  onAddStatements: (painStatements: any[], gainStatements: any[]) => void;
+  onGenerate: (customPrompt?: string) => Promise<{
+    painStatements: Array<{ content: string; impact: string }>;
+    gainStatements: Array<{ content: string; impact: string }>;
+  }>;
+  onAddStatements: (
+    painStatements: Array<{ content: string; impact: string }>, 
+    gainStatements: Array<{ content: string; impact: string }>
+  ) => void;
   isGenerating: boolean;
   progress: number;
   disabled?: boolean;
+  customPrompt?: string;
 }
 
 const StatementsAIGenerator: React.FC<StatementsAIGeneratorProps> = ({
@@ -21,133 +26,86 @@ const StatementsAIGenerator: React.FC<StatementsAIGeneratorProps> = ({
   onAddStatements,
   isGenerating,
   progress,
-  disabled = false
+  disabled = false,
+  customPrompt = ''
 }) => {
-  const [generatedStatements, setGeneratedStatements] = useState<{
-    painStatements: any[];
-    gainStatements: any[];
+  const [genResults, setGenResults] = useState<{
+    painStatements: Array<{ content: string; impact: string }>;
+    gainStatements: Array<{ content: string; impact: string }>;
   } | null>(null);
-  
-  const [customPrompt, setCustomPrompt] = useState<string>('');
 
   const handleGenerate = async () => {
     try {
-      const result = await onGenerate(customPrompt);
-      setGeneratedStatements(result);
-    } catch (error) {
-      console.error('Error generating statements:', error);
-      toast.error('Failed to generate statements');
+      const results = await onGenerate(customPrompt);
+      setGenResults(results);
+      toast.success('Statements generated successfully!');
+    } catch (error: any) {
+      toast.error('Failed to generate statements: ' + (error.message || 'Unknown error'));
+      console.error('Generation error:', error);
     }
   };
 
-  const handleAddStatements = () => {
-    if (generatedStatements) {
-      onAddStatements(
-        generatedStatements.painStatements,
-        generatedStatements.gainStatements
-      );
-      setGeneratedStatements(null);
-      toast.success('AI-generated statements added successfully');
+  const handleAddToList = () => {
+    if (genResults) {
+      onAddStatements(genResults.painStatements, genResults.gainStatements);
+      toast.success('Statements added to your lists!');
+      setGenResults(null);
     }
   };
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-blue-500" />
-            Generate Statements with AI
-          </CardTitle>
-          <CustomPromptDialog 
-            defaultPrompt={customPrompt}
-            onSavePrompt={setCustomPrompt}
-          />
-        </div>
-        {customPrompt && (
-          <div className="text-xs text-muted-foreground mt-2 italic border-l-2 border-blue-200 pl-2">
-            Custom instructions enabled: {customPrompt.substring(0, 100)}{customPrompt.length > 100 ? '...' : ''}
-          </div>
-        )}
+        <CardTitle className="text-lg">AI Statement Generator</CardTitle>
       </CardHeader>
-      
-      <CardContent>
-        <p className="text-sm text-muted-foreground mb-4">
-          Use AI to automatically generate powerful pain and gain statements based on your USP Canvas.
-          These statements will help make your marketing messages more impactful.
+      <CardContent className="space-y-4">
+        <p className="text-sm text-gray-500">
+          Generate compelling pain and gain statements based on your USP Canvas data.
+          {customPrompt ? ' A custom prompt has been set.' : ''}
         </p>
-        
-        {isGenerating && (
-          <div className="my-6">
-            <p className="text-sm font-medium mb-2">Generating statements...</p>
-            <Progress value={progress} className="h-2" />
+
+        {isGenerating ? (
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Generating statements...</p>
+            <Progress value={progress} />
+            <p className="text-xs text-muted-foreground">
+              {progress < 100
+                ? `Processing ${Math.round(progress)}%`
+                : 'Finalizing results...'}
+            </p>
           </div>
-        )}
-        
-        {generatedStatements && (
-          <div className="space-y-4 my-6">
-            <h3 className="text-sm font-semibold">Generated Statements Preview:</h3>
-            
-            <div className="border rounded-md p-3 bg-gray-50">
-              <h4 className="text-sm font-medium mb-2">Pain Statements ({generatedStatements.painStatements.length})</h4>
-              <ul className="list-disc pl-5 text-sm text-muted-foreground">
-                {generatedStatements.painStatements.slice(0, 3).map((statement, index) => (
-                  <li key={index} className="mb-1">{statement.content}</li>
-                ))}
-                {generatedStatements.painStatements.length > 3 && (
-                  <li className="italic">...and {generatedStatements.painStatements.length - 3} more</li>
-                )}
-              </ul>
+        ) : genResults ? (
+          <div className="space-y-4">
+            <div className="rounded-md bg-green-50 p-3">
+              <h4 className="font-medium text-sm text-green-800">Generated {genResults.painStatements.length} pain and {genResults.gainStatements.length} gain statements!</h4>
+              <p className="text-xs text-green-700 mt-1">Review them and add to your collection.</p>
             </div>
-            
-            <div className="border rounded-md p-3 bg-gray-50">
-              <h4 className="text-sm font-medium mb-2">Gain Statements ({generatedStatements.gainStatements.length})</h4>
-              <ul className="list-disc pl-5 text-sm text-muted-foreground">
-                {generatedStatements.gainStatements.slice(0, 3).map((statement, index) => (
-                  <li key={index} className="mb-1">{statement.content}</li>
-                ))}
-                {generatedStatements.gainStatements.length > 3 && (
-                  <li className="italic">...and {generatedStatements.gainStatements.length - 3} more</li>
-                )}
-              </ul>
-            </div>
+            <Button 
+              onClick={handleAddToList} 
+              className="w-full"
+              variant="outline"
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add to My Statements
+            </Button>
           </div>
-        )}
-        
-        {!generatedStatements && !isGenerating && (
-          <Alert className="my-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Information</AlertTitle>
-            <AlertDescription>
-              AI-generated statements are based on your USP Canvas data. Make sure you have completed the USP Canvas before generating statements.
-              {customPrompt && <p className="mt-1">You have provided custom instructions to improve the output.</p>}
-            </AlertDescription>
-          </Alert>
-        )}
-      </CardContent>
-      
-      <CardFooter className="flex justify-end gap-3 bg-gray-50">
-        {generatedStatements ? (
-          <>
-            <Button variant="secondary" onClick={() => setGeneratedStatements(null)}>
-              Discard
-            </Button>
-            <Button onClick={handleAddStatements}>
-              Add All Statements
-            </Button>
-          </>
         ) : (
-          <Button 
-            onClick={handleGenerate} 
-            disabled={isGenerating || disabled}
-            className="gap-2"
-            variant="default"
+          <Button
+            onClick={handleGenerate}
+            disabled={disabled || isGenerating}
+            className="w-full"
           >
-            <Sparkles className="h-4 w-4" />
-            {isGenerating ? 'Generating...' : 'Generate Statements'}
+            <Sparkles className="mr-2 h-4 w-4" />
+            Generate with AI
           </Button>
         )}
-      </CardFooter>
+
+        {disabled && (
+          <p className="text-xs text-amber-600">
+            USP Canvas data is required for generating statements. Please complete the USP Canvas first.
+          </p>
+        )}
+      </CardContent>
     </Card>
   );
 };
