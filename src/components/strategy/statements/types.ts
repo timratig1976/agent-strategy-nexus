@@ -4,6 +4,7 @@ export interface PainStatement {
   content: string;
   impact: 'low' | 'medium' | 'high';
   isAiGenerated: boolean;
+  createdAt?: string;
 }
 
 export interface GainStatement {
@@ -11,4 +12,10 @@ export interface GainStatement {
   content: string;
   impact: 'low' | 'medium' | 'high';
   isAiGenerated: boolean;
+  createdAt?: string;
+}
+
+export interface StatementFormValues {
+  content: string;
+  impact: 'low' | 'medium' | 'high';
 }

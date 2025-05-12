@@ -82,3 +82,46 @@ export const getPreviousState = (currentState: StrategyState): StrategyState => 
       return StrategyState.BRIEFING;
   }
 };
+
+/**
+ * Get the ordered stages for the strategy workflow
+ */
+export const getOrderedStages = (): string[] => {
+  return [
+    'briefing',
+    'persona',
+    'usp-canvas',
+    'statements',
+    'channel-strategy',
+    'funnel',
+    'roas-calculator',
+    'ad-campaign',
+    'completed'
+  ];
+};
+
+/**
+ * Get a human-readable label for a strategy stage
+ */
+export const getStageLabel = (stage: string): string => {
+  const stageMap: Record<string, string> = {
+    'briefing': 'Strategy Briefing',
+    'persona': 'Persona Development',
+    'usp-canvas': 'USP Canvas',
+    'statements': 'Pain & Gain Statements',
+    'channel-strategy': 'Channel Strategy',
+    'funnel': 'Funnel Strategy',
+    'roas-calculator': 'ROAS Calculator',
+    'ad-campaign': 'Ad Campaign',
+    'completed': 'Completed'
+  };
+  return stageMap[stage] || stage;
+};
+
+/**
+ * Get the index of a strategy state in the workflow
+ */
+export const getStageIndex = (state: StrategyState | string): number => {
+  const slug = typeof state === 'string' ? state : stateToSlug[state];
+  return getOrderedStages().indexOf(slug);
+};

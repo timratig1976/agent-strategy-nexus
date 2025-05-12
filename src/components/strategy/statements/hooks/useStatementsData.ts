@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { PainStatement, GainStatement } from '../types';
+import { fetchStatements } from './statementsRepository';
+import { mapToPainStatements, mapToGainStatements } from './statementsMapper';
 
 interface UseStatementsDataProps {
   strategyId: string;
@@ -24,7 +26,7 @@ export const useStatementsData = ({ strategyId, onChanges }: UseStatementsDataPr
   }, [hasLocalChanges, onChanges]);
 
   // Load statements from database
-  const fetchStatements = useCallback(async () => {
+  const fetchStatementsData = useCallback(async () => {
     if (!strategyId) return;
 
     try {
@@ -32,36 +34,11 @@ export const useStatementsData = ({ strategyId, onChanges }: UseStatementsDataPr
       setError(null);
       
       // Fetch all statements for the strategy
-      const { data, error } = await supabase
-        .from('strategy_statements')
-        .select('*')
-        .eq('strategy_id', strategyId)
-        .order('created_at', { ascending: true });
-      
-      if (error) {
-        throw new Error(`Error fetching statements: ${error.message}`);
-      }
+      const rows = await fetchStatements(strategyId);
       
       // Process the results into pain and gain statements
-      const painResults: PainStatement[] = [];
-      const gainResults: GainStatement[] = [];
-      
-      if (data && data.length > 0) {
-        data.forEach(item => {
-          const statement = {
-            id: item.id,
-            content: item.content,
-            impact: item.impact || 'medium', 
-            isAiGenerated: item.is_ai_generated || false,
-          };
-          
-          if (item.statement_type === 'pain') {
-            painResults.push(statement as PainStatement);
-          } else if (item.statement_type === 'gain') {
-            gainResults.push(statement as GainStatement);
-          }
-        });
-      }
+      const painResults = mapToPainStatements(rows);
+      const gainResults = mapToGainStatements(rows);
       
       setPainStatements(painResults);
       setGainStatements(gainResults);
@@ -76,8 +53,8 @@ export const useStatementsData = ({ strategyId, onChanges }: UseStatementsDataPr
 
   // Load statements on mount
   useEffect(() => {
-    fetchStatements();
-  }, [fetchStatements]);
+    fetchStatementsData();
+  }, [fetchStatementsData]);
 
   // Add a new pain statement
   const addPainStatement = useCallback((content: string, impact: 'low' | 'medium' | 'high' = 'medium', isAiGenerated: boolean = false) => {
@@ -86,6 +63,7 @@ export const useStatementsData = ({ strategyId, onChanges }: UseStatementsDataPr
       content,
       impact,
       isAiGenerated,
+      createdAt: new Date().toISOString(),
     };
     
     setPainStatements(prev => [...prev, newStatement]);
@@ -99,6 +77,7 @@ export const useStatementsData = ({ strategyId, onChanges }: UseStatementsDataPr
       content,
       impact,
       isAiGenerated,
+      createdAt: new Date().toISOString(),
     };
     
     setGainStatements(prev => [...prev, newStatement]);
@@ -158,6 +137,7 @@ export const useStatementsData = ({ strategyId, onChanges }: UseStatementsDataPr
           impact: statement.impact,
           statement_type: 'pain',
           is_ai_generated: statement.isAiGenerated,
+          created_at: statement.createdAt || new Date().toISOString(),
         })),
         ...gainStatements.map(statement => ({
           strategy_id: strategyId,
@@ -165,6 +145,7 @@ export const useStatementsData = ({ strategyId, onChanges }: UseStatementsDataPr
           impact: statement.impact,
           statement_type: 'gain',
           is_ai_generated: statement.isAiGenerated,
+          created_at: statement.createdAt || new Date().toISOString(),
         }))
       ];
       
@@ -205,7 +186,7 @@ export const useStatementsData = ({ strategyId, onChanges }: UseStatementsDataPr
     gainStatements,
     isLoading,
     error,
-    fetchStatements,
+    fetchStatements: fetchStatementsData,
     addPainStatement,
     addGainStatement,
     updatePainStatement,

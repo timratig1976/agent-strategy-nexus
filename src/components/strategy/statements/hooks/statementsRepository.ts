@@ -9,7 +9,7 @@ import { PainStatement, GainStatement } from '../types';
  */
 export const fetchStatements = async (strategyId: string): Promise<StrategyStatementRow[]> => {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('strategy_statements')
       .select('*')
       .eq('strategy_id', strategyId);
@@ -42,7 +42,7 @@ export const saveStatementsToDatabase = async (
         strategy_id: strategyId,
         content: statement.content,
         impact: statement.impact,
-        is_ai_generated: statement.isAIGenerated || false,
+        is_ai_generated: statement.isAiGenerated || false,
         statement_type: 'pain',
         created_at: statement.createdAt || new Date().toISOString()
       })),
@@ -51,14 +51,14 @@ export const saveStatementsToDatabase = async (
         strategy_id: strategyId,
         content: statement.content,
         impact: statement.impact,
-        is_ai_generated: statement.isAIGenerated || false,
+        is_ai_generated: statement.isAiGenerated || false,
         statement_type: 'gain',
         created_at: statement.createdAt || new Date().toISOString()
       }))
     ];
 
     // Delete existing statements for this strategy
-    const { error: deleteError } = await (supabase as any)
+    const { error: deleteError } = await supabase
       .from('strategy_statements')
       .delete()
       .eq('strategy_id', strategyId);
@@ -69,7 +69,7 @@ export const saveStatementsToDatabase = async (
 
     // Insert new statements if we have any
     if (statementsToSave.length > 0) {
-      const { error: insertError } = await (supabase as any)
+      const { error: insertError } = await supabase
         .from('strategy_statements')
         .insert(statementsToSave);
 

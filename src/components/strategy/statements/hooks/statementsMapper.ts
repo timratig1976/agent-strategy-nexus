@@ -12,7 +12,7 @@ export const mapToPainStatements = (rows: StrategyStatementRow[]): PainStatement
       id: item.id,
       content: item.content,
       impact: item.impact,
-      isAIGenerated: item.is_ai_generated,
+      isAiGenerated: item.is_ai_generated,
       createdAt: item.created_at
     }));
 };
@@ -27,7 +27,7 @@ export const mapToGainStatements = (rows: StrategyStatementRow[]): GainStatement
       id: item.id,
       content: item.content,
       impact: item.impact,
-      isAIGenerated: item.is_ai_generated,
+      isAiGenerated: item.is_ai_generated,
       createdAt: item.created_at
     }));
 };

@@ -48,7 +48,7 @@ const StatementItem: React.FC<StatementItemProps> = ({ statement, type, onEdit, 
           <Badge className={getImpactColor()}>
             {statement.impact.charAt(0).toUpperCase() + statement.impact.slice(1)} Impact
           </Badge>
-          {statement.isAIGenerated && (
+          {statement.isAiGenerated && (
             <Badge variant="outline" className="bg-blue-50">
               <Sparkles className="h-3 w-3 mr-1" />
               AI Generated

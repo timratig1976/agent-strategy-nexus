@@ -46,9 +46,13 @@ const StatementsDisplay: React.FC<StatementsDisplayProps> = ({
           const impactOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
           return impactOrder[a.impact] - impactOrder[b.impact];
         } else if (sortBy === 'newest') {
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return dateB - dateA;
         } else if (sortBy === 'oldest') {
-          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return dateA - dateB;
         } else {
           return 0;
         }
