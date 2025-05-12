@@ -100,8 +100,8 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
     }
   }, [saveStatements]);
 
-  // Handle adding new statement
-  const handleAddStatement = useCallback((content: string, impact: 'low' | 'medium' | 'high') => {
+  // Handle adding new statement 
+  const handleAddStatement = useCallback((content: string, impact: 'low' | 'medium' | 'high' = 'medium') => {
     if (activeTab === 'pain') {
       addPainStatement(content, impact);
     } else {

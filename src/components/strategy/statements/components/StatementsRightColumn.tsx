@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Save } from 'lucide-react';
 import StatementsDisplay from './StatementsDisplay';
 import CanvasNavigation from '@/components/marketing/modules/usp-canvas/components/CanvasNavigation';
+import { Textarea } from "@/components/ui/textarea";
+import { Card } from '@/components/ui/card';
 
 interface StatementsRightColumnProps {
   painStatements: PainStatement[];
@@ -23,6 +25,7 @@ interface StatementsRightColumnProps {
   isLoading: boolean;
   editingStatementId: string | null;
   setEditingStatementId: (id: string | null) => void;
+  onAddStatement: (content: string) => void;
 }
 
 const StatementsRightColumn: React.FC<StatementsRightColumnProps> = ({
@@ -39,8 +42,19 @@ const StatementsRightColumn: React.FC<StatementsRightColumnProps> = ({
   onSaveAndContinue,
   isLoading,
   editingStatementId,
-  setEditingStatementId
+  setEditingStatementId,
+  onAddStatement
 }) => {
+  const [newStatementContent, setNewStatementContent] = React.useState('');
+
+  const handleAddStatement = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newStatementContent.trim()) {
+      onAddStatement(newStatementContent);
+      setNewStatementContent('');
+    }
+  };
+
   return (
     <div className="w-full lg:w-2/3">
       <div className="bg-white rounded-md border mb-6">
@@ -72,7 +86,7 @@ const StatementsRightColumn: React.FC<StatementsRightColumnProps> = ({
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="pain" className="pt-4">
+          <TabsContent value="pain" className="pt-4 space-y-4">
             <StatementsDisplay
               painStatements={painStatements}
               gainStatements={gainStatements}
@@ -82,9 +96,23 @@ const StatementsRightColumn: React.FC<StatementsRightColumnProps> = ({
               onDeleteGainStatement={onDeleteGainStatement}
               activeTab="pain"
             />
+            
+            <Card className="p-4 bg-muted/50">
+              <form onSubmit={handleAddStatement}>
+                <div className="space-y-4">
+                  <Textarea
+                    value={newStatementContent}
+                    onChange={(e) => setNewStatementContent(e.target.value)}
+                    placeholder="Add a new pain statement here..."
+                    className="min-h-[80px]"
+                  />
+                  <Button type="submit" className="w-full">Add Pain Statement</Button>
+                </div>
+              </form>
+            </Card>
           </TabsContent>
           
-          <TabsContent value="gain" className="pt-4">
+          <TabsContent value="gain" className="pt-4 space-y-4">
             <StatementsDisplay
               painStatements={painStatements}
               gainStatements={gainStatements}
@@ -94,6 +122,20 @@ const StatementsRightColumn: React.FC<StatementsRightColumnProps> = ({
               onDeleteGainStatement={onDeleteGainStatement}
               activeTab="gain"
             />
+            
+            <Card className="p-4 bg-muted/50">
+              <form onSubmit={handleAddStatement}>
+                <div className="space-y-4">
+                  <Textarea
+                    value={newStatementContent}
+                    onChange={(e) => setNewStatementContent(e.target.value)}
+                    placeholder="Add a new gain statement here..."
+                    className="min-h-[80px]"
+                  />
+                  <Button type="submit" className="w-full">Add Gain Statement</Button>
+                </div>
+              </form>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

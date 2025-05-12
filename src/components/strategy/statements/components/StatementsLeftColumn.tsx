@@ -1,10 +1,8 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UspCanvasDataPanel from './UspCanvasDataPanel';
 import StatementsAIGenerator from './StatementsAIGenerator';
-import AddStatementForm from './AddStatementForm';
 
 interface StatementsLeftColumnProps {
   activeTab: 'pain' | 'gain';
@@ -15,7 +13,6 @@ interface StatementsLeftColumnProps {
   customPrompt?: string;
   onGenerate: (customPrompt?: string) => Promise<any>;
   onAddGeneratedStatements: (painStatements: any[], gainStatements: any[]) => void;
-  onAddStatement: (content: string, impact: 'low' | 'medium' | 'high') => void;
   onCustomPromptSave?: (prompt: string) => void;
 }
 
@@ -28,7 +25,6 @@ const StatementsLeftColumn: React.FC<StatementsLeftColumnProps> = ({
   customPrompt,
   onGenerate,
   onAddGeneratedStatements,
-  onAddStatement,
   onCustomPromptSave,
 }) => {
   const isDataAvailable = uspCanvasData && 
@@ -51,23 +47,6 @@ const StatementsLeftColumn: React.FC<StatementsLeftColumnProps> = ({
         disabled={!isDataAvailable}
         customPrompt={customPrompt}
       />
-      
-      {/* Add Statement Form */}
-      <Card className="overflow-hidden">
-        <div className="p-4 bg-muted/50">
-          <Tabs defaultValue={activeTab} className="w-full">
-            <TabsList className="grid grid-cols-2 mb-4">
-              <TabsTrigger value="pain">Add Pain Statement</TabsTrigger>
-              <TabsTrigger value="gain">Add Gain Statement</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          
-          <AddStatementForm 
-            type={activeTab}
-            onAdd={onAddStatement}
-          />
-        </div>
-      </Card>
     </div>
   );
 };

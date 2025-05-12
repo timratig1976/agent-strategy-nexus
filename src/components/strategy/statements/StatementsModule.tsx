@@ -66,7 +66,6 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({ strategy }) => {
           progress={progress}
           onGenerate={handleGenerateStatements}
           onAddGeneratedStatements={handleAddGeneratedStatements}
-          onAddStatement={handleAddStatement}
         />
         
         {/* Right column: Statements Display */}
@@ -85,6 +84,7 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({ strategy }) => {
           isLoading={isLoading}
           editingStatementId={editingStatementId}
           setEditingStatementId={setEditingStatementId}
+          onAddStatement={(content) => handleAddStatement(content, 'medium')}
         />
       </div>
     </div>
