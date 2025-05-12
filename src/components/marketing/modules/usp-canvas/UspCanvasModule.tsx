@@ -46,7 +46,9 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
     saveCanvasData,
     finalizeCanvas,
     isLoading,
-    error
+    error,
+    isSaved,
+    setIsSaved
   } = useUspCanvas(canvasId);
 
   const [activeTab, setActiveTab] = useState(defaultActiveTab);
@@ -91,6 +93,18 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
       return Promise.resolve(); // Return void Promise even on error
     }
   }, [saveCanvasData, customerItems, valueItems]);
+
+  // Save final version
+  const handleSaveFinal = useCallback(async () => {
+    try {
+      await finalizeCanvas();
+      setIsSaved(true);
+      toast.success("Final version of canvas saved");
+    } catch (err) {
+      console.error('Error saving final version:', err);
+      toast.error('Failed to save final version');
+    }
+  }, [finalizeCanvas, setIsSaved]);
 
   // Handle finalize and navigate
   const handleFinalizeAndContinue = useCallback(async () => {
@@ -140,9 +154,11 @@ const UspCanvasModule: React.FC<UspCanvasModuleProps> = ({
       <CanvasNavigation
         onNavigateBack={onNavigateBack}
         onNavigateNext={handleFinalizeAndContinue}
+        onSaveFinal={handleSaveFinal}
         prevStageLabel={prevStageLabel}
         nextStageLabel={nextStageLabel}
         canFinalize={customerItems.length > 0 || valueItems.length > 0}
+        isSaved={isSaved}
       />
     </div>
   );

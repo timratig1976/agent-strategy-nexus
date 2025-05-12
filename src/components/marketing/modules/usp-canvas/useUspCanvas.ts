@@ -12,6 +12,7 @@ export const useUspCanvas = (canvasId: string) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [customerItems, setCustomerItems] = useState<CanvasItem[]>([]);
   const [valueItems, setValueItems] = useState<CanvasItem[]>([]);
+  const [isSaved, setIsSaved] = useState(false);
 
   // Database operations
   const { 
@@ -43,6 +44,11 @@ export const useUspCanvas = (canvasId: string) => {
               
               if (Array.isArray(loadedValueItems)) {
                 setValueItems(loadedValueItems);
+              }
+              
+              // Check if there's a final version
+              if (latestSnapshot.metadata && latestSnapshot.metadata.isFinal) {
+                setIsSaved(true);
               }
               
               toast.success('Canvas data loaded successfully from database');
@@ -83,6 +89,10 @@ export const useUspCanvas = (canvasId: string) => {
           'Canvas finalized and saved successfully' : 
           'Canvas saved successfully to database'
         );
+        
+        if (finalState) {
+          setIsSaved(true);
+        }
       } else {
         toast.error('Failed to save canvas');
       }
@@ -111,7 +121,9 @@ export const useUspCanvas = (canvasId: string) => {
     saveCanvasData,
     finalizeCanvas,
     isLoading: loading || isProcessing,
-    error
+    error,
+    isSaved,
+    setIsSaved
   };
 };
 
