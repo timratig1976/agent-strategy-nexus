@@ -25,8 +25,10 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({ strategy }) => {
     isLoadingCanvasData,
     editingStatementId,
     setEditingStatementId,
+    customPrompt,
     handleGenerateStatements,
     handleAddGeneratedStatements,
+    handleSaveCustomPrompt,
     handleSaveAndContinue,
     handleNavigateBack,
     handleSave, 
@@ -64,8 +66,10 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({ strategy }) => {
           isLoadingCanvasData={isLoadingCanvasData}
           isGenerating={isGenerating}
           progress={progress}
+          customPrompt={customPrompt}
           onGenerate={handleGenerateStatements}
           onAddGeneratedStatements={handleAddGeneratedStatements}
+          onCustomPromptSave={handleSaveCustomPrompt}
         />
         
         {/* Right column: Statements Display */}

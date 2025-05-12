@@ -20,7 +20,14 @@ serve(async (req) => {
   }
 
   try {
-    const { strategyId, uspData, customPrompt = '', outputLanguage = 'english', minStatements = 10 } = await req.json();
+    const requestData = await req.json();
+    const { 
+      strategyId, 
+      uspData, 
+      customPrompt = '', 
+      outputLanguage = 'english', 
+      minStatements = 10 
+    } = requestData;
     
     if (!OPENAI_API_KEY) {
       return new Response(
@@ -42,23 +49,35 @@ serve(async (req) => {
       );
     }
 
-    if (!uspData) {
-      return new Response(
-        JSON.stringify({ error: 'USP Canvas data is required' }), 
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
     console.log(`Generating statements for strategy ${strategyId}`);
     console.log(`Output language: ${outputLanguage}`);
     console.log(`Minimum statements: ${minStatements}`);
     console.log(`Custom prompt provided: ${customPrompt ? 'Yes' : 'No'}`);
+    
+    // First try to load custom prompt from settings
+    let systemPrompt;
+    let userPrompt;
+    
+    // Try to fetch custom prompts from the database
+    try {
+      const { data: promptData, error: promptError } = await supabase
+        .from('ai_prompts')
+        .select('system_prompt, user_prompt')
+        .eq('module', 'statements')
+        .maybeSingle();
+        
+      if (!promptError && promptData) {
+        systemPrompt = promptData.system_prompt;
+        userPrompt = promptData.user_prompt;
+        console.log('Using custom prompts from settings');
+      }
+    } catch (err) {
+      console.error('Error fetching custom prompts:', err);
+    }
 
-    // System prompt for generating statements
-    const systemPrompt = `You are an expert marketing strategist specializing in pain and gain statements.
+    // If no custom prompts were found, use default prompts
+    if (!systemPrompt) {
+      systemPrompt = `You are an expert marketing strategist specializing in pain and gain statements.
 
 Your task is to analyze the USP Canvas data and create compelling:
 1. Pain Statements - Emotionally resonant descriptions of customer problems
@@ -68,12 +87,13 @@ Format your response as a valid JSON object with two arrays: "painStatements" an
 Each statement should be persuasive, specific, and emotionally resonant.
 
 You must create at least ${minStatements} statements of each type.`;
+    }
 
-    // User prompt for generating statements
-    const userPrompt = `Based on the provided USP Canvas data, create compelling pain and gain statements:
+    if (!userPrompt) {
+      userPrompt = `Based on the provided USP Canvas data, create compelling pain and gain statements:
 
 USP Canvas Data:
-${JSON.stringify(uspData, null, 2)}
+{{uspData}}
 
 Please provide a valid JSON with the following structure:
 {
@@ -91,12 +111,25 @@ For each statement, specify an impact level of "low", "medium", or "high".
 Pain statements should focus on emotional pain points, frustrations, and challenges.
 Gain statements should focus on aspirational outcomes and desired positive states.
 
-IMPORTANT: Generate at least ${minStatements} statements of each type (pain and gain).
+IMPORTANT: Generate at least {{minStatements}} statements of each type (pain and gain).
 
-${customPrompt ? `ADDITIONAL INSTRUCTIONS: ${customPrompt}` : ''}
+{{#if customPrompt}}
+ADDITIONAL INSTRUCTIONS: {{customPrompt}}
+{{/if}}
 
-${outputLanguage !== 'english' ? `Please respond in ${outputLanguage}.` : ''}`;
-
+{{#if outputLanguage}}
+Please respond in {{outputLanguage}}.
+{{/if}}`;
+    }
+    
+    // Process template variables in user prompt
+    userPrompt = userPrompt
+      .replace('{{uspData}}', JSON.stringify(uspData, null, 2))
+      .replace('{{minStatements}}', minStatements.toString())
+      .replace(/{{#if customPrompt}}[\s\S]*?{{\/if}}/g, customPrompt ? `ADDITIONAL INSTRUCTIONS: ${customPrompt}` : '')
+      .replace(/{{#if outputLanguage}}[\s\S]*?{{\/if}}/g, 
+        outputLanguage && outputLanguage !== 'english' ? `Please respond in ${outputLanguage}.` : '');
+        
     // Call OpenAI API
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -163,17 +196,17 @@ ${outputLanguage !== 'english' ? `Please respond in ${outputLanguage}.` : ''}`;
     // Return the result
     return new Response(
       JSON.stringify({ 
-        result: {
-          ...result,
-          rawOutput: content
-        },
+        painStatements: result.painStatements || [],
+        gainStatements: result.gainStatements || [],
+        rawOutput: content,
         debugInfo: {
           system_prompt: systemPrompt,
           user_prompt: userPrompt,
           response_tokens: completion.usage?.completion_tokens,
           prompt_tokens: completion.usage?.prompt_tokens,
           total_tokens: completion.usage?.total_tokens,
-          custom_prompt_provided: !!customPrompt
+          custom_prompt_provided: !!customPrompt,
+          output_language: outputLanguage
         } 
       }),
       { 

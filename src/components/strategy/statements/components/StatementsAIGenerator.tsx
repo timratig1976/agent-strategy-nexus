@@ -20,6 +20,7 @@ interface StatementsAIGeneratorProps {
   progress: number;
   disabled?: boolean;
   customPrompt?: string;
+  onSaveCustomPrompt?: (prompt: string) => void;
 }
 
 const StatementsAIGenerator: React.FC<StatementsAIGeneratorProps> = ({
@@ -28,7 +29,8 @@ const StatementsAIGenerator: React.FC<StatementsAIGeneratorProps> = ({
   isGenerating,
   progress,
   disabled = false,
-  customPrompt = ''
+  customPrompt = '',
+  onSaveCustomPrompt
 }) => {
   const [genResults, setGenResults] = useState<{
     painStatements: Array<{ content: string; impact: string }>;
@@ -69,7 +71,7 @@ const StatementsAIGenerator: React.FC<StatementsAIGeneratorProps> = ({
       <CardContent className="space-y-4">
         <p className="text-sm text-gray-500">
           Generate compelling pain and gain statements based on your USP Canvas data.
-          {customPrompt ? ' A custom prompt has been set.' : ''}
+          {customPrompt ? ' A custom prompt has been set in AI settings.' : ''}
         </p>
 
         {/* Additional briefing information input */}

@@ -1,10 +1,12 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { StrategyState } from '@/types/marketing';
 import { useStatementsData } from './useStatementsData';
 import useStatementsGenerator from './useStatementsGenerator';
 import useStrategyNavigation from '@/hooks/useStrategyNavigation';
+import { useAgentPrompt } from '@/hooks/useAgentPrompt';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UseStatementsModuleProps {
   strategyId: string;
@@ -14,6 +16,10 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
   const [activeTab, setActiveTab] = useState<'pain' | 'gain'>('pain');
   const [editingStatementId, setEditingStatementId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [customPrompt, setCustomPrompt] = useState<string>('');
+  
+  // Load custom prompt from settings
+  const { userPrompt, systemPrompt } = useAgentPrompt('statements');
   
   // Use our hooks
   const {
@@ -43,15 +49,48 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
     strategyId
   });
 
+  // Load strategy language for AI
+  const [outputLanguage, setOutputLanguage] = useState<string>('english');
+  
+  useEffect(() => {
+    const loadStrategyLanguage = async () => {
+      if (!strategyId) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('strategies')
+          .select('language')
+          .eq('id', strategyId)
+          .single();
+        
+        if (error) {
+          console.error('Error loading strategy language:', error);
+          return;
+        }
+        
+        if (data && data.language) {
+          setOutputLanguage(data.language);
+        }
+      } catch (err) {
+        console.error('Error getting strategy language:', err);
+      }
+    };
+    
+    loadStrategyLanguage();
+  }, [strategyId]);
+
   // Handle statement generation
-  const handleGenerateStatements = useCallback(async (prompt: string) => {
+  const handleGenerateStatements = useCallback(async (additionalPrompt: string = '') => {
     try {
-      return await generateStatements(prompt);
+      // Combine system and user prompts with any additional input
+      const combinedPrompt = additionalPrompt || customPrompt || '';
+      
+      return await generateStatements(combinedPrompt, outputLanguage);
     } catch (error) {
       console.error('Error in generation:', error);
       return { painStatements: [], gainStatements: [] };
     }
-  }, [generateStatements]);
+  }, [generateStatements, customPrompt, outputLanguage]);
 
   // Handle adding AI generated statements
   const handleAddGeneratedStatements = useCallback((generatedPainStatements: any[], generatedGainStatements: any[]) => {
@@ -65,6 +104,12 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
       addGainStatement(statement.content, statement.impact, true);
     });
   }, [addPainStatement, addGainStatement]);
+  
+  // Handle saving custom prompt
+  const handleSaveCustomPrompt = useCallback(async (prompt: string) => {
+    setCustomPrompt(prompt);
+    toast.success('Custom prompt saved');
+  }, []);
 
   // Save statements and move to next step
   const handleSaveAndContinue = useCallback(async () => {
@@ -124,8 +169,10 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
     progress,
     uspCanvasData,
     isLoadingCanvasData,
+    customPrompt,
     handleGenerateStatements,
     handleAddGeneratedStatements,
+    handleSaveCustomPrompt,
     handleSaveAndContinue,
     handleNavigateBack,
     handleSave,

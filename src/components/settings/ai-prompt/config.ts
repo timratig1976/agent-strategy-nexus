@@ -1,106 +1,68 @@
 
-export const moduleLabels: Record<string, {
-  title: { english: string; deutsch?: string };
-  description: { english: string; deutsch?: string };
+// Map of module IDs to their display names and descriptions for use in the AI prompt settings UI
+
+export const moduleLabels: Record<string, { 
+  title: { [key: string]: string }, 
+  description: { [key: string]: string } 
 }> = {
-  "briefing": {
+  briefing: {
     title: {
-      english: "Strategy Briefing",
-      deutsch: "Strategiebriefing"
+      english: 'Project Briefing',
+      deutsch: 'Projektbriefing'
     },
     description: {
-      english: "AI prompts used when generating marketing strategy briefings",
-      deutsch: "KI-Prompts für die Erstellung von Marketing-Strategiebriefings"
+      english: 'AI prompts for generating marketing strategy briefings',
+      deutsch: 'KI-Prompts für die Erstellung von Marketing-Strategie-Briefings'
     }
   },
-  "persona": {
+  persona: {
     title: {
-      english: "Persona Development",
-      deutsch: "Persona-Entwicklung"
+      english: 'Persona Development',
+      deutsch: 'Persona-Entwicklung'
     },
     description: {
-      english: "AI prompts used when generating customer personas",
-      deutsch: "KI-Prompts für die Erstellung von Kundenpersonas"
+      english: 'AI prompts for generating customer personas',
+      deutsch: 'KI-Prompts für die Erstellung von Kundenpersonas'
     }
   },
-  "usp_canvas_profile": {
+  usp_canvas: {
     title: {
-      english: "USP Canvas - Customer Profile",
-      deutsch: "USP-Canvas - Kundenprofil"
+      english: 'USP Canvas',
+      deutsch: 'USP Canvas'
     },
     description: {
-      english: "AI prompts for generating customer profiles in the Value Proposition Canvas",
-      deutsch: "KI-Prompts zur Erstellung von Kundenprofilen im Value Proposition Canvas"
+      english: 'AI prompts for generating USP canvas content',
+      deutsch: 'KI-Prompts für die Erstellung von USP-Canvas-Inhalten'
     }
   },
-  "usp_canvas_value_map": {
+  statements: {
     title: {
-      english: "USP Canvas - Value Map",
-      deutsch: "USP-Canvas - Wertkarte"
+      english: 'Pain & Gain Statements',
+      deutsch: 'Pain & Gain Statements'
     },
     description: {
-      english: "AI prompts for generating value propositions in the Value Proposition Canvas",
-      deutsch: "KI-Prompts zur Erstellung von Wertversprechen im Value Proposition Canvas"
+      english: 'AI prompts for generating pain and gain statements',
+      deutsch: 'KI-Prompts für die Erstellung von Pain & Gain Statements'
     }
   },
-  "contentStrategy": {
+  campaign: {
     title: {
-      english: "Content Strategy",
-      deutsch: "Content-Strategie"
+      english: 'Campaign Ideas',
+      deutsch: 'Kampagnenideen'
     },
     description: {
-      english: "AI prompts for generating content strategy and content pillars",
-      deutsch: "KI-Prompts zur Erstellung von Content-Strategie und Content-Säulen"
+      english: 'AI prompts for generating marketing campaign ideas',
+      deutsch: 'KI-Prompts für die Erstellung von Marketing-Kampagnenideen'
     }
   },
-  "uspGenerator": {
+  ads: {
     title: {
-      english: "USP Generator",
-      deutsch: "USP-Generator"
+      english: 'Ad Creatives',
+      deutsch: 'Werbeanzeigen'
     },
     description: {
-      english: "AI prompts for generating unique selling propositions",
-      deutsch: "KI-Prompts zur Erstellung von Alleinstellungsmerkmalen"
-    }
-  },
-  "campaignIdeas": {
-    title: {
-      english: "Campaign Ideas",
-      deutsch: "Kampagnenideen"
-    },
-    description: {
-      english: "AI prompts for generating marketing campaign ideas",
-      deutsch: "KI-Prompts zur Erstellung von Marketing-Kampagnenideen"
-    }
-  },
-  "leadMagnets": {
-    title: {
-      english: "Lead Magnets",
-      deutsch: "Lead-Magnete"
-    },
-    description: {
-      english: "AI prompts for generating lead magnet ideas",
-      deutsch: "KI-Prompts zur Erstellung von Lead-Magnet-Ideen"
-    }
-  },
-  "adCreative": {
-    title: {
-      english: "Ad Creative",
-      deutsch: "Werbeanzeigen"
-    },
-    description: {
-      english: "AI prompts for generating advertising creative ideas",
-      deutsch: "KI-Prompts zur Erstellung von Werbeanzeigenideen"
-    }
-  },
-  "channelStrategy": {
-    title: {
-      english: "Channel Strategy",
-      deutsch: "Kanalstrategie"
-    },
-    description: {
-      english: "AI prompts for generating channel strategy recommendations",
-      deutsch: "KI-Prompts zur Erstellung von Kanalstrategieempfehlungen"
+      english: 'AI prompts for generating ad creative concepts',
+      deutsch: 'KI-Prompts für die Erstellung von Werbekreativen'
     }
   }
 };

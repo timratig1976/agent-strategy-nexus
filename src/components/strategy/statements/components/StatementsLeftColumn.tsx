@@ -46,6 +46,7 @@ const StatementsLeftColumn: React.FC<StatementsLeftColumnProps> = ({
         progress={progress}
         disabled={!isDataAvailable}
         customPrompt={customPrompt}
+        onSaveCustomPrompt={onCustomPromptSave}
       />
     </div>
   );

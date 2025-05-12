@@ -26,7 +26,7 @@ const useStatementsGenerator = (strategyId: string) => {
   
   // Generate statements using AI
   const generateStatements = useCallback(
-    async (customPrompt: string = ''): Promise<GeneratedStatements> => {
+    async (customPrompt: string = '', outputLanguage: string = 'english'): Promise<GeneratedStatements> => {
       if (!strategyId) {
         throw new Error('Strategy ID is required');
       }
@@ -36,28 +36,39 @@ const useStatementsGenerator = (strategyId: string) => {
         setProgress(10);
         
         const payload = {
-          strategy_id: strategyId,
-          usp_canvas_data: uspCanvasData,
-          custom_prompt: customPrompt || ''
+          strategyId,
+          uspData: uspCanvasData,
+          customPrompt: customPrompt || '',
+          outputLanguage: outputLanguage || 'english',
+          minStatements: 5
         };
         
         setProgress(30);
         
+        console.log('Generating statements with payload:', payload);
+        
         // Call the Edge function to generate statements
         const { data, error } = await supabase.functions.invoke('statements-generator', {
-          body: JSON.stringify(payload)
+          body: payload
         });
         
         if (error) {
+          console.error('Error from statements-generator:', error);
           throw new Error(error.message);
         }
         
+        if (!data) {
+          throw new Error('No data returned from statements generator');
+        }
+
         setProgress(90);
+        
+        console.log('Generated statements:', data);
         
         // Return the generated statements
         return {
-          painStatements: data?.painStatements || [],
-          gainStatements: data?.gainStatements || []
+          painStatements: data.painStatements || [],
+          gainStatements: data.gainStatements || []
         };
       } catch (err: any) {
         console.error('Error generating statements:', err);
