@@ -3,8 +3,10 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Sparkles, PlusCircle } from 'lucide-react';
+import { Sparkles, PlusCircle, Edit } from 'lucide-react';
 import { toast } from 'sonner';
+import { Textarea } from '@/components/ui/textarea';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface StatementsAIGeneratorProps {
   onGenerate: (customPrompt?: string) => Promise<{
@@ -33,10 +35,17 @@ const StatementsAIGenerator: React.FC<StatementsAIGeneratorProps> = ({
     painStatements: Array<{ content: string; impact: string }>;
     gainStatements: Array<{ content: string; impact: string }>;
   } | null>(null);
+  const [briefingInfo, setBriefingInfo] = useState('');
+  const [showBriefingInput, setShowBriefingInput] = useState(false);
 
   const handleGenerate = async () => {
     try {
-      const results = await onGenerate(customPrompt);
+      // Combine custom prompt with additional briefing info if provided
+      const finalPrompt = briefingInfo 
+        ? `${customPrompt ? customPrompt + '\n\n' : ''}Additional context: ${briefingInfo}` 
+        : customPrompt;
+        
+      const results = await onGenerate(finalPrompt);
       setGenResults(results);
       toast.success('Statements generated successfully!');
     } catch (error: any) {
@@ -63,6 +72,29 @@ const StatementsAIGenerator: React.FC<StatementsAIGeneratorProps> = ({
           Generate compelling pain and gain statements based on your USP Canvas data.
           {customPrompt ? ' A custom prompt has been set.' : ''}
         </p>
+
+        {/* Additional briefing information input */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <button
+              className="text-xs text-blue-500 hover:text-blue-700 flex items-center"
+              onClick={() => setShowBriefingInput(!showBriefingInput)}
+            >
+              <Edit className="h-3 w-3 mr-1" />
+              {showBriefingInput ? 'Hide additional context' : 'Add additional context'}
+            </button>
+          </div>
+          
+          {showBriefingInput && (
+            <Textarea
+              value={briefingInfo}
+              onChange={(e) => setBriefingInfo(e.target.value)}
+              placeholder="Add specific details about your product, target audience, or objectives to guide the AI..."
+              className="text-sm"
+              rows={3}
+            />
+          )}
+        </div>
 
         {isGenerating ? (
           <div className="space-y-2">

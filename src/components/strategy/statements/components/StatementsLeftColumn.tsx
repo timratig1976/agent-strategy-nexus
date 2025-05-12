@@ -1,10 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { PainStatement, GainStatement } from '../types';
 import UspCanvasDataPanel from './UspCanvasDataPanel';
 import StatementsAIGenerator from './StatementsAIGenerator';
 import CustomPromptDialog from './CustomPromptDialog';
-import AddStatementForm from './AddStatementForm';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 interface StatementsLeftColumnProps {
   activeTab: 'pain' | 'gain';
@@ -34,6 +37,18 @@ const StatementsLeftColumn: React.FC<StatementsLeftColumnProps> = ({
   onAddGeneratedStatements,
   onAddStatement
 }) => {
+  const [statementContent, setStatementContent] = useState('');
+  
+  const handleAddStatement = () => {
+    if (statementContent.trim()) {
+      // Always use 'medium' as the default impact level since we're removing the selection
+      onAddStatement(statementContent, 'medium');
+      setStatementContent('');
+    }
+  };
+
+  const isPain = activeTab === 'pain';
+
   return (
     <div className="w-full lg:w-1/3 space-y-6">
       <UspCanvasDataPanel 
@@ -55,10 +70,40 @@ const StatementsLeftColumn: React.FC<StatementsLeftColumnProps> = ({
         onSavePrompt={onCustomPromptSave} 
       />
       
-      <AddStatementForm 
-        type={activeTab}
-        onAdd={onAddStatement}
-      />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">
+            {isPain ? 'Add Pain Statement' : 'Add Gain Statement'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Textarea
+              value={statementContent}
+              onChange={(e) => setStatementContent(e.target.value)}
+              placeholder={isPain 
+                ? 'E.g., Customers struggle with organizing their tasks efficiently...' 
+                : 'E.g., Customers desire a simplified workflow that saves time...'}
+              className="min-h-[80px]"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && e.ctrlKey && statementContent.trim()) {
+                  e.preventDefault();
+                  handleAddStatement();
+                }
+              }}
+            />
+            <p className="text-xs text-muted-foreground mt-1">Press Ctrl+Enter to add quickly</p>
+          </div>
+          <Button 
+            onClick={handleAddStatement}
+            disabled={!statementContent.trim()}
+            className="w-full"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add {isPain ? 'Pain' : 'Gain'} Statement
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 };
