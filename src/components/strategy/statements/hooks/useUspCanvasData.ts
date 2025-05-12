@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { safeJsonAccess, safeJsonToRecord } from "@/utils/typeUtils";
 
 interface USPCanvasData {
   customerJobs?: any[];
@@ -39,7 +40,7 @@ export default function useUspCanvasData(strategyId: string) {
         
         // Check if we have history data
         if (historyData && historyData.length > 0) {
-          const snapshotData = historyData[0].snapshot_data;
+          const snapshotData = safeJsonToRecord(historyData[0].snapshot_data);
           
           // Map from snapshot_data structure to our expected USPCanvasData format
           const mappedData: USPCanvasData = {
@@ -52,9 +53,10 @@ export default function useUspCanvasData(strategyId: string) {
           };
           
           // Map customer items
-          if (snapshotData.customerItems && Array.isArray(snapshotData.customerItems)) {
-            snapshotData.customerItems.forEach((item: any) => {
-              if (item.id.startsWith('job-')) {
+          const customerItems = safeJsonAccess<any[]>(snapshotData, 'customerItems', []);
+          if (Array.isArray(customerItems)) {
+            customerItems.forEach((item: any) => {
+              if (item.id?.startsWith('job-')) {
                 mappedData.customerJobs = [
                   ...(mappedData.customerJobs || []),
                   { 
@@ -63,7 +65,7 @@ export default function useUspCanvasData(strategyId: string) {
                     priority: item.rating
                   }
                 ];
-              } else if (item.id.startsWith('pain-')) {
+              } else if (item.id?.startsWith('pain-')) {
                 mappedData.customerPains = [
                   ...(mappedData.customerPains || []),
                   { 
@@ -72,7 +74,7 @@ export default function useUspCanvasData(strategyId: string) {
                     severity: item.rating
                   }
                 ];
-              } else if (item.id.startsWith('gain-')) {
+              } else if (item.id?.startsWith('gain-')) {
                 mappedData.customerGains = [
                   ...(mappedData.customerGains || []),
                   { 
@@ -86,9 +88,10 @@ export default function useUspCanvasData(strategyId: string) {
           }
           
           // Map value items if they exist
-          if (snapshotData.valueItems && Array.isArray(snapshotData.valueItems)) {
-            snapshotData.valueItems.forEach((item: any) => {
-              if (item.id.startsWith('product-')) {
+          const valueItems = safeJsonAccess<any[]>(snapshotData, 'valueItems', []);
+          if (Array.isArray(valueItems)) {
+            valueItems.forEach((item: any) => {
+              if (item.id?.startsWith('product-')) {
                 mappedData.productServices = [
                   ...(mappedData.productServices || []),
                   { 
@@ -96,7 +99,7 @@ export default function useUspCanvasData(strategyId: string) {
                     content: item.content
                   }
                 ];
-              } else if (item.id.startsWith('pain-reliever-')) {
+              } else if (item.id?.startsWith('pain-reliever-')) {
                 mappedData.painRelievers = [
                   ...(mappedData.painRelievers || []),
                   { 
@@ -104,7 +107,7 @@ export default function useUspCanvasData(strategyId: string) {
                     content: item.content
                   }
                 ];
-              } else if (item.id.startsWith('gain-creator-')) {
+              } else if (item.id?.startsWith('gain-creator-')) {
                 mappedData.gainCreators = [
                   ...(mappedData.gainCreators || []),
                   { 
@@ -133,36 +136,27 @@ export default function useUspCanvasData(strategyId: string) {
           
           if (uspData) {
             const mappedData: USPCanvasData = {
-              customerJobs: uspData.customer_jobs || [],
-              customerPains: uspData.pain_points || [],
-              customerGains: uspData.gains || [],
-              productServices: uspData.differentiators?.productServices || [],
-              painRelievers: uspData.differentiators?.painRelievers || [],
-              gainCreators: uspData.differentiators?.gainCreators || []
+              customerJobs: uspData.customer_jobs as any[] || [],
+              customerPains: uspData.pain_points as any[] || [],
+              customerGains: uspData.gains as any[] || [],
+              productServices: safeJsonAccess<any[]>(uspData.differentiators, 'productServices', []),
+              painRelievers: safeJsonAccess<any[]>(uspData.differentiators, 'painRelievers', []),
+              gainCreators: safeJsonAccess<any[]>(uspData.differentiators, 'gainCreators', [])
             };
             
             setUspCanvasData(mappedData);
             console.log("USP Canvas data loaded from usp_canvas table:", mappedData);
           } else {
-            // Final fallback: check if strategy has metadata with uspCanvas
-            const { data: strategyData, error: strategyError } = await supabase
-              .from('strategies')
-              .select('metadata')
-              .eq('id', strategyId)
-              .single();
-              
-            if (strategyError) {
-              console.error("Error fetching strategy metadata:", strategyError);
-              throw strategyError;
-            }
-            
-            if (strategyData?.metadata?.uspCanvas) {
-              setUspCanvasData(strategyData.metadata.uspCanvas);
-              console.log("USP Canvas data loaded from strategy metadata:", strategyData.metadata.uspCanvas);
-            } else {
-              console.log("No USP Canvas data found for strategy:", strategyId);
-              setUspCanvasData(null);
-            }
+            // We don't have a metadata column in strategies table, so just return empty data
+            console.log("No USP Canvas data found for strategy:", strategyId);
+            setUspCanvasData({
+              customerJobs: [],
+              customerPains: [],
+              customerGains: [],
+              productServices: [],
+              painRelievers: [],
+              gainCreators: []
+            });
           }
         }
       } catch (err: any) {
