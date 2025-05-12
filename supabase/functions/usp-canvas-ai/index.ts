@@ -77,10 +77,12 @@ Your task is to analyze the marketing briefing and persona information to develo
 3. Customer Gains - Benefits and positive outcomes customers seek
 
 Format your response as a valid JSON object with three arrays: "jobs", "pains", and "gains".
-Each item in these arrays should have a "content" field and a priority/severity/importance rating.`;
+Each item in these arrays should have a "content" field and a priority/severity/importance rating.
+
+IMPORTANT: Generate at least 10 high-quality items for each category (jobs, pains, and gains).`;
 
       // User prompt for generating customer profiles
-      userPrompt = `Based on the provided information, create a customer profile that identifies:
+      userPrompt = `Based on the provided information, create a detailed customer profile that identifies:
 
 Briefing Information:
 ${briefingContent}
@@ -94,20 +96,25 @@ Please provide a valid JSON with the following structure:
   "jobs": [
     { "content": "Job description", "priority": "high" },
     { "content": "Another job", "priority": "medium" }
+    // At least 10 jobs in total
   ],
   "pains": [
     { "content": "Pain description", "severity": "high" },
     { "content": "Another pain", "severity": "low" }
+    // At least 10 pains in total
   ],
   "gains": [
     { "content": "Gain description", "importance": "high" },
     { "content": "Another gain", "importance": "medium" }
+    // At least 10 gains in total
   ]
 }
 
 For each job, specify a priority of "low", "medium", or "high".
 For each pain, specify a severity of "low", "medium", or "high".
 For each gain, specify an importance of "low", "medium", or "high".
+
+IMPORTANT: I need high-quality, specific, and detailed content for each item (not generic statements). Generate at least 10 items for each category (jobs, pains, and gains) that are relevant to the business described.
 
 ${outputLanguage === 'deutsch' ? 'Bitte antworte auf Deutsch und erstelle den JSON mit deutschen Inhalten.' : ''}`;
     } else if (action === 'generate_value_proposition') {
@@ -121,7 +128,9 @@ Your task is to analyze the customer profile and briefing to develop value propo
 3. Gain Creators - How products/services create customer gains
 
 Format your response as a valid JSON object with three arrays: "products", "painRelievers", and "gainCreators".
-Each item should have a "content" field and relevant relationships to customer jobs, pains, or gains.`;
+Each item should have a "content" field and relevant relationships to customer jobs, pains, or gains.
+
+IMPORTANT: Generate at least 10 high-quality items for each category (products, painRelievers, and gainCreators).`;
 
       // User prompt for generating value proposition
       userPrompt = `Based on the provided information, create value proposition elements:
@@ -138,17 +147,22 @@ Please provide a valid JSON with the following structure:
 {
   "products": [
     { "content": "Product/service description", "priority": "high" }
+    // At least 10 products in total
   ],
   "painRelievers": [
     { "content": "Pain reliever description", "relatedPainIds": [] }
+    // At least 10 pain relievers in total
   ],
   "gainCreators": [
     { "content": "Gain creator description", "relatedGainIds": [] }
+    // At least 10 gain creators in total
   ]
 }
 
 For each product, specify a priority of "low", "medium", or "high".
 For pain relievers and gain creators, you don't need to include the relatedPainIds and relatedGainIds arrays.
+
+IMPORTANT: I need high-quality, specific, and detailed content for each item (not generic statements). Generate at least 10 items for each category that are relevant to the business described.
 
 ${outputLanguage === 'deutsch' ? 'Bitte antworte auf Deutsch und erstelle den JSON mit deutschen Inhalten.' : ''}`;
     } else {

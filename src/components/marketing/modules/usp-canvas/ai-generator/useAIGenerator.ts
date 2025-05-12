@@ -20,38 +20,16 @@ export const useAIGenerator = (
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<any>(null);
-  const [rawResponse, setRawResponse] = useState<any>(null);
   const [generationHistory, setGenerationHistory] = useState<any[]>([]);
   const [showDebug, setShowDebug] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<string>('jobs');
   const { ensurePromptExists } = useAgentPrompt('usp_canvas');
 
-  const parseResults = useCallback((rawResponse: any) => {
-    if (!rawResponse || !rawResponse.data) {
-      return {
-        jobsFound: 0,
-        painsFound: 0,
-        gainsFound: 0,
-      };
-    }
-
-    const jobsFound = Array.isArray(rawResponse.data.jobs) ? rawResponse.data.jobs.length : 0;
-    const painsFound = Array.isArray(rawResponse.data.pains) ? rawResponse.data.pains.length : 0;
-    const gainsFound = Array.isArray(rawResponse.data.gains) ? rawResponse.data.gains.length : 0;
-
-    return {
-      jobsFound,
-      painsFound,
-      gainsFound,
-    };
-  }, []);
-
   const generateResult = useCallback(async () => {
     setIsGenerating(true);
     setError(null);
     setDebugInfo(null);
-    setRawResponse(null);
     setProgress(0);
 
     try {
@@ -86,7 +64,7 @@ export const useAIGenerator = (
         gains: gainsResult.data?.gains || [],
       };
 
-      // Set raw response and debug info
+      // Set debug info
       const newGenerationHistory = [
         {
           jobs: jobsResult.debugInfo,
@@ -96,11 +74,6 @@ export const useAIGenerator = (
         ...generationHistory,
       ];
 
-      setRawResponse({
-        jobs: jobsResult,
-        pains: painsResult,
-        gains: gainsResult,
-      });
       setDebugInfo(newGenerationHistory);
       setGenerationHistory(newGenerationHistory);
 
@@ -123,9 +96,6 @@ export const useAIGenerator = (
     activeTab,
     setActiveTab,
     generateResult,
-    generationHistory,
-    rawResponse,
-    parseResults,
     showDebug,
     setShowDebug,
     progress
