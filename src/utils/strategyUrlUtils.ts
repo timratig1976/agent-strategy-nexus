@@ -1,76 +1,84 @@
 
 import { StrategyState } from "@/types/marketing";
 
-// Map StrategyState to URL-friendly slugs
-export const stateToSlug: Record<string, string> = {
-  [StrategyState.BRIEFING]: "briefing",
-  [StrategyState.PERSONA]: "persona",
-  [StrategyState.PAIN_GAINS]: "usp-canvas",
-  [StrategyState.STATEMENTS]: "statements",
-  [StrategyState.CHANNEL_STRATEGY]: "channel-strategy",
-  [StrategyState.FUNNEL]: "funnel",
-  [StrategyState.ROAS_CALCULATOR]: "roas-calculator",
-  [StrategyState.ADS]: "ad-campaign",
-  [StrategyState.COMPLETED]: "completed",
-};
-
-// Map URL-friendly slugs to StrategyState
+/**
+ * Maps URL slugs to StrategyState enum values
+ */
 export const slugToState: Record<string, StrategyState> = {
-  "briefing": StrategyState.BRIEFING,
-  "persona": StrategyState.PERSONA,
-  "usp-canvas": StrategyState.PAIN_GAINS,
-  "statements": StrategyState.STATEMENTS,
-  "channel-strategy": StrategyState.CHANNEL_STRATEGY,
-  "funnel": StrategyState.FUNNEL,
-  "roas-calculator": StrategyState.ROAS_CALCULATOR,
-  "ad-campaign": StrategyState.ADS,
-  "completed": StrategyState.COMPLETED,
+  'briefing': StrategyState.BRIEFING,
+  'persona': StrategyState.PERSONA,
+  'usp-canvas': StrategyState.PAIN_GAINS,
+  'statements': StrategyState.STATEMENTS,
+  'channel-strategy': StrategyState.CHANNEL_STRATEGY,
+  'funnel': StrategyState.FUNNEL,
+  'roas-calculator': StrategyState.ROAS_CALCULATOR,
+  'ad-campaign': StrategyState.ADS,
+  'completed': StrategyState.COMPLETED
 };
 
-// Get stage index for ordering and progression
-export const getStageIndex = (state: StrategyState | string): number => {
-  const stageOrder = [
-    StrategyState.BRIEFING,
-    StrategyState.PERSONA,
-    StrategyState.PAIN_GAINS, 
-    StrategyState.STATEMENTS,
-    StrategyState.CHANNEL_STRATEGY,
-    StrategyState.FUNNEL,
-    StrategyState.ROAS_CALCULATOR,
-    StrategyState.ADS,
-    StrategyState.COMPLETED,
-  ];
-  
-  return stageOrder.indexOf(state as StrategyState);
+/**
+ * Maps StrategyState enum values to URL slugs
+ */
+export const stateToSlug: Record<StrategyState, string> = {
+  [StrategyState.BRIEFING]: 'briefing',
+  [StrategyState.PERSONA]: 'persona',
+  [StrategyState.PAIN_GAINS]: 'usp-canvas',
+  [StrategyState.STATEMENTS]: 'statements',
+  [StrategyState.CHANNEL_STRATEGY]: 'channel-strategy',
+  [StrategyState.FUNNEL]: 'funnel',
+  [StrategyState.ROAS_CALCULATOR]: 'roas-calculator',
+  [StrategyState.ADS]: 'ad-campaign',
+  [StrategyState.COMPLETED]: 'completed'
 };
 
-// Get a list of all stage slugs in order
-export const getOrderedStages = (): string[] => {
-  return [
-    stateToSlug[StrategyState.BRIEFING],
-    stateToSlug[StrategyState.PERSONA],
-    stateToSlug[StrategyState.PAIN_GAINS],
-    stateToSlug[StrategyState.STATEMENTS],
-    stateToSlug[StrategyState.CHANNEL_STRATEGY],
-    stateToSlug[StrategyState.FUNNEL],
-    stateToSlug[StrategyState.ROAS_CALCULATOR],
-    stateToSlug[StrategyState.ADS],
-  ];
+/**
+ * Get the next state in the strategy workflow
+ */
+export const getNextState = (currentState: StrategyState): StrategyState => {
+  switch (currentState) {
+    case StrategyState.BRIEFING:
+      return StrategyState.PERSONA;
+    case StrategyState.PERSONA:
+      return StrategyState.PAIN_GAINS;
+    case StrategyState.PAIN_GAINS:
+      return StrategyState.STATEMENTS;
+    case StrategyState.STATEMENTS:
+      return StrategyState.CHANNEL_STRATEGY;
+    case StrategyState.CHANNEL_STRATEGY:
+      return StrategyState.FUNNEL;
+    case StrategyState.FUNNEL:
+      return StrategyState.ROAS_CALCULATOR;
+    case StrategyState.ROAS_CALCULATOR:
+      return StrategyState.ADS;
+    case StrategyState.ADS:
+      return StrategyState.COMPLETED;
+    default:
+      return StrategyState.COMPLETED;
+  }
 };
 
-// Get human-readable stage names
-export const getStageLabel = (slug: string): string => {
-  const map: Record<string, string> = {
-    "briefing": "Briefing",
-    "persona": "Persona Development", 
-    "usp-canvas": "USP Canvas",
-    "statements": "Pain & Gain Statements",
-    "channel-strategy": "Channel Strategy",
-    "funnel": "Funnel Strategy",
-    "roas-calculator": "ROAS Calculator",
-    "ad-campaign": "Ad Campaign",
-    "completed": "Completed",
-  };
-  
-  return map[slug] || slug;
+/**
+ * Get the previous state in the strategy workflow
+ */
+export const getPreviousState = (currentState: StrategyState): StrategyState => {
+  switch (currentState) {
+    case StrategyState.PERSONA:
+      return StrategyState.BRIEFING;
+    case StrategyState.PAIN_GAINS:
+      return StrategyState.PERSONA;
+    case StrategyState.STATEMENTS:
+      return StrategyState.PAIN_GAINS;
+    case StrategyState.CHANNEL_STRATEGY:
+      return StrategyState.STATEMENTS;
+    case StrategyState.FUNNEL:
+      return StrategyState.CHANNEL_STRATEGY;
+    case StrategyState.ROAS_CALCULATOR:
+      return StrategyState.FUNNEL;
+    case StrategyState.ADS:
+      return StrategyState.ROAS_CALCULATOR;
+    case StrategyState.COMPLETED:
+      return StrategyState.ADS;
+    default:
+      return StrategyState.BRIEFING;
+  }
 };

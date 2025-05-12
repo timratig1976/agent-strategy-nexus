@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Save } from 'lucide-react';
 import StatementsDisplay from './StatementsDisplay';
-import CanvasNavigation from '@/components/marketing/modules/usp-canvas/components/CanvasNavigation';
+import StatementsFooter from './StatementsFooter';
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from '@/components/ui/card';
 
@@ -21,8 +21,10 @@ interface StatementsRightColumnProps {
   onDeleteGainStatement: (id: string) => void;
   onNavigateBack: () => void;
   onSave: () => void;
+  onSaveFinal: () => void;
   onSaveAndContinue: () => void;
   isLoading: boolean;
+  hasChanges: boolean;
   editingStatementId: string | null;
   setEditingStatementId: (id: string | null) => void;
   onAddStatement: (content: string) => void;
@@ -39,8 +41,10 @@ const StatementsRightColumn: React.FC<StatementsRightColumnProps> = ({
   onDeleteGainStatement,
   onNavigateBack,
   onSave,
+  onSaveFinal,
   onSaveAndContinue,
   isLoading,
+  hasChanges,
   editingStatementId,
   setEditingStatementId,
   onAddStatement
@@ -55,9 +59,12 @@ const StatementsRightColumn: React.FC<StatementsRightColumnProps> = ({
     }
   };
 
+  // Determine if we can continue (have at least one pain and one gain statement)
+  const canContinue = painStatements.length > 0 && gainStatements.length > 0;
+
   return (
-    <div className="w-full lg:w-2/3">
-      <div className="bg-white rounded-md border mb-6">
+    <div className="w-full lg:w-2/3 flex flex-col">
+      <div className="bg-white rounded-md border mb-6 flex-grow">
         <div className="p-4 border-b">
           <h2 className="text-xl font-bold">Pain & Gain Statements</h2>
           <p className="text-sm text-gray-500 mt-1">
@@ -140,25 +147,14 @@ const StatementsRightColumn: React.FC<StatementsRightColumnProps> = ({
         </Tabs>
       </div>
       
-      <div className="flex justify-between items-center">
-        <Button
-          variant="outline"
-          onClick={onSave}
-          disabled={isLoading}
-          className="flex items-center gap-2"
-        >
-          <Save className="h-4 w-4" />
-          Save Statements
-        </Button>
-        
-        <CanvasNavigation 
-          onNavigateBack={onNavigateBack}
-          onFinalize={onSaveAndContinue}
-          canFinalize={painStatements.length > 0 && gainStatements.length > 0}
-          prevStageLabel="Back to USP Canvas"
-          nextStageLabel="Continue to Channel Strategy"
-        />
-      </div>
+      <StatementsFooter 
+        onSave={onSave}
+        onSaveFinal={onSaveFinal}
+        onContinue={onSaveAndContinue}
+        isSaving={isLoading}
+        hasChanges={hasChanges}
+        canContinue={canContinue}
+      />
     </div>
   );
 };

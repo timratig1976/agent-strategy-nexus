@@ -17,6 +17,7 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({ strategy }) => {
     isLoading,
     painStatements,
     gainStatements,
+    hasChanges,
     statementsError,
     generationError,
     isGenerating,
@@ -29,9 +30,10 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({ strategy }) => {
     handleGenerateStatements,
     handleAddGeneratedStatements,
     handleSaveCustomPrompt,
+    handleSave,
+    handleSaveFinal,
     handleSaveAndContinue,
     handleNavigateBack,
-    handleSave, 
     handleAddStatement,
     updatePainStatement,
     updateGainStatement,
@@ -84,8 +86,10 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({ strategy }) => {
           onDeleteGainStatement={deleteGainStatement}
           onNavigateBack={handleNavigateBack}
           onSave={handleSave}
+          onSaveFinal={handleSaveFinal}
           onSaveAndContinue={handleSaveAndContinue}
           isLoading={isLoading}
+          hasChanges={hasChanges}
           editingStatementId={editingStatementId}
           setEditingStatementId={setEditingStatementId}
           onAddStatement={(content) => handleAddStatement(content, 'medium')}

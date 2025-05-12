@@ -1,152 +1,211 @@
 
-import { useState, useEffect, useCallback } from "react";
-import { v4 as uuidv4 } from "uuid";
-import { toast } from "sonner";
-import { PainStatement, GainStatement } from "../types";
-import { supabase } from "@/integrations/supabase/client";
-import { UseStatementsDataProps, UseStatementsDataReturn } from "./types";
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { v4 as uuidv4 } from 'uuid';
+import { PainStatement, GainStatement } from '../types';
 
-export const useStatementsData = ({ strategyId }: UseStatementsDataProps): UseStatementsDataReturn => {
+interface UseStatementsDataProps {
+  strategyId: string;
+  onChanges?: (hasChanges: boolean) => void;
+}
+
+export const useStatementsData = ({ strategyId, onChanges }: UseStatementsDataProps) => {
   const [painStatements, setPainStatements] = useState<PainStatement[]>([]);
   const [gainStatements, setGainStatements] = useState<GainStatement[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
+  const [hasLocalChanges, setHasLocalChanges] = useState<boolean>(false);
+
+  // Notify parent component about changes
+  useEffect(() => {
+    if (onChanges) {
+      onChanges(hasLocalChanges);
+    }
+  }, [hasLocalChanges, onChanges]);
 
   // Load statements from database
-  useEffect(() => {
-    const fetchStatements = async () => {
-      if (!strategyId) return;
+  const fetchStatements = useCallback(async () => {
+    if (!strategyId) return;
 
-      try {
-        setIsLoading(true);
-        
-        // Fetch strategy data
-        const { data, error } = await supabase
-          .from('strategies')
-          .select('*')
-          .eq('id', strategyId)
-          .single();
-          
-        if (error) throw error;
-        
-        // Extract statements from metadata
-        if (data) {
-          // Handle both direct metadata property or using the strategy_metadata table
-          const metadata = (data as any).metadata || {};
-          setPainStatements(metadata.painStatements || []);
-          setGainStatements(metadata.gainStatements || []);
-        } else {
-          // Initialize with empty arrays if no metadata
-          setPainStatements([]);
-          setGainStatements([]);
-        }
-      } catch (err: any) {
-        console.error("Error fetching statements:", err);
-        setError(err);
-      } finally {
-        setIsLoading(false);
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Fetch all statements for the strategy
+      const { data, error } = await supabase
+        .from('strategy_statements')
+        .select('*')
+        .eq('strategy_id', strategyId)
+        .order('created_at', { ascending: true });
+      
+      if (error) {
+        throw new Error(`Error fetching statements: ${error.message}`);
       }
-    };
-    
-    fetchStatements();
+      
+      // Process the results into pain and gain statements
+      const painResults: PainStatement[] = [];
+      const gainResults: GainStatement[] = [];
+      
+      if (data && data.length > 0) {
+        data.forEach(item => {
+          const statement = {
+            id: item.id,
+            content: item.content,
+            impact: item.impact || 'medium', 
+            isAiGenerated: item.is_ai_generated || false,
+          };
+          
+          if (item.statement_type === 'pain') {
+            painResults.push(statement as PainStatement);
+          } else if (item.statement_type === 'gain') {
+            gainResults.push(statement as GainStatement);
+          }
+        });
+      }
+      
+      setPainStatements(painResults);
+      setGainStatements(gainResults);
+      setHasLocalChanges(false);
+    } catch (err) {
+      console.error('Error loading statements:', err);
+      setError(err instanceof Error ? err : new Error('Unknown error loading statements'));
+    } finally {
+      setIsLoading(false);
+    }
   }, [strategyId]);
 
-  // Add pain statement
-  const addPainStatement = useCallback((content: string, impact: 'low' | 'medium' | 'high', isAIGenerated = false) => {
+  // Load statements on mount
+  useEffect(() => {
+    fetchStatements();
+  }, [fetchStatements]);
+
+  // Add a new pain statement
+  const addPainStatement = useCallback((content: string, impact: 'low' | 'medium' | 'high' = 'medium', isAiGenerated: boolean = false) => {
     const newStatement: PainStatement = {
       id: uuidv4(),
       content,
       impact,
-      isAIGenerated,
-      createdAt: new Date().toISOString()
+      isAiGenerated,
     };
     
     setPainStatements(prev => [...prev, newStatement]);
+    setHasLocalChanges(true);
   }, []);
-  
-  // Add gain statement
-  const addGainStatement = useCallback((content: string, impact: 'low' | 'medium' | 'high', isAIGenerated = false) => {
+
+  // Add a new gain statement
+  const addGainStatement = useCallback((content: string, impact: 'low' | 'medium' | 'high' = 'medium', isAiGenerated: boolean = false) => {
     const newStatement: GainStatement = {
       id: uuidv4(),
       content,
       impact,
-      isAIGenerated,
-      createdAt: new Date().toISOString()
+      isAiGenerated,
     };
     
     setGainStatements(prev => [...prev, newStatement]);
+    setHasLocalChanges(true);
   }, []);
-  
-  // Update pain statement
+
+  // Update a pain statement
   const updatePainStatement = useCallback((id: string, updates: Partial<PainStatement>) => {
-    setPainStatements(prev => 
-      prev.map(statement => 
-        statement.id === id ? { ...statement, ...updates } : statement
-      )
-    );
+    setPainStatements(prev => prev.map(statement => 
+      statement.id === id ? { ...statement, ...updates } : statement
+    ));
+    setHasLocalChanges(true);
   }, []);
-  
-  // Update gain statement
+
+  // Update a gain statement
   const updateGainStatement = useCallback((id: string, updates: Partial<GainStatement>) => {
-    setGainStatements(prev => 
-      prev.map(statement => 
-        statement.id === id ? { ...statement, ...updates } : statement
-      )
-    );
+    setGainStatements(prev => prev.map(statement => 
+      statement.id === id ? { ...statement, ...updates } : statement
+    ));
+    setHasLocalChanges(true);
   }, []);
-  
-  // Delete pain statement
+
+  // Delete a pain statement
   const deletePainStatement = useCallback((id: string) => {
     setPainStatements(prev => prev.filter(statement => statement.id !== id));
+    setHasLocalChanges(true);
   }, []);
-  
-  // Delete gain statement
+
+  // Delete a gain statement
   const deleteGainStatement = useCallback((id: string) => {
     setGainStatements(prev => prev.filter(statement => statement.id !== id));
+    setHasLocalChanges(true);
   }, []);
 
   // Save statements to database
-  const saveStatements = useCallback(async () => {
-    if (!strategyId) return;
-    
+  const saveStatements = useCallback(async (isFinal: boolean = false) => {
+    if (!strategyId) return false;
+
     try {
-      // First get existing data
-      const { data, error: fetchError } = await supabase
-        .from('strategies')
-        .select('*')
-        .eq('id', strategyId)
-        .single();
+      setIsLoading(true);
+      
+      // Delete all existing statements for this strategy
+      const { error: deleteError } = await supabase
+        .from('strategy_statements')
+        .delete()
+        .eq('strategy_id', strategyId);
+      
+      if (deleteError) {
+        throw new Error(`Error deleting existing statements: ${deleteError.message}`);
+      }
+      
+      // Prepare statements for insertion
+      const statementsToInsert = [
+        ...painStatements.map(statement => ({
+          strategy_id: strategyId,
+          content: statement.content,
+          impact: statement.impact,
+          statement_type: 'pain',
+          is_ai_generated: statement.isAiGenerated,
+        })),
+        ...gainStatements.map(statement => ({
+          strategy_id: strategyId,
+          content: statement.content,
+          impact: statement.impact,
+          statement_type: 'gain',
+          is_ai_generated: statement.isAiGenerated,
+        }))
+      ];
+      
+      if (statementsToInsert.length > 0) {
+        const { error: insertError } = await supabase
+          .from('strategy_statements')
+          .insert(statementsToInsert);
         
-      if (fetchError) throw fetchError;
+        if (insertError) {
+          throw new Error(`Error inserting statements: ${insertError.message}`);
+        }
+      }
       
-      // Update data with statements
-      const updatedMetadata = {
-        ...((data as any)?.metadata || {}),
-        painStatements,
-        gainStatements
-      };
+      // If it's the final version, update the strategy state
+      if (isFinal) {
+        const { error: updateError } = await supabase
+          .from('strategies')
+          .update({ state: 'statements' }) // Mark as having completed the statements phase
+          .eq('id', strategyId);
+          
+        if (updateError) {
+          throw new Error(`Error updating strategy state: ${updateError.message}`);
+        }
+      }
       
-      // Save updated metadata
-      const { error: updateError } = await supabase
-        .from('strategies')
-        .update({ 
-          metadata: updatedMetadata 
-        } as any)
-        .eq('id', strategyId);
-        
-      if (updateError) throw updateError;
-      
-      toast.success("Statements saved successfully");
-    } catch (err: any) {
-      console.error("Error saving statements:", err);
-      toast.error("Failed to save statements");
+      setHasLocalChanges(false);
+      return true;
+    } catch (err) {
+      console.error('Error saving statements:', err);
       throw err;
+    } finally {
+      setIsLoading(false);
     }
   }, [strategyId, painStatements, gainStatements]);
-  
+
   return {
     painStatements,
     gainStatements,
+    isLoading,
+    error,
+    fetchStatements,
     addPainStatement,
     addGainStatement,
     updatePainStatement,
@@ -154,7 +213,7 @@ export const useStatementsData = ({ strategyId }: UseStatementsDataProps): UseSt
     deletePainStatement,
     deleteGainStatement,
     saveStatements,
-    isLoading,
-    error
+    hasLocalChanges,
+    setHasLocalChanges
   };
 };

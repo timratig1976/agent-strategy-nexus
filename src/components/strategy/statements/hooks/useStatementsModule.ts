@@ -17,6 +17,7 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
   const [editingStatementId, setEditingStatementId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [customPrompt, setCustomPrompt] = useState<string>('');
+  const [hasChanges, setHasChanges] = useState<boolean>(false);
   
   // Load custom prompt from settings
   const { userPrompt, systemPrompt } = useAgentPrompt('statements');
@@ -33,8 +34,12 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
     deleteGainStatement,
     saveStatements,
     isLoading: isLoadingStatements,
-    error: statementsError
-  } = useStatementsData({ strategyId });
+    error: statementsError,
+    setHasLocalChanges
+  } = useStatementsData({ 
+    strategyId,
+    onChanges: (hasChanged) => setHasChanges(hasChanged)
+  });
   
   const {
     generateStatements,
@@ -111,32 +116,82 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
     toast.success('Custom prompt saved');
   }, []);
 
+  // Update strategy state function
+  const updateStrategyState = useCallback(async (nextState: StrategyState) => {
+    try {
+      console.log(`Updating strategy state to ${nextState}`);
+      
+      const { error } = await supabase
+        .from('strategies')
+        .update({ state: nextState })
+        .eq('id', strategyId);
+      
+      if (error) {
+        console.error("Error updating strategy state:", error);
+        toast.error("Failed to update strategy state");
+        throw error;
+      }
+      
+      console.log(`Strategy state updated successfully to ${nextState}`);
+      return true;
+    } catch (err) {
+      console.error("Error in updateStrategyState:", err);
+      return false;
+    }
+  }, [strategyId]);
+
   // Save statements and move to next step
   const handleSaveAndContinue = useCallback(async () => {
     setIsLoading(true);
     try {
-      await saveStatements();
-      toast.success('Statements saved successfully');
-      navigateToNextStep(StrategyState.STATEMENTS);
+      // First save the statements
+      await saveStatements(false);
+      
+      // Then update the strategy state
+      const success = await updateStrategyState(StrategyState.CHANNEL_STRATEGY);
+      
+      if (success) {
+        toast.success('Statements saved and proceeding to next step');
+        navigateToNextStep(StrategyState.STATEMENTS);
+      } else {
+        toast.error('Failed to update strategy state');
+      }
     } catch (error) {
-      toast.error('Failed to save statements');
+      toast.error('Failed to save statements and continue');
       console.error(error);
     } finally {
       setIsLoading(false);
+      setHasChanges(false);
     }
-  }, [saveStatements, navigateToNextStep]);
+  }, [saveStatements, navigateToNextStep, updateStrategyState]);
   
   // Handle navigation back to previous step
   const handleNavigateBack = useCallback(() => {
     navigateToPreviousStep(StrategyState.STATEMENTS);
   }, [navigateToPreviousStep]);
 
-  // Just save statements without navigation
+  // Just save statements without navigation (as draft)
   const handleSave = useCallback(async () => {
     setIsLoading(true);
     try {
-      await saveStatements();
-      toast.success('Statements saved successfully');
+      await saveStatements(false);
+      toast.success('Statements saved as draft');
+      setHasChanges(false);
+    } catch (error) {
+      toast.error('Failed to save statements');
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [saveStatements]);
+
+  // Save statements as final
+  const handleSaveFinal = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      await saveStatements(true); // Mark as final
+      toast.success('Statements saved as final');
+      setHasChanges(false);
     } catch (error) {
       toast.error('Failed to save statements');
       console.error(error);
@@ -152,6 +207,7 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
     } else {
       addGainStatement(content, impact);
     }
+    setHasChanges(true);
   }, [activeTab, addPainStatement, addGainStatement]);
 
   return {
@@ -170,12 +226,14 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
     uspCanvasData,
     isLoadingCanvasData,
     customPrompt,
+    hasChanges,
     handleGenerateStatements,
     handleAddGeneratedStatements,
     handleSaveCustomPrompt,
     handleSaveAndContinue,
     handleNavigateBack,
     handleSave,
+    handleSaveFinal,
     handleAddStatement,
     updatePainStatement,
     updateGainStatement,

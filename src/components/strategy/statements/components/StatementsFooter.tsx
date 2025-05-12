@@ -2,9 +2,11 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Save, ArrowRight } from 'lucide-react';
 
 interface StatementsFooterProps {
   onSave: () => void;
+  onSaveFinal: () => void;
   onContinue: () => void; 
   isSaving?: boolean;
   hasChanges?: boolean;
@@ -14,6 +16,7 @@ interface StatementsFooterProps {
 
 const StatementsFooter: React.FC<StatementsFooterProps> = ({
   onSave,
+  onSaveFinal,
   onContinue,
   isSaving = false,
   hasChanges = false,
@@ -39,15 +42,26 @@ const StatementsFooter: React.FC<StatementsFooterProps> = ({
           variant="outline"
           onClick={onSave}
           disabled={isSaving || !hasChanges}
+          className="flex items-center gap-2"
         >
-          {isSaving ? "Saving..." : "Save Statements"}
+          <Save className="h-4 w-4" />
+          Save as Draft
+        </Button>
+        
+        <Button
+          variant="default"
+          onClick={onSaveFinal}
+          disabled={isSaving || (!hasChanges && !canContinue)}
+        >
+          Save Final Version
         </Button>
         
         <Button
           onClick={onContinue}
           disabled={isNavigating || !canContinue || hasChanges}
+          className="flex items-center gap-2"
         >
-          {isNavigating ? "Navigating..." : "Continue to Funnel Strategy"}
+          Continue <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
     </div>
