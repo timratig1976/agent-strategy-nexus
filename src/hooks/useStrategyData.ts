@@ -64,7 +64,8 @@ export const useStrategyData = ({ id }: UseStrategyDataProps) => {
         } as Strategy;
       } catch (err) {
         console.error("Error fetching strategy:", err);
-        toast.error("Failed to load strategy details");
+        // Only show error toast once, not on every retry
+        toast.error("Failed to load strategy details", { id: 'strategy-error' });
         throw err; // Re-throw to let React Query handle it
       }
     },
@@ -77,6 +78,7 @@ export const useStrategyData = ({ id }: UseStrategyDataProps) => {
   const { 
     data: tasks, 
     isLoading: isTasksLoading,
+    error: tasksError,
     refetch: refetchTasks
   } = useQuery({
     queryKey: ['strategy-tasks', id],
@@ -112,17 +114,20 @@ export const useStrategyData = ({ id }: UseStrategyDataProps) => {
         })) as StrategyTask[];
       } catch (err) {
         console.error("Error fetching tasks:", err);
-        toast.error("Failed to load strategy tasks");
-        return [];
+        // Only show error toast once, not on every retry
+        toast.error("Failed to load strategy tasks", { id: 'tasks-error' });
+        return []; // Return empty array on error to prevent endless retry loops
       }
     },
     enabled: !!id && !!strategy, // Only run query if id is available and strategy loaded
+    retry: 1 // Only retry once to prevent endless loops
   });
   
   // Fetch agent results for this strategy
   const { 
     data: agentResults, 
     isLoading: isResultsLoading,
+    error: resultsError,
     refetch: refetchResults
   } = useQuery({
     queryKey: ['strategy-results', id],
@@ -156,11 +161,13 @@ export const useStrategyData = ({ id }: UseStrategyDataProps) => {
         })) as AgentResult[];
       } catch (err) {
         console.error("Error fetching agent results:", err);
-        return [];
+        // Only display toast once
+        toast.error("Failed to load agent results", { id: 'results-error' });
+        return []; // Return empty array on error to prevent endless retry loops
       }
     },
     enabled: !!id && !!strategy, // Only run query if id is available and strategy loaded
-    retry: 2
+    retry: 1 // Only retry once to prevent endless loops
   });
   
   // Handle task changes
@@ -181,7 +188,7 @@ export const useStrategyData = ({ id }: UseStrategyDataProps) => {
     tasks,
     agentResults,
     isLoading: isStrategyLoading || isTasksLoading || isResultsLoading,
-    isError: !!strategyError,
+    isError: !!strategyError || !!tasksError || !!resultsError,
     handleTasksChange,
     refetch
   };

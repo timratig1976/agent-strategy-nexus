@@ -56,14 +56,20 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({ strategy }) => {
     strategyId: strategy.id
   });
   
-  // Show errors via toast
+  // Show errors via toast only once, not repeatedly
   useEffect(() => {
     if (statementsError) {
-      toast.error(`Error loading statements: ${statementsError.message}`);
+      console.error("Statements loading error:", statementsError);
+      toast.error(`Error loading statements: ${statementsError.message}`, {
+        id: 'statements-error', // Add ID to prevent duplicate toasts
+      });
     }
     
     if (generationError) {
-      toast.error(`Error generating statements: ${generationError}`);
+      console.error("Generation error:", generationError);
+      toast.error(`Error generating statements: ${generationError}`, {
+        id: 'generation-error', // Add ID to prevent duplicate toasts
+      });
     }
   }, [statementsError, generationError]);
 
