@@ -5,6 +5,7 @@ import { PainStatement, GainStatement } from '../types';
 import { fetchStatements, saveStatementsToDatabase } from './statementsRepository';
 import { mapToPainStatements, mapToGainStatements } from './statementsMapper';
 import { StrategyState } from '@/types/marketing';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UseStatementsDataProps {
   strategyId: string;
@@ -162,3 +163,4 @@ export const useStatementsData = ({ strategyId, onChanges }: UseStatementsDataPr
     setHasLocalChanges
   };
 };
+
