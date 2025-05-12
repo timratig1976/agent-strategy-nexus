@@ -44,7 +44,7 @@ export const saveStatementsToDatabase = async (
         impact: statement.impact,
         is_ai_generated: statement.isAIGenerated || false,
         statement_type: 'pain',
-        created_at: statement.createdAt
+        created_at: statement.createdAt || new Date().toISOString()
       })),
       ...gainStatements.map(statement => ({
         id: statement.id,
@@ -53,7 +53,7 @@ export const saveStatementsToDatabase = async (
         impact: statement.impact,
         is_ai_generated: statement.isAIGenerated || false,
         statement_type: 'gain',
-        created_at: statement.createdAt
+        created_at: statement.createdAt || new Date().toISOString()
       }))
     ];
 

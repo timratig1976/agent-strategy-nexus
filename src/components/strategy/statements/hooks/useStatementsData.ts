@@ -19,19 +19,24 @@ export const useStatementsData = ({ strategyId }: UseStatementsDataProps): UseSt
       try {
         setIsLoading(true);
         
-        // Fetch strategy metadata which contains statements
+        // Fetch strategy data
         const { data, error } = await supabase
           .from('strategies')
-          .select('metadata')
+          .select('*')
           .eq('id', strategyId)
           .single();
           
         if (error) throw error;
         
         // Extract statements from metadata
-        const metadata = data?.metadata || {};
-        setPainStatements(metadata.painStatements || []);
-        setGainStatements(metadata.gainStatements || []);
+        if (data && data.metadata) {
+          setPainStatements(data.metadata.painStatements || []);
+          setGainStatements(data.metadata.gainStatements || []);
+        } else {
+          // Initialize with empty arrays if no metadata
+          setPainStatements([]);
+          setGainStatements([]);
+        }
       } catch (err: any) {
         console.error("Error fetching statements:", err);
         setError(err);
@@ -100,16 +105,16 @@ export const useStatementsData = ({ strategyId }: UseStatementsDataProps): UseSt
     if (!strategyId) return;
     
     try {
-      // First get existing metadata
+      // First get existing data
       const { data, error: fetchError } = await supabase
         .from('strategies')
-        .select('metadata')
+        .select('*')
         .eq('id', strategyId)
         .single();
         
       if (fetchError) throw fetchError;
       
-      // Update metadata with statements
+      // Update data with statements
       const updatedMetadata = {
         ...(data?.metadata || {}),
         painStatements,
@@ -119,7 +124,9 @@ export const useStatementsData = ({ strategyId }: UseStatementsDataProps): UseSt
       // Save updated metadata
       const { error: updateError } = await supabase
         .from('strategies')
-        .update({ metadata: updatedMetadata })
+        .update({ 
+          metadata: updatedMetadata
+        })
         .eq('id', strategyId);
         
       if (updateError) throw updateError;

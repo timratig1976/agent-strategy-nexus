@@ -18,3 +18,13 @@ export interface UseStatementsDataReturn {
   isLoading: boolean;
   error: Error | null;
 }
+
+export interface StrategyStatementRow {
+  id: string;
+  strategy_id: string;
+  content: string;
+  impact: 'low' | 'medium' | 'high';
+  is_ai_generated: boolean;
+  statement_type: 'pain' | 'gain';
+  created_at: string;
+}

@@ -3,14 +3,16 @@ export interface BaseStatement {
   id: string;
   content: string;
   isAIGenerated?: boolean;
+  impact: 'low' | 'medium' | 'high';
+  createdAt?: string; // Add createdAt property
 }
 
 export interface PainStatement extends BaseStatement {
-  impact: 'low' | 'medium' | 'high';
+  // No need for additional fields as they inherit from BaseStatement
 }
 
 export interface GainStatement extends BaseStatement {
-  impact: 'low' | 'medium' | 'high';
+  // No need for additional fields as they inherit from BaseStatement
 }
 
 export interface StatementFormValues {

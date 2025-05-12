@@ -11,7 +11,8 @@ interface USPCanvasData {
   gainCreators?: any[];
 }
 
-const useUspCanvasData = (strategyId: string) => {
+// Make sure to export the hook as the default export
+export default function useUspCanvasData(strategyId: string) {
   const [uspCanvasData, setUspCanvasData] = useState<USPCanvasData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -23,20 +24,19 @@ const useUspCanvasData = (strategyId: string) => {
       try {
         setIsLoading(true);
         
-        // Fetch strategy metadata which contains USP Canvas data
+        // Fetch strategy with its data
         const { data, error } = await supabase
           .from('strategies')
-          .select('metadata')
+          .select('*')
           .eq('id', strategyId)
           .single();
           
         if (error) throw error;
         
-        // Extract USP Canvas data from metadata
-        const metadata = data?.metadata || {};
-        const canvasData = metadata.uspCanvas || {};
+        // Check if uspCanvas data exists in metadata
+        const uspCanvas = data?.metadata?.uspCanvas || {};
         
-        setUspCanvasData(canvasData);
+        setUspCanvasData(uspCanvas);
       } catch (err: any) {
         console.error("Error fetching USP Canvas data:", err);
         setError(err);
@@ -54,5 +54,3 @@ const useUspCanvasData = (strategyId: string) => {
     error
   };
 };
-
-export default useUspCanvasData;

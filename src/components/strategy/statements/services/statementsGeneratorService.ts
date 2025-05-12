@@ -1,8 +1,14 @@
 
-import { StatementsService, GeneratedStatements } from '@/services/ai/statementsService';
+import { StatementsService } from '@/services/ai/statementsService';
 
 export interface StatementsGenerationOptions {
   strategyId: string;
+}
+
+export interface GeneratedStatements {
+  painStatements: Array<{ content: string; impact: 'low' | 'medium' | 'high' }>;
+  gainStatements: Array<{ content: string; impact: 'low' | 'medium' | 'high' }>;
+  rawOutput?: string;
 }
 
 /**

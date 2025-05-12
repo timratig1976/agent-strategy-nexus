@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAgentGeneration } from "@/hooks/useAgentGeneration";
-import { useUspCanvasData } from "./useUspCanvasData";
+// Fix the import to use default import for useUspCanvasData
+import useUspCanvasData from "./useUspCanvasData";
 import { PainStatement, GainStatement } from "../types";
 
 interface StatementsGenerationResult {
