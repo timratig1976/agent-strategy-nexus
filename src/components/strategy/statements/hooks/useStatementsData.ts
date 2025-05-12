@@ -29,9 +29,11 @@ export const useStatementsData = ({ strategyId }: UseStatementsDataProps): UseSt
         if (error) throw error;
         
         // Extract statements from metadata
-        if (data && data.metadata) {
-          setPainStatements(data.metadata.painStatements || []);
-          setGainStatements(data.metadata.gainStatements || []);
+        if (data) {
+          // Handle both direct metadata property or using the strategy_metadata table
+          const metadata = (data as any).metadata || {};
+          setPainStatements(metadata.painStatements || []);
+          setGainStatements(metadata.gainStatements || []);
         } else {
           // Initialize with empty arrays if no metadata
           setPainStatements([]);
@@ -54,7 +56,8 @@ export const useStatementsData = ({ strategyId }: UseStatementsDataProps): UseSt
       id: uuidv4(),
       content,
       impact,
-      isAIGenerated
+      isAIGenerated,
+      createdAt: new Date().toISOString()
     };
     
     setPainStatements(prev => [...prev, newStatement]);
@@ -66,7 +69,8 @@ export const useStatementsData = ({ strategyId }: UseStatementsDataProps): UseSt
       id: uuidv4(),
       content,
       impact,
-      isAIGenerated
+      isAIGenerated,
+      createdAt: new Date().toISOString()
     };
     
     setGainStatements(prev => [...prev, newStatement]);
@@ -116,7 +120,7 @@ export const useStatementsData = ({ strategyId }: UseStatementsDataProps): UseSt
       
       // Update data with statements
       const updatedMetadata = {
-        ...(data?.metadata || {}),
+        ...((data as any)?.metadata || {}),
         painStatements,
         gainStatements
       };
@@ -125,8 +129,8 @@ export const useStatementsData = ({ strategyId }: UseStatementsDataProps): UseSt
       const { error: updateError } = await supabase
         .from('strategies')
         .update({ 
-          metadata: updatedMetadata
-        })
+          metadata: updatedMetadata 
+        } as any)
         .eq('id', strategyId);
         
       if (updateError) throw updateError;

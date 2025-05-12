@@ -34,7 +34,7 @@ export default function useUspCanvasData(strategyId: string) {
         if (error) throw error;
         
         // Check if uspCanvas data exists in metadata
-        const uspCanvas = data?.metadata?.uspCanvas || {};
+        const uspCanvas = ((data as any)?.metadata?.uspCanvas) || {};
         
         setUspCanvasData(uspCanvas);
       } catch (err: any) {
