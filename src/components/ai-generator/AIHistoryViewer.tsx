@@ -53,7 +53,11 @@ const AIHistoryViewer = <T extends AIGenerationResult>({
                     )}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {item.createdAt && formatDistanceToNow(new Date(item.createdAt instanceof Date ? item.createdAt : item.createdAt), { addSuffix: true })}
+                    {item.createdAt && formatDistanceToNow(new Date(
+                      typeof item.createdAt === 'object' && item.createdAt !== null && 'getTime' in item.createdAt 
+                        ? item.createdAt 
+                        : item.createdAt
+                    ), { addSuffix: true })}
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground line-clamp-2">
