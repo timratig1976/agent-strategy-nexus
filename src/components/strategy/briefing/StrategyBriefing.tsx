@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -172,7 +171,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   // Use BriefingEditorPanel instead of BriefingResult
   const rightContent = (
     <BriefingEditorPanel
-      title="Strategy Briefing"
+      title="AI Generator"
       latestBriefing={latestBriefing}
       editedContent={editedContent}
       setEditedContent={setEditedContent}
@@ -184,7 +183,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
       aiDebugInfo={aiDebugInfo}
       error={error}
       generateBriefing={handleGenerateBriefing}
-      handleSaveBriefing={saveAgentResult}
+      handleSaveBriefing={(isFinal: boolean) => saveAgentResult(editedContent, isFinal)}
       enhancerExpanded={enhancerExpanded}
       toggleEnhancerExpanded={toggleEnhancerExpanded}
       showPromptMonitor={showPromptMonitor}
