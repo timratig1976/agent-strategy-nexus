@@ -8,14 +8,6 @@ import { AIPromptSettingsTab } from "@/components/settings";
 import StripeSetup from "@/components/settings/StripeSetup";
 import { DebugSettings } from "@/components/strategy/debug";
 
-// Dummy props for CompanyProfileTab with correct type
-const dummyUserId = "current-user";
-const dummyDefaultValues = {
-  name: "",
-  website: "",
-  logo_url: ""
-};
-
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("company-profile");
 
@@ -37,10 +29,7 @@ const Settings = () => {
           </TabsList>
 
           <TabsContent value="company-profile">
-            <CompanyProfileTab
-              userId={dummyUserId}
-              defaultValues={dummyDefaultValues}
-            />
+            <CompanyProfileTab />
           </TabsContent>
           
           <TabsContent value="api-keys">

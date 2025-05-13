@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,28 +15,29 @@ import {
 import { Loader2, Plus, Save, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Strategy } from "@/types/marketing";
 
 interface AdCreativeGeneratorProps {
-  data: any;
-  strategy: Strategy;
-  onSave: (data: any) => Promise<boolean> | void;
+  campaignData: any;
+  onSaveCampaign: (data: any, isFinal?: boolean) => void;
+  strategyId: string;
+  funnelData: any;
   isLoading: boolean;
 }
 
 const AdCreativeGenerator: React.FC<AdCreativeGeneratorProps> = ({
-  data,
-  strategy,
-  onSave,
+  campaignData,
+  onSaveCampaign,
+  strategyId,
+  funnelData,
   isLoading
 }) => {
   const [adCreatives, setAdCreatives] = useState<any[]>(
-    data?.adCreatives || []
+    campaignData?.adCreatives || []
   );
   
   const [selectedAdSet, setSelectedAdSet] = useState<string>(
-    data?.adSets && data.adSets.length > 0
-      ? data.adSets[0].id
+    campaignData?.adSets && campaignData.adSets.length > 0
+      ? campaignData.adSets[0].id
       : ""
   );
   
@@ -111,20 +113,14 @@ const AdCreativeGenerator: React.FC<AdCreativeGeneratorProps> = ({
   };
   
   // Save ad creatives
-  const handleSave = async () => {
+  const handleSave = () => {
     const updatedCampaign = {
-      ...(data || {}),
+      ...(campaignData || {}),
       adCreatives: adCreatives,
       lastUpdated: new Date().toISOString()
     };
     
-    const success = await onSave(updatedCampaign);
-    
-    if (success) {
-      toast.success("Ad creatives saved successfully!");
-    } else {
-      toast.error("Failed to save ad creatives.");
-    }
+    onSaveCampaign(updatedCampaign);
   };
   
   // Generate ad creative based on funnel data and selected ad set
@@ -138,7 +134,7 @@ const AdCreativeGenerator: React.FC<AdCreativeGeneratorProps> = ({
     
     try {
       // Find the selected ad set
-      const selectedAdSetData = data?.adSets?.find(
+      const selectedAdSetData = campaignData?.adSets?.find(
         (adSet: any) => adSet.id === selectedAdSet
       );
       
@@ -208,7 +204,7 @@ const AdCreativeGenerator: React.FC<AdCreativeGeneratorProps> = ({
   }
   
   // Check if we have any ad sets defined
-  const hasAdSets = data?.adSets && data.adSets.length > 0;
+  const hasAdSets = campaignData?.adSets && campaignData.adSets.length > 0;
 
   return (
     <div className="space-y-6">
@@ -279,7 +275,7 @@ const AdCreativeGenerator: React.FC<AdCreativeGeneratorProps> = ({
               <SelectValue placeholder="Select an ad set" />
             </SelectTrigger>
             <SelectContent>
-              {data.adSets.map((adSet: any) => (
+              {campaignData.adSets.map((adSet: any) => (
                 <SelectItem key={adSet.id} value={adSet.id}>
                   {adSet.name}
                 </SelectItem>
@@ -443,7 +439,7 @@ const AdCreativeGenerator: React.FC<AdCreativeGeneratorProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {adCreatives.map((creative) => {
             // Find the ad set this creative belongs to
-            const adSet = data?.adSets?.find((adSet: any) => adSet.id === creative.adSetId);
+            const adSet = campaignData?.adSets?.find((adSet: any) => adSet.id === creative.adSetId);
             
             return (
               <Card key={creative.id}>

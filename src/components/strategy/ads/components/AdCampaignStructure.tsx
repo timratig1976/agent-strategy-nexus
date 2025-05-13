@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,33 +14,30 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Save, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { Strategy } from "@/types/marketing";
 
 interface AdCampaignStructureProps {
-  data: any;
-  campaign: any;
-  strategy: Strategy;
-  onSave: (data: any) => Promise<boolean> | void;
+  campaignData: any;
+  onSaveCampaign: (data: any, isFinal?: boolean) => void;
+  strategyId: string;
   isLoading: boolean;
 }
 
 const AdCampaignStructure: React.FC<AdCampaignStructureProps> = ({
-  data,
-  campaign,
-  strategy,
-  onSave,
+  campaignData,
+  onSaveCampaign,
+  strategyId,
   isLoading
 }) => {
   const [campaignName, setCampaignName] = useState<string>(
-    data?.name || ""
+    campaignData?.name || ""
   );
   
   const [campaignObjective, setCampaignObjective] = useState<string>(
-    data?.objective || "BRAND_AWARENESS"
+    campaignData?.objective || "BRAND_AWARENESS"
   );
   
   const [adSets, setAdSets] = useState<any[]>(
-    data?.adSets || []
+    campaignData?.adSets || []
   );
   
   const [isAddingAdSet, setIsAddingAdSet] = useState<boolean>(false);
@@ -84,21 +82,21 @@ const AdCampaignStructure: React.FC<AdCampaignStructureProps> = ({
   };
   
   // Save campaign structure
-  const handleSaveCampaign = async (campaignData: any) => {
+  const handleSaveCampaign = () => {
     if (!campaignName) {
       toast.error("Please enter a campaign name");
       return;
     }
     
     const campaign = {
-      ...data,
+      ...campaignData,
       name: campaignName,
       objective: campaignObjective,
       adSets: adSets,
       lastUpdated: new Date().toISOString()
     };
     
-    await onSave(campaign);
+    onSaveCampaign(campaign);
   };
   
   if (isLoading) {
@@ -115,7 +113,7 @@ const AdCampaignStructure: React.FC<AdCampaignStructureProps> = ({
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Campaign Structure</h3>
         <Button 
-          onClick={() => handleSaveCampaign(data)}
+          onClick={handleSaveCampaign}
           className="flex items-center gap-2"
         >
           <Save className="h-4 w-4" />
@@ -205,34 +203,34 @@ const AdCampaignStructure: React.FC<AdCampaignStructureProps> = ({
                       </SelectItem>
                     ))}
                   </SelectContent>
-              </Select>
+                </Select>
+              </div>
             </div>
-          </div>
             
-          <div className="space-y-2">
-            <Label htmlFor="ad-set-description">Description (Optional)</Label>
-            <Textarea
-              id="ad-set-description"
-              value={newAdSetDescription}
-              onChange={(e) => setNewAdSetDescription(e.target.value)}
-              placeholder="Enter ad set description"
-              rows={3}
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="ad-set-description">Description (Optional)</Label>
+              <Textarea
+                id="ad-set-description"
+                value={newAdSetDescription}
+                onChange={(e) => setNewAdSetDescription(e.target.value)}
+                placeholder="Enter ad set description"
+                rows={3}
+              />
+            </div>
             
-          <div className="flex justify-end space-x-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsAddingAdSet(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleAddAdSet}>
-              Add Ad Set
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsAddingAdSet(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleAddAdSet}>
+                Add Ad Set
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
       
       {adSets.length === 0 ? (

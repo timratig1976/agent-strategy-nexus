@@ -14,7 +14,6 @@ export interface GeneratedStatements {
   painStatements: Array<{ content: string; impact: 'low' | 'medium' | 'high' }>;
   gainStatements: Array<{ content: string; impact: 'low' | 'medium' | 'high' }>;
   rawOutput?: string;
-  debugInfo?: any; // Adding debugInfo property to match the expected type
 }
 
 export class StatementsService {
@@ -61,8 +60,7 @@ export class StatementsService {
       return {
         painStatements: data.result.painStatements || [],
         gainStatements: data.result.gainStatements || [],
-        rawOutput: data.result.rawOutput,
-        debugInfo: data.result.debugInfo // Explicitly include debugInfo in the return
+        rawOutput: data.result.rawOutput
       };
     } catch (error: any) {
       console.error('Statements generation service error:', error);

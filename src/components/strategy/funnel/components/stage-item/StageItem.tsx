@@ -44,7 +44,7 @@ export const StageItem: React.FC<StageItemProps> = ({
         <div className="flex flex-col">
           <h3 className="text-lg font-medium">{stage.name}</h3>
           <span className="text-xs text-muted-foreground">
-            Stage {index + 1} • {stage.touchpoints?.length || 0} touchpoints
+            Stage {index + 1} • {stage.touchPoints?.length || 0} touchpoints
           </span>
         </div>
         
@@ -60,7 +60,7 @@ export const StageItem: React.FC<StageItemProps> = ({
       <CardContent className="py-3 px-4">
         {/* Touchpoints List */}
         <TouchpointsList 
-          touchpoints={stage.touchpoints || []} 
+          touchpoints={stage.touchPoints || []} 
           onRemove={(id) => onRemoveTouchpoint(stage.id, id)}
         />
         

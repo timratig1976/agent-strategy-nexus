@@ -18,11 +18,6 @@ export class ResultManager {
     agentId: string | null = null
   ): Promise<AgentResult | null> {
     try {
-      // Ensure metadata is a proper object
-      const metadataObj = typeof metadata === 'string' 
-        ? JSON.parse(metadata) 
-        : metadata;
-        
       // Insert the agent result into the database
       const { data, error } = await supabase
         .from('agent_results')
@@ -30,8 +25,7 @@ export class ResultManager {
           strategy_id: strategyId,
           agent_id: agentId,
           content: content,
-          // Use type assertion to handle JSON compatibility
-          metadata: metadataObj as any // Force type for Supabase compatibility
+          metadata: metadata
         })
         .select()
         .single();
@@ -42,14 +36,13 @@ export class ResultManager {
       }
 
       // Map the database result to the AgentResult type
-      // Handle conversion from Supabase's Json type to our app's type
       return {
         id: data.id,
         agentId: data.agent_id || '',
         strategyId: data.strategy_id,
         content: data.content,
         createdAt: data.created_at,
-        metadata: data.metadata as Record<string, any> // Use type assertion to handle the Json type
+        metadata: data.metadata
       };
     } catch (error) {
       console.error("Exception saving agent result:", error);

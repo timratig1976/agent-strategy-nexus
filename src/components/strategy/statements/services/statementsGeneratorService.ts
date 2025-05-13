@@ -9,8 +9,6 @@ export interface GeneratedStatements {
   painStatements: Array<{ content: string; impact: 'low' | 'medium' | 'high' }>;
   gainStatements: Array<{ content: string; impact: 'low' | 'medium' | 'high' }>;
   rawOutput?: string;
-  error?: string;
-  debugInfo?: any;
 }
 
 /**
@@ -30,25 +28,13 @@ export class StatementsGeneratorService {
 
     try {
       // Call the statements service to generate statements
-      const result = await StatementsService.generateStatements({
+      return await StatementsService.generateStatements({
         strategyId,
         uspData
       });
-      
-      // Map the result to our expected structure
-      return {
-        painStatements: result.painStatements || [],
-        gainStatements: result.gainStatements || [],
-        rawOutput: result.rawOutput,
-        debugInfo: result.debugInfo
-      };
     } catch (error: any) {
       console.error('Error in statements generation service:', error);
-      return {
-        painStatements: [],
-        gainStatements: [],
-        error: error.message || 'An error occurred while generating statements'
-      };
+      throw error;
     }
   }
 }

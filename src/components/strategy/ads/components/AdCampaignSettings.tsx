@@ -1,18 +1,20 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"; // Fixed import path
 import { Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface AdCampaignSettingsProps {
-  data: any;
-  onSave: (data: any) => Promise<boolean> | void;
+  campaignData: any;
+  onSaveCampaign: (data: any, isFinal?: boolean) => void;
+  strategyId: string;
   isLoading: boolean;
 }
 
 const AdCampaignSettings: React.FC<AdCampaignSettingsProps> = ({
-  data,
-  onSave,
+  campaignData,
+  onSaveCampaign,
+  strategyId,
   isLoading
 }) => {
   if (isLoading) {
