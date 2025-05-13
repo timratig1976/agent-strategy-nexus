@@ -1,7 +1,9 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Save, Check } from "lucide-react";
+import { Save, Check, History } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { AgentResult } from "@/types/marketing";
 
 interface BriefingActionBarProps {
   onSave: () => Promise<void>;
@@ -9,6 +11,12 @@ interface BriefingActionBarProps {
   isGenerating: boolean;
   saveButtonText?: string;
   saveFinalButtonText?: string;
+  // Add the missing props
+  briefingHistory?: AgentResult[];
+  onSelectHistoricalVersion?: (content: string) => void;
+  aiDebugInfo?: any;
+  showPromptMonitor?: boolean;
+  togglePromptMonitor?: () => void;
 }
 
 export const BriefingActionBar: React.FC<BriefingActionBarProps> = ({
@@ -16,7 +24,12 @@ export const BriefingActionBar: React.FC<BriefingActionBarProps> = ({
   onSaveFinal,
   isGenerating,
   saveButtonText = "Save Draft",
-  saveFinalButtonText = "Save as Final"
+  saveFinalButtonText = "Save as Final",
+  briefingHistory,
+  onSelectHistoricalVersion,
+  aiDebugInfo,
+  showPromptMonitor,
+  togglePromptMonitor
 }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false);
@@ -66,9 +79,28 @@ export const BriefingActionBar: React.FC<BriefingActionBarProps> = ({
     }
   };
 
+  // Render the history button only if briefingHistory and onSelectHistoricalVersion are provided
+  const renderHistoryButton = () => {
+    if (!briefingHistory || !onSelectHistoricalVersion) return null;
+    
+    return (
+      <Button 
+        variant="outline" 
+        size="sm"
+        onClick={togglePromptMonitor}
+        className="flex items-center gap-1"
+      >
+        <History className="h-4 w-4" />
+        History
+      </Button>
+    );
+  };
+
   return (
     <div className="flex justify-between items-center mt-4">
-      <div />
+      <div>
+        {renderHistoryButton()}
+      </div>
       <div className="flex gap-2">
         <Button
           onClick={handleSave}

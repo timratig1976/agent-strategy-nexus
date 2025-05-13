@@ -7,6 +7,7 @@ import { AlertCircle, Sparkles } from "lucide-react";
 import BriefingContentEditor from "./BriefingContentEditor";
 import BriefingActionBar from "./BriefingActionBar";
 import BriefingAIEnhancer from "./BriefingAIEnhancer";
+import BriefingHistorySheet from "./BriefingHistorySheet";
 import PromptMonitor from "./PromptMonitor";
 import { AgentResult } from "@/types/marketing";
 import { Progress } from "@/components/ui/progress";
@@ -140,14 +141,10 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-lg font-medium">Output</h3>
             
-            {/* History button moved here next to Output heading */}
-            <BriefingActionBar 
-              isGenerating={isGenerating}
+            {/* History button displayed separately */}
+            <BriefingHistorySheet 
               briefingHistory={briefingHistory}
               onSelectHistoricalVersion={onSelectHistoricalVersion}
-              aiDebugInfo={null} // Setting to null since we moved the AI debug toggle to the header
-              showPromptMonitor={showPromptMonitor}
-              togglePromptMonitor={togglePromptMonitor}
             />
           </div>
           
@@ -162,26 +159,16 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
             />
           </div>
         </div>
-        
-        {/* Removed the inline PromptMonitor as it's now in the sheet */}
       </CardContent>
       
       <CardFooter className="flex gap-2 w-full">
-        <Button 
-          variant="outline" 
-          onClick={() => handleSaveBriefing(false)} 
-          disabled={isGenerating || !editedContent.trim()} 
-          className="flex-1"
-        >
-          {saveButtonText}
-        </Button>
-        <Button 
-          onClick={() => handleSaveBriefing(true)} 
-          disabled={isGenerating || !editedContent.trim()}
-          className="flex-1"
-        >
-          {saveFinalButtonText}
-        </Button>
+        <BriefingActionBar
+          onSave={() => handleSaveBriefing(false)}
+          onSaveFinal={() => handleSaveBriefing(true)}
+          isGenerating={isGenerating}
+          saveButtonText={saveButtonText}
+          saveFinalButtonText={saveFinalButtonText}
+        />
       </CardFooter>
     </Card>
   );
