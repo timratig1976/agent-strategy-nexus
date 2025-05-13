@@ -3,12 +3,13 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Sparkles } from "lucide-react";
 import BriefingContentEditor from "./BriefingContentEditor";
 import BriefingActionBar from "./BriefingActionBar";
 import BriefingAIEnhancer from "./BriefingAIEnhancer";
 import PromptMonitor from "./PromptMonitor";
 import { AgentResult } from "@/types/marketing";
+import { Progress } from "@/components/ui/progress";
 
 interface BriefingEditorPanelProps {
   title: string;
@@ -59,8 +60,6 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
 }) => {
   const handleGenerate = () => {
     generateBriefing(enhancementText);
-    setEnhancementText("");
-    toggleEnhancerExpanded();
   };
 
   const onSelectHistoricalVersion = (content: string) => {
@@ -73,8 +72,6 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
         <CardTitle>{title}</CardTitle>
         <BriefingActionBar 
           isGenerating={isGenerating}
-          generateButtonText={generateButtonText}
-          onGenerate={handleGenerate}
           briefingHistory={briefingHistory}
           onSelectHistoricalVersion={onSelectHistoricalVersion}
           aiDebugInfo={aiDebugInfo}
@@ -95,19 +92,41 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
           </Alert>
         )}
         
-        {/* Special Instructions first with progress bar */}
-        <BriefingAIEnhancer 
-          enhancementText={enhancementText} 
-          setEnhancementText={setEnhancementText}
-          isExpanded={enhancerExpanded}
-          onToggleExpand={toggleEnhancerExpanded}
-          onSubmit={handleGenerate}
-          isGenerating={isGenerating}
-          progress={progress}
-        />
+        {/* AI Generator section - separated from the output */}
+        <div className="mb-6 border rounded-lg p-4 bg-muted/20">
+          {/* Special Instructions without internal generate button */}
+          <BriefingAIEnhancer 
+            enhancementText={enhancementText} 
+            setEnhancementText={setEnhancementText}
+            isExpanded={enhancerExpanded}
+            onToggleExpand={toggleEnhancerExpanded}
+          />
+          
+          {/* Progress bar positioned between instructions and generate button */}
+          {isGenerating && (
+            <div className="space-y-2 mt-4 mb-4">
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>Generating briefing...</span>
+                <span>{Math.round(progress)}%</span>
+              </div>
+              <Progress value={progress} className="w-full" />
+            </div>
+          )}
+          
+          {/* Generate button moved under the special instructions */}
+          <Button 
+            className="w-full mt-4 flex gap-1 items-center" 
+            onClick={handleGenerate}
+            disabled={isGenerating}
+          >
+            <Sparkles className="h-4 w-4" /> 
+            {isGenerating ? "Generating..." : generateButtonText}
+          </Button>
+        </div>
         
-        {/* Content Editor */}
-        <div className="flex-grow mt-4">
+        {/* Content Editor - separated from the AI generator section */}
+        <div className="flex-grow">
+          <h3 className="text-lg font-medium mb-2">Output</h3>
           <BriefingContentEditor 
             content={latestBriefing?.content || ""} 
             editedContent={editedContent}
