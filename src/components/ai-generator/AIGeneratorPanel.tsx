@@ -15,7 +15,7 @@ import AIDebugMonitor from "./AIDebugMonitor";
 /**
  * Main component for AI content generation
  */
-const AIGeneratorPanel = <T extends { id?: string; content: string; createdAt?: string | Date; metadata?: Record<string, any> }>({
+const AIGeneratorPanel = ({
   title,
   latestResult,
   editedContent,
@@ -37,7 +37,7 @@ const AIGeneratorPanel = <T extends { id?: string; content: string; createdAt?: 
   saveButtonText = "Save Draft",
   saveFinalButtonText = "Save as Final",
   placeholderText = "Generated content will appear here..."
-}: AIGeneratorPanelProps<T>) => {
+}: AIGeneratorPanelProps) => {
   const handleGenerate = () => {
     generateContent(enhancementText);
   };
