@@ -135,7 +135,7 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
             disabled={isGenerating}
           >
             <Sparkles className="h-4 w-4" /> 
-            {isGenerating ? "Generating..." : generateButtonText}
+            {isGenerating ? "Generating..." : "Generate"}
           </Button>
         </div>
         
