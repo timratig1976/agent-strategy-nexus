@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { StrategyBriefingProps } from "./types";
 
 // Import components
-import { BriefingResult } from "./components/briefing-result/BriefingResult";
+import BriefingEditorPanel from "./components/briefing-result/BriefingEditorPanel";
 import { BriefingHeader, BriefingLayout } from "./components";
 import StrategyInfoCard from "./components/strategy-info/StrategyInfoCard";
 import WebsiteCrawlerWrapper from "./WebsiteCrawlerWrapper";
@@ -15,6 +15,8 @@ import WebsiteCrawlerWrapper from "./WebsiteCrawlerWrapper";
 import { useBriefingGenerator } from "./hooks/useBriefingGenerator";
 import { useStrategyMetadata } from "./hooks/useStrategyMetadata";
 import { useAgentResultSaver } from "./hooks/useAgentResultSaver";
+import { useBriefingEditor } from "./hooks/useBriefingEditor";
+import { useBriefingViewer } from "./hooks/useBriefingViewer";
 
 const StrategyBriefing: React.FC<StrategyBriefingProps> = ({ 
   strategy, 
@@ -24,6 +26,7 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   const [showCrawler, setShowCrawler] = useState<boolean>(false);
   const [crawlResults, setCrawlResults] = useState<any | null>(null);
   const [hasFinalBriefing, setHasFinalBriefing] = useState<boolean>(false);
+  const [enhancementText, setEnhancementText] = useState<string>("");
   
   // Use our custom hook for form state management
   const { formValues, saveStrategyMetadata: saveMetadata } = useStrategyMetadata(strategy.id);
@@ -41,6 +44,14 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
     aiDebugInfo,
     error
   } = useBriefingGenerator(strategy.id);
+
+  // Use our custom hooks for the editor panel
+  const {
+    showPromptMonitor,
+    enhancerExpanded,
+    togglePromptMonitor,
+    toggleEnhancerExpanded
+  } = useBriefingViewer();
   
   // Check if there's a final briefing in the history
   useEffect(() => {
@@ -56,6 +67,16 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
   const latestBriefing = briefingHistory.length > 0 
     ? briefingHistory[0] 
     : (agentResults && agentResults.length > 0 ? agentResults[0] : null);
+
+  // Use the briefing editor hook
+  const { 
+    editedContent, 
+    setEditedContent, 
+    resetContent 
+  } = useBriefingEditor({
+    initialContent: latestBriefing?.content || '',
+    isGenerating
+  });
 
   // Navigate to persona development
   const goToNextStep = async () => {
@@ -148,19 +169,30 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
     />
   );
   
-  // Determine what to show on the right side
+  // Use BriefingEditorPanel instead of BriefingResult
   const rightContent = (
-    <BriefingResult 
+    <BriefingEditorPanel
+      title="Strategy Briefing"
       latestBriefing={latestBriefing}
+      editedContent={editedContent}
+      setEditedContent={setEditedContent}
+      enhancementText={enhancementText}
+      setEnhancementText={setEnhancementText}
       isGenerating={isGenerating}
       progress={progress}
-      generateBriefing={handleGenerateBriefing}
-      saveAgentResult={saveAgentResult}
       briefingHistory={briefingHistory}
-      setBriefingHistory={setBriefingHistory}
-      onBriefingSaved={handleBriefingSaved}
       aiDebugInfo={aiDebugInfo}
       error={error}
+      generateBriefing={handleGenerateBriefing}
+      handleSaveBriefing={saveAgentResult}
+      enhancerExpanded={enhancerExpanded}
+      toggleEnhancerExpanded={toggleEnhancerExpanded}
+      showPromptMonitor={showPromptMonitor}
+      togglePromptMonitor={togglePromptMonitor}
+      generateButtonText="Generate Briefing"
+      saveButtonText="Save Draft"
+      saveFinalButtonText="Save as Final"
+      placeholderText="The AI will generate your marketing strategy briefing here..."
     />
   );
 
