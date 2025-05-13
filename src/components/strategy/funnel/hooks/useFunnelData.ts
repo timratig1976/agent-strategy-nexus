@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FunnelData, FunnelStage } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -11,7 +11,10 @@ export const useFunnelData = (strategyId: string) => {
   });
   
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasChanges, setHasChanges] = useState<boolean>(false);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
 
   // Load funnel data from the database
   useEffect(() => {
@@ -44,7 +47,12 @@ export const useFunnelData = (strategyId: string) => {
           try {
             const parsedContent = JSON.parse(data.content);
             
-            if (parsedContent && Array.isArray(parsedContent.stages)) {
+            if (parsedContent && Array.isArray(parsedContent)) {
+              setFunnelData({
+                strategyId,
+                stages: parsedContent as FunnelStage[]
+              });
+            } else if (parsedContent && Array.isArray(parsedContent.stages)) {
               setFunnelData({
                 strategyId,
                 stages: parsedContent.stages as FunnelStage[]
@@ -56,6 +64,13 @@ export const useFunnelData = (strategyId: string) => {
                 stages: []
               });
             }
+            
+            // Update debug info
+            setDebugInfo({
+              loadedData: data,
+              parsedContent: parsedContent
+            });
+            
           } catch (parseError) {
             console.error('Error parsing funnel data:', parseError);
             setError('Invalid funnel data format');
@@ -67,6 +82,8 @@ export const useFunnelData = (strategyId: string) => {
             stages: []
           });
         }
+        
+        setHasChanges(false);
       } catch (err: any) {
         console.error('Exception loading funnel data:', err);
         setError(err.message);
@@ -78,14 +95,19 @@ export const useFunnelData = (strategyId: string) => {
     loadFunnelData();
   }, [strategyId]);
 
+  // Handle stages change
+  const handleStagesChange = useCallback((stages: FunnelStage[]) => {
+    setFunnelData(prev => ({
+      ...prev,
+      stages
+    }));
+    setHasChanges(true);
+  }, []);
+
   // Function to save funnel data
-  const saveFunnelData = async (updatedData: FunnelData): Promise<boolean> => {
+  const handleSave = async (): Promise<boolean> => {
     try {
-      // Update content and ensure it has strategyId
-      const dataToSave = {
-        ...updatedData,
-        strategyId: strategyId
-      };
+      setIsSaving(true);
       
       // First, update the final status of any existing final funnel results
       await supabase.rpc('update_agent_results_final_status', {
@@ -98,10 +120,10 @@ export const useFunnelData = (strategyId: string) => {
         .from('agent_results')
         .insert({
           strategy_id: strategyId,
-          content: JSON.stringify(dataToSave.stages),
+          content: JSON.stringify(funnelData.stages),
           metadata: {
             type: 'funnel',
-            is_final: 'true',
+            is_final: true,
             source: 'user_edit',
             timestamp: new Date().toISOString()
           }
@@ -112,13 +134,13 @@ export const useFunnelData = (strategyId: string) => {
         throw new Error(error.message);
       }
       
-      // Update local state
-      setFunnelData(dataToSave);
-      
+      setHasChanges(false);
       return true;
     } catch (err) {
       console.error('Exception saving funnel data:', err);
       return false;
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -126,7 +148,11 @@ export const useFunnelData = (strategyId: string) => {
     funnelData,
     setFunnelData,
     isLoading,
+    isSaving,
     error,
-    saveFunnelData
+    hasChanges,
+    handleStagesChange,
+    handleSave,
+    debugInfo
   };
 };

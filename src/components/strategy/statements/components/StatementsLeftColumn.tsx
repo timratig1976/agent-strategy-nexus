@@ -41,12 +41,12 @@ const StatementsLeftColumn: React.FC<StatementsLeftColumnProps> = ({
       {/* AI Generator */}
       <StatementsAIGenerator 
         onGenerate={onGenerate}
-        onAddStatements={onAddGeneratedStatements}
         isGenerating={isGenerating}
         progress={progress}
         disabled={!isDataAvailable}
         customPrompt={customPrompt}
         onSaveCustomPrompt={onCustomPromptSave}
+        onAddGeneratedStatements={onAddGeneratedStatements}
       />
     </div>
   );

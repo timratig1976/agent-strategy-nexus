@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -59,7 +60,7 @@ export const BriefingResult: React.FC<StrategyBriefingResultProps> = ({
       await saveAgentResult(latestBriefing.content, isFinal);
       
       toast.success(`Briefing saved as ${isFinal ? 'final' : 'draft'}`);
-      onBriefingSaved(isFinal);
+      onBriefingSaved && onBriefingSaved(isFinal);
     } catch (error) {
       console.error("Error saving briefing:", error);
       toast.error("Failed to save briefing");
@@ -106,7 +107,7 @@ export const BriefingResult: React.FC<StrategyBriefingResultProps> = ({
           </Button>
           
           <Button 
-            variant="primary"
+            variant="secondary"
             onClick={() => handleSaveBriefing(true)}
             disabled={isFinalizing || isGenerating || !latestBriefing?.content}
             aria-label="Finalize Briefing"
@@ -145,3 +146,5 @@ export const BriefingResult: React.FC<StrategyBriefingResultProps> = ({
     </div>
   );
 };
+
+export default BriefingResult;

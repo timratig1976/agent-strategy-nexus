@@ -8,6 +8,16 @@ import { AIPromptSettingsTab } from "@/components/settings";
 import StripeSetup from "@/components/settings/StripeSetup";
 import { DebugSettings } from "@/components/strategy/debug";
 
+// Dummy props for CompanyProfileTab until we implement proper user management
+const dummyUserId = "current-user";
+const dummyDefaultValues = {
+  companyName: "",
+  industry: "",
+  employeeCount: "",
+  website: "",
+  logoUrl: ""
+};
+
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("company-profile");
 
@@ -29,7 +39,10 @@ const Settings = () => {
           </TabsList>
 
           <TabsContent value="company-profile">
-            <CompanyProfileTab />
+            <CompanyProfileTab
+              userId={dummyUserId}
+              defaultValues={dummyDefaultValues}
+            />
           </TabsContent>
           
           <TabsContent value="api-keys">

@@ -1,10 +1,10 @@
-
 export interface FunnelStage {
   id: string;
   name: string;
   description?: string;
   order: number;
   touchpoints?: FunnelTouchpoint[];
+  keyMetrics?: string[];
 }
 
 export interface FunnelTouchpoint {
@@ -20,5 +20,8 @@ export interface FunnelData {
   stages: FunnelStage[];
 }
 
-// Re-export types from the parent directory
+export interface FunnelStrategyModuleProps {
+  strategy: any;
+}
+
 export * from '../types';

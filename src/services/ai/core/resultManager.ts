@@ -18,6 +18,11 @@ export class ResultManager {
     agentId: string | null = null
   ): Promise<AgentResult | null> {
     try {
+      // Ensure metadata is a proper object
+      const metadataObj = typeof metadata === 'string' 
+        ? JSON.parse(metadata) 
+        : metadata;
+        
       // Insert the agent result into the database
       const { data, error } = await supabase
         .from('agent_results')
@@ -25,7 +30,7 @@ export class ResultManager {
           strategy_id: strategyId,
           agent_id: agentId,
           content: content,
-          metadata: metadata
+          metadata: metadataObj
         })
         .select()
         .single();
