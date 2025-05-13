@@ -1,139 +1,135 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Copy, CheckCircle, AlertCircle } from "lucide-react";
-import { toast } from 'sonner';
-import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { StrategyDebugPanel } from "@/components/strategy/debug";
-import { useStrategyDebug } from "@/hooks/useStrategyDebug";
 
-interface StatementsAIGeneratorProps {
-  customPrompt: string;
-  onCustomPromptSave: (prompt: string) => Promise<void>;
-  onGenerate: (additionalPrompt?: string) => Promise<{ painStatements: any[]; gainStatements: any[]; }>;
-  onAddGeneratedStatements: (painStatements: any[], gainStatements: any[]) => void;
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { Progress } from '@/components/ui/progress';
+
+export interface StatementsAIGeneratorProps {
+  onGenerate: (customPrompt?: string) => Promise<any>;
   isGenerating: boolean;
   progress: number;
+  disabled?: boolean;
+  customPrompt?: string;
+  onSaveCustomPrompt?: (prompt: string) => void;
+  onAddGeneratedStatements: (painStatements: any[], gainStatements: any[]) => void;
 }
 
 const StatementsAIGenerator: React.FC<StatementsAIGeneratorProps> = ({
-  customPrompt,
-  onCustomPromptSave,
   onGenerate,
-  onAddGeneratedStatements,
   isGenerating,
   progress,
+  disabled = false,
+  customPrompt = '',
+  onSaveCustomPrompt,
+  onAddGeneratedStatements
 }) => {
-  const [generatedPainStatements, setGeneratedPainStatements] = useState<string[]>([]);
-  const [generatedGainStatements, setGeneratedGainStatements] = useState<string[]>([]);
-  const [additionalPrompt, setAdditionalPrompt] = useState<string>('');
-  const [isCustomPromptSaved, setIsCustomPromptSaved] = useState<boolean>(false);
-  const [isGenerationComplete, setIsGenerationComplete] = useState<boolean>(false);
-  
-  const { isDebugEnabled, setDebugInfo } = useStrategyDebug();
-  
-  const handleGenerate = useCallback(async () => {
-    setIsGenerationComplete(false);
-    
-    const { painStatements, gainStatements } = await onGenerate(additionalPrompt);
-    
-    setGeneratedPainStatements(painStatements);
-    setGeneratedGainStatements(gainStatements);
-    setIsGenerationComplete(true);
-  }, [onGenerate, additionalPrompt]);
+  const [showCustomPrompt, setShowCustomPrompt] = useState(false);
+  const [prompt, setPrompt] = useState(customPrompt);
+  const [generatedStatements, setGeneratedStatements] = useState<{
+    painStatements: any[];
+    gainStatements: any[];
+  } | null>(null);
 
-  const handleAddStatements = useCallback(() => {
-    onAddGeneratedStatements(generatedPainStatements, generatedGainStatements);
-    setGeneratedPainStatements([]);
-    setGeneratedGainStatements([]);
-    setIsGenerationComplete(false);
-    toast.success("Statements added successfully!");
-  }, [onAddGeneratedStatements, generatedPainStatements, generatedGainStatements]);
+  const handleGenerate = async () => {
+    if (isGenerating) return;
+    
+    try {
+      const result = await onGenerate(showCustomPrompt ? prompt : undefined);
+      if (result && result.painStatements && result.gainStatements) {
+        setGeneratedStatements(result);
+      }
+    } catch (error) {
+      console.error('Error generating statements:', error);
+    }
+  };
 
-  const handleSaveCustomPrompt = useCallback(async () => {
-    await onCustomPromptSave(customPrompt);
-    setIsCustomPromptSaved(true);
-    toast.success("Custom prompt saved successfully!");
-  }, [onCustomPromptSave, customPrompt]);
-  
-  // Reset state when generation starts
-  useEffect(() => {
-    if (isGenerating) {
-      setIsGenerationComplete(false);
+  const handleAddGeneratedStatements = () => {
+    if (generatedStatements) {
+      onAddGeneratedStatements(
+        generatedStatements.painStatements,
+        generatedStatements.gainStatements
+      );
+      setGeneratedStatements(null);
     }
-  }, [isGenerating]);
-  
-  // Update debug info when generation happens
-  useEffect(() => {
-    if (isDebugEnabled && isGenerating) {
-      // Inside the actual StatementsModule, we'll set the debug info
-      // This component just displays it
+  };
+
+  const handleSaveCustomPrompt = () => {
+    if (onSaveCustomPrompt) {
+      onSaveCustomPrompt(prompt);
     }
-  }, [isDebugEnabled, isGenerating]);
+  };
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardContent className="space-y-4">
+    <Card>
+      <CardHeader>
+        <CardTitle>AI Statement Generator</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {showCustomPrompt && (
           <div className="space-y-2">
-            <Label htmlFor="additional-prompt">Additional Prompt (Optional)</Label>
             <Textarea
-              id="additional-prompt"
-              placeholder="Add any specific instructions or context here..."
-              value={additionalPrompt}
-              onChange={(e) => setAdditionalPrompt(e.target.value)}
+              placeholder="Enter custom instructions for the AI..."
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              rows={5}
+              className="w-full"
             />
+            {onSaveCustomPrompt && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSaveCustomPrompt}
+                disabled={isGenerating}
+              >
+                Save Custom Prompt
+              </Button>
+            )}
           </div>
-          
-          <Button 
-            onClick={handleGenerate} 
-            disabled={isGenerating}
-          >
-            {isGenerating ? 'Generating...' : 'Generate Statements'}
-          </Button>
-          
-          {isGenerating && (
-            <Progress value={progress} className="mt-2" />
-          )}
-        </CardContent>
-      </Card>
-
-      {isGenerationComplete && (
-        <Card>
-          <CardContent className="space-y-4">
-            {generatedPainStatements.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium">Generated Pain Statements</h4>
-                <ul className="list-disc pl-5 space-y-1">
-                  {generatedPainStatements.map((statement, index) => (
-                    <li key={index}>{statement}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {generatedGainStatements.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium">Generated Gain Statements</h4>
-                <ul className="list-disc pl-5 space-y-1">
-                  {generatedGainStatements.map((statement, index) => (
-                    <li key={index}>{statement}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </CardContent>
-          <CardFooter>
-            <Button onClick={handleAddStatements}>Add Statements</Button>
-          </CardFooter>
-        </Card>
-      )}
-    </div>
+        )}
+        
+        {isGenerating && (
+          <div className="space-y-2">
+            <Progress value={progress} className="w-full" />
+            <p className="text-sm text-center text-muted-foreground">
+              Generating statements... {progress}%
+            </p>
+          </div>
+        )}
+        
+        {generatedStatements && !isGenerating && (
+          <div className="space-y-2">
+            <p className="text-sm">
+              Generated {generatedStatements.painStatements.length} pain statements and {generatedStatements.gainStatements.length} gain statements.
+            </p>
+            <Button 
+              onClick={handleAddGeneratedStatements} 
+              variant="outline" 
+              size="sm"
+            >
+              Add to Statements
+            </Button>
+          </div>
+        )}
+      </CardContent>
+      <CardFooter className="flex justify-between">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowCustomPrompt(!showCustomPrompt)}
+          disabled={isGenerating}
+        >
+          {showCustomPrompt ? 'Hide Custom Prompt' : 'Custom Prompt'}
+        </Button>
+        
+        <Button 
+          onClick={handleGenerate} 
+          disabled={disabled || isGenerating}
+        >
+          {isGenerating ? 'Generating...' : 'Generate Statements'}
+        </Button>
+      </CardFooter>
+    </Card>
   );
 };
 

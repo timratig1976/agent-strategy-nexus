@@ -16,6 +16,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
+// Update the type to match what's expected
 type CompanySettings = {
   name: string;
   website: string;

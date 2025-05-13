@@ -43,6 +43,9 @@ export interface BriefingResultProps {
   placeholderText?: string;
 }
 
+// Renamed to match expected type in BriefingResult.tsx
+export interface StrategyBriefingResultProps extends BriefingResultProps {}
+
 export interface EnhancerProps {
   enhancementText: string;
   setEnhancementText: (text: string) => void;

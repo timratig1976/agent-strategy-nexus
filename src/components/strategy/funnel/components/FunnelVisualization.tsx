@@ -94,7 +94,7 @@ const FunnelVisualization: React.FC<FunnelVisualizationProps> = ({
                     <h3 className="font-medium">{stage.name}</h3>
                     <div className="flex justify-center items-center gap-2">
                       <span className="text-xs opacity-80">
-                        {stage.touchPoints?.length || 0} touchpoints
+                        {stage.touchpoints?.length || 0} touchpoints
                       </span>
                       {stage.keyMetrics && stage.keyMetrics.length > 0 && (
                         <span className="text-xs px-2 py-0.5 bg-white/20 rounded-full">

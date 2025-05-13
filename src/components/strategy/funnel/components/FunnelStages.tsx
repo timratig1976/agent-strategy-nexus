@@ -23,7 +23,8 @@ const FunnelStages: React.FC<FunnelStagesProps> = ({ stages, onStagesChange }) =
       id: uuidv4(),
       name: newStageName,
       description: "",
-      touchPoints: [],
+      order: stages.length,
+      touchpoints: [],
       keyMetrics: []
     };
     
@@ -53,6 +54,7 @@ const FunnelStages: React.FC<FunnelStagesProps> = ({ stages, onStagesChange }) =
       id: uuidv4(),
       name: touchpointName,
       description: "",
+      type: "default",
       channel: "default"
     };
     
@@ -60,7 +62,7 @@ const FunnelStages: React.FC<FunnelStagesProps> = ({ stages, onStagesChange }) =
       if (stage.id === stageId) {
         return {
           ...stage,
-          touchPoints: [...(stage.touchPoints || []), newTouchpoint]
+          touchpoints: [...(stage.touchpoints || []), newTouchpoint]
         };
       }
       return stage;
@@ -75,7 +77,7 @@ const FunnelStages: React.FC<FunnelStagesProps> = ({ stages, onStagesChange }) =
       if (stage.id === stageId) {
         return {
           ...stage,
-          touchPoints: (stage.touchPoints || []).filter(tp => tp.id !== touchpointId)
+          touchpoints: (stage.touchpoints || []).filter(tp => tp.id !== touchpointId)
         };
       }
       return stage;

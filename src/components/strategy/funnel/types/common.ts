@@ -1,4 +1,6 @@
 
+import { Strategy } from '@/types/marketing';
+
 export interface FunnelStage {
   id: string;
   name: string;
@@ -22,5 +24,5 @@ export interface FunnelData {
 }
 
 export interface FunnelStrategyModuleProps {
-  strategy: any;
+  strategy: Strategy;
 }

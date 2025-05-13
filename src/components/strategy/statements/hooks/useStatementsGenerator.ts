@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from 'react';
-import { useUspCanvasData } from './useUspCanvasData';
-import { statementsGeneratorService } from '../services/statementsGeneratorService';
+import useUspCanvasData from './useUspCanvasData';
+import { StatementsGeneratorService } from '../services/statementsGeneratorService';
 
 /**
  * Hook for generating statements from USP Canvas data
@@ -43,11 +43,9 @@ export const useStatementsGenerator = (strategyId: string) => {
       }, 500);
 
       // Generate statements
-      const result = await statementsGeneratorService.generateStatements(
+      const result = await StatementsGeneratorService.generateStatements(
         strategyId,
-        additionalPrompt,
-        uspCanvasData,
-        outputLanguage
+        uspCanvasData
       );
 
       clearInterval(progressInterval);
@@ -63,8 +61,8 @@ export const useStatementsGenerator = (strategyId: string) => {
       
       setProgress(100);
       return {
-        painStatements: result.data.painStatements || [],
-        gainStatements: result.data.gainStatements || []
+        painStatements: result.painStatements || [],
+        gainStatements: result.gainStatements || []
       };
     } catch (error: any) {
       console.error("Error generating statements:", error);
