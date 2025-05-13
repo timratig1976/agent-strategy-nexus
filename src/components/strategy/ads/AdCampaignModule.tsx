@@ -39,6 +39,7 @@ const AdCampaignModule: React.FC<AdCampaignModuleProps> = ({
       try {
         setIsLoading(true);
         
+        // Use the correct table name that we just created in the database
         const { data, error } = await supabase
           .from('ad_campaigns')
           .select('*')
@@ -64,6 +65,7 @@ const AdCampaignModule: React.FC<AdCampaignModuleProps> = ({
             structure: {}
           });
         } else if (data) {
+          // Parse the JSONB content field
           setCampaignData(data.content || {});
           
           // Store debug info

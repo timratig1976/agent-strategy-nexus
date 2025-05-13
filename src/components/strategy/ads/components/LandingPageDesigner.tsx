@@ -1,20 +1,21 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button"; // Fixed import path
+import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Strategy } from "@/types/marketing";
 
 interface LandingPageDesignerProps {
-  campaignData: any;
-  onSaveCampaign: (data: any, isFinal?: boolean) => void;
-  strategyId: string;
+  data: any;
+  strategy: Strategy;
+  onSave: (data: any) => Promise<boolean> | void;
   isLoading: boolean;
 }
 
 const LandingPageDesigner: React.FC<LandingPageDesignerProps> = ({
-  campaignData,
-  onSaveCampaign,
-  strategyId,
+  data,
+  strategy,
+  onSave,
   isLoading
 }) => {
   if (isLoading) {

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,22 +9,23 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Save, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Strategy } from "@/types/marketing";
 
 interface TargetAudienceBuilderProps {
-  campaignData: any;
-  onSaveCampaign: (data: any, isFinal?: boolean) => void;
-  strategyId: string;
+  data: any;
+  strategy: Strategy;
+  onSave: (data: any) => Promise<boolean> | void;
   isLoading: boolean;
 }
 
 const TargetAudienceBuilder: React.FC<TargetAudienceBuilderProps> = ({
-  campaignData,
-  onSaveCampaign,
-  strategyId,
+  data,
+  strategy,
+  onSave,
   isLoading
 }) => {
   const [audiences, setAudiences] = useState<any[]>(
-    campaignData?.targetAudiences || []
+    data?.targetAudiences || []
   );
   
   const [personaData, setPersonaData] = useState<any>(null);
@@ -57,7 +57,7 @@ const TargetAudienceBuilder: React.FC<TargetAudienceBuilderProps> = ({
         const { data, error } = await supabase
           .from("agent_results")
           .select("*")
-          .eq("strategy_id", strategyId)
+          .eq("strategy_id", strategy.id)
           .eq("metadata->>type", "persona")
           .eq("metadata->>is_final", "true")
           .order("created_at", { ascending: false })
@@ -81,7 +81,7 @@ const TargetAudienceBuilder: React.FC<TargetAudienceBuilderProps> = ({
     };
     
     loadPersonaData();
-  }, [strategyId]);
+  }, [strategy.id]);
   
   // Handle adding a new audience
   const handleAddAudience = () => {
@@ -128,12 +128,12 @@ const TargetAudienceBuilder: React.FC<TargetAudienceBuilderProps> = ({
   // Save target audiences
   const handleSave = () => {
     const updatedCampaign = {
-      ...(campaignData || {}),
+      ...(data || {}),
       targetAudiences: audiences,
       lastUpdated: new Date().toISOString()
     };
     
-    onSaveCampaign(updatedCampaign);
+    onSave(updatedCampaign);
   };
   
   // Add interest to the new audience
