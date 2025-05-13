@@ -80,7 +80,7 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
         />
       </CardHeader>
       
-      <CardContent className="flex-grow flex flex-col">
+      <CardContent className="flex-grow flex flex-col space-y-6">
         {/* Display error if present */}
         {error && (
           <Alert variant="destructive" className="mb-4">
@@ -92,8 +92,10 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
           </Alert>
         )}
         
-        {/* AI Generator section - separated from the output */}
-        <div className="mb-6 border rounded-lg p-4 bg-muted/20">
+        {/* AI Generator section - now with border and clear separation */}
+        <div className="border rounded-lg p-4 bg-muted/10">
+          <h3 className="text-lg font-medium mb-3">AI Generator</h3>
+          
           {/* Special Instructions without internal generate button */}
           <BriefingAIEnhancer 
             enhancementText={enhancementText} 
@@ -124,17 +126,19 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
           </Button>
         </div>
         
-        {/* Content Editor - separated from the AI generator section */}
-        <div className="flex-grow">
-          <h3 className="text-lg font-medium mb-2">Output</h3>
-          <BriefingContentEditor 
-            content={latestBriefing?.content || ""} 
-            editedContent={editedContent}
-            setEditedContent={setEditedContent}
-            isGenerating={isGenerating}
-            progress={progress}
-            placeholder={placeholderText}
-          />
+        {/* Content Editor - now with border and clear separation */}
+        <div className="border rounded-lg p-4 flex-grow">
+          <h3 className="text-lg font-medium mb-3">Output</h3>
+          <div className="h-full">
+            <BriefingContentEditor 
+              content={latestBriefing?.content || ""} 
+              editedContent={editedContent}
+              setEditedContent={setEditedContent}
+              isGenerating={isGenerating}
+              progress={progress}
+              placeholder={placeholderText}
+            />
+          </div>
         </div>
         
         {showPromptMonitor && aiDebugInfo && (
