@@ -1,94 +1,90 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { UspCanvasAIResult } from '@/services/ai/types';
-import { supabase } from '@/integrations/supabase/client';
-import useUspCanvasData from './useUspCanvasData';
+import { useState, useCallback } from 'react';
+import { useUspCanvasData } from './useUspCanvasData';
+import { statementsGeneratorService } from '../services/statementsGeneratorService';
 
-interface GeneratedStatement {
-  id: string;
-  content: string;
-  impact: 'low' | 'medium' | 'high';
-  isAIGenerated: boolean;
-  createdAt: string;
-}
-
-interface GeneratedStatements {
-  painStatements: GeneratedStatement[];
-  gainStatements: GeneratedStatement[];
-}
-
-const useStatementsGenerator = (strategyId: string) => {
+/**
+ * Hook for generating statements from USP Canvas data
+ */
+export const useStatementsGenerator = (strategyId: string) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
   
-  const { uspCanvasData, isLoading: isLoadingCanvasData } = useUspCanvasData(strategyId);
-  
-  // Generate statements using AI
-  const generateStatements = useCallback(
-    async (customPrompt: string = '', outputLanguage: string = 'english'): Promise<GeneratedStatements> => {
-      if (!strategyId) {
-        throw new Error('Strategy ID is required');
-      }
+  // Get USP Canvas data
+  const {
+    uspCanvasData,
+    isLoading: isLoadingCanvasData,
+    error: canvasError
+  } = useUspCanvasData(strategyId);
 
-      try {
-        setIsGenerating(true);
-        setProgress(10);
-        
-        const payload = {
-          strategyId,
-          uspData: uspCanvasData,
-          customPrompt: customPrompt || '',
-          outputLanguage: outputLanguage || 'english',
-          minStatements: 5
-        };
-        
-        setProgress(30);
-        
-        console.log('Generating statements with payload:', payload);
-        
-        // Call the Edge function to generate statements
-        const { data, error } = await supabase.functions.invoke('statements-generator', {
-          body: payload
+  /**
+   * Generate statements from USP Canvas data
+   */
+  const generateStatements = useCallback(async (
+    additionalPrompt: string = '',
+    outputLanguage: string = 'english'
+  ) => {
+    try {
+      setIsGenerating(true);
+      setError(null);
+      setProgress(10);
+
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
         });
-        
-        if (error) {
-          console.error('Error from statements-generator:', error);
-          throw new Error(error.message);
-        }
-        
-        if (!data) {
-          throw new Error('No data returned from statements generator');
-        }
+      }, 500);
 
-        setProgress(90);
-        
-        console.log('Generated statements:', data);
-        
-        // Return the generated statements
-        return {
-          painStatements: data.painStatements || [],
-          gainStatements: data.gainStatements || []
-        };
-      } catch (err: any) {
-        console.error('Error generating statements:', err);
-        setError(err.message);
-        throw err;
-      } finally {
-        setProgress(100);
-        setIsGenerating(false);
+      // Generate statements
+      const result = await statementsGeneratorService.generateStatements(
+        strategyId,
+        additionalPrompt,
+        uspCanvasData,
+        outputLanguage
+      );
+
+      clearInterval(progressInterval);
+
+      if (result.error) {
+        setError(result.error);
+        setProgress(0);
+        return { painStatements: [], gainStatements: [] };
       }
-    },
-    [strategyId, uspCanvasData]
-  );
-  
+
+      // Store debug info
+      setDebugInfo(result.debugInfo);
+      
+      setProgress(100);
+      return {
+        painStatements: result.data.painStatements || [],
+        gainStatements: result.data.gainStatements || []
+      };
+    } catch (error: any) {
+      console.error("Error generating statements:", error);
+      setError(error.message || "Failed to generate statements");
+      setProgress(0);
+      return { painStatements: [], gainStatements: [] };
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [strategyId, uspCanvasData]);
+
   return {
     generateStatements,
     isGenerating,
     progress,
     error,
     uspCanvasData,
-    isLoadingCanvasData
+    isLoadingCanvasData,
+    canvasError,
+    debugInfo
   };
 };
 

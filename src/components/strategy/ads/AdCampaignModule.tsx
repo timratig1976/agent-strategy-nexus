@@ -1,187 +1,278 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Strategy } from "@/types/marketing";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
-import { toast } from "sonner";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import AdCampaignSettings from "./components/AdCampaignSettings";
+import TargetAudienceBuilder from "./components/TargetAudienceBuilder";
+import AdCreativeGenerator from "./components/AdCreativeGenerator";
+import LandingPageDesigner from "./components/LandingPageDesigner";
+import AdCampaignStructure from "./components/AdCampaignStructure";
 import { supabase } from "@/integrations/supabase/client";
-
-// Import components for each stage
-import { 
-  AdCampaignStructure,
-  AdCreativeGenerator,
-  TargetAudienceBuilder,
-  AdCampaignSettings,
-  LandingPageDesigner
-} from "./components";
+import { StrategyDebugPanel } from "@/components/strategy/debug";
+import { useStrategyDebug } from "@/hooks/useStrategyDebug";
 
 interface AdCampaignModuleProps {
   strategy: Strategy;
-  onNavigateBack: () => void;
+  onNavigateBack?: () => void;
 }
 
-const AdCampaignModule: React.FC<AdCampaignModuleProps> = ({
+const AdCampaignModule: React.FC<AdCampaignModuleProps> = ({ 
   strategy,
-  onNavigateBack
+  onNavigateBack 
 }) => {
-  const [activeTab, setActiveTab] = useState<string>("structure");
+  const [activeTab, setActiveTab] = useState<string>("settings");
   const [campaignData, setCampaignData] = useState<any>({});
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [debugInfo, setLocalDebugInfo] = useState<any>(null);
+
+  // Use our strategy debug hook
+  const { isDebugEnabled, setDebugInfo } = useStrategyDebug();
   
-  // Get saved campaign data on mount
-  React.useEffect(() => {
+  // Load campaign data on initial render
+  useEffect(() => {
     const loadCampaignData = async () => {
+      if (!strategy.id) return;
+      
       try {
         setIsLoading(true);
         
         const { data, error } = await supabase
-          .from('agent_results')
+          .from('ad_campaigns')
           .select('*')
           .eq('strategy_id', strategy.id)
-          .eq('metadata->>type', 'ad_campaign')
-          .order('created_at', { ascending: false })
-          .maybeSingle();
+          .single();
           
-        if (error) throw error;
-        
-        if (data) {
-          try {
-            const parsedData = JSON.parse(data.content);
-            setCampaignData(parsedData);
-          } catch (e) {
-            console.error("Error parsing campaign data:", e);
+        if (error) {
+          if (error.code !== 'PGRST116') { // Not found error is ok for new campaigns
+            console.error("Error loading campaign data:", error);
+          }
+          
+          // Set default campaign data
+          setCampaignData({
+            settings: {
+              name: `Campaign for ${strategy.name}`,
+              platform: 'meta',
+              budget: 1000,
+              duration: 30
+            },
+            audience: {},
+            creative: {},
+            landingPage: {},
+            structure: {}
+          });
+        } else if (data) {
+          setCampaignData(data.content || {});
+          
+          // Store debug info
+          const loadDebugInfo = {
+            type: 'ad_campaign_load',
+            timestamp: new Date().toISOString(),
+            data: data,
+            success: true
+          };
+          
+          setLocalDebugInfo(loadDebugInfo);
+          
+          if (isDebugEnabled) {
+            setDebugInfo(loadDebugInfo);
           }
         }
       } catch (err) {
-        console.error("Error loading campaign data:", err);
-        toast.error("Failed to load campaign data");
+        console.error("Exception loading campaign data:", err);
       } finally {
         setIsLoading(false);
       }
     };
     
     loadCampaignData();
-  }, [strategy.id]);
-  
-  // Save campaign data
-  const saveCampaignData = async (data: any, isFinal: boolean = false) => {
+  }, [strategy.id, isDebugEnabled, setDebugInfo]);
+
+  // Update debug info when it changes
+  useEffect(() => {
+    if (isDebugEnabled && debugInfo) {
+      setDebugInfo(debugInfo);
+    }
+  }, [isDebugEnabled, debugInfo, setDebugInfo]);
+
+  const handleSave = async (tabData: any, tabName: string) => {
+    if (!strategy.id) return;
+    
     try {
-      setIsSaving(true);
+      const updatedCampaignData = {
+        ...campaignData,
+        [tabName]: tabData
+      };
       
-      const content = JSON.stringify(data);
+      const savePayload = {
+        strategy_id: strategy.id,
+        content: updatedCampaignData
+      };
       
-      const { error } = await supabase
-        .from('agent_results')
-        .insert({
-          strategy_id: strategy.id,
-          agent_id: null,
-          content: content,
-          metadata: {
-            type: 'ad_campaign',
-            is_final: isFinal,
-            saved_at: new Date().toISOString()
-          }
-        });
+      const debugPayload = {
+        type: 'ad_campaign_save',
+        timestamp: new Date().toISOString(),
+        requestData: savePayload
+      };
+      
+      setLocalDebugInfo(debugPayload);
+      
+      // Check if record exists
+      const { data: existing, error: checkError } = await supabase
+        .from('ad_campaigns')
+        .select('id')
+        .eq('strategy_id', strategy.id)
+        .maybeSingle();
         
-      if (error) throw error;
+      if (checkError) {
+        console.error('Error checking campaign existence:', checkError);
+        throw new Error(checkError.message);
+      }
       
-      setCampaignData(data);
-      toast.success("Campaign data saved successfully");
-    } catch (err) {
+      let result;
+      
+      if (existing) {
+        // Update existing record
+        result = await supabase
+          .from('ad_campaigns')
+          .update(savePayload)
+          .eq('strategy_id', strategy.id);
+      } else {
+        // Insert new record
+        result = await supabase
+          .from('ad_campaigns')
+          .insert(savePayload);
+      }
+      
+      if (result.error) {
+        console.error("Error saving campaign data:", result.error);
+        throw new Error(result.error.message);
+      }
+      
+      // Update local state
+      setCampaignData(updatedCampaignData);
+      
+      // Update debug info with success
+      const successPayload = {
+        ...debugPayload,
+        success: true,
+        responseData: { status: 'success' }
+      };
+      
+      setLocalDebugInfo(successPayload);
+      
+      if (isDebugEnabled) {
+        setDebugInfo(successPayload);
+      }
+      
+      return true;
+    } catch (err: any) {
       console.error("Error saving campaign data:", err);
-      toast.error("Failed to save campaign data");
-    } finally {
-      setIsSaving(false);
+      
+      // Update debug info with error
+      const errorPayload = {
+        type: 'ad_campaign_save',
+        timestamp: new Date().toISOString(),
+        error: err.message,
+        success: false
+      };
+      
+      setLocalDebugInfo(errorPayload);
+      
+      if (isDebugEnabled) {
+        setDebugInfo(errorPayload);
+      }
+      
+      return false;
     }
   };
-  
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Ad Campaign Strategy</h2>
-        <div className="space-x-2">
-          <Button 
-            variant="outline" 
-            onClick={onNavigateBack}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to ROAS Calculator
-          </Button>
-          
-          <Button
-            onClick={() => saveCampaignData(campaignData, true)}
-            disabled={isSaving}
-            className="flex items-center gap-2"
-          >
-            <Save className="h-4 w-4" />
-            {isSaving ? "Saving..." : "Save Campaign"}
-          </Button>
-        </div>
+      <div className="flex justify-between items-center">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onNavigateBack}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Strategy
+        </Button>
+        <h2 className="text-2xl font-bold">Ad Campaign</h2>
       </div>
-      
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-5 w-full">
-          <TabsTrigger value="structure" className="text-xs md:text-sm">1. Campaign Structure</TabsTrigger>
-          <TabsTrigger value="audience" className="text-xs md:text-sm">2. Target Audience</TabsTrigger>
-          <TabsTrigger value="creative" className="text-xs md:text-sm">3. Ad Creative</TabsTrigger>
-          <TabsTrigger value="settings" className="text-xs md:text-sm">4. Campaign Settings</TabsTrigger>
-          <TabsTrigger value="landing" className="text-xs md:text-sm">5. Landing Pages</TabsTrigger>
-        </TabsList>
-        
-        <Card className="mt-4">
-          <CardContent className="pt-6">
-            <TabsContent value="structure" className="m-0">
-              <AdCampaignStructure 
-                campaignData={campaignData} 
-                onSaveCampaign={saveCampaignData} 
-                strategyId={strategy.id}
-                isLoading={isLoading}
-              />
-            </TabsContent>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Campaign Planner</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid grid-cols-5">
+              <TabsTrigger value="settings">Settings</TabsTrigger>
+              <TabsTrigger value="audience">Audience</TabsTrigger>
+              <TabsTrigger value="creative">Creative</TabsTrigger>
+              <TabsTrigger value="landing-page">Landing Page</TabsTrigger>
+              <TabsTrigger value="structure">Structure</TabsTrigger>
+            </TabsList>
             
-            <TabsContent value="audience" className="m-0">
-              <TargetAudienceBuilder 
-                campaignData={campaignData} 
-                onSaveCampaign={saveCampaignData} 
-                strategyId={strategy.id}
-                isLoading={isLoading}
-              />
-            </TabsContent>
-            
-            <TabsContent value="creative" className="m-0">
-              <AdCreativeGenerator 
-                campaignData={campaignData} 
-                onSaveCampaign={saveCampaignData} 
-                strategyId={strategy.id}
-                funnelData={null} // Will be implemented later
-                isLoading={isLoading}
-              />
-            </TabsContent>
-            
-            <TabsContent value="settings" className="m-0">
+            <TabsContent value="settings">
               <AdCampaignSettings 
-                campaignData={campaignData} 
-                onSaveCampaign={saveCampaignData} 
-                strategyId={strategy.id}
+                data={campaignData.settings || {}}
+                onSave={(data) => handleSave(data, 'settings')}
                 isLoading={isLoading}
               />
             </TabsContent>
             
-            <TabsContent value="landing" className="m-0">
-              <LandingPageDesigner 
-                campaignData={campaignData} 
-                onSaveCampaign={saveCampaignData} 
-                strategyId={strategy.id}
+            <TabsContent value="audience">
+              <TargetAudienceBuilder 
+                data={campaignData.audience || {}}
+                strategy={strategy}
+                onSave={(data) => handleSave(data, 'audience')}
                 isLoading={isLoading}
               />
             </TabsContent>
-          </CardContent>
-        </Card>
-      </Tabs>
+            
+            <TabsContent value="creative">
+              <AdCreativeGenerator 
+                data={campaignData.creative || {}}
+                strategy={strategy}
+                onSave={(data) => handleSave(data, 'creative')}
+                isLoading={isLoading}
+              />
+            </TabsContent>
+            
+            <TabsContent value="landing-page">
+              <LandingPageDesigner 
+                data={campaignData.landingPage || {}}
+                strategy={strategy}
+                onSave={(data) => handleSave(data, 'landingPage')}
+                isLoading={isLoading}
+              />
+            </TabsContent>
+            
+            <TabsContent value="structure">
+              <AdCampaignStructure 
+                data={campaignData.structure || {}}
+                campaign={campaignData}
+                strategy={strategy}
+                onSave={(data) => handleSave(data, 'structure')}
+                isLoading={isLoading}
+              />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* Debug panel */}
+      {isDebugEnabled && debugInfo && (
+        <StrategyDebugPanel 
+          debugInfo={debugInfo} 
+          title="Ad Campaign Debug Information" 
+        />
+      )}
     </div>
   );
 };

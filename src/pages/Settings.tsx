@@ -1,150 +1,65 @@
 
-// Update the Settings.tsx page to include organization settings
-import React, { useEffect, useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/context/AuthProvider";
-import { useOrganization } from "@/context/OrganizationProvider";
+import React, { useState } from "react";
 import NavBar from "@/components/NavBar";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import { AIPromptSettingsTab, CompanyProfileTab, APIKeysTab } from "@/components/settings";
-import TeamManagement from "@/components/organizations/TeamManagement";
-import { useSearchParams } from "react-router-dom";
-
-type CompanySettings = {
-  name: string;
-  website: string;
-  logo_url: string;
-};
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CompanyProfileTab } from "@/components/settings";
+import { APIKeysTab } from "@/components/settings";
+import { AIPromptSettingsTab } from "@/components/settings";
+import StripeSetup from "@/components/settings/StripeSetup";
+import { DebugSettings } from "@/components/strategy/debug";
 
 const Settings = () => {
-  const { toast } = useToast();
-  const { user } = useAuth();
-  const { currentOrganization } = useOrganization();
-  const [searchParams] = useSearchParams();
-  const tabFromUrl = searchParams.get('tab');
-  const [activeTab, setActiveTab] = useState(tabFromUrl || "company");
-  const [isLoading, setIsLoading] = useState(false);
-  const [companySettings, setCompanySettings] = useState<CompanySettings>({
-    name: "",
-    website: "",
-    logo_url: "",
-  });
-
-  // Fetch existing company settings
-  useEffect(() => {
-    const fetchCompanySettings = async () => {
-      if (!user) return;
-
-      try {
-        setIsLoading(true);
-        const { data, error } = await supabase
-          .from("company_settings")
-          .select("*")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        if (error) {
-          console.error("Error fetching company settings:", error);
-          throw error;
-        }
-
-        if (data) {
-          setCompanySettings({
-            name: data.name || "",
-            website: data.website || "",
-            logo_url: data.logo_url || "",
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching company settings:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load company settings",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchCompanySettings();
-  }, [user, toast]);
+  const [activeTab, setActiveTab] = useState("company-profile");
 
   return (
     <>
       <NavBar />
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">
-            Settings
-          </h1>
+      <div className="container mx-auto p-4">
+        <div className="flex justify-between mb-6">
+          <h1 className="text-3xl font-bold">Settings</h1>
         </div>
-        
-        <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">
-            <TabsTrigger value="company">
-              Company Profile
-            </TabsTrigger>
-            {currentOrganization && (
-              <TabsTrigger value="teams">
-                Teams
-              </TabsTrigger>
-            )}
-            <TabsTrigger value="ai-prompts">
-              AI Prompt Settings
-            </TabsTrigger>
-            <TabsTrigger value="api-keys">
-              API Keys
-            </TabsTrigger>
-            {currentOrganization && (
-              <TabsTrigger value="billing">
-                Billing
-              </TabsTrigger>
-            )}
+            <TabsTrigger value="company-profile">Company Profile</TabsTrigger>
+            <TabsTrigger value="api-keys">API Keys</TabsTrigger>
+            <TabsTrigger value="ai-prompts">AI Prompts</TabsTrigger>
+            <TabsTrigger value="billing">Billing</TabsTrigger>
+            <TabsTrigger value="debugging">Debugging</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="company">
-            <CompanyProfileTab 
-              userId={user?.id} 
-              defaultValues={companySettings} 
-            />
-          </TabsContent>
-          
-          {currentOrganization && (
-            <TabsContent value="teams">
-              <TeamManagement />
-            </TabsContent>
-          )}
-          
-          <TabsContent value="ai-prompts">
-            <AIPromptSettingsTab />
+
+          <TabsContent value="company-profile">
+            <CompanyProfileTab />
           </TabsContent>
           
           <TabsContent value="api-keys">
             <APIKeysTab />
           </TabsContent>
           
-          {currentOrganization && (
-            <TabsContent value="billing">
-              <div className="text-center py-12">
-                <p className="mb-4">
-                  Manage your subscription and billing settings in the organization settings.
+          <TabsContent value="ai-prompts">
+            <AIPromptSettingsTab />
+          </TabsContent>
+          
+          <TabsContent value="billing">
+            <StripeSetup />
+          </TabsContent>
+          
+          <TabsContent value="debugging">
+            <div className="grid gap-6 max-w-2xl mx-auto">
+              <DebugSettings />
+              
+              <div className="p-4 bg-muted/50 rounded-lg border">
+                <h3 className="text-md font-medium mb-2">Debug Mode Information</h3>
+                <p className="text-sm text-muted-foreground">
+                  When debug mode is enabled, all AI agent interactions will collect and display debug information.
+                  This includes request data, response data, and prompts used.
                 </p>
-                <a 
-                  href={`/organizations/${currentOrganization.id}/settings`}
-                  className="text-primary hover:underline"
-                >
-                  Go to Organization Settings
-                </a>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Debug panels will appear at the bottom of relevant strategy flow pages when debug information is available.
+                </p>
               </div>
-            </TabsContent>
-          )}
+            </div>
+          </TabsContent>
         </Tabs>
       </div>
     </>

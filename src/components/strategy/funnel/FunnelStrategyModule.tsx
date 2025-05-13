@@ -10,6 +10,8 @@ import useStrategyNavigation from "@/hooks/useStrategyNavigation";
 import { StrategyState } from "@/types/marketing";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { StrategyDebugPanel } from "@/components/strategy/debug";
+import { useStrategyDebug } from "@/hooks/useStrategyDebug";
 
 const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy }) => {
   const strategyId = strategy?.id;
@@ -21,7 +23,11 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
     hasChanges,
     handleStagesChange,
     handleSave,
+    debugInfo
   } = useFunnelData(strategyId);
+
+  // Add debug capabilities
+  const { isDebugEnabled, setDebugInfo } = useStrategyDebug();
 
   // Add navigation functionality
   const { navigateToPreviousStep, isNavigating } = useStrategyNavigation({
@@ -48,6 +54,13 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
     }
   };
 
+  // Update debug info
+  React.useEffect(() => {
+    if (isDebugEnabled && debugInfo) {
+      setDebugInfo(debugInfo);
+    }
+  }, [isDebugEnabled, debugInfo, setDebugInfo]);
+
   return (
     <div className="space-y-6">
       <Card>
@@ -73,6 +86,14 @@ const FunnelStrategyModule: React.FC<FunnelStrategyModuleProps> = ({ strategy })
           onSave={handleSave}
         />
       </Card>
+      
+      {/* Render debug panel if debug is enabled and there's info */}
+      {isDebugEnabled && debugInfo && (
+        <StrategyDebugPanel 
+          debugInfo={debugInfo} 
+          title="Funnel Strategy Debug Information"
+        />
+      )}
     </div>
   );
 };

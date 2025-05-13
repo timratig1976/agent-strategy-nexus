@@ -5,6 +5,8 @@ import { Strategy } from '@/types/marketing';
 import StatementsLeftColumn from './components/StatementsLeftColumn';
 import StatementsRightColumn from './components/StatementsRightColumn';
 import useStatementsModule from './hooks/useStatementsModule';
+import { StrategyDebugPanel } from '@/components/strategy/debug';
+import { useStrategyDebug } from '@/hooks/useStrategyDebug';
 
 interface StatementsModuleProps {
   strategy: Strategy;
@@ -39,7 +41,17 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({ strategy }) => {
     updateGainStatement,
     deletePainStatement,
     deleteGainStatement,
+    generatorDebugInfo
   } = useStatementsModule({ strategyId: strategy.id });
+  
+  const { isDebugEnabled, setDebugInfo } = useStrategyDebug();
+  
+  // Update debug info when it changes
+  useEffect(() => {
+    if (isDebugEnabled && generatorDebugInfo) {
+      setDebugInfo(generatorDebugInfo);
+    }
+  }, [isDebugEnabled, generatorDebugInfo, setDebugInfo]);
   
   // Show errors via toast only once, not repeatedly
   useEffect(() => {
@@ -95,6 +107,14 @@ const StatementsModule: React.FC<StatementsModuleProps> = ({ strategy }) => {
           onAddStatement={(content) => handleAddStatement(content, 'medium')}
         />
       </div>
+      
+      {/* Debug panel */}
+      {isDebugEnabled && generatorDebugInfo && (
+        <StrategyDebugPanel 
+          debugInfo={generatorDebugInfo} 
+          title="Statements AI Debug Information"
+        />
+      )}
     </div>
   );
 };

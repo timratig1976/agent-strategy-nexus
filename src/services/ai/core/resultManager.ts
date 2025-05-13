@@ -1,6 +1,6 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { AgentResult } from "@/types/marketing";
+import { supabase } from '@/integrations/supabase/client';
+import { AgentResult } from '@/types/marketing';
 
 export class ResultManager {
   /**
@@ -18,46 +18,34 @@ export class ResultManager {
     agentId: string | null = null
   ): Promise<AgentResult | null> {
     try {
-      if (!strategyId || !content) {
-        throw new Error("Strategy ID and content are required");
-      }
-      
-      // Create a new result record
+      // Insert the agent result into the database
       const { data, error } = await supabase
         .from('agent_results')
         .insert({
           strategy_id: strategyId,
-          content,
-          metadata,
-          agent_id: agentId
+          agent_id: agentId,
+          content: content,
+          metadata: metadata
         })
         .select()
         .single();
-      
+
       if (error) {
         console.error("Error saving agent result:", error);
-        throw error;
+        return null;
       }
-      
-      // Map the snake_case database columns to camelCase interface properties
-      if (data) {
-        const result: AgentResult = {
-          id: data.id,
-          agentId: data.agent_id,
-          strategyId: data.strategy_id,
-          content: data.content,
-          createdAt: data.created_at,
-          // Ensure metadata is an object or default to empty object
-          metadata: typeof data.metadata === 'object' && data.metadata !== null 
-            ? data.metadata as Record<string, any> 
-            : {}
-        };
-        return result;
-      }
-      
-      return null;
-    } catch (err) {
-      console.error("Error in saveAgentResult:", err);
+
+      // Map the database result to the AgentResult type
+      return {
+        id: data.id,
+        agentId: data.agent_id || '',
+        strategyId: data.strategy_id,
+        content: data.content,
+        createdAt: data.created_at,
+        metadata: data.metadata
+      };
+    } catch (error) {
+      console.error("Exception saving agent result:", error);
       return null;
     }
   }

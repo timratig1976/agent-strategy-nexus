@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { StrategyState } from '@/types/marketing';
 import { useStatementsData } from './useStatementsData';
@@ -49,7 +48,8 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
     progress,
     error: generationError,
     uspCanvasData,
-    isLoadingCanvasData
+    isLoadingCanvasData,
+    debugInfo
   } = useStatementsGenerator(strategyId);
 
   // Use our statements editor hook
@@ -67,6 +67,7 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
 
   // Load strategy language for AI
   const [outputLanguage, setOutputLanguage] = useState<string>('english');
+  const [generatorDebugInfo, setGeneratorDebugInfo] = useState<any>(null);
   
   useEffect(() => {
     const loadStrategyLanguage = async () => {
@@ -101,12 +102,17 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
       // Combine system and user prompts with any additional input
       const combinedPrompt = additionalPrompt || '';
       
-      return await generateStatements(combinedPrompt, outputLanguage);
+      const result = await generateStatements(combinedPrompt, outputLanguage);
+      
+      // Store the debug info
+      setGeneratorDebugInfo(debugInfo);
+      
+      return result;
     } catch (error) {
       console.error('Error in generation:', error);
       return { painStatements: [], gainStatements: [] };
     }
-  }, [generateStatements, outputLanguage]);
+  }, [generateStatements, outputLanguage, debugInfo]);
 
   // Use our statements AI hook
   const {
@@ -162,6 +168,7 @@ export const useStatementsModule = ({ strategyId }: UseStatementsModuleProps) =>
     updateGainStatement,
     deletePainStatement,
     deleteGainStatement,
+    generatorDebugInfo,
   };
 };
 

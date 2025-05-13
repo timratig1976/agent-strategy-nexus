@@ -1,178 +1,246 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { FunnelData, FunnelStage } from '../types';
 
-// 🔒 Lokale Typen
-type FunnelStage = {
-  id: string;
-  name: string;
-  description: string;
-  touchPoints: any[];
-  keyMetrics?: string[];
-};
+export const useFunnelData = (strategyId?: string) => {
+  const [funnelData, setFunnelData] = useState<FunnelData>({
+    stages: []
+  });
+  const [initialData, setInitialData] = useState<FunnelData | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
+  
+  // Calculate if there are unsaved changes
+  const hasChanges = JSON.stringify(funnelData) !== JSON.stringify(initialData);
 
-type FunnelData = {
-  stages: FunnelStage[];
-  name: string;
-  primaryGoal: string;
-  leadMagnetType?: string;
-  targetAudience?: string;
-  mainChannel?: string;
-  conversionAction?: string;
-  timeframe?: string;
-  budget?: string;
-  kpis?: string;
-  notes?: string;
-  actionPlans?: Record<string, string>;
-  conversionRates?: Record<string, number>;
-  lastUpdated?: string;
-  version?: number;
-};
-
-// 🛠️ Lokale Factory
-function createInitialFunnelData(): FunnelData {
-  return {
-    stages: [],
-    name: "",
-    primaryGoal: "",
-    leadMagnetType: "",
-    targetAudience: "",
-    mainChannel: "",
-    conversionAction: "",
-    timeframe: "",
-    budget: "",
-    kpis: "",
-    notes: "",
-    actionPlans: {},
-    conversionRates: {},
-    lastUpdated: "",
-    version: 1,
-  };
-}
-
-// ✅ Typprüfung
-function isFunnelMetadata(metadata: any): boolean {
-  return metadata?.type === "funnel";
-}
-
-// ✅ Parser
-function parseFunnelStage(stage: any): FunnelStage {
-  return {
-    id: String(stage.id),
-    name: String(stage.name),
-    description: String(stage.description),
-    touchPoints: Array.isArray(stage.touchPoints) ? stage.touchPoints : [],
-    keyMetrics: Array.isArray(stage.keyMetrics) ? stage.keyMetrics : [],
-  };
-}
-
-// ✅ Haupt-Hook
-export function useFunnelData(strategyId: string | undefined) {
-  const [funnelData, setFunnelData] = useState<FunnelData>(createInitialFunnelData());
-  const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [hasChanges, setHasChanges] = useState<boolean>(false);
-
+  // Load funnel data
   useEffect(() => {
     if (!strategyId) return;
-
+    
     const loadFunnelData = async () => {
+      setIsLoading(true);
+      setError(null);
+      
       try {
-        // Use any type to avoid TypeScript's deep instantiation error
-        const response: any = await supabase
-          .from("agent_results")
-          .select("id, content, metadata")
-          .eq("strategy_id", strategyId)
-          .eq("metadata->>type", "funnel") // Fixed: correct JSONB syntax with ->> operator
-          .order("created_at", { ascending: false })
-          .limit(1);
-
-        const data = response.data;
-        const error = response.error;
-
+        const { data, error } = await supabase
+          .from('funnel_data')
+          .select('*')
+          .eq('strategy_id', strategyId)
+          .single();
+          
         if (error) {
-          console.error("Database error:", error);
-          throw error;
-        }
-
-        if (data && data.length > 0 && data[0].content) {
-          let parsedContent;
-          try {
-            parsedContent = JSON.parse(data[0].content);
-          } catch (parseErr) {
-            console.error("Error parsing JSON content:", parseErr);
-            toast.error("Failed to parse funnel data");
-            return;
+          if (error.code === 'PGRST116') {
+            // No data found, that's OK for a new funnel
+            setFunnelData({
+              stages: [
+                {
+                  id: "awareness",
+                  name: "Awareness",
+                  description: "Potential customers become aware of your product or service.",
+                  touchpoints: []
+                },
+                {
+                  id: "consideration",
+                  name: "Consideration",
+                  description: "Prospects evaluate your offering against alternatives.",
+                  touchpoints: []
+                },
+                {
+                  id: "conversion",
+                  name: "Conversion",
+                  description: "Prospects make a purchase decision.",
+                  touchpoints: []
+                },
+                {
+                  id: "retention",
+                  name: "Retention",
+                  description: "Keep customers engaged and coming back.",
+                  touchpoints: []
+                }
+              ]
+            });
+            
+            setInitialData({
+              stages: [
+                {
+                  id: "awareness",
+                  name: "Awareness",
+                  description: "Potential customers become aware of your product or service.",
+                  touchpoints: []
+                },
+                {
+                  id: "consideration",
+                  name: "Consideration",
+                  description: "Prospects evaluate your offering against alternatives.",
+                  touchpoints: []
+                },
+                {
+                  id: "conversion",
+                  name: "Conversion",
+                  description: "Prospects make a purchase decision.",
+                  touchpoints: []
+                },
+                {
+                  id: "retention",
+                  name: "Retention",
+                  description: "Keep customers engaged and coming back.",
+                  touchpoints: []
+                }
+              ]
+            });
+          } else {
+            console.error('Error loading funnel data:', error);
+            setError(`Failed to load funnel data: ${error.message}`);
           }
-
-          const safeContent = {
-            ...createInitialFunnelData(),
-            ...parsedContent,
-            stages: Array.isArray(parsedContent.stages)
-              ? parsedContent.stages.map((stage: any) => parseFunnelStage(stage))
-              : [],
+          setIsLoading(false);
+          return;
+        }
+        
+        if (data) {
+          const loadedData = {
+            stages: data.content?.stages || []
           };
-
-          setFunnelData(safeContent);
-          setHasChanges(false);
+          
+          setFunnelData(loadedData);
+          setInitialData(loadedData);
+          
+          // Store debug info
+          setDebugInfo({
+            type: 'funnel_data_load',
+            timestamp: new Date().toISOString(),
+            data: data
+          });
         }
       } catch (err: any) {
-        console.error("Error loading funnel data:", err);
-        toast.error(`Error loading funnel data: ${err.message || "Unknown error"}`);
+        console.error('Exception loading funnel data:', err);
+        setError(`Exception loading funnel data: ${err.message}`);
+      } finally {
+        setIsLoading(false);
       }
     };
-
+    
     loadFunnelData();
   }, [strategyId]);
-
-  const handleStagesChange = (newStages: FunnelStage[]) => {
+  
+  // Handle stage changes
+  const handleStagesChange = useCallback((stages: FunnelStage[]) => {
     setFunnelData(prev => ({
       ...prev,
-      stages: newStages,
+      stages
     }));
-    setHasChanges(true);
-  };
-
-  const handleSave = async () => {
+  }, []);
+  
+  // Save funnel data
+  const handleSave = useCallback(async () => {
     if (!strategyId) {
-      toast.error("Strategy ID is missing");
-      return;
+      toast.error("Missing strategy ID");
+      return false;
     }
-
+    
     setIsSaving(true);
-
+    
     try {
-      const { error } = await supabase
-        .from("agent_results")
-        .insert({
-          strategy_id: strategyId,
-          content: JSON.stringify(funnelData),
-          metadata: {
-            type: "funnel",
-            is_final: true,
-            version: funnelData.version || 1,
-            created_by: "user",
-            updated_at: new Date().toISOString(),
-          },
+      const savePayload = {
+        strategy_id: strategyId,
+        content: funnelData
+      };
+      
+      // Store debug info for the save operation
+      const debugPayload = {
+        type: 'funnel_data_save',
+        timestamp: new Date().toISOString(),
+        requestData: savePayload
+      };
+      
+      // Check if record exists
+      const { data: existing, error: checkError } = await supabase
+        .from('funnel_data')
+        .select('id')
+        .eq('strategy_id', strategyId)
+        .maybeSingle();
+        
+      if (checkError) {
+        console.error('Error checking funnel data existence:', checkError);
+        toast.error(`Failed to save: ${checkError.message}`);
+        setIsSaving(false);
+        return false;
+      }
+      
+      let result;
+      
+      if (existing) {
+        // Update existing record
+        result = await supabase
+          .from('funnel_data')
+          .update(savePayload)
+          .eq('strategy_id', strategyId);
+      } else {
+        // Insert new record
+        result = await supabase
+          .from('funnel_data')
+          .insert(savePayload);
+      }
+      
+      const { error: saveError } = result;
+      
+      if (saveError) {
+        console.error('Error saving funnel data:', saveError);
+        toast.error(`Failed to save: ${saveError.message}`);
+        
+        // Update debug info
+        setDebugInfo({
+          ...debugPayload,
+          error: saveError,
+          success: false
         });
-
-      if (error) throw error;
-
-      toast.success("Funnel strategy saved successfully");
-      setHasChanges(false);
+        
+        setIsSaving(false);
+        return false;
+      }
+      
+      // Update initialData so hasChanges becomes false
+      setInitialData({...funnelData});
+      toast.success("Funnel data saved successfully");
+      
+      // Update debug info with success
+      setDebugInfo({
+        ...debugPayload,
+        success: true,
+        responseData: { status: 'success' }
+      });
+      
+      return true;
     } catch (err: any) {
-      console.error("Error saving funnel data:", err);
-      toast.error(`Failed to save funnel data: ${err.message || "Unknown error"}`);
+      console.error('Exception saving funnel data:', err);
+      toast.error(`Exception saving funnel data: ${err.message}`);
+      
+      // Update debug info with error
+      setDebugInfo({
+        type: 'funnel_data_save',
+        timestamp: new Date().toISOString(),
+        error: err.message,
+        success: false
+      });
+      
+      return false;
     } finally {
       setIsSaving(false);
     }
-  };
-
+  }, [strategyId, funnelData]);
+  
   return {
     funnelData,
-    isSaving,
-    hasChanges,
+    setFunnelData,
     handleStagesChange,
     handleSave,
+    isSaving,
+    isLoading,
+    error,
+    hasChanges,
+    debugInfo
   };
-}
+};

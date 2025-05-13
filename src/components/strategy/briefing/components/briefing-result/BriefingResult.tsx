@@ -1,30 +1,16 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner";
 import { AgentResult } from "@/types/marketing";
-import BriefingEditorPanel from "./BriefingEditorPanel";
-import { useBriefingEditor } from "../../hooks/useBriefingEditor";
-import { useBriefingViewer } from "../../hooks/useBriefingViewer";
+import { StrategyBriefingResultProps } from "../../types";
+import { StrategyState } from "@/types/marketing";
+import { useAgentResultSaver } from "../../hooks/useAgentResultSaver";
+import { StrategyDebugPanel } from "@/components/strategy/debug";
+import { useStrategyDebug } from "@/hooks/useStrategyDebug";
 
-interface BriefingResultProps {
-  latestBriefing: AgentResult | null;
-  isGenerating: boolean;
-  progress: number;
-  generateBriefing: (enhancementText?: string) => void;
-  saveAgentResult: (content: string, isFinal?: boolean) => Promise<void>;
-  briefingHistory: AgentResult[];
-  setBriefingHistory: React.Dispatch<React.SetStateAction<AgentResult[]>>;
-  onBriefingSaved?: (isFinal: boolean) => void;
-  aiDebugInfo?: any;
-  error?: string | null;
-  customTitle?: string;
-  generateButtonText?: string;
-  saveButtonText?: string;
-  saveFinalButtonText?: string;
-  placeholderText?: string;
-}
-
-export const BriefingResult: React.FC<BriefingResultProps> = ({
+export const BriefingResult: React.FC<StrategyBriefingResultProps> = ({
   latestBriefing,
   isGenerating,
   progress,
@@ -33,93 +19,129 @@ export const BriefingResult: React.FC<BriefingResultProps> = ({
   briefingHistory,
   setBriefingHistory,
   onBriefingSaved,
-  aiDebugInfo = null,
-  error = null,
-  customTitle = "AI Briefing",
-  generateButtonText = "Generate Briefing",
-  saveButtonText = "Save Briefing",
-  saveFinalButtonText = "Save Final Briefing",
-  placeholderText = "Generated content will appear here..."
+  aiDebugInfo,
+  error
 }) => {
-  // Use our custom hooks to manage state
-  const { editedContent, setEditedContent } = useBriefingEditor({
-    initialContent: latestBriefing?.content || "",
-    isGenerating
-  });
+  const [enhancementText, setEnhancementText] = useState<string>("");
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isFinalizing, setIsFinalizing] = useState<boolean>(false);
   
-  const {
-    enhancerExpanded,
-    showPromptMonitor,
-    setShowPromptMonitor,
-    toggleEnhancerExpanded,
-    togglePromptMonitor
-  } = useBriefingViewer();
+  // Use our custom hook for saving agent results
+  const { saveAgentResult: saveAgentResultToDb } = useAgentResultSaver();
   
-  // Local state
-  const [enhancementText, setEnhancementText] = useState("");
-  const [hasFinalVersion, setHasFinalVersion] = useState(false);
-
-  // Effect to show prompt monitor if aiDebugInfo becomes available
-  useEffect(() => {
-    if (aiDebugInfo !== null && aiDebugInfo !== undefined) {
-      setShowPromptMonitor(true);
+  const { isDebugEnabled, setDebugInfo } = useStrategyDebug();
+  
+  // Update debug info whenever it changes
+  React.useEffect(() => {
+    if (isDebugEnabled && aiDebugInfo) {
+      setDebugInfo(aiDebugInfo);
     }
-  }, [aiDebugInfo, setShowPromptMonitor]);
+  }, [isDebugEnabled, aiDebugInfo, setDebugInfo]);
 
-  // Check if there's a final version in the history
-  useEffect(() => {
-    const finalVersion = briefingHistory.find(item => item.metadata?.is_final === true);
-    setHasFinalVersion(!!finalVersion);
-  }, [briefingHistory]);
+  const handleEnhance = () => {
+    generateBriefing(enhancementText);
+    setEnhancementText("");
+  };
 
-  // Handler for saving briefings
-  const handleSaveBriefing = async (isFinal: boolean = false) => {
+  const handleSaveBriefing = async (isFinal: boolean) => {
+    if (!latestBriefing?.content) {
+      toast.error("No briefing to save");
+      return;
+    }
+    
     try {
-      await saveAgentResult(editedContent, isFinal);
-      
-      toast.success(isFinal 
-        ? "Final version saved successfully" 
-        : "Draft saved successfully");
-      
-      // Update the local state to reflect the new final status
       if (isFinal) {
-        setHasFinalVersion(true);
+        setIsFinalizing(true);
+      } else {
+        setIsSaving(true);
       }
       
-      if (onBriefingSaved) {
-        onBriefingSaved(isFinal);
-      }
+      await saveAgentResult(latestBriefing.content, isFinal);
+      
+      toast.success(`Briefing saved as ${isFinal ? 'final' : 'draft'}`);
+      onBriefingSaved(isFinal);
     } catch (error) {
       console.error("Error saving briefing:", error);
-      toast.error("Failed to save");
+      toast.error("Failed to save briefing");
+    } finally {
+      setIsSaving(false);
+      setIsFinalizing(false);
     }
   };
 
   return (
-    <BriefingEditorPanel
-      title={customTitle}
-      latestBriefing={latestBriefing}
-      editedContent={editedContent}
-      setEditedContent={setEditedContent}
-      enhancementText={enhancementText}
-      setEnhancementText={setEnhancementText}
-      isGenerating={isGenerating}
-      progress={progress}
-      briefingHistory={briefingHistory}
-      aiDebugInfo={aiDebugInfo}
-      error={error}
-      generateBriefing={generateBriefing}
-      handleSaveBriefing={handleSaveBriefing}
-      enhancerExpanded={enhancerExpanded}
-      toggleEnhancerExpanded={toggleEnhancerExpanded}
-      showPromptMonitor={showPromptMonitor}
-      togglePromptMonitor={togglePromptMonitor}
-      generateButtonText={generateButtonText}
-      saveButtonText={saveButtonText}
-      saveFinalButtonText={saveFinalButtonText}
-      placeholderText={placeholderText}
-    />
+    <div className="space-y-4">
+      <Card className="bg-muted/30">
+        <CardContent className="p-4">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold">Latest Briefing</h3>
+            {isGenerating && (
+              <p className="text-sm text-muted-foreground">
+                Generating... {progress}%
+              </p>
+            )}
+            {error && (
+              <p className="text-sm text-red-500">
+                Error: {error}
+              </p>
+            )}
+          </div>
+          
+          {latestBriefing ? (
+            <div className="prose prose-sm max-w-none">
+              {latestBriefing.content}
+            </div>
+          ) : (
+            <p className="text-muted-foreground">No briefing generated yet.</p>
+          )}
+        </CardContent>
+        
+        <CardFooter className="flex justify-between items-center p-4">
+          <Button 
+            onClick={() => handleSaveBriefing(false)}
+            disabled={isSaving || isGenerating || !latestBriefing?.content}
+            aria-label="Save Briefing"
+          >
+            {isSaving ? "Saving..." : "Save as Draft"}
+          </Button>
+          
+          <Button 
+            variant="primary"
+            onClick={() => handleSaveBriefing(true)}
+            disabled={isFinalizing || isGenerating || !latestBriefing?.content}
+            aria-label="Finalize Briefing"
+          >
+            {isFinalizing ? "Finalizing..." : "Save as Final"}
+          </Button>
+        </CardFooter>
+      </Card>
+
+      <Card className="bg-muted/30">
+        <CardContent className="p-4">
+          <h3 className="text-lg font-semibold mb-2">Enhance Briefing</h3>
+          <Textarea
+            value={enhancementText}
+            onChange={(e) => setEnhancementText(e.target.value)}
+            placeholder="Enter specific instructions or details to enhance the briefing..."
+            className="mb-4"
+          />
+          <Button 
+            onClick={handleEnhance}
+            disabled={isGenerating}
+            aria-label="Enhance Briefing"
+          >
+            {isGenerating ? "Generating..." : "Enhance"}
+          </Button>
+        </CardContent>
+      </Card>
+      
+      {/* Render the debug panel if debug is enabled and we have debug info */}
+      {isDebugEnabled && aiDebugInfo && (
+        <StrategyDebugPanel 
+          debugInfo={aiDebugInfo} 
+          title="Briefing AI Debug Information"
+        />
+      )}
+    </div>
   );
 };
-
-export default BriefingResult;
