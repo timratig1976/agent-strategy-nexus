@@ -1,8 +1,17 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { FunnelData, FunnelStage } from '../types';
 import { toast } from 'sonner';
+
+// Helper type to ensure JSON compatibility
+type JsonCompatible<T> = {
+  [K in keyof T]: T[K] extends Record<string, any>
+    ? JsonCompatible<T[K]>
+    : T[K] extends Array<infer U>
+    ? Array<JsonCompatible<U>>
+    : T[K];
+};
 
 export const useFunnelData = (strategyId: string) => {
   const [funnelData, setFunnelData] = useState<FunnelData>({
@@ -27,7 +36,7 @@ export const useFunnelData = (strategyId: string) => {
         .from('ad_campaigns')
         .select('*')
         .eq('strategy_id', strategyId)
-        .single();
+        .maybeSingle();
         
       if (error) throw error;
       
@@ -63,9 +72,9 @@ export const useFunnelData = (strategyId: string) => {
   }, [strategyId]);
 
   // Initialize on component mount
-  useState(() => {
+  useEffect(() => {
     fetchFunnelData();
-  });
+  }, [fetchFunnelData]);
   
   // Handle stage changes
   const handleStagesChange = useCallback((stages: FunnelStage[]) => {
@@ -93,12 +102,18 @@ export const useFunnelData = (strategyId: string) => {
       
       let saveResult;
       
+      // Convert funnelData to a JSON-compatible object for Supabase
+      const jsonCompatibleData = {
+        strategyId: funnelData.strategyId,
+        stages: funnelData.stages
+      } as JsonCompatible<FunnelData>;
+      
       if (existingData) {
         // Update existing campaign
         const { error: updateError } = await supabase
           .from('ad_campaigns')
           .update({
-            content: funnelData,
+            content: jsonCompatibleData,
             updated_at: new Date().toISOString()
           })
           .eq('id', existingData.id);
@@ -111,7 +126,7 @@ export const useFunnelData = (strategyId: string) => {
           .from('ad_campaigns')
           .insert({
             strategy_id: strategyId,
-            content: funnelData
+            content: jsonCompatibleData
           });
           
         if (insertError) throw insertError;

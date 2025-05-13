@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from 'sonner';
 import { useStrategyDebug } from "@/hooks/useStrategyDebug";
 
-interface StatementsAIGeneratorProps {
+export interface StatementsAIGeneratorProps {
   customPrompt?: string;
   onCustomPromptSave?: (prompt: string) => void;
   onGenerate: (additionalPrompt?: string) => Promise<{ painStatements: any[]; gainStatements: any[]; }>;
@@ -26,6 +25,7 @@ const StatementsAIGenerator: React.FC<StatementsAIGeneratorProps> = ({
   progress,
   disabled = false,
 }) => {
+  
   const [generatedPainStatements, setGeneratedPainStatements] = useState<any[]>([]);
   const [generatedGainStatements, setGeneratedGainStatements] = useState<any[]>([]);
   const [additionalPrompt, setAdditionalPrompt] = useState<string>('');

@@ -35,11 +35,12 @@ export class StatementsGeneratorService {
         uspData
       });
       
+      // Map the result to our expected structure
       return {
         painStatements: result.painStatements || [],
         gainStatements: result.gainStatements || [],
         rawOutput: result.rawOutput,
-        debugInfo: result.debugInfo || {}
+        debugInfo: result.debugInfo || {} // Include the debugInfo property
       };
     } catch (error: any) {
       console.error('Error in statements generation service:', error);

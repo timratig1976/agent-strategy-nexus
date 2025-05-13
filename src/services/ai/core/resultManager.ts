@@ -30,7 +30,8 @@ export class ResultManager {
           strategy_id: strategyId,
           agent_id: agentId,
           content: content,
-          metadata: metadataObj as any // Use type assertion to handle the Json type
+          // Use type assertion to handle JSON compatibility
+          metadata: metadataObj as any // Force type for Supabase compatibility
         })
         .select()
         .single();
@@ -41,6 +42,7 @@ export class ResultManager {
       }
 
       // Map the database result to the AgentResult type
+      // Handle conversion from Supabase's Json type to our app's type
       return {
         id: data.id,
         agentId: data.agent_id || '',

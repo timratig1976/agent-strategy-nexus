@@ -1,3 +1,4 @@
+
 export interface FunnelStage {
   id: string;
   name: string;
@@ -23,5 +24,3 @@ export interface FunnelData {
 export interface FunnelStrategyModuleProps {
   strategy: any;
 }
-
-export * from '../types';
