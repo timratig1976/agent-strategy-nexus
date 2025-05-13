@@ -93,13 +93,10 @@ export const useStrategyStageSynchronization = ({
         console.log(`Updating database with state value: ${dbState}`);
         
         // Update the database with the new state
-        // Fix the type issue by using a more comprehensive type assertion
+        // Fix the type issue by using a more direct approach
         const { error } = await supabase
           .from('strategies')
-          .update({ 
-            state: dbState as "briefing" | "persona" | "pain_gains" | "statements" | 
-                  "channel_strategy" | "funnel" | "roas_calculator" | "ads" | "completed"
-          })
+          .update({ state: dbState })
           .eq('id', id);
         
         if (error) {

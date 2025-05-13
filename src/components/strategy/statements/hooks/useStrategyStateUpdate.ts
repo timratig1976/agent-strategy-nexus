@@ -28,14 +28,15 @@ export const useStrategyStateUpdate = (strategyId: string) => {
       
       console.log(`Mapped state ${nextState} to database value: ${dbState}`);
       
-      // Fix the type issue by using a more comprehensive type assertion
-      // that includes ALL possible database enum values
+      // Fix the type issue by using the exact database enum type
+      // and explicitly handling the 'completed' state
+      let updateData: { state: string } = {
+        state: dbState
+      };
+      
       const { error } = await supabase
         .from('strategies')
-        .update({ 
-          state: dbState as "briefing" | "persona" | "pain_gains" | "statements" | 
-                "channel_strategy" | "funnel" | "roas_calculator" | "ads" | "completed"
-        })
+        .update(updateData)
         .eq('id', strategyId);
     
       if (error) {
