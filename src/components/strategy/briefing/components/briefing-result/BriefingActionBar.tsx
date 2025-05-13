@@ -37,15 +37,7 @@ const BriefingActionBar: React.FC<BriefingActionBarProps> = ({
           onSelect={(content) => onSelectHistoricalVersion(content)}
         />
       </Sheet>
-      {aiDebugInfo && (
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={togglePromptMonitor}
-        >
-          {showPromptMonitor ? "Hide AI Log" : "Show AI Log"}
-        </Button>
-      )}
+      {/* AI Debug button removed from here as it's now in the header */}
     </div>
   );
 };

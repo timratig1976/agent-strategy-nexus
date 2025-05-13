@@ -70,7 +70,18 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
     <Card className="h-full flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>{title}</CardTitle>
-        {/* Moved action bar to within the AI Generator block */}
+        {/* AI Debug controls moved to AI Generator section */}
+        <div>
+          {aiDebugInfo && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={togglePromptMonitor}
+            >
+              {showPromptMonitor ? "Hide AI Log" : "Show AI Log"}
+            </Button>
+          )}
+        </div>
       </CardHeader>
       
       <CardContent className="flex-grow flex flex-col space-y-6">
@@ -89,14 +100,6 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
         <div className="border rounded-lg p-4 bg-muted/10">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-lg font-medium">AI Generator</h3>
-            <BriefingActionBar 
-              isGenerating={isGenerating}
-              briefingHistory={briefingHistory}
-              onSelectHistoricalVersion={onSelectHistoricalVersion}
-              aiDebugInfo={aiDebugInfo}
-              showPromptMonitor={showPromptMonitor}
-              togglePromptMonitor={togglePromptMonitor}
-            />
           </div>
           
           {/* Special Instructions without internal generate button */}
@@ -131,7 +134,20 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
         
         {/* Content Editor - now with border and clear separation */}
         <div className="border rounded-lg p-4 flex-grow">
-          <h3 className="text-lg font-medium mb-3">Output</h3>
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-lg font-medium">Output</h3>
+            
+            {/* History button moved here next to Output heading */}
+            <BriefingActionBar 
+              isGenerating={isGenerating}
+              briefingHistory={briefingHistory}
+              onSelectHistoricalVersion={onSelectHistoricalVersion}
+              aiDebugInfo={null} // Setting to null since we moved the AI debug toggle to the header
+              showPromptMonitor={showPromptMonitor}
+              togglePromptMonitor={togglePromptMonitor}
+            />
+          </div>
+          
           <div className="h-full">
             <BriefingContentEditor 
               content={latestBriefing?.content || ""} 
