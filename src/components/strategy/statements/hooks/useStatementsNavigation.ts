@@ -23,35 +23,37 @@ export const useStatementsNavigation = ({
     strategyId
   });
 
-  // Save statements and move to next step - now with better handling
+  // Modified save and continue flow - we'll avoid dual state updates
   const handleSaveAndContinue = useCallback(async () => {
     setIsLoading(true);
     try {
+      console.log("Starting handleSaveAndContinue flow");
+      
       // First save the statements
-      await saveStatements(false);
-    
-      // Then update the strategy state using the consistent method
-      const success = await updateStrategyState(StrategyState.CHANNEL_STRATEGY);
-    
-      if (success) {
-        toast.success('Statements saved and proceeding to next step');
-        // Allow navigation to continue even if state wasn't updated in database
-        navigateToNextStep(StrategyState.STATEMENTS);
-      } else {
-        // Even if the update fails, we'll still try to navigate
-        toast.warning('Strategy state update failed, but proceeding to next step');
-        navigateToNextStep(StrategyState.STATEMENTS);
+      const saveSuccess = await saveStatements(false);
+      if (!saveSuccess) {
+        console.error("Failed to save statements");
+        toast.error('Failed to save statements - please try again');
+        setIsLoading(false);
+        return;
       }
+      
+      console.log("Statements saved successfully, navigating to next step");
+      
+      // Skip the state update here and just navigate to the next step
+      // The StrategyStageContainer component will handle updating the database state
+      // This prevents duplicate state updates that might be causing the loop
+      navigateToNextStep(StrategyState.STATEMENTS);
+      
+      toast.success('Statements saved and proceeding to next step');
     } catch (error) {
       console.error('Error in handleSaveAndContinue:', error);
       toast.error('Failed to save statements - please try again');
-      // Even if there's an error, still try to navigate
-      navigateToNextStep(StrategyState.STATEMENTS);
     } finally {
       setIsLoading(false);
       setHasChanges(false);
     }
-  }, [saveStatements, navigateToNextStep, updateStrategyState, setHasChanges]);
+  }, [saveStatements, navigateToNextStep, setHasChanges]);
 
   // Handle navigation back to previous step
   const handleNavigateBack = useCallback(() => {

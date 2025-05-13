@@ -43,6 +43,7 @@ export const useStrategyStageSynchronization = ({
 }: StrategyStageSyncOptions) => {
   const navigate = useNavigate();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [lastAttemptedUpdate, setLastAttemptedUpdate] = useState<string | null>(null);
   
   useEffect(() => {
     // Skip if we don't have necessary data
@@ -72,25 +73,40 @@ export const useStrategyStageSynchronization = ({
       return;
     }
     
-    const dbState = stateToDbMap[urlState]; 
+    const dbState = stateToDbMap[urlState];
+    
+    // Implement a simple circuit breaker to prevent infinite loops
+    // If we've already tried to update to this state recently, don't try again
+    const updateKey = `${id}-${urlState}`;
+    if (updateKey === lastAttemptedUpdate) {
+      console.log("Skipping redundant state update to prevent loop:", updateKey);
+      return;
+    }
     
     // Handle state transitions based on the existing state and URL
     const handleStateTransition = async () => {
       try {
         setIsUpdating(true);
+        setLastAttemptedUpdate(updateKey);
         
         console.log(`Handling transition from ${strategy.state} to ${urlState}`);
-        // Instead of restricting forward navigation, we'll allow all stage navigation 
-        // from the dropdown menu but sync the database accordingly
+        console.log(`Updating database with state value: ${dbState}`);
         
         // Update the database with the new state
-        // Fix the type issue by matching exactly what the database expects
+        // Fix the type issue by using a more comprehensive type assertion
         const { error } = await supabase
           .from('strategies')
-          .update({ state: dbState as "briefing" | "persona" | "pain_gains" | "funnel" | "ads" })
+          .update({ 
+            state: dbState as "briefing" | "persona" | "pain_gains" | "statements" | 
+                  "channel_strategy" | "funnel" | "roas_calculator" | "ads" | "completed"
+          })
           .eq('id', id);
         
-        if (error) throw error;
+        if (error) {
+          console.error("Error updating strategy state:", error);
+          console.error("Error details:", error.message, error.details, error.hint);
+          throw error;
+        }
         
         console.log(`Updated strategy state from ${strategy.state} to ${dbState}`);
         
@@ -107,7 +123,7 @@ export const useStrategyStageSynchronization = ({
     
     handleStateTransition();
     
-  }, [id, stageSlug, strategy, navigate, refetch]);
+  }, [id, stageSlug, strategy, navigate, refetch, lastAttemptedUpdate]);
   
   return { isUpdating };
 };

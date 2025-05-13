@@ -1,4 +1,3 @@
-
 import { StrategyState } from "@/types/marketing";
 
 /**
@@ -63,11 +62,11 @@ export const stateToDbMap: Record<StrategyState, string> = {
   [StrategyState.BRIEFING]: "briefing",
   [StrategyState.PERSONA]: "persona",
   [StrategyState.PAIN_GAINS]: "pain_gains",
-  [StrategyState.STATEMENTS]: "statements", // Now maps to actual 'statements' enum value in DB
-  [StrategyState.CHANNEL_STRATEGY]: "channel_strategy", // Now maps to actual 'channel_strategy' enum value in DB
+  [StrategyState.STATEMENTS]: "statements", // Mapped to exact database enum value
+  [StrategyState.CHANNEL_STRATEGY]: "channel_strategy", // Mapped to exact database enum value
   [StrategyState.FUNNEL]: "funnel",
-  [StrategyState.ROAS_CALCULATOR]: "roas_calculator", // Now maps to actual 'roas_calculator' enum value in DB
+  [StrategyState.ROAS_CALCULATOR]: "roas_calculator", // Mapped to exact database enum value
   [StrategyState.ADS]: "ads",
-  [StrategyState.COMPLETED]: "ads" // Map to ads in DB since completed isn't in DB enum
+  [StrategyState.COMPLETED]: "completed" // Updated to map to 'completed' if it exists in the DB enum
 };
 

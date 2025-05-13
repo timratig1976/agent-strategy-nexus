@@ -1,14 +1,9 @@
 
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { StrategyState } from '@/types/marketing';
-import { stateToDbMap } from '@/utils/strategyUtils';
 import { stateToSlug } from '@/utils/strategyUrlUtils';
-
-// Define a type for the valid database state values - Updated to include new states
-type DbStrategyState = "briefing" | "persona" | "pain_gains" | "statements" | "channel_strategy" | "funnel" | "roas_calculator" | "ads" | "completed";
 
 type StrategyNavigationOptions = {
   strategyId?: string;
@@ -70,6 +65,7 @@ export const useStrategyNavigation = (
 
       // Get URL slug for the previous state
       const previousStateSlug = stateToSlug[previousState];
+      console.log(`Navigating from ${currentState} to previous state ${previousState} (${previousStateSlug})`);
       
       // Simply navigate to the URL for the previous state
       // The StrategyStageContainer component will handle the database update
@@ -135,6 +131,7 @@ export const useStrategyNavigation = (
 
       // Get URL slug for the next state
       const nextStateSlug = stateToSlug[nextState];
+      console.log(`Navigating from ${currentState} to next state ${nextState} (${nextStateSlug})`);
       
       // Simply navigate to the URL for the next state
       // The StrategyStageContainer component will handle the database update
