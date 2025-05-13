@@ -28,15 +28,15 @@ export const useStrategyStateUpdate = (strategyId: string) => {
       
       console.log(`Mapped state ${nextState} to database value: ${dbState}`);
       
-      // Fix the type issue by using the exact database enum type
-      // and explicitly handling the 'completed' state
-      let updateData: { state: string } = {
-        state: dbState
-      };
-      
+      // Use the database enum type directly instead of string
+      // This ensures TypeScript knows we're using a valid enum value
       const { error } = await supabase
         .from('strategies')
-        .update(updateData)
+        .update({ 
+          state: dbState as "briefing" | "persona" | "pain_gains" | 
+                "statements" | "channel_strategy" | "funnel" | 
+                "roas_calculator" | "ads" | "completed"
+        })
         .eq('id', strategyId);
     
       if (error) {
