@@ -36,10 +36,10 @@ export class StatementsGeneratorService {
       });
       
       return {
-        painStatements: result?.data?.painStatements || [],
-        gainStatements: result?.data?.gainStatements || [],
-        rawOutput: result?.rawOutput,
-        debugInfo: result?.debugInfo
+        painStatements: result.painStatements || [],
+        gainStatements: result.gainStatements || [],
+        rawOutput: result.rawOutput,
+        debugInfo: result.debugInfo || {}
       };
     } catch (error: any) {
       console.error('Error in statements generation service:', error);

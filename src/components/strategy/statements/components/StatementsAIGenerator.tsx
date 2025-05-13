@@ -1,41 +1,38 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Copy, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from 'sonner';
-import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { StrategyDebugPanel } from "@/components/strategy/debug";
 import { useStrategyDebug } from "@/hooks/useStrategyDebug";
 
 interface StatementsAIGeneratorProps {
-  customPrompt: string;
-  onCustomPromptSave: (prompt: string) => Promise<void>;
+  customPrompt?: string;
+  onCustomPromptSave?: (prompt: string) => void;
   onGenerate: (additionalPrompt?: string) => Promise<{ painStatements: any[]; gainStatements: any[]; }>;
   onAddGeneratedStatements: (painStatements: any[], gainStatements: any[]) => void;
   isGenerating: boolean;
   progress: number;
+  disabled?: boolean;
 }
 
 const StatementsAIGenerator: React.FC<StatementsAIGeneratorProps> = ({
-  customPrompt,
+  customPrompt = '',
   onCustomPromptSave,
   onGenerate,
   onAddGeneratedStatements,
   isGenerating,
   progress,
+  disabled = false,
 }) => {
-  const [generatedPainStatements, setGeneratedPainStatements] = useState<string[]>([]);
-  const [generatedGainStatements, setGeneratedGainStatements] = useState<string[]>([]);
+  const [generatedPainStatements, setGeneratedPainStatements] = useState<any[]>([]);
+  const [generatedGainStatements, setGeneratedGainStatements] = useState<any[]>([]);
   const [additionalPrompt, setAdditionalPrompt] = useState<string>('');
   const [isCustomPromptSaved, setIsCustomPromptSaved] = useState<boolean>(false);
   const [isGenerationComplete, setIsGenerationComplete] = useState<boolean>(false);
   
-  const { isDebugEnabled, setDebugInfo } = useStrategyDebug();
+  const { isDebugEnabled } = useStrategyDebug();
   
   const handleGenerate = useCallback(async () => {
     setIsGenerationComplete(false);
@@ -56,9 +53,11 @@ const StatementsAIGenerator: React.FC<StatementsAIGeneratorProps> = ({
   }, [onAddGeneratedStatements, generatedPainStatements, generatedGainStatements]);
 
   const handleSaveCustomPrompt = useCallback(async () => {
-    await onCustomPromptSave(customPrompt);
-    setIsCustomPromptSaved(true);
-    toast.success("Custom prompt saved successfully!");
+    if (onCustomPromptSave) {
+      await onCustomPromptSave(customPrompt);
+      setIsCustomPromptSaved(true);
+      toast.success("Custom prompt saved successfully!");
+    }
   }, [onCustomPromptSave, customPrompt]);
   
   // Reset state when generation starts
@@ -67,21 +66,13 @@ const StatementsAIGenerator: React.FC<StatementsAIGeneratorProps> = ({
       setIsGenerationComplete(false);
     }
   }, [isGenerating]);
-  
-  // Update debug info when generation happens
-  useEffect(() => {
-    if (isDebugEnabled && isGenerating) {
-      // Inside the actual StatementsModule, we'll set the debug info
-      // This component just displays it
-    }
-  }, [isDebugEnabled, isGenerating]);
 
   return (
     <div className="space-y-4">
       <Card>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="additional-prompt">Additional Prompt (Optional)</Label>
+            <label htmlFor="additional-prompt" className="text-sm font-medium">Additional Prompt (Optional)</label>
             <Textarea
               id="additional-prompt"
               placeholder="Add any specific instructions or context here..."
@@ -92,7 +83,7 @@ const StatementsAIGenerator: React.FC<StatementsAIGeneratorProps> = ({
           
           <Button 
             onClick={handleGenerate} 
-            disabled={isGenerating}
+            disabled={isGenerating || disabled}
           >
             {isGenerating ? 'Generating...' : 'Generate Statements'}
           </Button>
@@ -111,7 +102,7 @@ const StatementsAIGenerator: React.FC<StatementsAIGeneratorProps> = ({
                 <h4 className="text-sm font-medium">Generated Pain Statements</h4>
                 <ul className="list-disc pl-5 space-y-1">
                   {generatedPainStatements.map((statement, index) => (
-                    <li key={index}>{statement}</li>
+                    <li key={index}>{typeof statement === 'string' ? statement : statement.content}</li>
                   ))}
                 </ul>
               </div>
@@ -122,7 +113,7 @@ const StatementsAIGenerator: React.FC<StatementsAIGeneratorProps> = ({
                 <h4 className="text-sm font-medium">Generated Gain Statements</h4>
                 <ul className="list-disc pl-5 space-y-1">
                   {generatedGainStatements.map((statement, index) => (
-                    <li key={index}>{statement}</li>
+                    <li key={index}>{typeof statement === 'string' ? statement : statement.content}</li>
                   ))}
                 </ul>
               </div>

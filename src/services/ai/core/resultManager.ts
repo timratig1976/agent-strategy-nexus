@@ -30,7 +30,7 @@ export class ResultManager {
           strategy_id: strategyId,
           agent_id: agentId,
           content: content,
-          metadata: metadataObj
+          metadata: metadataObj as any // Use type assertion to handle the Json type
         })
         .select()
         .single();
@@ -47,7 +47,7 @@ export class ResultManager {
         strategyId: data.strategy_id,
         content: data.content,
         createdAt: data.created_at,
-        metadata: data.metadata
+        metadata: data.metadata as Record<string, any> // Use type assertion to handle the Json type
       };
     } catch (error) {
       console.error("Exception saving agent result:", error);

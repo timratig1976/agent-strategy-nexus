@@ -8,14 +8,12 @@ import { AIPromptSettingsTab } from "@/components/settings";
 import StripeSetup from "@/components/settings/StripeSetup";
 import { DebugSettings } from "@/components/strategy/debug";
 
-// Dummy props for CompanyProfileTab until we implement proper user management
+// Dummy props for CompanyProfileTab with correct type
 const dummyUserId = "current-user";
 const dummyDefaultValues = {
-  companyName: "",
-  industry: "",
-  employeeCount: "",
+  name: "",
   website: "",
-  logoUrl: ""
+  logo_url: ""
 };
 
 const Settings = () => {
