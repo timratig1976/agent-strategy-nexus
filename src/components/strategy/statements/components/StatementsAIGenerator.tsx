@@ -91,9 +91,6 @@ const StatementsAIGenerator: React.FC<StatementsAIGeneratorProps> = ({
         {isGenerating && (
           <div className="space-y-2">
             <Progress value={progress} className="w-full" />
-            <p className="text-sm text-center text-muted-foreground">
-              Generating statements... {progress}%
-            </p>
           </div>
         )}
         

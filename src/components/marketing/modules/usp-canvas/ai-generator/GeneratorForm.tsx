@@ -109,13 +109,9 @@ const GeneratorForm: React.FC<FormProps> = ({
             </div>
           </div>
           
-          {/* Add progress bar that only shows when generating */}
+          {/* Add progress bar that only shows when generating, without text */}
           {isGenerating && (
-            <div className="w-full space-y-2">
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Generating content...</span>
-                <span>{Math.round(progress)}%</span>
-              </div>
+            <div className="w-full">
               <Progress value={progress} className="w-full h-1" />
             </div>
           )}

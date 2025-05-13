@@ -140,9 +140,8 @@ const WebsiteAnalysisForm: React.FC<WebsiteAnalysisFormProps> = ({
 
             {isLoading && (
               <div className="space-y-2">
-                <div className="flex justify-between items-center text-sm">
-                  <span>{getStatusMessage(crawlStatus)}</span>
-                  <span>{progress}%</span>
+                <div className="text-sm">
+                  {getStatusMessage(crawlStatus)}
                 </div>
                 <Progress value={progress} className="h-1" />
               </div>

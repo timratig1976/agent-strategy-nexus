@@ -117,13 +117,9 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
             onToggleExpand={toggleEnhancerExpanded}
           />
           
-          {/* Progress bar positioned between instructions and generate button */}
+          {/* Progress bar positioned between instructions and generate button - text removed */}
           {isGenerating && (
-            <div className="space-y-2 mt-4 mb-4">
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Generating briefing...</span>
-                <span>{Math.round(progress)}%</span>
-              </div>
+            <div className="mt-4 mb-4">
               <Progress value={progress} className="w-full" />
             </div>
           )}
