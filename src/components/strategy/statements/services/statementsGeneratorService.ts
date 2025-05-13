@@ -10,7 +10,7 @@ export interface GeneratedStatements {
   gainStatements: Array<{ content: string; impact: 'low' | 'medium' | 'high' }>;
   rawOutput?: string;
   error?: string;
-  debugInfo?: any;
+  debugInfo?: any; // Add the debugInfo property to match the expected return type
 }
 
 /**

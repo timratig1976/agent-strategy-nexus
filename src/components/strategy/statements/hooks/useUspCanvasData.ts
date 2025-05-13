@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { Json } from '@/integrations/supabase/types';
 
 /**
  * Hook to fetch USP Canvas data for a strategy
@@ -30,14 +31,22 @@ const useUspCanvasData = (strategyId: string) => {
       
       // Process the data into a format suitable for statement generation
       if (data) {
+        const customerJobs = data.customer_jobs as Json || [];
+        const painPoints = data.pain_points as Json || [];
+        const gains = data.gains as Json || [];
+        
+        // In our database, products, pain_relievers and gain_creators might 
+        // be stored differently or not exist in the current schema
+        // Use empty arrays as fallbacks
         const formattedData = {
-          jobs: data.customer_jobs || [],
-          pains: data.pain_points || [],
-          gains: data.gains || [],
-          products: data.products || [],
-          painRelievers: data.pain_relievers || [],
-          gainCreators: data.gain_creators || []
+          jobs: customerJobs,
+          pains: painPoints,
+          gains: gains,
+          products: [], // Default to empty array if not in the schema
+          painRelievers: [], // Default to empty array if not in the schema
+          gainCreators: [] // Default to empty array if not in the schema
         };
+        
         setUspCanvasData(formattedData);
       } else {
         setUspCanvasData(null);
