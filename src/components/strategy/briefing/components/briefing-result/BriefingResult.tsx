@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { StrategyState } from "@/types/marketing";
 import { useAgentResultSaver } from "../../hooks/useAgentResultSaver";
 import { StrategyDebugPanel } from "@/components/strategy/debug";
 import { useStrategyDebug } from "@/hooks/useStrategyDebug";
+import { Check } from "lucide-react";
 
 export const BriefingResult: React.FC<StrategyBriefingResultProps> = ({
   latestBriefing,
@@ -26,6 +27,8 @@ export const BriefingResult: React.FC<StrategyBriefingResultProps> = ({
   const [enhancementText, setEnhancementText] = useState<string>("");
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isFinalizing, setIsFinalizing] = useState<boolean>(false);
+  const [showSaveSuccess, setShowSaveSuccess] = useState<boolean>(false);
+  const [showFinalSuccess, setShowFinalSuccess] = useState<boolean>(false);
   
   // Use our custom hook for saving agent results
   const { saveAgentResult: saveAgentResultToDb } = useAgentResultSaver();
@@ -38,6 +41,29 @@ export const BriefingResult: React.FC<StrategyBriefingResultProps> = ({
       setDebugInfo(aiDebugInfo);
     }
   }, [isDebugEnabled, aiDebugInfo, setDebugInfo]);
+
+  // Reset success states after a delay
+  useEffect(() => {
+    let saveTimer: NodeJS.Timeout;
+    let finalTimer: NodeJS.Timeout;
+    
+    if (showSaveSuccess) {
+      saveTimer = setTimeout(() => {
+        setShowSaveSuccess(false);
+      }, 1500);
+    }
+    
+    if (showFinalSuccess) {
+      finalTimer = setTimeout(() => {
+        setShowFinalSuccess(false);
+      }, 1500);
+    }
+    
+    return () => {
+      clearTimeout(saveTimer);
+      clearTimeout(finalTimer);
+    };
+  }, [showSaveSuccess, showFinalSuccess]);
 
   const handleEnhance = () => {
     generateBriefing(enhancementText);
@@ -58,6 +84,12 @@ export const BriefingResult: React.FC<StrategyBriefingResultProps> = ({
       }
       
       await saveAgentResult(latestBriefing.content, isFinal);
+      
+      if (isFinal) {
+        setShowFinalSuccess(true);
+      } else {
+        setShowSaveSuccess(true);
+      }
       
       toast.success(`Briefing saved as ${isFinal ? 'final' : 'draft'}`);
       onBriefingSaved && onBriefingSaved(isFinal);
@@ -100,19 +132,27 @@ export const BriefingResult: React.FC<StrategyBriefingResultProps> = ({
         <CardFooter className="flex justify-between items-center p-4">
           <Button 
             onClick={() => handleSaveBriefing(false)}
-            disabled={isSaving || isGenerating || !latestBriefing?.content}
+            disabled={isSaving || isGenerating || !latestBriefing?.content || showSaveSuccess}
             aria-label="Save Briefing"
+            className="flex items-center gap-2"
           >
-            {isSaving ? "Saving..." : "Save as Draft"}
+            {showSaveSuccess ? (
+              <Check className="h-4 w-4 text-green-500" />
+            ) : null}
+            {showSaveSuccess ? "Saved" : (isSaving ? "Saving..." : "Save as Draft")}
           </Button>
           
           <Button 
             variant="secondary"
             onClick={() => handleSaveBriefing(true)}
-            disabled={isFinalizing || isGenerating || !latestBriefing?.content}
+            disabled={isFinalizing || isGenerating || !latestBriefing?.content || showFinalSuccess}
             aria-label="Finalize Briefing"
+            className="flex items-center gap-2"
           >
-            {isFinalizing ? "Finalizing..." : "Save as Final"}
+            {showFinalSuccess ? (
+              <Check className="h-4 w-4 text-green-500" />
+            ) : null}
+            {showFinalSuccess ? "Saved" : (isFinalizing ? "Finalizing..." : "Save as Final")}
           </Button>
         </CardFooter>
       </Card>

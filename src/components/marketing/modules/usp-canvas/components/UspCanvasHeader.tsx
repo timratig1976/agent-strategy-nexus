@@ -1,7 +1,7 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 
 interface UspCanvasHeaderProps {
   onNavigateBack?: () => void;
@@ -20,6 +20,28 @@ const UspCanvasHeader: React.FC<UspCanvasHeaderProps> = ({
   prevStageLabel = "Back to Personas",
   nextStageLabel = "Next"
 }) => {
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+  
+  // Reset success state after a delay
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
+    if (showSaveSuccess) {
+      timer = setTimeout(() => {
+        setShowSaveSuccess(false);
+      }, 1500);
+    }
+    
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [showSaveSuccess]);
+  
+  const handleSaveFinal = () => {
+    onSaveFinal();
+    setShowSaveSuccess(true);
+  };
+
   return (
     <div className="flex flex-col mb-4 gap-2">
       <h2 className="text-2xl font-bold">Unique Selling Proposition Canvas</h2>
@@ -42,11 +64,14 @@ const UspCanvasHeader: React.FC<UspCanvasHeaderProps> = ({
         
         <div className="flex gap-2 ml-auto">
           <Button 
-            onClick={onSaveFinal}
+            onClick={handleSaveFinal}
             className="flex items-center gap-2"
-            disabled={isFinalSaved}
+            disabled={isFinalSaved || showSaveSuccess}
           >
-            {isFinalSaved ? 'Final Version Saved' : 'Save Final Version'}
+            {showSaveSuccess || isFinalSaved ? (
+              <Check className="h-4 w-4" />
+            ) : null}
+            {showSaveSuccess ? "Saved" : (isFinalSaved ? 'Final Version Saved' : 'Save Final Version')}
           </Button>
           
           {onNavigateNext && (

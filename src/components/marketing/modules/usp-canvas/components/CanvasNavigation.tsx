@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, Save } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Save, Check } from 'lucide-react';
 
 interface CanvasNavigationProps {
   onNavigateBack?: () => void;
@@ -24,6 +24,30 @@ const CanvasNavigation: React.FC<CanvasNavigationProps> = ({
   prevStageLabel = 'Back to Previous Step',
   nextStageLabel = 'Continue to Next Step'
 }) => {
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+  
+  // Reset success state after a delay
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
+    if (showSaveSuccess) {
+      timer = setTimeout(() => {
+        setShowSaveSuccess(false);
+      }, 1500);
+    }
+    
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [showSaveSuccess]);
+  
+  const handleSaveFinal = () => {
+    if (onSaveFinal) {
+      onSaveFinal();
+      setShowSaveSuccess(true);
+    }
+  };
+
   return (
     <div className="flex justify-between items-center mt-6 px-4">
       {onNavigateBack && (
@@ -41,12 +65,16 @@ const CanvasNavigation: React.FC<CanvasNavigationProps> = ({
         {onSaveFinal && (
           <Button
             variant="default"
-            onClick={onSaveFinal}
-            disabled={isSaved}
+            onClick={handleSaveFinal}
+            disabled={isSaved || showSaveSuccess}
             className="flex items-center gap-2"
           >
-            <Save className="h-4 w-4" />
-            {isSaved ? 'Final Version Saved' : 'Save Final Version'}
+            {showSaveSuccess || isSaved ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            {showSaveSuccess ? "Saved" : (isSaved ? 'Final Version Saved' : 'Save Final Version')}
           </Button>
         )}
         
