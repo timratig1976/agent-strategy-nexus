@@ -56,7 +56,7 @@ const AIHistoryViewer = <T extends AIGenerationResult>({
                     {item.createdAt && formatDistanceToNow(new Date(
                       typeof item.createdAt === 'object' && item.createdAt !== null && 'getTime' in item.createdAt 
                         ? item.createdAt 
-                        : item.createdAt
+                        : String(item.createdAt) // Ensure it's converted to a string if it's not null
                     ), { addSuffix: true })}
                   </div>
                 </div>
