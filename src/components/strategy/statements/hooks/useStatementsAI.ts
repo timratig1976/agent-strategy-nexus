@@ -1,6 +1,7 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
+import { StatementsService } from '@/services/ai/statementsService';
 
 interface UseStatementsAIProps {
   handleGenerateStatements: (additionalPrompt: string) => Promise<any>;
@@ -14,6 +15,19 @@ export const useStatementsAI = ({
   addGainStatement
 }: UseStatementsAIProps) => {
   const [customPrompt, setCustomPrompt] = useState<string>('');
+  
+  // Ensure statements prompts exist on initial load
+  useEffect(() => {
+    const initPrompts = async () => {
+      try {
+        await StatementsService.ensurePromptsExist();
+      } catch (err) {
+        console.error('Error initializing statements prompts:', err);
+      }
+    };
+    
+    initPrompts();
+  }, []);
   
   // Handle adding AI generated statements
   const handleAddGeneratedStatements = useCallback((generatedPainStatements: any[], generatedGainStatements: any[]) => {

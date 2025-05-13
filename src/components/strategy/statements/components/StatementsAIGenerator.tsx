@@ -3,9 +3,10 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Sparkles, PlusCircle, Edit } from 'lucide-react';
+import { Sparkles, PlusCircle, Edit, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 
 interface StatementsAIGeneratorProps {
   onGenerate: (customPrompt?: string) => Promise<{
@@ -65,13 +66,21 @@ const StatementsAIGenerator: React.FC<StatementsAIGeneratorProps> = ({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">AI Statement Generator</CardTitle>
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg">AI Statement Generator</CardTitle>
+          {customPrompt && (
+            <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200 flex items-center gap-1">
+              <Settings className="h-3 w-3" />
+              <span className="text-xs">Custom Prompt</span>
+            </Badge>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-gray-500">
           Generate compelling pain and gain statements based on your USP Canvas data.
-          {customPrompt ? ' A custom prompt has been set in AI settings.' : ''}
+          {customPrompt ? ' A custom prompt from Settings is being used.' : ''}
         </p>
 
         {/* Additional briefing information input */}

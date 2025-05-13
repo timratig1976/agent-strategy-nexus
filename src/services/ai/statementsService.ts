@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { PromptManager } from "./core/promptManager";
 
 interface StatementsGenerationOptions {
   strategyId: string;
@@ -17,6 +18,13 @@ export interface GeneratedStatements {
 
 export class StatementsService {
   /**
+   * Ensure prompts exist for the statements module
+   */
+  static async ensurePromptsExist(): Promise<boolean> {
+    return await PromptManager.ensurePromptsExist('statements');
+  }
+
+  /**
    * Generate statements using the edge function
    */
   static async generateStatements(options: StatementsGenerationOptions): Promise<GeneratedStatements> {
@@ -27,6 +35,9 @@ export class StatementsService {
     }
 
     try {
+      // Ensure prompts exist for the statements module
+      await this.ensurePromptsExist();
+      
       const { data, error } = await supabase.functions.invoke('statements-generator', {
         body: { 
           strategyId, 

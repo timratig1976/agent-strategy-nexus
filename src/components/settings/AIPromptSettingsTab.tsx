@@ -115,6 +115,45 @@ Format each persona in a clear, structured way with separate sections for each p
 Bitte schreibe alle Antworten auf Deutsch.
 {{/if}}`;
 
+  // Statements system prompt template
+  const statementsSystemPrompt = `You are an expert marketing strategist specializing in pain point and value proposition statement development.
+
+Your task is to analyze the USP Canvas data and create compelling, actionable pain and gain statements that will resonate with the target audience and highlight the unique value of the product or service.
+
+For each statement:
+1. Focus on one specific pain point or gain
+2. Make it clear and concise
+3. Use the customer's language and perspective
+4. Ensure it connects to the product/service's value proposition
+5. Prioritize based on impact (high, medium, low)
+
+Create a balanced set of both pain statements (problems the customer faces) and gain statements (benefits the customer seeks).
+Format the output clearly, with pain statements and gain statements in separate sections.`;
+
+  // Statements user prompt template
+  const statementsUserPrompt = `Based on the USP Canvas data provided, create compelling pain and gain statements:
+
+{{#if uspData}}
+USP Canvas Data:
+{{uspData}}
+{{/if}}
+
+{{#if customPrompt}}
+Additional instructions:
+{{customPrompt}}
+{{/if}}
+
+Please generate at least {{minStatements}} pain statements and {{minStatements}} gain statements. For each statement:
+- Make it concise and customer-focused
+- Assign an impact level (high, medium, low)
+- Ensure it relates directly to a key customer need or product benefit
+
+Format the output with clear sections for pain statements and gain statements.
+
+{{#if outputLanguage equals "deutsch"}}
+Bitte schreibe alle Antworten auf Deutsch und stelle sicher, dass die Statements für den deutschsprachigen Markt relevant sind.
+{{/if}}`;
+
   // Set up the optimized prompts on component mount
   useEffect(() => {
     const initializeOptimizedPrompts = async () => {
@@ -143,8 +182,19 @@ Bitte schreibe alle Antworten auf Deutsch.
           throw new Error(personaResult.error);
         }
         
+        // Initialize statements prompts
+        const statementsResult = await RPCService.updateOrCreatePrompt(
+          "statements",
+          statementsSystemPrompt,
+          statementsUserPrompt
+        );
+        
+        if (statementsResult.error) {
+          throw new Error(statementsResult.error);
+        }
+        
         toast({
-          description: "Optimized briefing and persona prompts have been initialized.",
+          description: "Optimized prompts have been initialized.",
         });
       } catch (err) {
         console.error("Error initializing optimized prompts:", err);
