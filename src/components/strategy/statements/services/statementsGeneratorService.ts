@@ -10,7 +10,7 @@ export interface GeneratedStatements {
   gainStatements: Array<{ content: string; impact: 'low' | 'medium' | 'high' }>;
   rawOutput?: string;
   error?: string;
-  debugInfo?: any; // Add the debugInfo property to match the expected return type
+  debugInfo?: any;
 }
 
 /**
@@ -40,7 +40,7 @@ export class StatementsGeneratorService {
         painStatements: result.painStatements || [],
         gainStatements: result.gainStatements || [],
         rawOutput: result.rawOutput,
-        debugInfo: result.debugInfo || {} // Include the debugInfo property
+        debugInfo: result.debugInfo
       };
     } catch (error: any) {
       console.error('Error in statements generation service:', error);
