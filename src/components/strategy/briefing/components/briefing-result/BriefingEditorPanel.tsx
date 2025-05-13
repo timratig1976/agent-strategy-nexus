@@ -10,6 +10,7 @@ import BriefingAIEnhancer from "./BriefingAIEnhancer";
 import PromptMonitor from "./PromptMonitor";
 import { AgentResult } from "@/types/marketing";
 import { Progress } from "@/components/ui/progress";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 interface BriefingEditorPanelProps {
   title: string;
@@ -70,16 +71,22 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
     <Card className="h-full flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>{title}</CardTitle>
-        {/* AI Debug controls moved to AI Generator section */}
+        {/* AI Debug controls in a Sheet for right panel effect */}
         <div>
           {aiDebugInfo && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={togglePromptMonitor}
-            >
-              {showPromptMonitor ? "Hide AI Log" : "Show AI Log"}
-            </Button>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                >
+                  Show AI Log
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[400px] sm:w-[540px]">
+                <PromptMonitor debugInfo={aiDebugInfo} />
+              </SheetContent>
+            </Sheet>
           )}
         </div>
       </CardHeader>
@@ -160,11 +167,7 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
           </div>
         </div>
         
-        {showPromptMonitor && aiDebugInfo && (
-          <div className="mt-4">
-            <PromptMonitor debugInfo={aiDebugInfo} />
-          </div>
-        )}
+        {/* Removed the inline PromptMonitor as it's now in the sheet */}
       </CardContent>
       
       <CardFooter className="flex gap-2 w-full">
