@@ -1,7 +1,6 @@
-
 import React from "react";
 import { PersonaDevelopmentProps } from "./types";
-import { BriefingResult } from "../briefing/components/briefing-result/BriefingResult";
+import BriefingResult from "../briefing/components/briefing-result/BriefingResult";
 import { PersonaHeader, BriefingDisplay } from "./components";
 import { usePersonaDevelopment } from "./hooks/usePersonaDevelopment";
 import { usePersonaNavigation } from "./hooks/usePersonaNavigation";

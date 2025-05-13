@@ -33,7 +33,7 @@ const BriefingResult: React.FC<StrategyBriefingResultProps> = ({
     }
   }, [latestBriefing]);
 
-  // Handle save
+  // Handle save - updated to conform to AIGeneratorPanel prop types
   const handleSaveBriefing = async (isFinal: boolean) => {
     try {
       await saveAgentResult(editedContent, isFinal);
@@ -42,10 +42,11 @@ const BriefingResult: React.FC<StrategyBriefingResultProps> = ({
         onBriefingSaved(isFinal);
       }
       
-      return true;
+      // Return nothing (void) to match expected type
+      return;
     } catch (error) {
       console.error("Error saving briefing:", error);
-      return false;
+      return;
     }
   };
 

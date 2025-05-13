@@ -9,7 +9,7 @@ interface UseAIGeneratorOptions<T extends AIGenerationResult> {
   initialHistory?: T[];
   onSaveSuccess?: (result: T, isFinal: boolean) => void;
   fetchGenerationHistory?: () => Promise<T[]>;
-  saveGenerationResult?: (content: string, isFinal: boolean) => Promise<T | null>;
+  saveGenerationResult?: (content: string, isFinal: boolean) => Promise<T | void>;
   generateFunction?: (enhancementText?: string) => Promise<{ content: string; metadata?: Record<string, any> } | null>;
 }
 
@@ -122,7 +122,7 @@ export function useAIGenerator<T extends AIGenerationResult>({
     }
   }, [enhancementText, generateFunction, latestGeneration, module]);
 
-  // Save content
+  // Save content - updated return type to match our interface
   const saveContent = useCallback(async (isFinal: boolean) => {
     if (!saveGenerationResult) {
       toast.error(`Save function not provided for ${module}`);
@@ -132,17 +132,15 @@ export function useAIGenerator<T extends AIGenerationResult>({
     try {
       const savedResult = await saveGenerationResult(editedContent, isFinal);
       
-      if (!savedResult) {
-        throw new Error('Save failed: No result returned');
-      }
-      
-      // Update history and latest generation
-      setGenerationHistory(prev => [savedResult, ...prev.filter(item => item.id !== savedResult.id)]);
-      setLatestGeneration(savedResult);
-      
-      // Call success callback if provided
-      if (onSaveSuccess) {
-        onSaveSuccess(savedResult, isFinal);
+      if (savedResult) {
+        // Update history and latest generation
+        setGenerationHistory(prev => [savedResult as T, ...prev.filter(item => item.id !== (savedResult as T).id)]);
+        setLatestGeneration(savedResult as T);
+        
+        // Call success callback if provided
+        if (onSaveSuccess) {
+          onSaveSuccess(savedResult as T, isFinal);
+        }
       }
       
       toast.success(isFinal ? `${module} saved as final` : `${module} draft saved`);
@@ -150,7 +148,7 @@ export function useAIGenerator<T extends AIGenerationResult>({
     } catch (error) {
       console.error(`Error saving ${module}:`, error);
       toast.error(`Failed to save ${module}`);
-      return null;
+      return;
     }
   }, [editedContent, module, onSaveSuccess, saveGenerationResult]);
 

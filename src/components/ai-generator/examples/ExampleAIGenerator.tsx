@@ -34,7 +34,8 @@ const ExampleAIGenerator: React.FC<ExampleAIGeneratorProps> = ({ strategyId }) =
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    return {
+    // Updated to match the expected void return type
+    const result = {
       id: `example-${Date.now()}`,
       content,
       createdAt: new Date().toISOString(),
@@ -44,6 +45,9 @@ const ExampleAIGenerator: React.FC<ExampleAIGeneratorProps> = ({ strategyId }) =
         type: 'example'
       }
     };
+    
+    // Return the result but allow it to be treated as void to match AIGeneratorPanel's expected type
+    return result;
   };
   
   const mockFetchHistory = async () => {
