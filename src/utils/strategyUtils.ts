@@ -1,3 +1,4 @@
+
 import { StrategyState } from "@/types/marketing";
 
 /**
@@ -62,11 +63,36 @@ export const stateToDbMap: Record<StrategyState, string> = {
   [StrategyState.BRIEFING]: "briefing",
   [StrategyState.PERSONA]: "persona",
   [StrategyState.PAIN_GAINS]: "pain_gains",
-  [StrategyState.STATEMENTS]: "statements", // Mapped to exact database enum value
-  [StrategyState.CHANNEL_STRATEGY]: "channel_strategy", // Mapped to exact database enum value
+  [StrategyState.STATEMENTS]: "statements",
+  [StrategyState.CHANNEL_STRATEGY]: "channel_strategy",
   [StrategyState.FUNNEL]: "funnel",
-  [StrategyState.ROAS_CALCULATOR]: "roas_calculator", // Mapped to exact database enum value
+  [StrategyState.ROAS_CALCULATOR]: "roas_calculator",
   [StrategyState.ADS]: "ads",
-  [StrategyState.COMPLETED]: "completed" // Updated to map to 'completed' if it exists in the DB enum
+  [StrategyState.COMPLETED]: "ads" // Map COMPLETED to 'ads' since the database doesn't have a 'completed' state
 };
 
+/**
+ * Get a valid database enum value for strategy_state
+ * This ensures we never try to write an invalid enum value to the database
+ */
+export const getValidDbState = (state: StrategyState): "briefing" | "persona" | "pain_gains" | 
+                                                     "statements" | "channel_strategy" | "funnel" | 
+                                                     "roas_calculator" | "ads" => {
+  const dbValue = stateToDbMap[state];
+  
+  // Ensure we're returning a valid database enum value
+  switch (dbValue) {
+    case "briefing": 
+    case "persona": 
+    case "pain_gains": 
+    case "statements":
+    case "channel_strategy":
+    case "funnel":
+    case "roas_calculator":
+    case "ads":
+      return dbValue;
+    default:
+      console.warn(`Invalid state value: ${state}, falling back to "ads"`);
+      return "ads"; // Default fallback for safety
+  }
+};

@@ -5,7 +5,7 @@ import { Strategy, StrategyState } from "@/types/marketing";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { slugToState, stateToSlug } from "@/utils/strategyUrlUtils";
-import { stateToDbMap } from "@/utils/strategyUtils";
+import { stateToDbMap, getValidDbState } from "@/utils/strategyUtils";
 import { isValidStrategyState } from "@/utils/typeUtils";
 
 interface StrategyStageSyncOptions {
@@ -65,16 +65,6 @@ export const useStrategyStageSynchronization = ({
       return;
     }
     
-    // Map the URL state to a valid database state value
-    // We need to ensure urlState is a valid StrategyState before using it as a key in stateToDbMap
-    if (!isValidStrategyState(urlState)) {
-      console.error("URL state is not a valid StrategyState:", urlState);
-      navigate(`/strategy/${id}`);
-      return;
-    }
-    
-    const dbState = stateToDbMap[urlState];
-    
     // Implement a simple circuit breaker to prevent infinite loops
     // If we've already tried to update to this state recently, don't try again
     const updateKey = `${id}-${urlState}`;
@@ -89,18 +79,24 @@ export const useStrategyStageSynchronization = ({
         setIsUpdating(true);
         setLastAttemptedUpdate(updateKey);
         
-        console.log(`Handling transition from ${strategy.state} to ${urlState}`);
-        console.log(`Updating database with state value: ${dbState}`);
+        // Ensure urlState is a valid StrategyState before using it
+        if (!isValidStrategyState(urlState)) {
+          console.error("URL state is not a valid StrategyState:", urlState);
+          navigate(`/strategy/${id}`);
+          return;
+        }
         
-        // Update the database with the new state
-        // Use type assertion to ensure TypeScript recognizes this as a valid enum value
+        console.log(`Handling transition from ${strategy.state} to ${urlState}`);
+        
+        // Get a validated database enum value to ensure type safety
+        const validDbState = getValidDbState(urlState);
+        
+        console.log(`Updating database with state value: ${validDbState}`);
+        
+        // Update the database with the new state using our validated enum value
         const { error } = await supabase
           .from('strategies')
-          .update({ 
-            state: dbState as "briefing" | "persona" | "pain_gains" | 
-                  "statements" | "channel_strategy" | "funnel" | 
-                  "roas_calculator" | "ads" | "completed"
-          })
+          .update({ state: validDbState })
           .eq('id', id);
         
         if (error) {
@@ -109,7 +105,7 @@ export const useStrategyStageSynchronization = ({
           throw error;
         }
         
-        console.log(`Updated strategy state from ${strategy.state} to ${dbState}`);
+        console.log(`Updated strategy state from ${strategy.state} to ${validDbState}`);
         
         // Refetch the strategy data to get the updated state
         if (refetch) refetch();

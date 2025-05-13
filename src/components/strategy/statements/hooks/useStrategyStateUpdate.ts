@@ -1,7 +1,7 @@
 
 import { StrategyState } from '@/types/marketing';
 import { supabase } from '@/integrations/supabase/client';
-import { stateToDbMap } from '@/utils/strategyUtils';
+import { stateToDbMap, getValidDbState } from '@/utils/strategyUtils';
 import { toast } from 'sonner';
 
 /**
@@ -28,15 +28,13 @@ export const useStrategyStateUpdate = (strategyId: string) => {
       
       console.log(`Mapped state ${nextState} to database value: ${dbState}`);
       
-      // Use the database enum type directly instead of string
-      // This ensures TypeScript knows we're using a valid enum value
+      // Get a validated database enum value to ensure type safety
+      const validDbState = getValidDbState(nextState);
+      
+      // Use the validated database state value
       const { error } = await supabase
         .from('strategies')
-        .update({ 
-          state: dbState as "briefing" | "persona" | "pain_gains" | 
-                "statements" | "channel_strategy" | "funnel" | 
-                "roas_calculator" | "ads" | "completed"
-        })
+        .update({ state: validDbState })
         .eq('id', strategyId);
     
       if (error) {
@@ -46,7 +44,7 @@ export const useStrategyStateUpdate = (strategyId: string) => {
         return false;
       }
     
-      console.log(`Strategy state updated successfully to ${nextState} (${dbState})`);
+      console.log(`Strategy state updated successfully to ${nextState} (${validDbState})`);
       return true;
     } catch (err) {
       console.error("Error in updateStrategyState:", err);
