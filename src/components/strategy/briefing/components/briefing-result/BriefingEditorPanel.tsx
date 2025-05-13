@@ -70,14 +70,7 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
     <Card className="h-full flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>{title}</CardTitle>
-        <BriefingActionBar 
-          isGenerating={isGenerating}
-          briefingHistory={briefingHistory}
-          onSelectHistoricalVersion={onSelectHistoricalVersion}
-          aiDebugInfo={aiDebugInfo}
-          showPromptMonitor={showPromptMonitor}
-          togglePromptMonitor={togglePromptMonitor}
-        />
+        {/* Moved action bar to within the AI Generator block */}
       </CardHeader>
       
       <CardContent className="flex-grow flex flex-col space-y-6">
@@ -94,7 +87,17 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
         
         {/* AI Generator section - now with border and clear separation */}
         <div className="border rounded-lg p-4 bg-muted/10">
-          <h3 className="text-lg font-medium mb-3">AI Generator</h3>
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-lg font-medium">AI Generator</h3>
+            <BriefingActionBar 
+              isGenerating={isGenerating}
+              briefingHistory={briefingHistory}
+              onSelectHistoricalVersion={onSelectHistoricalVersion}
+              aiDebugInfo={aiDebugInfo}
+              showPromptMonitor={showPromptMonitor}
+              togglePromptMonitor={togglePromptMonitor}
+            />
+          </div>
           
           {/* Special Instructions without internal generate button */}
           <BriefingAIEnhancer 
