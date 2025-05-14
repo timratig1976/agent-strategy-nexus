@@ -4,3 +4,4 @@ export * from "./useAgentResultSaver";
 export * from "./useStrategyMetadata";
 export * from "./useBriefingEditor";
 export * from "./useBriefingViewer";
+export * from "./useBriefingGenerator";
