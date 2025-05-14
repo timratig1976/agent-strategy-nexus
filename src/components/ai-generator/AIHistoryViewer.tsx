@@ -13,6 +13,27 @@ import { History } from "lucide-react";
 import { AIGenerationResult, AIHistoryViewerProps } from "./types";
 
 /**
+ * Format a date safely, handling potential null values and different date types
+ */
+function formatDate(dateValue: string | Date | null | undefined): string | null {
+  if (!dateValue) {
+    return null;
+  }
+  
+  try {
+    // Convert to Date object if it's a string
+    const dateObj = typeof dateValue === 'string' 
+      ? new Date(dateValue)
+      : dateValue;
+      
+    return formatDistanceToNow(dateObj, { addSuffix: true });
+  } catch (e) {
+    console.error("Error formatting date:", e);
+    return null;
+  }
+}
+
+/**
  * Component for viewing and selecting from generation history
  */
 const AIHistoryViewer = <T extends AIGenerationResult>({
@@ -53,11 +74,7 @@ const AIHistoryViewer = <T extends AIGenerationResult>({
                     )}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {item.createdAt ? formatDistanceToNow(
-                      typeof item.createdAt === 'object' && item.createdAt !== null && 'getTime' in item.createdAt 
-                        ? item.createdAt 
-                        : new Date(String(item.createdAt))
-                    , { addSuffix: true }) : null}
+                    {formatDate(item.createdAt)}
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground line-clamp-2">
