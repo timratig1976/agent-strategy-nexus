@@ -71,7 +71,7 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
   const generationHistory = briefingHistory.map(briefing => ({
     id: briefing.id,
     content: briefing.content,
-    createdAt: briefing.created_at,
+    createdAt: briefing.createdAt,
     metadata: briefing.metadata
   }));
   
@@ -79,7 +79,7 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
   const latestResult = latestBriefing ? {
     id: latestBriefing.id,
     content: latestBriefing.content,
-    createdAt: latestBriefing.created_at,
+    createdAt: latestBriefing.createdAt,
     metadata: latestBriefing.metadata
   } : null;
 
@@ -112,3 +112,4 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
 };
 
 export default BriefingEditorPanel;
+
