@@ -1,35 +1,32 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 
-interface UseBriefingEditorProps {
+interface UseBriefingEditorOptions {
   initialContent: string;
   isGenerating: boolean;
 }
 
-export const useBriefingEditor = ({ 
+export const useBriefingEditor = ({
   initialContent, 
-  isGenerating 
-}: UseBriefingEditorProps) => {
+  isGenerating
+}: UseBriefingEditorOptions) => {
   const [editedContent, setEditedContent] = useState<string>(initialContent);
-  const [originalContent, setOriginalContent] = useState<string>(initialContent);
-
-  // Update editor content when initialContent changes
+  
+  // Update edited content when the initial content changes
   useEffect(() => {
-    if (initialContent && initialContent !== originalContent) {
+    if (initialContent) {
       setEditedContent(initialContent);
-      setOriginalContent(initialContent);
     }
-  }, [initialContent, originalContent]);
-
-  // Reset content to initial value
+  }, [initialContent]);
+  
+  // Reset content to initial state
   const resetContent = () => {
     setEditedContent(initialContent);
   };
-
+  
   return {
     editedContent,
     setEditedContent,
-    originalContent,
-    resetContent,
+    resetContent
   };
 };

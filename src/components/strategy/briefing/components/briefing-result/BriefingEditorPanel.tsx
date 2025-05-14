@@ -1,12 +1,10 @@
 
-import React, { useState } from "react";
-import { Strategy, AgentResult } from "@/types/marketing";
+import React, { useState, useEffect } from "react";
+import { Strategy } from "@/types/marketing";
 import { AIGeneratorPanel } from "@/components/ai-generator";
 import { useStrategyDebug } from "@/hooks/useStrategyDebug";
-import { useBriefingEditor } from '../../hooks';
-import { useBriefingHistory } from '../../hooks';
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useBriefingEditor } from '../../hooks/useBriefingEditor';
+import { useBriefingViewer } from '../../hooks/useBriefingViewer';
 
 interface BriefingEditorPanelProps {
   strategy: Strategy;
@@ -19,28 +17,46 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
   briefing = "",
   onUpdateBriefing
 }) => {
-  const { debugInfo, setDebugInfo } = useStrategyDebug();
+  const { debugInfo } = useStrategyDebug();
   const isDebugEnabled = debugInfo !== null;
   
-  const [enhancementText, setEnhancementText] = useState("");
-  const [enhancerExpanded, setEnhancerExpanded] = useState(false);
-  const [showPromptMonitor, setShowPromptMonitor] = useState(false);
+  // Use our briefing viewer hook to handle generation
+  const {
+    enhancementText,
+    setEnhancementText,
+    enhancerExpanded,
+    toggleEnhancerExpanded,
+    showPromptMonitor,
+    togglePromptMonitor,
+    latestBriefing,
+    briefingHistory,
+    isGenerating,
+    progress,
+    aiDebugInfo,
+    error,
+    generateContent
+  } = useBriefingViewer({
+    strategy,
+    onUpdateBriefing
+  });
   
+  // Use briefing editor for content editing
   const {
     editedContent,
     setEditedContent,
     resetContent
   } = useBriefingEditor({
     initialContent: briefing,
-    isGenerating: false
+    isGenerating
   });
   
-  const { 
-    briefingHistory, 
-    fetchBriefingHistory,
-    setBriefingHistory
-  } = useBriefingHistory(strategy.id);
-  
+  // Update edited content when the briefing changes
+  useEffect(() => {
+    if (briefing) {
+      setEditedContent(briefing);
+    }
+  }, [briefing, setEditedContent]);
+
   // Format history for AIGeneratorPanel
   const generationHistory = briefingHistory.map(briefing => ({
     id: briefing.id || '',
@@ -49,19 +65,13 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
     metadata: briefing.metadata
   }));
   
-  // Get the latest briefing from the history
-  const latestResult = briefingHistory.length > 0 ? {
-    id: briefingHistory[0].id || '',
-    content: briefingHistory[0].content,
-    createdAt: briefingHistory[0].createdAt || new Date().toISOString(),
-    metadata: briefingHistory[0].metadata
+  // Get the latest result for AIGeneratorPanel
+  const latestResult = latestBriefing ? {
+    id: latestBriefing.id || '',
+    content: latestBriefing.content,
+    createdAt: latestBriefing.createdAt || new Date().toISOString(),
+    metadata: latestBriefing.metadata
   } : null;
-
-  // Handler for generating content
-  const generateContent = (enhancementText?: string) => {
-    console.log("Generate content with:", enhancementText);
-    // Implementation would go here
-  };
 
   // Handler for saving content
   const handleSaveContent = async (isFinal: boolean) => {
@@ -69,10 +79,6 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
     onUpdateBriefing(editedContent);
     return;
   };
-
-  // Toggle handlers for enhancer and monitor
-  const toggleEnhancerExpanded = () => setEnhancerExpanded(!enhancerExpanded);
-  const togglePromptMonitor = () => setShowPromptMonitor(!showPromptMonitor);
 
   return (
     <AIGeneratorPanel
@@ -82,11 +88,11 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
       setEditedContent={setEditedContent}
       enhancementText={enhancementText}
       setEnhancementText={setEnhancementText}
-      isGenerating={false}
-      progress={0}
+      isGenerating={isGenerating}
+      progress={progress}
       generationHistory={generationHistory}
       aiDebugInfo={isDebugEnabled ? debugInfo : null}
-      error={null}
+      error={error}
       generateContent={generateContent}
       handleSaveContent={handleSaveContent}
       enhancerExpanded={enhancerExpanded}
