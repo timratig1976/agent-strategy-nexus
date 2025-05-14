@@ -24,7 +24,8 @@ const AIContentEditor: React.FC<AIContentEditorProps> = ({
     }
   }, [content, editedContent, setEditedContent]);
 
-  if (isGenerating) {
+  // Only render the loading state when isGenerating is true AND there's no editedContent yet
+  if (isGenerating && !editedContent) {
     return (
       <div className="relative min-h-[300px] bg-muted/20 rounded-md p-4">
         <div className="animate-pulse flex flex-col space-y-4">
