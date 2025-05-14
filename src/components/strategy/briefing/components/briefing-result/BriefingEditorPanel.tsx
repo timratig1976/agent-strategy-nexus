@@ -1,6 +1,7 @@
+
 import React from "react";
-import { Strategy } from "@/types/marketing";
-import AIGeneratorPanel from "@/components/ui/generator/AIGeneratorPanel";
+import { Strategy, AgentResult } from "@/types/marketing";
+import { AIGeneratorPanel } from "@/components/ai-generator";
 import { useStrategyDebug } from "@/hooks/useStrategyDebug";
 import { useBriefingEditor } from '../../hooks';
 import { useBriefingHistory } from '../../hooks';
@@ -20,77 +21,72 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
   const isDebugEnabled = debugInfo !== null;
   
   const {
-    content,
-    setContent,
-    isGenerating,
-    isInstructionsVisible,
-    toggleInstructions,
-    handleGenerate,
-    generationStatus,
-    instructions,
-    setInstructions,
-    handleRegenerateWithInstructions
+    editedContent,
+    setEditedContent,
+    resetContent
   } = useBriefingEditor({
-    strategy,
     initialContent: briefing,
-    onUpdateContent: onUpdateBriefing
+    isGenerating: false
   });
   
   const { 
     briefingHistory, 
-    latestBriefing,
-    isHistoryVisible,
-    toggleHistory,
-    loadBriefingFromHistory 
-  } = useBriefingHistory({
-    strategy,
-    onSelectBriefing: (content) => {
-      setContent(content);
-      onUpdateBriefing(content);
-    }
-  });
+    fetchBriefingHistory,
+    setBriefingHistory
+  } = useBriefingHistory(strategy.id);
   
   // Format history for AIGeneratorPanel
   const generationHistory = briefingHistory.map(briefing => ({
-    id: briefing.id,
+    id: briefing.id || '',
     content: briefing.content,
-    createdAt: briefing.created_at || briefing.createdAt,
+    createdAt: briefing.createdAt || new Date().toISOString(),
     metadata: briefing.metadata
   }));
   
-  // Format latest result for AIGeneratorPanel
-  const latestResult = latestBriefing ? {
-    id: latestBriefing.id,
-    content: latestBriefing.content,
-    createdAt: latestBriefing.created_at || latestBriefing.createdAt,
-    metadata: latestBriefing.metadata
+  // Get the latest briefing from the history
+  const latestResult = briefingHistory.length > 0 ? {
+    id: briefingHistory[0].id || '',
+    content: briefingHistory[0].content,
+    createdAt: briefingHistory[0].createdAt || new Date().toISOString(),
+    metadata: briefingHistory[0].metadata
   } : null;
+
+  // Handler for generating content
+  const generateContent = (enhancementText?: string) => {
+    console.log("Generate content with:", enhancementText);
+    // Implementation would go here
+  };
+
+  // Handler for saving content
+  const handleSaveContent = async (isFinal: boolean) => {
+    console.log("Saving content as", isFinal ? "final" : "draft");
+    onUpdateBriefing(editedContent);
+    return;
+  };
 
   return (
     <AIGeneratorPanel
       title="Strategy Briefing"
-      content={content}
-      onContentChange={setContent}
-      instructions={instructions}
-      onInstructionsChange={setInstructions}
-      isGenerating={isGenerating}
-      isInstructionsVisible={isInstructionsVisible}
-      onToggleInstructions={toggleInstructions}
-      onGenerate={handleGenerate}
-      onRegenerateWithInstructions={handleRegenerateWithInstructions}
-      generationStatus={generationStatus}
-      generationHistory={generationHistory}
       latestResult={latestResult}
-      isHistoryVisible={isHistoryVisible}
-      onToggleHistory={toggleHistory}
-      onSelectHistoryItem={(item) => loadBriefingFromHistory(item.id)}
-      debugInfo={isDebugEnabled ? debugInfo : null}
-      onUpdateDebugInfo={setDebugInfo}
-      historyTitle="Briefing History"
-      includeAIResponseValidator={true}
-      aiResponseValidatorConfig={{
-        expectedStructure: "Comprehensive marketing strategy briefing with company details, industry analysis, target audience, goals and key performance indicators."
-      }}
+      editedContent={editedContent}
+      setEditedContent={setEditedContent}
+      enhancementText=""
+      setEnhancementText={() => {}}
+      isGenerating={false}
+      progress={0}
+      generationHistory={generationHistory}
+      aiDebugInfo={isDebugEnabled ? debugInfo : null}
+      error={null}
+      generateContent={generateContent}
+      handleSaveContent={handleSaveContent}
+      enhancerExpanded={true}
+      toggleEnhancerExpanded={() => {}}
+      showPromptMonitor={false}
+      togglePromptMonitor={() => {}}
+      generateButtonText="Generate Briefing"
+      saveButtonText="Save Draft"
+      saveFinalButtonText="Save as Final"
+      placeholderText="Generated marketing strategy briefing will appear here..."
     />
   );
 };

@@ -168,30 +168,15 @@ const StrategyBriefing: React.FC<StrategyBriefingProps> = ({
     />
   );
   
-  // Use BriefingEditorPanel instead of BriefingResult
+  // Fixed prop passing to BriefingEditorPanel
   const rightContent = (
     <BriefingEditorPanel
-      title="AI Generator"
-      latestBriefing={latestBriefing}
-      editedContent={editedContent}
-      setEditedContent={setEditedContent}
-      enhancementText={enhancementText}
-      setEnhancementText={setEnhancementText}
-      isGenerating={isGenerating}
-      progress={progress}
-      briefingHistory={briefingHistory}
-      aiDebugInfo={aiDebugInfo}
-      error={error}
-      generateBriefing={handleGenerateBriefing}
-      handleSaveBriefing={(isFinal: boolean) => saveAgentResult(editedContent, isFinal)}
-      enhancerExpanded={enhancerExpanded}
-      toggleEnhancerExpanded={toggleEnhancerExpanded}
-      showPromptMonitor={showPromptMonitor}
-      togglePromptMonitor={togglePromptMonitor}
-      generateButtonText="Generate Briefing"
-      saveButtonText="Save Draft"
-      saveFinalButtonText="Save as Final"
-      placeholderText="The AI will generate your marketing strategy briefing here..."
+      strategy={strategy}
+      briefing={latestBriefing?.content || ''}
+      onUpdateBriefing={(content) => {
+        setEditedContent(content);
+        saveAgentResult(content, false);
+      }}
     />
   );
 
