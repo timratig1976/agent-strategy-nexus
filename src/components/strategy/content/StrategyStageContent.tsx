@@ -1,8 +1,8 @@
 
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Strategy, StrategyState } from "@/types/marketing";
 import { AgentResult } from "@/types/marketing";
-import { useNavigate } from "react-router-dom";
 
 // Import strategy stage components
 import StrategyBriefing from "@/components/strategy/briefing";
@@ -12,7 +12,7 @@ import StatementsModule from "@/components/strategy/statements";
 import ChannelStrategyModule from "@/components/strategy/channel-strategy";
 import FunnelStrategyModule from "@/components/strategy/funnel";
 import RoasCalculatorModule from "@/components/strategy/roas-calculator";
-import AdCampaignModule from "@/components/strategy/ads";
+import { AdCampaignModule } from "@/components/strategy/ads";
 import useStrategyNavigation from "@/hooks/useStrategyNavigation";
 
 interface StrategyStageContentProps {

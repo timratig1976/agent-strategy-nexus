@@ -16,7 +16,7 @@ import StatementsModule from "@/components/strategy/statements";
 import ChannelStrategyModule from "@/components/strategy/channel-strategy";
 import FunnelStrategyModule from "@/components/strategy/funnel";
 import RoasCalculatorModule from "@/components/strategy/roas-calculator";
-import AdCampaignModule from "@/components/strategy/ads";
+import { AdCampaignModule } from "@/components/strategy/ads";
 
 // Import custom hooks and utilities
 import useStrategyData from "@/hooks/useStrategyData";
