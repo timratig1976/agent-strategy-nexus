@@ -15,8 +15,6 @@ import WebsiteCrawlerWrapper from "../WebsiteCrawlerWrapper";
 import { useBriefingGenerator } from "../hooks/useBriefingGenerator";
 import { useStrategyMetadata } from "../hooks/useStrategyMetadata";
 import { useAgentResultSaver } from "../hooks/useAgentResultSaver";
-import { useBriefingEditor } from "../hooks/useBriefingEditor";
-import { useBriefingViewer } from "../hooks/useBriefingViewer";
 
 export const BriefingContainer: React.FC<StrategyBriefingProps> = ({ 
   strategy, 
@@ -43,18 +41,9 @@ export const BriefingContainer: React.FC<StrategyBriefingProps> = ({
     aiDebugInfo,
     error
   } = useBriefingGenerator(strategy.id);
-
-  // Use our custom hooks for the editor panel
-  const {
-    showPromptMonitor,
-    enhancerExpanded,
-    togglePromptMonitor,
-    toggleEnhancerExpanded
-  } = useBriefingViewer();
   
   // Check if there's a final briefing in the history
   useEffect(() => {
-    console.log("Checking for final briefing in history:", briefingHistory);
     const finalBriefing = briefingHistory.find(briefing => 
       briefing.metadata && briefing.metadata.is_final === true
     );
@@ -66,16 +55,6 @@ export const BriefingContainer: React.FC<StrategyBriefingProps> = ({
   const latestBriefing = briefingHistory.length > 0 
     ? briefingHistory[0] 
     : (agentResults && agentResults.length > 0 ? agentResults[0] : null);
-
-  // Use the briefing editor hook
-  const { 
-    editedContent, 
-    setEditedContent, 
-    resetContent 
-  } = useBriefingEditor({
-    initialContent: latestBriefing?.content || '',
-    isGenerating
-  });
 
   // Navigate to persona development
   const goToNextStep = async () => {
@@ -125,15 +104,18 @@ export const BriefingContainer: React.FC<StrategyBriefingProps> = ({
       
       if (isFinal) {
         setHasFinalBriefing(true);
+        toast.success("Final briefing saved successfully");
+      } else {
+        toast.success("Draft saved successfully");
       }
     } catch (error) {
       console.error("Error saving briefing:", error);
+      toast.error("Failed to save briefing");
       throw error;
     }
   };
 
   const handleUpdateBriefing = (content: string) => {
-    setEditedContent(content);
     saveAgentResult(content, false);
   };
 

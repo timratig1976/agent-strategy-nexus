@@ -1,10 +1,12 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Strategy, AgentResult } from "@/types/marketing";
 import { AIGeneratorPanel } from "@/components/ai-generator";
 import { useStrategyDebug } from "@/hooks/useStrategyDebug";
 import { useBriefingEditor } from '../../hooks';
 import { useBriefingHistory } from '../../hooks';
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 interface BriefingEditorPanelProps {
   strategy: Strategy;
@@ -19,6 +21,10 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
 }) => {
   const { debugInfo, setDebugInfo } = useStrategyDebug();
   const isDebugEnabled = debugInfo !== null;
+  
+  const [enhancementText, setEnhancementText] = useState("");
+  const [enhancerExpanded, setEnhancerExpanded] = useState(false);
+  const [showPromptMonitor, setShowPromptMonitor] = useState(false);
   
   const {
     editedContent,
@@ -64,14 +70,18 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
     return;
   };
 
+  // Toggle handlers for enhancer and monitor
+  const toggleEnhancerExpanded = () => setEnhancerExpanded(!enhancerExpanded);
+  const togglePromptMonitor = () => setShowPromptMonitor(!showPromptMonitor);
+
   return (
     <AIGeneratorPanel
       title="Strategy Briefing"
       latestResult={latestResult}
       editedContent={editedContent}
       setEditedContent={setEditedContent}
-      enhancementText=""
-      setEnhancementText={() => {}}
+      enhancementText={enhancementText}
+      setEnhancementText={setEnhancementText}
       isGenerating={false}
       progress={0}
       generationHistory={generationHistory}
@@ -79,10 +89,10 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
       error={null}
       generateContent={generateContent}
       handleSaveContent={handleSaveContent}
-      enhancerExpanded={true}
-      toggleEnhancerExpanded={() => {}}
-      showPromptMonitor={false}
-      togglePromptMonitor={() => {}}
+      enhancerExpanded={enhancerExpanded}
+      toggleEnhancerExpanded={toggleEnhancerExpanded}
+      showPromptMonitor={showPromptMonitor}
+      togglePromptMonitor={togglePromptMonitor}
       generateButtonText="Generate Briefing"
       saveButtonText="Save Draft"
       saveFinalButtonText="Save as Final"
