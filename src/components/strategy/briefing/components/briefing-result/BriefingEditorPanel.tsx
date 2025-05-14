@@ -108,6 +108,23 @@ const BriefingEditorPanel: React.FC<BriefingEditorPanelProps> = ({
         <div className="border rounded-lg p-4 bg-muted/10">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-lg font-medium">AI Generator</h3>
+            
+            {/* AI Log button moved here, next to the AI Generator headline */}
+            {aiDebugInfo && (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                  >
+                    Show AI Log
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[400px] sm:w-[540px]">
+                  <PromptMonitor debugInfo={aiDebugInfo} />
+                </SheetContent>
+              </Sheet>
+            )}
           </div>
           
           {/* Special Instructions without internal generate button */}
