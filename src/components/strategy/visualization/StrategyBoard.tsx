@@ -12,10 +12,13 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { Button } from "@/components/ui/button";
-import { Download, FileText, User, FlaskConical, BarChart2, MessageSquare } from "lucide-react";
+import { Download, FileText, User, FlaskConical, BarChart2, MessageSquare, X } from "lucide-react";
 import { AgentResult, StrategyState } from "@/types/marketing";
 import { getStateLabel } from "@/utils/strategyUtils";
-import UspCanvasBoard from "@/components/marketing/modules/usp-canvas/visualization/UspCanvasBoard"; 
+import UspCanvasBoard from "@/components/marketing/modules/usp-canvas/visualization/UspCanvasBoard";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { formatContentForDisplay, extractUspCanvasFromAgentResult } from "@/utils/canvasVisualizationHelpers";
+import DetailedContentViewer from './components/DetailedContentViewer';
 
 // Custom node components
 import StageNode from './nodes/StageNode';
@@ -44,6 +47,9 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
   const [edges, setEdges] = useState<Edge[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [showDetailDialog, setShowDetailDialog] = useState<boolean>(false);
+  const [selectedResult, setSelectedResult] = useState<AgentResult | null>(null);
+  const [canvasDialogOpen, setCanvasDialogOpen] = useState<boolean>(false);
   
   // Get the USP Canvas result specifically
   const uspCanvasResult = agentResults.find(r => 
@@ -90,7 +96,7 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
       // Create nodes for each stage
       const stageNodes: Node[] = stages.map((stage, index) => {
         const isCurrentStage = currentStage === stage;
-        const xPos = 100 + index * 200;
+        const xPos = 100 + index * 250; // Increased spacing between nodes
         
         return {
           id: `stage-${stage}`,
@@ -117,13 +123,14 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
           id: `result-briefing`,
           type: 'resultNode',
           data: { 
-            label: 'Briefing Summary',
-            content: truncateContent(briefingResult.content, 100),
+            label: 'Strategy Briefing',
+            content: formatContentForDisplay(briefingResult.content),
             type: 'briefing',
-            result: briefingResult
+            result: briefingResult,
+            onViewDetails: handleViewDetails
           },
           position: { x: 100, y: 250 },
-          style: { width: 180, height: 160 }
+          style: { width: 250, height: 280 }  // Increased size for better readability
         });
       }
       
@@ -133,12 +140,13 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
           type: 'resultNode',
           data: { 
             label: 'Target Persona',
-            content: truncateContent(personaResult.content, 100),
+            content: formatContentForDisplay(personaResult.content),
             type: 'persona',
-            result: personaResult
+            result: personaResult,
+            onViewDetails: handleViewDetails
           },
-          position: { x: 300, y: 250 },
-          style: { width: 180, height: 160 }
+          position: { x: 350, y: 250 },
+          style: { width: 250, height: 280 }
         });
       }
       
@@ -148,12 +156,13 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
           type: 'resultNode',
           data: { 
             label: 'USP Canvas',
-            content: truncateContent(uspResult.content, 100),
+            content: formatContentForDisplay(uspResult.content),
             type: 'pain_gains',
-            result: uspResult
+            result: uspResult,
+            onViewDetails: handleViewCanvasDetails
           },
-          position: { x: 500, y: 250 },
-          style: { width: 180, height: 160 }
+          position: { x: 600, y: 250 },
+          style: { width: 250, height: 280 }
         });
       }
       
@@ -163,12 +172,13 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
           type: 'resultNode',
           data: { 
             label: 'Marketing Funnel',
-            content: truncateContent(funnelResult.content, 100),
+            content: formatContentForDisplay(funnelResult.content),
             type: 'funnel',
-            result: funnelResult
+            result: funnelResult,
+            onViewDetails: handleViewDetails
           },
-          position: { x: 700, y: 250 },
-          style: { width: 180, height: 160 }
+          position: { x: 850, y: 250 },
+          style: { width: 250, height: 280 }
         });
       }
       
@@ -178,12 +188,13 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
           type: 'resultNode',
           data: { 
             label: 'Ad Campaign',
-            content: truncateContent(adResult.content, 100),
+            content: formatContentForDisplay(adResult.content),
             type: 'ads',
-            result: adResult
+            result: adResult,
+            onViewDetails: handleViewDetails
           },
-          position: { x: 900, y: 250 },
-          style: { width: 180, height: 160 }
+          position: { x: 1100, y: 250 },
+          style: { width: 250, height: 280 }
         });
       }
       
@@ -224,14 +235,6 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
     generateNodesAndEdges();
   }, [strategyId, agentResults, currentStage, stages]);
 
-  // Helper function to truncate content
-  const truncateContent = (content: string, maxLength: number): string => {
-    if (!content) return '';
-    return content.length > maxLength
-      ? content.substring(0, maxLength) + '...'
-      : content;
-  };
-
   // Helper function to check if a stage is completed
   const isStageCompleted = (stage: StrategyState, currentStage?: StrategyState): boolean => {
     if (!currentStage) return false;
@@ -260,6 +263,30 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
     }
   };
 
+  // Handle viewing of detailed content
+  const handleViewDetails = (result: AgentResult) => {
+    setSelectedResult(result);
+    setShowDetailDialog(true);
+  };
+  
+  // Handle viewing USP Canvas
+  const handleViewCanvasDetails = (result: AgentResult) => {
+    setSelectedResult(result);
+    setCanvasDialogOpen(true);
+  };
+  
+  // Close detail dialog
+  const handleCloseDetailDialog = () => {
+    setShowDetailDialog(false);
+    setSelectedResult(null);
+  };
+  
+  // Close canvas dialog
+  const handleCloseCanvasDialog = () => {
+    setCanvasDialogOpen(false);
+    setSelectedResult(null);
+  };
+
   const handleExport = () => {
     // This will be implemented to export the board as PNG or PDF
     console.log("Export functionality to be implemented");
@@ -271,45 +298,19 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
   // Handle node click to show details
   const handleNodeClick = (event: React.MouseEvent, node: Node) => {
     setSelectedNode(node.id);
+    
+    // If it's a result node, also show the detailed view
+    if (node.type === 'resultNode') {
+      handleViewDetails(node.data.result);
+    }
   };
   
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Loading strategy visualization...</div>;
   }
-  
-  // If a USP Canvas node is selected and we have canvas data, render the USP Canvas visualization
-  if (selectedNode === 'result-usp' && uspCanvasResult) {
-    try {
-      // Try to parse the USP Canvas data from the result content
-      const uspCanvasData = JSON.parse(uspCanvasResult.content);
-      
-      return (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">USP Canvas Visualization</h2>
-            <Button variant="outline" onClick={() => setSelectedNode(null)}>
-              Back to Overview
-            </Button>
-          </div>
-          
-          {/* If we have valid USP Canvas data, render the board */}
-          {uspCanvasData && (
-            <UspCanvasBoard
-              canvas={uspCanvasData}
-              readOnly={true}
-            />
-          )}
-        </div>
-      );
-    } catch (error) {
-      console.error("Error parsing USP Canvas data:", error);
-      // If there's an error parsing the data, just show the regular board
-      setSelectedNode(null);
-    }
-  }
 
   return (
-    <div className="w-full h-[800px] border border-gray-200 rounded-md overflow-hidden">
+    <div className="w-full h-[800px] border border-gray-200 rounded-md overflow-hidden relative">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -323,7 +324,19 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
         onNodeClick={handleNodeClick}
       >
         <Controls />
-        <MiniMap nodeBorderRadius={8} />
+        <MiniMap 
+          nodeBorderRadius={8} 
+          nodeColor={(node) => {
+            switch (node.data?.type) {
+              case 'briefing': return '#60a5fa';
+              case 'persona': return '#c084fc';
+              case 'pain_gains': return '#fbbf24';
+              case 'funnel': return '#34d399';
+              case 'ads': return '#f472b6';
+              default: return '#94a3b8';
+            }
+          }}
+        />
         <Background gap={16} size={1} />
         
         <Panel position="top-right">
@@ -337,6 +350,41 @@ const StrategyBoard: React.FC<StrategyBoardProps> = ({
           </Button>
         </Panel>
       </ReactFlow>
+      
+      {/* Detailed Content Dialog */}
+      <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh]">
+          {selectedResult && (
+            <DetailedContentViewer 
+              result={selectedResult} 
+              onClose={handleCloseDetailDialog}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* USP Canvas Dialog */}
+      <Dialog open={canvasDialogOpen} onOpenChange={setCanvasDialogOpen}>
+        <DialogContent className="sm:max-w-[90vw] max-h-[90vh] p-0">
+          <div className="p-4 bg-white flex justify-between items-center border-b">
+            <h2 className="text-xl font-semibold">USP Canvas Visualization</h2>
+            <Button variant="ghost" size="icon" onClick={handleCloseCanvasDialog}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          <div className="p-4">
+            {selectedResult && (
+              <div className="h-[70vh]">
+                <UspCanvasBoard
+                  canvas={extractUspCanvasFromAgentResult(selectedResult) || createSampleUspCanvas()}
+                  readOnly={true}
+                />
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -100,3 +100,42 @@ export const createSampleUspCanvas = (): UspCanvas => {
     ]
   };
 };
+
+/**
+ * Format content for display in a card or node
+ * This preserves all the content but formats it for better reading
+ */
+export const formatContentForDisplay = (content: string): string => {
+  if (!content) return '';
+  
+  // Replace markdown headers with plain text headers
+  let formatted = content.replace(/#{1,6}\s(.*?)$/gm, '$1:');
+  
+  // Clean up multiple newlines to just double newlines
+  formatted = formatted.replace(/\n{3,}/g, '\n\n');
+  
+  // Limit length but preserve natural paragraph breaks
+  if (formatted.length > 1000) {
+    const paragraphs = formatted.split('\n\n');
+    let truncated = '';
+    let charCount = 0;
+    
+    for (const paragraph of paragraphs) {
+      if (charCount + paragraph.length < 1000) {
+        truncated += paragraph + '\n\n';
+        charCount += paragraph.length + 2;
+      } else {
+        // Add a partial paragraph to get close to 1000 chars
+        const remainingChars = 1000 - charCount - 3;
+        if (remainingChars > 20) {
+          truncated += paragraph.substring(0, remainingChars) + '...';
+        }
+        break;
+      }
+    }
+    
+    return truncated;
+  }
+  
+  return formatted;
+};

@@ -2,7 +2,9 @@
 import React from 'react';
 import { Handle, Position } from 'reactflow';
 import { AgentResult } from '@/types/marketing';
-import { FileText, User, FlaskConical, BarChart2, MessageSquare } from "lucide-react";
+import { FileText, User, FlaskConical, BarChart2, MessageSquare, ExternalLink } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 interface ResultNodeProps {
   data: {
@@ -10,28 +12,29 @@ interface ResultNodeProps {
     content: string;
     type: string;
     result: AgentResult;
+    onViewDetails?: (result: AgentResult) => void;
   };
   selected: boolean;
 }
 
-const ResultNode: React.FC<ResultNodeProps> = ({ data }) => {
-  const { label, content, type } = data;
+const ResultNode: React.FC<ResultNodeProps> = ({ data, selected }) => {
+  const { label, content, type, result, onViewDetails } = data;
 
   // Get the appropriate icon based on result type
   const getIcon = () => {
     switch (type) {
       case 'briefing':
-        return <FileText size={16} className="text-blue-500" />;
+        return <FileText size={18} className="text-blue-500" />;
       case 'persona':
-        return <User size={16} className="text-purple-500" />;
+        return <User size={18} className="text-purple-500" />;
       case 'pain_gains':
-        return <FlaskConical size={16} className="text-amber-500" />; // Changed from Star to FlaskConical
+        return <FlaskConical size={18} className="text-amber-500" />; 
       case 'funnel':
-        return <BarChart2 size={16} className="text-green-500" />;
+        return <BarChart2 size={18} className="text-green-500" />;
       case 'ads':
-        return <MessageSquare size={16} className="text-pink-500" />;
+        return <MessageSquare size={18} className="text-pink-500" />;
       default:
-        return <FileText size={16} className="text-gray-500" />;
+        return <FileText size={18} className="text-gray-500" />;
     }
   };
 
@@ -47,30 +50,45 @@ const ResultNode: React.FC<ResultNodeProps> = ({ data }) => {
     }
   };
 
-  // For USP Canvas nodes, show a clickable indicator
-  const isUspCanvas = type === 'pain_gains';
+  // Get background color based on result type
+  const getBgColor = () => {
+    switch (type) {
+      case 'briefing': return 'bg-blue-50';
+      case 'persona': return 'bg-purple-50';
+      case 'pain_gains': return 'bg-amber-50';
+      case 'funnel': return 'bg-green-50';
+      case 'ads': return 'bg-pink-50';
+      default: return 'bg-gray-50';
+    }
+  };
 
   return (
-    <div className={`p-3 bg-white rounded-md border ${getBorderColor()} shadow-sm relative`}>
+    <div className={`p-3 ${getBgColor()} rounded-md border ${getBorderColor()} ${selected ? 'ring-2 ring-primary' : ''} shadow-sm relative w-[250px]`}>
       <Handle type="target" position={Position.Top} />
       
       <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100">
         {getIcon()}
         <span className="font-medium text-sm">{label}</span>
+        <Badge variant="outline" className="ml-auto text-[10px] py-0">
+          {type === 'pain_gains' ? 'USP' : type}
+        </Badge>
       </div>
       
-      <div className="text-xs text-gray-600 h-20 overflow-y-auto">
-        {content}
-      </div>
-
-      {isUspCanvas && (
-        <div className="absolute bottom-1 right-1">
-          <span className="text-xs text-amber-600 font-medium flex items-center">
-            <span className="w-2 h-2 bg-amber-500 rounded-full mr-1"></span>
-            Click to view canvas
-          </span>
+      <ScrollArea className="h-[180px] w-full pr-2">
+        <div className="text-xs text-gray-700 whitespace-pre-line">
+          {content}
         </div>
-      )}
+      </ScrollArea>
+
+      <div className="absolute bottom-2 right-2 flex items-center">
+        <button 
+          className="text-xs text-primary flex items-center gap-1 hover:underline"
+          onClick={() => onViewDetails && onViewDetails(result)}
+        >
+          <ExternalLink size={12} />
+          View details
+        </button>
+      </div>
     </div>
   );
 };

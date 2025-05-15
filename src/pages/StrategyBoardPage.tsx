@@ -16,6 +16,7 @@ const StrategyBoardPage = () => {
   const [agentResults, setAgentResults] = useState<AgentResult[]>([]);
   const [currentStage, setCurrentStage] = useState<StrategyState | undefined>();
   const [isLoading, setIsLoading] = useState(true);
+  const [strategy, setStrategy] = useState<any>(null);
   
   useEffect(() => {
     if (strategyId) {
@@ -37,6 +38,7 @@ const StrategyBoardPage = () => {
       if (strategyError) throw strategyError;
       
       if (strategy) {
+        setStrategy(strategy);
         setCurrentStage(toStrategyState(strategy.state));
       }
       
@@ -87,6 +89,11 @@ const StrategyBoardPage = () => {
         <h1 className="text-2xl font-bold">Strategy Visualization Board</h1>
         <p className="text-muted-foreground mt-1">
           An interactive visualization of your marketing strategy and results.
+          {strategy?.name && (
+            <span className="font-medium ml-1">
+              for <span className="text-primary">{strategy.name}</span>
+            </span>
+          )}
         </p>
       </div>
       
