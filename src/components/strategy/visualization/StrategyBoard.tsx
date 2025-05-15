@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import ReactFlow, {
   Background,
@@ -17,7 +16,7 @@ import { AgentResult, StrategyState } from "@/types/marketing";
 import { getStateLabel } from "@/utils/strategyUtils";
 import UspCanvasBoard from "@/components/marketing/modules/usp-canvas/visualization/UspCanvasBoard";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { formatContentForDisplay, extractUspCanvasFromAgentResult } from "@/utils/canvasVisualizationHelpers";
+import { formatContentForDisplay, extractUspCanvasFromAgentResult, createSampleUspCanvas } from "@/utils/canvasVisualizationHelpers";
 import DetailedContentViewer from './components/DetailedContentViewer';
 
 // Custom node components

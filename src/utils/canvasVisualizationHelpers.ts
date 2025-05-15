@@ -53,14 +53,7 @@ export const extractUspCanvasFromAgentResult = (agentResult?: AgentResult): UspC
   }
   
   // As a fallback, create an empty canvas structure
-  return {
-    customerJobs: [],
-    customerPains: [],
-    customerGains: [],
-    productServices: [],
-    painRelievers: [],
-    gainCreators: []
-  };
+  return createSampleUspCanvas();
 };
 
 /**
