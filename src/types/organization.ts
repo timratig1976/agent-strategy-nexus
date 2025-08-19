@@ -1,6 +1,4 @@
 
-import { User } from "@supabase/supabase-js";
-
 export type UserRole = 'owner' | 'admin' | 'member' | 'viewer';
 
 export interface Organization {

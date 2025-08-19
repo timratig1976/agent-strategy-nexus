@@ -1,0 +1,65 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Strategy {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  // Relations (optional future): StrategyMetadata could reference Strategy via strategy_id
+}
+
+model StrategyMetadata {
+  id                 String   @id @default(uuid()) @db.Uuid
+  strategy_id        String   @unique
+  company_name       String?
+  website_url        String?
+  product_description String?
+  product_url        String?
+  additional_info    String?
+  created_at         DateTime @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+}
+
+model AiPrompt {
+  id            String   @id @default(uuid()) @db.Uuid
+  module        String   @unique
+  system_prompt String?
+  user_prompt   String?
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+}
+
+model Organization {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String
+  slug       String   @unique
+  logo_url   String?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  memberships OrgMembership[]
+}
+
+model OrgMembership {
+  id              String   @id @default(uuid()) @db.Uuid
+  user_id         String
+  organization_id String   @db.Uuid
+  role            String   @default("member")
+  is_primary      Boolean  @default(false)
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  organization Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([organization_id])
+}

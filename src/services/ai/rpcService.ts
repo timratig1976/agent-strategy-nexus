@@ -1,8 +1,17 @@
 
-import { supabase } from "@/integrations/supabase/client";
 import { AIServiceResponse, StrategyMetadata } from "./types";
 
 export class RPCService {
+  private static async getAuthHeaders(): Promise<Headers> {
+    const headers = new Headers({ "content-type": "application/json" });
+    try {
+      const anyWindow = window as any;
+      const token = await anyWindow?.Clerk?.session?.getToken?.();
+      if (token) headers.set("authorization", `Bearer ${token}`);
+    } catch {}
+    return headers;
+  }
+
   /**
    * Gets strategy metadata from the database using an RPC function
    */
@@ -10,21 +19,30 @@ export class RPCService {
     strategyId: string
   ): Promise<AIServiceResponse<StrategyMetadata>> {
     try {
-      const { data, error } = await supabase.rpc('get_strategy_metadata', {
-        strategy_id_param: strategyId
+      const headers = await this.getAuthHeaders();
+      const res = await fetch(`/api/strategy-metadata?strategyId=${encodeURIComponent(strategyId)}`, {
+        method: "GET",
+        headers,
       });
-      
-      if (error) {
-        throw error;
-      }
-      
-      if (!data || data.length === 0) {
+      if (!res.ok) throw new Error(`GET strategy-metadata failed: ${res.status}`);
+      const json = await res.json();
+      const items = Array.isArray(json.items) ? json.items : [];
+      if (items.length === 0) {
         return { 
           error: `No metadata found for strategy ID: ${strategyId}` 
         };
       }
-      
-      return { data: data[0] as StrategyMetadata };
+
+      const m = items[0];
+      const mapped: StrategyMetadata = {
+        strategy_id: strategyId,
+        company_name: m?.company_name ?? null,
+        website_url: m?.website_url ?? null,
+        product_description: m?.product_description ?? null,
+        product_url: m?.product_url ?? null,
+        additional_info: m?.additional_info ?? null,
+      };
+      return { data: mapped };
     } catch (error) {
       console.error(`Error fetching strategy metadata for ID ${strategyId}:`, error);
       return { 
@@ -43,18 +61,20 @@ export class RPCService {
     metadata: Partial<StrategyMetadata>
   ): Promise<AIServiceResponse<boolean>> {
     try {
-      const { error } = await supabase.rpc('upsert_strategy_metadata', {
-        strategy_id_param: strategyId,
-        company_name_param: metadata.company_name || null,
-        website_url_param: metadata.website_url || null,
-        product_description_param: metadata.product_description || null,
-        product_url_param: metadata.product_url || null,
-        additional_info_param: metadata.additional_info || null
+      const headers = await this.getAuthHeaders();
+      const res = await fetch(`/api/strategy-metadata`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          strategyId,
+          company_name: metadata.company_name ?? null,
+          website_url: metadata.website_url ?? null,
+          product_description: metadata.product_description ?? null,
+          product_url: metadata.product_url ?? null,
+          additional_info: metadata.additional_info ?? null,
+        }),
       });
-      
-      if (error) {
-        throw error;
-      }
+      if (!res.ok) throw new Error(`POST strategy-metadata failed: ${res.status}`);
       
       return { data: true };
     } catch (error) {
@@ -77,44 +97,13 @@ export class RPCService {
   ): Promise<AIServiceResponse<boolean>> {
     try {
       console.log(`Updating prompt for module: ${module}`);
-      
-      // Check if prompt exists
-      const { data: existingPrompt, error: fetchError } = await supabase
-        .from('ai_prompts')
-        .select('id')
-        .eq('module', module)
-        .maybeSingle();
-      
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        throw fetchError;
-      }
-      
-      let result;
-      
-      if (existingPrompt) {
-        // Update existing prompt
-        result = await supabase
-          .from('ai_prompts')
-          .update({
-            system_prompt: systemPrompt,
-            user_prompt: userPrompt,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingPrompt.id);
-      } else {
-        // Insert new prompt
-        result = await supabase
-          .from('ai_prompts')
-          .insert({
-            module,
-            system_prompt: systemPrompt,
-            user_prompt: userPrompt
-          });
-      }
-      
-      if (result.error) {
-        throw result.error;
-      }
+      const headers = await this.getAuthHeaders();
+      const res = await fetch(`/api/ai-prompts`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ module, system_prompt: systemPrompt, user_prompt: userPrompt }),
+      });
+      if (!res.ok) throw new Error(`POST ai-prompts failed: ${res.status}`);
       
       console.log(`Successfully updated prompt for module: ${module}`);
       return { data: true };
@@ -128,3 +117,4 @@ export class RPCService {
     }
   }
 }
+

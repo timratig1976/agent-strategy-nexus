@@ -1,6 +1,5 @@
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthProvider";
 
 interface CompanyLogoProps {
@@ -14,32 +13,13 @@ const CompanyLogo = ({ size = "md", className = "" }: CompanyLogoProps) => {
   const [companyName, setCompanyName] = useState<string>("");
 
   useEffect(() => {
-    const fetchCompanySettings = async () => {
-      if (!user) return;
-
-      try {
-        // Use maybeSingle instead of single to handle the case where no data is found
-        const { data, error } = await supabase
-          .from("company_settings")
-          .select("name, logo_url")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        if (error) {
-          console.error("Error fetching company settings:", error);
-          return;
-        }
-
-        if (data) {
-          setLogoUrl(data.logo_url);
-          setCompanyName(data.name || "");
-        }
-      } catch (error) {
-        console.error("Error fetching company settings:", error);
-      }
-    };
-
-    fetchCompanySettings();
+    // Supabase disabled during migration; use placeholder initial
+    if (user?.email) {
+      const initial = user.email.charAt(0).toUpperCase();
+      setCompanyName(initial);
+    } else {
+      setCompanyName("C");
+    }
   }, [user]);
 
   const sizeClasses = {

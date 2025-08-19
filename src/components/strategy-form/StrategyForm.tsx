@@ -6,7 +6,6 @@ import { Form } from "@/components/ui/form";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthProvider";
 import { StrategyState } from "@/types/marketing";
 import BasicInfoSection from "./BasicInfoSection";
@@ -16,11 +15,13 @@ import AdditionalInfoSection from "./AdditionalInfoSection";
 import StrategyFormActions from "./StrategyFormActions";
 import StrategyFormHeader from "./StrategyFormHeader";
 import { strategyFormSchema, StrategyFormValues } from "./strategyFormSchema";
+import { useApiClient } from "@/hooks/useApiClient";
 
 const StrategyForm = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [submitting, setSubmitting] = React.useState(false);
+  const api = useApiClient("");
 
   const form = useForm<StrategyFormValues>({
     resolver: zodResolver(strategyFormSchema),
@@ -44,41 +45,15 @@ const StrategyForm = () => {
     setSubmitting(true);
     
     try {
-      // Create the strategy
-      const { data: strategy, error: strategyError } = await supabase
-        .from('strategies')
-        .insert({
-          name: values.name,
-          user_id: user.id,
-          company_name: values.companyName,
-          website_url: values.websiteUrl || "",
-          product_description: values.productDescription || "",
-          product_url: values.productUrl || "",
-          additional_info: values.additionalInfo || "",
-          status: 'in_progress',
-          state: StrategyState.BRIEFING,
-          language: values.language
-        })
-        .select()
-        .single();
-      
-      if (strategyError) throw strategyError;
-      
-      // Add initial briefing task
-      const { error: taskError } = await supabase
-        .from('strategy_tasks')
-        .insert({
-          strategy_id: strategy.id,
-          title: "Create AI Briefing",
-          state: StrategyState.BRIEFING,
-          is_completed: false
-        });
-      
-      if (taskError) throw taskError;
-      
+      // Create the strategy via our Prisma-backed API
+      const res = await api.post<{ id: string }>("/api/strategies", {
+        name: values.name,
+      });
+      const strategyId = res.id;
+
       toast.success("Strategy created successfully!");
       // Navigate to the strategy overview page
-      navigate(`/strategy-overview/${strategy.id}`);
+      navigate(`/strategy-overview/${strategyId}`);
       
     } catch (error) {
       console.error('Error creating strategy:', error);

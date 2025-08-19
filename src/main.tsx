@@ -5,6 +5,7 @@ import App from './App.tsx'
 import './index.css'
 import { AuthProvider } from './context/AuthProvider'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ClerkProvider } from '@clerk/clerk-react'
 
 // Create a client
 const queryClient = new QueryClient({
@@ -17,11 +18,13 @@ const queryClient = new QueryClient({
 })
 
 createRoot(document.getElementById("root")!).render(
-  <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </BrowserRouter>
-  </QueryClientProvider>
+  <ClerkProvider publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
+  </ClerkProvider>
 );

@@ -2,37 +2,24 @@
 import React from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import CompanyLogo from "./CompanyLogo";
 import { useAuth } from "@/context/AuthProvider";
-import { Building, ChevronDown, Home, Settings, LogOut, User, Users } from "lucide-react";
+import { Building, Home, Settings } from "lucide-react";
 import { useOrganization } from "@/context/OrganizationProvider";
 import OrganizationSelector from "./organizations/OrganizationSelector";
+import { UserButton } from "@clerk/clerk-react";
 
 const NavBar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { currentOrganization } = useOrganization();
 
   const isActive = (path: string) => {
     return location.pathname === path;
   };
 
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      navigate("/auth");
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
+  // Sign out handled via Clerk UserButton menu
 
   return (
     <header className="border-b">
@@ -79,49 +66,21 @@ const NavBar = () => {
         </div>
 
         {user && (
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 ml-auto">
             <OrganizationSelector />
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-1 flex items-center">
-                  <User className="h-4 w-4" />
-                  <span className="hidden md:inline">Account</span>
-                  <ChevronDown className="h-3 w-3 opacity-50" />
+            {currentOrganization && (
+              <Link to={`/organizations/${currentOrganization.id}/settings`}>
+                <Button variant="ghost" size="icon" aria-label="Organization Settings" title="Organization Settings">
+                  <Building className="h-5 w-5" />
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <div className="px-2 py-1.5 text-sm font-medium">
-                  {user.email}
-                </div>
-                <DropdownMenuSeparator />
-                
-                {currentOrganization && (
-                  <>
-                    <Link to={`/organizations/${currentOrganization.id}/settings`}>
-                      <DropdownMenuItem className="cursor-pointer">
-                        <Building className="mr-2 h-4 w-4" />
-                        <span>Organization</span>
-                      </DropdownMenuItem>
-                    </Link>
-                  </>
-                )}
-                
-                <Link to="/settings">
-                  <DropdownMenuItem className="cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </DropdownMenuItem>
-                </Link>
-                
-                <DropdownMenuSeparator />
-                
-                <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </Link>
+            )}
+            <Link to="/settings">
+              <Button variant="ghost" size="icon" aria-label="Settings" title="Settings">
+                <Settings className="h-5 w-5" />
+              </Button>
+            </Link>
+            <UserButton appearance={{ elements: { userButtonPopoverCard: "shadow-lg" } }} userProfileMode="modal" afterSignOutUrl="/" />
           </div>
         )}
       </div>

@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthProvider";
+import { useApiClient } from "@/hooks/useApiClient";
 
 export const usePromptData = (module: string) => {
   const [systemPrompt, setSystemPrompt] = useState<string>("");
@@ -11,6 +11,7 @@ export const usePromptData = (module: string) => {
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const api = useApiClient("");
 
   useEffect(() => {
     const fetchPromptData = async () => {
@@ -18,26 +19,9 @@ export const usePromptData = (module: string) => {
 
       try {
         setIsLoading(true);
-        const { data, error } = await supabase
-          .from("ai_prompts")
-          .select("system_prompt, user_prompt")
-          .eq("module", module)
-          .single();
-
-        if (error) {
-          console.error("Error fetching prompt data:", error);
-          if (error.code !== 'PGRST116') { // Not found error
-            throw error;
-          }
-          
-          // If not found, use empty strings
-          setSystemPrompt("");
-          setUserPrompt("");
-          return;
-        }
-
-        setSystemPrompt(data?.system_prompt || "");
-        setUserPrompt(data?.user_prompt || "");
+        const res = await api.get<{ system_prompt: string; user_prompt: string }>(`/api/ai-prompts?module=${encodeURIComponent(module)}`);
+        setSystemPrompt(res.system_prompt || "");
+        setUserPrompt(res.user_prompt || "");
       } catch (error: any) {
         console.error("Error:", error);
         toast({
@@ -65,39 +49,11 @@ export const usePromptData = (module: string) => {
 
     setIsSaving(true);
     try {
-      // Check if the prompt already exists
-      const { data: existingData } = await supabase
-        .from("ai_prompts")
-        .select("id")
-        .eq("module", module)
-        .single();
-
-      let result;
-      
-      if (existingData) {
-        // Update existing prompt
-        result = await supabase
-          .from("ai_prompts")
-          .update({
-            system_prompt: systemPrompt,
-            user_prompt: userPrompt,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("module", module);
-      } else {
-        // Insert new prompt
-        result = await supabase
-          .from("ai_prompts")
-          .insert({
-            module,
-            system_prompt: systemPrompt,
-            user_prompt: userPrompt,
-          });
-      }
-
-      if (result.error) {
-        throw result.error;
-      }
+      await api.post(`/api/ai-prompts`, {
+        module,
+        system_prompt: systemPrompt,
+        user_prompt: userPrompt,
+      });
 
       toast({
         title: "Success",

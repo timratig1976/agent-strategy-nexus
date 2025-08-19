@@ -1,7 +1,6 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+// Header is simplified; global NavBar contains auth controls
 
 interface PageHeaderProps {
   user: any;
@@ -9,7 +8,6 @@ interface PageHeaderProps {
 }
 
 const PageHeader = ({ user }: PageHeaderProps) => {
-  const navigate = useNavigate();
   
   return (
     <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8 pb-6 border-b">
@@ -18,15 +16,6 @@ const PageHeader = ({ user }: PageHeaderProps) => {
           Strategy Hub
         </h1>
       </div>
-      
-      {!user && (
-        <Button 
-          onClick={() => navigate("/auth")} 
-          className="px-4 py-2 h-10 shadow-md hover:shadow-lg transition-shadow"
-        >
-          Sign In
-        </Button>
-      )}
     </div>
   );
 };
